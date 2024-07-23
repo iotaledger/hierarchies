@@ -32,7 +32,7 @@ module htf::main {
     id : UID,
     governance:        Governance,
     root_authorities:  vector<RootAuthority>,
-    trust_services:    Table<String, TrustedService>,
+    trust_services:    VecMap<String, TrustedService>,
   }
 
 // Root authority has the highest trust in the system, it can delegate trust to other entities and itself
@@ -51,7 +51,7 @@ module htf::main {
     trusted_constraints : TrustedPropertyConstraints,
     // user-id => permission_to_acredit
     issued_permissions_to_acredit : Table<ID, PermissionsToAcredit>,
-    // trusted_delegate_id => attestation
+    // trusted_delegate_id => atestation
     issued_permissions_to_atest : Table<ID, PersmissionsToAtest>,
   }
 
@@ -71,10 +71,9 @@ module htf::main {
 
   public fun new_federation(ctx :&mut TxContext)  {
     let federation_id = object::new(ctx);
-    let federation_address = federation_id.to_address().to_string();
     let mut federation = Federation {
       id : federation_id,
-      trust_services : table::new(ctx),
+      trust_services : vec_map::empty(),
       root_authorities : vector[],
       governance : Governance {
         id : object::new(ctx),
@@ -89,7 +88,7 @@ module htf::main {
     Self::add_root_authority(&cap, &mut federation, ctx.sender().to_string(),  ctx);
 
     event::emit(Event{data: FederationCreatedEvent{
-      federation_address: federation.federation_id().to_address()
+      federation_address: federation.federation_id().to_address(),
       }
     });
     transfer::transfer(cap, ctx.sender());
@@ -143,15 +142,15 @@ module htf::main {
     federation.governance.trusted_constraints.add_constraint(property_name, constraint) ;
   }
 
-  /// Creates a new accredit capability
-  fun new_cap_accredit(self : &Federation, ctx : &mut TxContext) : AccreditCap {
+  /// Creates a new acredit capability
+  fun new_cap_acredit(self : &Federation, ctx : &mut TxContext) : AccreditCap {
     AccreditCap {
       id : object::new(ctx),
       federation_id : self.federation_id(),
     }
   }
 
-  /// Creates a new attest capability
+  /// Creates a new atest capability
   fun new_cap_atest(self : &Federation, ctx : &mut TxContext) : AttestCap {
     AttestCap {
       id : object::new(ctx),
@@ -192,14 +191,14 @@ module htf::main {
   }
 
   fun add_trust_service(federation : &mut Federation,  service_type : String, ctx :&mut TxContext) {
-    if ( table::contains(&federation.trust_services, service_type) ) {
+    if ( federation.trust_services.contains(&service_type)) {
       return
     };
     let trust_service = trusted_service::new_trust_service(ctx, service_type);
-    table::add(&mut federation.trust_services, service_type, trust_service);
+    federation.trust_services.insert(service_type, trust_service);
   }
 
-  /// Issue an accredidation to accredit about given trusted properties
+  /// Issue an accredidation to acredit about given trusted properties
   public fun issue_permission_to_acredit(cap : &AccreditCap,  federation : &mut Federation, receiver : ID, want_property_constraints : vector<TrustedPropertyConstraint>,  ctx : &mut TxContext) {
       if (cap.federation_id !=  federation.federation_id())   {
         abort EUnauthorizedWrongFederation
@@ -227,7 +226,7 @@ module htf::main {
           federation.governance.issued_permissions_to_acredit.add(receiver, permissions_to_acredit);
 
           // also create a capability
-          transfer::transfer(federation.new_cap_accredit(ctx), receiver.to_address());
+          transfer::transfer(federation.new_cap_acredit(ctx), receiver.to_address());
         }
   }
 

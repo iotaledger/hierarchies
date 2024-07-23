@@ -7,13 +7,13 @@ module htf::permission {
   use htf::permission_to_acredit::{PermissionToAcredit};
 
   public struct Permissions has store {
-    attestations : Table<ID, vector<PermissionToAtest>>,
+    atestations : Table<ID, vector<PermissionToAtest>>,
     permissions_to_acredit : Table<ID, vector<PermissionToAcredit>>,
   }
 
   public(package) fun empty(ctx :&mut TxContext) : Permissions {
     Permissions {
-      attestations : table::new(ctx),
+      atestations : table::new(ctx),
       permissions_to_acredit : table::new(ctx),
     }
    }
