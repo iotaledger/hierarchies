@@ -1,8 +1,4 @@
 module htf::utils {
-  use sui::vec_map::{Self, VecMap};
-  use htf::trusted_property::{TrustedPropertyName};
-  use htf::trusted_constraint::{TrustedPropertyConstraint};
-
   public(package) fun contains_one_of<D : copy + drop>(source : &vector<D>, one_of : &vector<D>)  : bool {
     let len_one_of = vector::length<D>(one_of);
     let mut idx_one_of = 0;
@@ -30,17 +26,6 @@ module htf::utils {
     return true
   }
 
-  public(package) fun to_map_of_constraints(constraints : vector<TrustedPropertyConstraint>) : VecMap<TrustedPropertyName, TrustedPropertyConstraint> {
-    let mut idx = 0;
-    let mut map : VecMap<TrustedPropertyName, TrustedPropertyConstraint> = vec_map::empty();
-    while ( idx < constraints.length() ) {
-      let constraint = constraints[idx];
-      map.insert(*constraint.property_name(), constraint);
-      idx = idx + 1;
-
-    };
-    return map
-  }
 
   public(package) fun copy_vector<D: copy>(src : &vector<D>) : vector<D>  {
     let mut idx = 0 ;

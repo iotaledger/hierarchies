@@ -5,6 +5,7 @@ module htf::trusted_constraint {
   use sui::vec_set::{Self, VecSet};
 
   use htf::trusted_property::{TrustedPropertyValue, TrustedPropertyName};
+  use htf::utils;
 
 
   public(package) fun new_trusted_property_constraints() : TrustedPropertyConstraints {
@@ -43,7 +44,7 @@ module htf::trusted_constraint {
     self.data.insert(name, constraint)
   }
 
-  public(package) fun new_trusted_property_constraint(property_name : TrustedPropertyName, allowed_values : VecSet<TrustedPropertyValue>) : TrustedPropertyConstraint {
+  public(package) fun new_trusted_property_constraint(property_name : TrustedPropertyName, allowed_values : VecSet<TrustedPropertyValue>, allow_any : bool) : TrustedPropertyConstraint {
     TrustedPropertyConstraint {
       property_name,
       allowed_values,
@@ -67,6 +68,14 @@ module htf::trusted_constraint {
     &self.property_name
   }
 
+  public(package) fun matches_contraint(self : &TrustedPropertyConstraint, constraint : &TrustedPropertyConstraint)  : bool {
+    if (constraint.allow_any) {
+      return self.allow_any
+    };
+
+   utils::contains_all_from(self.allowed_values.keys(), constraint.allowed_values.keys())
+  }
+
   public(package) fun matches_property(self: &TrustedPropertyConstraint, name: &TrustedPropertyName, value: &TrustedPropertyValue) : bool {
     self.matches_name(name) && self.matches_value(value)
   }
@@ -80,5 +89,17 @@ module htf::trusted_constraint {
       return true
     };
     self.allowed_values.contains(value)
+  }
+
+  public(package) fun to_map_of_constraints(constraints : vector<TrustedPropertyConstraint>) : VecMap<TrustedPropertyName, TrustedPropertyConstraint> {
+    let mut idx = 0;
+    let mut map : VecMap<TrustedPropertyName, TrustedPropertyConstraint> = vec_map::empty();
+    while ( idx < constraints.length() ) {
+      let constraint = constraints[idx];
+      map.insert(*constraint.property_name(), constraint);
+      idx = idx + 1;
+
+    };
+    return map
   }
 }

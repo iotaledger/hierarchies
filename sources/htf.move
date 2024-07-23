@@ -25,6 +25,7 @@ module htf::main {
  const  E_INVALID_PROPERTY: u64 = 3;
  const  E_INVALID_ISSUER: u64 = 4;
  const  E_INVALID_ISSUER_INSUFFICIENT_ATESTATION: u64 = 4;
+ const  E_INVALID_CONSTRAINT  : u64 = 5;
 
   // Federation is the hierarcy of trust in the system. Itsa a public, shared object
   public struct Federation has store, key {
@@ -123,15 +124,20 @@ module htf::main {
     federation : &mut Federation,
     property_name : TrustedPropertyName,
     allowed_values : VecSet<TrustedPropertyValue>,
+    allow_any : bool,
     _ctx : &mut TxContext)
   {
     if  (cap.federation_id != federation.federation_id()) {
       abort E_UNAUTHORIZED_WRONG_FEDERATION
     };
+    if (allow_any && allowed_values.keys().length() > 0 ) {
+     abort E_INVALID_CONSTRAINT
+    };
 
     let constraint = trusted_constraint::new_trusted_property_constraint(
       property_name,
       allowed_values,
+      allow_any,
     );
 
     federation.governance.trusted_constraints.add_constraint(property_name, constraint) ;
@@ -239,7 +245,7 @@ module htf::main {
     };
 
     let permission = permission_to_atest::new_permission_to_atest(
-      federation_id, utils::to_map_of_constraints(wanted_constraints), ctx
+      federation_id, trusted_constraint::to_map_of_constraints(wanted_constraints), ctx
     );
 
     if ( federation.governance.issued_permissions_to_atest.contains(receiver))  {
