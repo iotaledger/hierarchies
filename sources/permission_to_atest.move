@@ -80,10 +80,8 @@ module htf::permission_to_atest {
       if ( maybe_property_constraint.is_none()) {
         continue
       };
-
-      if ( maybe_property_constraint.borrow().allowed_values().contains(property_value)  )  {
-        return true;
-
+      if (maybe_property_constraint.borrow().matches_property(property_name, property_value)) {
+        return true
       };
       idx_permissions_to_atest = idx_permissions_to_atest + 1;
     };

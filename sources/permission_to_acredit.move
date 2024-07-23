@@ -65,7 +65,7 @@ module htf::permission_to_acredit {
       let mut idx_want_constraints = 0;
       while (idx_want_constraints < len_want_constraints ) {
         let constraint_value = want_constraints[idx_want_constraints];
-        if ( maybe_property_constraint.borrow().allowed_values().contains(&constraint_value) ) {
+        if ( maybe_property_constraint.borrow().matches_value(&constraint_value) ) {
           want_constraints.remove(idx_want_constraints);
           len_want_constraints = len_want_constraints - 1;
         };

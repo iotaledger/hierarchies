@@ -34,10 +34,9 @@ module htf::trusted_constraint {
 
   public(package) fun is_property_correct(self : &TrustedPropertyConstraints, property_name : &TrustedPropertyName, value : &TrustedPropertyValue) : bool {
     if ( ! self.data.contains(property_name) ) {
-      // no name
       return false
     };
-    self.data.get(property_name).allowed_values.contains(value)
+    self.data.get(property_name).matches_property(property_name, value)
   }
 
   public(package) fun add_constraint(self : &mut TrustedPropertyConstraints, name : TrustedPropertyName, constraint : TrustedPropertyConstraint)  {
@@ -54,7 +53,9 @@ module htf::trusted_constraint {
 
   public struct TrustedPropertyConstraint has  store, copy, drop {
     property_name : TrustedPropertyName,
+    // allow only set of values
     allowed_values : VecSet<TrustedPropertyValue>,
+    // allow_any - takes a precedence over the allowed_values
     allow_any : bool,
   }
 
@@ -64,5 +65,20 @@ module htf::trusted_constraint {
 
   public(package) fun property_name(self : &TrustedPropertyConstraint) : &TrustedPropertyName {
     &self.property_name
+  }
+
+  public(package) fun matches_property(self: &TrustedPropertyConstraint, name: &TrustedPropertyName, value: &TrustedPropertyValue) : bool {
+    self.matches_name(name) && self.matches_value(value)
+  }
+
+  public(package) fun matches_name(self : &TrustedPropertyConstraint, name : &TrustedPropertyName) : bool {
+      self.property_name == name
+  }
+
+  public(package) fun matches_value(self : &TrustedPropertyConstraint, value : &TrustedPropertyValue) : bool {
+    if ( self.allow_any ) {
+      return true
+    };
+    self.allowed_values.contains(value)
   }
 }
