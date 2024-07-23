@@ -14,12 +14,12 @@ module htf::permission_to_atest {
   /// PermissionToAtest can be created only by the HTF module
   public struct PermissionToAtest has store, key {
     id : UID,
-    federation_id : String,
+    federation_id : ID,
     created_by : String,
     trusted_properties : VecMap<TrustedPropertyName, TrustedPropertyConstraint>,
   }
 
-  public(package) fun new_permission_to_atest(federation_id : String, constraints : VecMap<TrustedPropertyName, TrustedPropertyConstraint>, ctx : &mut TxContext) : PermissionToAtest {
+  public(package) fun new_permission_to_atest(federation_id: ID, constraints: VecMap<TrustedPropertyName, TrustedPropertyConstraint>, ctx : &mut TxContext) : PermissionToAtest {
     PermissionToAtest {
         id : object::new(ctx),
         federation_id,
@@ -28,13 +28,13 @@ module htf::permission_to_atest {
     }
    }
 
-  public(package) fun new_permissions_to_atest() : PersmissionsToAtest {
+  public(package) fun new_permissions_to_atest(): PersmissionsToAtest {
     PersmissionsToAtest {
       permissions_to_atest: vector::empty(),
     }
   }
 
-  public(package)  fun federation_id(self : &PermissionToAtest) : &String {
+  public(package)  fun federation_id(self : &PermissionToAtest) : &ID {
     &self.federation_id
   }
 

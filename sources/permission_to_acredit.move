@@ -15,12 +15,12 @@ module htf::permission_to_acredit {
   // Accredidation can be created only by the HTF module
   public struct PermissionToAcredit has store, key {
     id : UID,
-    federation_id : String,
+    federation_id : ID,
     created_by : String,
     trusted_constraints : VecMap<TrustedPropertyName, TrustedPropertyConstraint>,
   }
 
-  public(package) fun new_permission_to_acredit(federation_id  : String, constraints : VecMap<TrustedPropertyName, TrustedPropertyConstraint>, ctx : &mut TxContext)  : PermissionToAcredit {
+  public(package) fun new_permission_to_acredit(federation_id  : ID, constraints : VecMap<TrustedPropertyName, TrustedPropertyConstraint>, ctx : &mut TxContext)  : PermissionToAcredit {
     PermissionToAcredit {
       id : object::new(ctx),
       federation_id,
