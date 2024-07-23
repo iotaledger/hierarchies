@@ -66,7 +66,7 @@ module htf::main {
   }
 
   public struct FederationCreatedEvent has copy, drop {
-    federation_address : String,
+    federation_address : address,
   }
 
   public fun new_federation(ctx :&mut TxContext)  {
@@ -89,7 +89,7 @@ module htf::main {
     Self::add_root_authority(&cap, &mut federation, ctx.sender().to_string(),  ctx);
 
     event::emit(Event{data: FederationCreatedEvent{
-      federation_address: federation_address
+      federation_address: federation.federation_id().to_address()
       }
     });
     transfer::transfer(cap, ctx.sender());
