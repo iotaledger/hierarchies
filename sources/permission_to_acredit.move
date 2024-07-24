@@ -1,5 +1,5 @@
 // HTF Notary module
-module htf::permission_to_acredit {
+module htf::permission_to_accredit {
 
   use std::string::String;
   use sui::vec_map::{Self, VecMap};
@@ -8,20 +8,20 @@ module htf::permission_to_acredit {
   use htf::trusted_constraint::{TrustedPropertyConstraint};
   use htf::utils;
 
-  public struct PermissionsToAcredit has store {
-    permissions_to_acredit  : vector<PermissionToAcredit>,
+  public struct PermissionsToAccredit has store {
+    permissions_to_accredit  : vector<PermissionToAccredit>,
   }
 
   // Accredidation can be created only by the HTF module
-  public struct PermissionToAcredit has store, key {
+  public struct PermissionToAccredit has store, key {
     id : UID,
     federation_id : ID,
     created_by : String,
     trusted_constraints : VecMap<TrustedPropertyName, TrustedPropertyConstraint>,
   }
 
-  public(package) fun new_permission_to_acredit(federation_id  : ID, constraints : VecMap<TrustedPropertyName, TrustedPropertyConstraint>, ctx : &mut TxContext)  : PermissionToAcredit {
-    PermissionToAcredit {
+  public(package) fun new_permission_to_accredit(federation_id  : ID, constraints : VecMap<TrustedPropertyName, TrustedPropertyConstraint>, ctx : &mut TxContext)  : PermissionToAccredit {
+    PermissionToAccredit {
       id : object::new(ctx),
       federation_id,
       trusted_constraints: constraints,
@@ -29,13 +29,13 @@ module htf::permission_to_acredit {
     }
   }
 
-  public(package) fun new_permissions_to_acredit() : PermissionsToAcredit {
-    PermissionsToAcredit {
-      permissions_to_acredit: vector::empty(),
+  public(package) fun new_permissions_to_accredit() : PermissionsToAccredit {
+    PermissionsToAccredit {
+      permissions_to_accredit: vector::empty(),
     }
   }
 
-  public(package) fun are_constraints_permitted(self : &PermissionsToAcredit, constraints: &vector<TrustedPropertyConstraint> ) :bool {
+  public(package) fun are_constraints_permitted(self : &PermissionsToAccredit, constraints: &vector<TrustedPropertyConstraint> ) :bool {
     let mut idx = 0;
     while ( idx < constraints.length()  ) {
         let constraint = constraints[idx];
@@ -48,13 +48,13 @@ module htf::permission_to_acredit {
   }
 
 
-  public(package) fun is_constraint_permitted(self : &PermissionsToAcredit, constraint : &TrustedPropertyConstraint) :  bool {
-    let len_permissions_to_acredit = self.permissions_to_acredit.length();
-    let mut idx_permissions_to_acredit = 0;
+  public(package) fun is_constraint_permitted(self : &PermissionsToAccredit, constraint : &TrustedPropertyConstraint) :  bool {
+    let len_permissions_to_accredit = self.permissions_to_accredit.length();
+    let mut idx_permissions_to_accredit = 0;
     let mut want_constraints : vector<TrustedPropertyValue> = utils::copy_vector(constraint.allowed_values().keys());
 
-    while (idx_permissions_to_acredit < len_permissions_to_acredit) {
-      let permission = &self.permissions_to_acredit[idx_permissions_to_acredit];
+    while (idx_permissions_to_accredit < len_permissions_to_accredit) {
+      let permission = &self.permissions_to_accredit[idx_permissions_to_accredit];
 
       let maybe_property_constraint = permission.trusted_constraints.try_get(constraint.property_name()) ;
       if ( maybe_property_constraint.is_none()) {
@@ -71,7 +71,7 @@ module htf::permission_to_acredit {
         };
         idx_want_constraints = idx_want_constraints + 1;
       };
-      idx_permissions_to_acredit = idx_permissions_to_acredit + 1;
+      idx_permissions_to_accredit = idx_permissions_to_accredit + 1;
     };
 
     // alll wanted constraints have been found
@@ -82,8 +82,8 @@ module htf::permission_to_acredit {
     return false
   }
 
-  public(package) fun add(self : &mut PermissionsToAcredit, permission_to_acredit : PermissionToAcredit) {
-    self.permissions_to_acredit.push_back(permission_to_acredit);
+  public(package) fun add(self : &mut PermissionsToAccredit, permission_to_accredit : PermissionToAccredit) {
+    self.permissions_to_accredit.push_back(permission_to_accredit);
   }
 
 }

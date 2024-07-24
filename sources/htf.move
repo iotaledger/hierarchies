@@ -10,17 +10,17 @@ module htf::main {
   use htf::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
   use htf::trusted_constraint::{Self, TrustedPropertyConstraints, TrustedPropertyConstraint};
   use htf::credential::{Self, Credential};
-  use htf::permission_to_atest::{Self, PersmissionsToAtest};
-  use htf::permission_to_acredit::{Self, PermissionsToAcredit};
+  use htf::permission_to_attest::{Self, PersmissionsToAttest};
+  use htf::permission_to_accredit::{Self, PermissionsToAccredit};
   use htf::permission::{Self, Permissions};
   use htf::trusted_service::{Self, TrustedService};
 
   const  EUnauthorizedWrongFederation  : u64  = 1;
   const  EUnauthorizedInsufficientAccreditation : u64 = 2;
-  const  EUnauthorizedInsufficientAtestation : u64 = 3;
+  const  EUnauthorizedInsufficientAttestation : u64 = 3;
   const  EInvalidProperty: u64 = 3;
   const  EInvalidIssuer: u64 = 4;
-  const  EInvalidIssuerInsufficientAtestation: u64 = 4;
+  const  EInvalidIssuerInsufficientAttestation: u64 = 4;
   const  EInvalidConstraint  : u64 = 5;
 
   // Federation is the hierarcy of trust in the system. Itsa a public, shared object
@@ -45,10 +45,10 @@ module htf::main {
     id : UID,
     // Trusted Properties all are properties that are trusted by the Federation
     trusted_constraints : TrustedPropertyConstraints,
-    // user-id => permission_to_acredit
-    issued_permissions_to_acredit : Table<ID, PermissionsToAcredit>,
-    // trusted_delegate_id => atestation
-    issued_permissions_to_atest : Table<ID, PersmissionsToAtest>,
+    // user-id => permission_to_accredit
+    issued_permissions_to_accredit : Table<ID, PermissionsToAccredit>,
+    // trusted_delegate_id => attestation
+    issued_permissions_to_attest : Table<ID, PersmissionsToAttest>,
   }
 
 
@@ -74,8 +74,8 @@ module htf::main {
       governance : Governance {
         id : object::new(ctx),
         trusted_constraints : trusted_constraint::new_trusted_property_constraints(),
-        issued_permissions_to_acredit : table::new(ctx),
-        issued_permissions_to_atest : table::new(ctx),
+        issued_permissions_to_accredit : table::new(ctx),
+        issued_permissions_to_attest : table::new(ctx),
       },
     };
     let cap = Self::new_root_authority_cap(&federation, ctx);
@@ -95,20 +95,20 @@ module htf::main {
     self.id.to_inner()
   }
 
-  fun find_permissions_to_atest(self : &Federation, user_id : ID)  :  &PersmissionsToAtest {
-      self.governance.issued_permissions_to_atest.borrow(user_id)
+  fun find_permissions_to_attest(self : &Federation, user_id : ID)  :  &PersmissionsToAttest {
+      self.governance.issued_permissions_to_attest.borrow(user_id)
   }
 
-  fun has_permissions_to_atest(self :&Federation, user_id :ID)  : bool {
-    self.governance.issued_permissions_to_atest.contains(user_id)
+  fun has_permissions_to_attest(self :&Federation, user_id :ID)  : bool {
+    self.governance.issued_permissions_to_attest.contains(user_id)
   }
 
-  fun find_permissions_to_acredit(self : &Federation, user_id : ID) : &PermissionsToAcredit {
-    self.governance.issued_permissions_to_acredit.borrow(user_id)
+  fun find_permissions_to_accredit(self : &Federation, user_id : ID) : &PermissionsToAccredit {
+    self.governance.issued_permissions_to_accredit.borrow(user_id)
   }
 
-  fun has_permissions_to_acredit(self : &Federation, user_id :ID)  : bool {
-    self.governance.issued_permissions_to_acredit.contains(user_id)
+  fun has_permissions_to_accredit(self : &Federation, user_id :ID)  : bool {
+    self.governance.issued_permissions_to_accredit.contains(user_id)
   }
 
 
@@ -133,16 +133,16 @@ module htf::main {
     federation.governance.trusted_constraints.add_constraint(property_name, constraint) ;
   }
 
-  /// Creates a new acredit capability
-  fun new_cap_acredit(self : &Federation, ctx : &mut TxContext) : AccreditCap {
+  /// Creates a new accredit capability
+  fun new_cap_accredit(self : &Federation, ctx : &mut TxContext) : AccreditCap {
     AccreditCap {
       id : object::new(ctx),
       federation_id : self.federation_id(),
     }
   }
 
-  /// Creates a new atest capability
-  fun new_cap_atest(self : &Federation, ctx : &mut TxContext) : AttestCap {
+  /// Creates a new attest capability
+  fun new_cap_attest(self : &Federation, ctx : &mut TxContext) : AttestCap {
     AttestCap {
       id : object::new(ctx),
       federation_id : self.federation_id(),
@@ -189,12 +189,12 @@ module htf::main {
     federation.trust_services.insert(service_type, trust_service);
   }
 
-  /// Issue an accredidation to acredit about given trusted properties
-  public fun issue_permission_to_acredit(cap : &AccreditCap,  federation : &mut Federation, receiver : ID, want_property_constraints : vector<TrustedPropertyConstraint>,  ctx : &mut TxContext) {
+  /// Issue an accredidation to accredit about given trusted properties
+  public fun issue_permission_to_accredit(cap : &AccreditCap,  federation : &mut Federation, receiver : ID, want_property_constraints : vector<TrustedPropertyConstraint>,  ctx : &mut TxContext) {
       assert!(cap.federation_id == federation.federation_id(), EUnauthorizedWrongFederation);
 
-      let permissions_to_acredit = federation.find_permissions_to_acredit(ctx.sender().to_id());
-      assert!(permissions_to_acredit.are_constraints_permitted(&want_property_constraints), EUnauthorizedInsufficientAccreditation);
+      let permissions_to_accredit = federation.find_permissions_to_accredit(ctx.sender().to_id());
+      assert!(permissions_to_accredit.are_constraints_permitted(&want_property_constraints), EUnauthorizedInsufficientAccreditation);
 
       let mut trusted_constraints :VecMap<TrustedPropertyName, TrustedPropertyConstraint> =  vec_map::empty();
       let want_property_constraints_len = vector::length<TrustedPropertyConstraint>(&want_property_constraints);
@@ -205,47 +205,47 @@ module htf::main {
       };
 
 
-      let permission = permission_to_acredit::new_permission_to_acredit(federation.federation_id(), trusted_constraints, ctx);
-      if ( federation.governance.issued_permissions_to_acredit.contains(receiver) ) {
-          federation.governance.issued_permissions_to_acredit.borrow_mut(receiver).add(permission);
+      let permission = permission_to_accredit::new_permission_to_accredit(federation.federation_id(), trusted_constraints, ctx);
+      if ( federation.governance.issued_permissions_to_accredit.contains(receiver) ) {
+          federation.governance.issued_permissions_to_accredit.borrow_mut(receiver).add(permission);
         } else {
-          let mut permissions_to_acredit  = permission_to_acredit::new_permissions_to_acredit();
-          permissions_to_acredit.add(permission);
-          federation.governance.issued_permissions_to_acredit.add(receiver, permissions_to_acredit);
+          let mut permissions_to_accredit  = permission_to_accredit::new_permissions_to_accredit();
+          permissions_to_accredit.add(permission);
+          federation.governance.issued_permissions_to_accredit.add(receiver, permissions_to_accredit);
 
           // also create a capability
-          transfer::transfer(federation.new_cap_acredit(ctx), receiver.to_address());
+          transfer::transfer(federation.new_cap_accredit(ctx), receiver.to_address());
         }
   }
 
-  /// creates a permission  (permission_to_atest) to atest about attributes
-  public fun issue_permission_to_atest(cap : &AttestCap, federation : &mut Federation, receiver : ID, wanted_constraints: vector<TrustedPropertyConstraint>, ctx : &mut TxContext) {
+  /// creates a permission  (permission_to_attest) to attest about attributes
+  public fun issue_permission_to_attest(cap : &AttestCap, federation : &mut Federation, receiver : ID, wanted_constraints: vector<TrustedPropertyConstraint>, ctx : &mut TxContext) {
     assert!(cap.federation_id == federation.federation_id(), EUnauthorizedWrongFederation);
 
-    let permissions_to_acredit = federation.find_permissions_to_acredit(ctx.sender().to_id());
-    assert!(permissions_to_acredit.are_constraints_permitted(&wanted_constraints), EUnauthorizedInsufficientAccreditation);
+    let permissions_to_accredit = federation.find_permissions_to_accredit(ctx.sender().to_id());
+    assert!(permissions_to_accredit.are_constraints_permitted(&wanted_constraints), EUnauthorizedInsufficientAccreditation);
 
-    let permission = permission_to_atest::new_permission_to_atest(
+    let permission = permission_to_attest::new_permission_to_attest(
       federation.federation_id(), trusted_constraint::to_map_of_constraints(wanted_constraints), ctx
     );
 
-    if ( federation.governance.issued_permissions_to_atest.contains(receiver))  {
-      federation.governance.issued_permissions_to_atest.borrow_mut(receiver).add_permission_to_atest(permission);
+    if ( federation.governance.issued_permissions_to_attest.contains(receiver))  {
+      federation.governance.issued_permissions_to_attest.borrow_mut(receiver).add_permission_to_attest(permission);
     } else {
-        let mut permissions_to_atest = permission_to_atest::new_permissions_to_atest();
-        permissions_to_atest.add_permission_to_atest(permission);
-        federation.governance.issued_permissions_to_atest.add(receiver, permissions_to_atest);
+        let mut permissions_to_attest = permission_to_attest::new_permissions_to_attest();
+        permissions_to_attest.add_permission_to_attest(permission);
+        federation.governance.issued_permissions_to_attest.add(receiver, permissions_to_attest);
 
         // also create a capability
-        transfer::transfer(federation.new_cap_atest(ctx), receiver.to_address());
+        transfer::transfer(federation.new_cap_attest(ctx), receiver.to_address());
     };
   }
 
   public fun issue_credential(cap : &AttestCap, federation : &mut Federation, receiver : ID,  trusted_properties : VecMap<TrustedPropertyName, TrustedPropertyValue>,  ctx : &mut TxContext)  {
       assert!(cap.federation_id == federation.federation_id(), EUnauthorizedWrongFederation);
 
-      let permissions_to_atest = federation.find_permissions_to_atest(ctx.sender().to_id());
-      assert!(permissions_to_atest.are_values_permitted(&trusted_properties), EUnauthorizedInsufficientAtestation);
+      let permissions_to_attest = federation.find_permissions_to_attest(ctx.sender().to_id());
+      assert!(permissions_to_attest.are_values_permitted(&trusted_properties), EUnauthorizedInsufficientAttestation);
 
       let creds = credential::new(trusted_properties, ctx);
       transfer::public_transfer(creds, receiver.to_address());
@@ -257,14 +257,14 @@ module htf::main {
       EInvalidProperty,
     );
     assert!(
-      self.has_permissions_to_acredit(*credential.issued_by()),
+      self.has_permissions_to_accredit(*credential.issued_by()),
       EInvalidIssuer,
     );
 
-    let issuer_permissions_to_atest = self.find_permissions_to_atest(*credential.issued_by());
+    let issuer_permissions_to_attest = self.find_permissions_to_attest(*credential.issued_by());
     assert!(
-      issuer_permissions_to_atest.are_values_permitted(credential.trusted_properties()),
-      EInvalidIssuerInsufficientAtestation,
+      issuer_permissions_to_attest.are_values_permitted(credential.trusted_properties()),
+      EInvalidIssuerInsufficientAttestation,
     );
   }
 

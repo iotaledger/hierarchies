@@ -2,7 +2,7 @@
 
 ## Overview
 
-The HTF Notary module is designed to create and manage a hierarchical trust system within a blockchain federation. This module facilitates the issuance and validation of credentials, acreditation, and atestation permissions, as well as governance over trusted properties and services.
+The HTF Notary module is designed to create and manage a hierarchical trust system within a blockchain federation. This module facilitates the issuance and validation of credentials, accreditation, and attestation permissions, as well as governance over trusted properties and services.
 
 ## Key Concepts
 
@@ -12,17 +12,17 @@ A `Federation` represents a collection of entities with a shared trust framework
 
 ### Root Authority
 
-`RootAuthority` is the highest level of trust within the federation. Root authorities have the capability to delegate trust to other entities and manage permissions for acreditation and atestation.
+`RootAuthority` is the highest level of trust within the federation. Root authorities have the capability to delegate trust to other entities and manage permissions for accreditation and attestation.
 
 ### Governance
 
-The `Governance` component defines the policies and constraints of the federation. It maintains the trusted properties, issues permissions for acreditation and atestation, and ensures that all operations comply with the defined constraints.
+The `Governance` component defines the policies and constraints of the federation. It maintains the trusted properties, issues permissions for accreditation and attestation, and ensures that all operations comply with the defined constraints.
 
 ### Permissions and Capabilities
 
 - **RootAuthorityCap**: Grants the ability to manage root authorities within the federation.
-- **AttestCap**: Allows the holder to issue atestations for trusted properties.
-- **AccreditCap**: Allows the holder to issue acreditations for trusted properties.
+- **AttestCap**: Allows the holder to issue attestations for trusted properties.
+- **AccreditCap**: Allows the holder to issue accreditations for trusted properties.
 
 ### Trusted Properties and Constraints
 
@@ -42,8 +42,8 @@ Trusted properties are attributes that are recognized and verified within the fe
 
 3. **Issuing Permissions**:
 
-   - Permissions for acreditation and atestation are issued to entities within the federation.
-   - Entities with `AccreditCap` can grant acreditation permissions, while those with `AttestCap` can issue atestations.
+   - Permissions for accreditation and attestation are issued to entities within the federation.
+   - Entities with `AccreditCap` can grant accreditation permissions, while those with `AttestCap` can issue attestations.
 
 4. **Adding Trusted Properties**:
 
@@ -63,7 +63,7 @@ Trusted properties are attributes that are recognized and verified within the fe
 
 - **Decentralized Identity Management**: The module can be used to manage decentralized identities, ensuring that credentials are issued and validated according to a strict set of rules and constraints.
 - **Supply Chain Verification**: Trusted properties can represent attributes of goods, and credentials can certify the authenticity and origin of these goods within a supply chain.
-- **Access Control**: Permissions can be used to control access to resources, ensuring only acredited entities can access certain information or services.
+- **Access Control**: Permissions can be used to control access to resources, ensuring only accredited entities can access certain information or services.
 
 ## The class diagram
 
@@ -86,8 +86,8 @@ classDiagram
     class Governance {
         +UID id
         +TrustedPropertyConstraints trusted_constraints
-        +Table~ID, PermissionsToAcredit~ issued_permissions_to_acredit
-        +Table~ID, PersmissionsToAtest~ issued_permissions_to_atest
+        +Table~ID, PermissionsToAccredit~ issued_permissions_to_accredit
+        +Table~ID, PersmissionsToAttest~ issued_permissions_to_attest
     }
 
     class RootAuthorityCap {
@@ -123,22 +123,22 @@ classDiagram
         +bool allow_any
     }
 
-    class PermissionsToAcredit {
-        +vector~PermissionToAcredit~ permissions_to_acredit
+    class PermissionsToAccredit {
+        +vector~PermissionToAccredit~ permissions_to_accredit
     }
 
-    class PermissionToAcredit {
+    class PermissionToAccredit {
         +UID id
         +String federation_id
         +String created_by
         +VecMap~TrustedPropertyName, TrustedPropertyConstraint~ trusted_constraints
     }
 
-    class PersmissionsToAtest {
-        +vector~PermissionToAtest~ permissions_to_atest
+    class PersmissionsToAttest {
+        +vector~PermissionToAttest~ permissions_to_attest
     }
 
-    class PermissionToAtest {
+    class PermissionToAttest {
         +UID id
         +String federation_id
         +String created_by
@@ -168,10 +168,10 @@ classDiagram
     Federation --> "0..*" RootAuthority : contains
     Federation --> "0..*" TrustedService : contains
     Governance --> "1" TrustedPropertyConstraints : contains
-    Governance --> "0..*" PermissionsToAcredit : contains
-    Governance --> "0..*" PersmissionsToAtest : contains
-    PermissionsToAcredit --> "0..*" PermissionToAcredit : contains
-    PersmissionsToAtest --> "0..*" PermissionToAtest : contains
+    Governance --> "0..*" PermissionsToAccredit : contains
+    Governance --> "0..*" PersmissionsToAttest : contains
+    PermissionsToAccredit --> "0..*" PermissionToAccredit : contains
+    PersmissionsToAttest --> "0..*" PermissionToAttest : contains
     TrustedPropertyConstraints --> "0..*" TrustedPropertyConstraint : contains
     TrustedPropertyConstraint --> "1" TrustedPropertyName : has
     TrustedPropertyConstraint --> "0..*" TrustedPropertyValue : has
