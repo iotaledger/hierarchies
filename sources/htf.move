@@ -35,8 +35,7 @@ module htf::main {
 // Root authority has the highest trust in the system, it can delegate trust to other entities and itself
   public struct RootAuthority  has store, key{
     id : UID,
-    trust_service: String,
-    id_in_trust_service: String,
+    account_id: String,
     permissions: Permissions,
   }
 
@@ -196,23 +195,13 @@ module htf::main {
   }
 
   fun new_root_authority(federation: &mut Federation, account_id: String, ctx: &mut TxContext)  : RootAuthority {
-    Self::add_trust_service(federation, b"account".to_string(), ctx);
-
     RootAuthority {
       id : object::new(ctx),
-      trust_service:  b"account".to_string(),
-      id_in_trust_service : account_id,
+      account_id : account_id,
       permissions : permission::empty(ctx),
     }
   }
 
-  fun add_trust_service(federation : &mut Federation,  service_type : String, ctx :&mut TxContext) {
-    if ( federation.trust_services.contains(&service_type)) {
-      return
-    };
-    let trust_service = trusted_service::new_trust_service(ctx, service_type);
-    federation.trust_services.insert(service_type, trust_service);
-  }
 
   /// Issue an accredidation to accredit about given trusted properties
   public fun issue_permission_to_accredit(cap : &AccreditCap,  federation : &mut Federation, receiver : ID, want_property_constraints : vector<TrustedPropertyConstraint>,  ctx : &mut TxContext) {
