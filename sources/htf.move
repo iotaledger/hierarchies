@@ -9,7 +9,6 @@ module htf::main {
 
   use htf::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
   use htf::trusted_constraint::{Self, TrustedPropertyConstraints, TrustedPropertyConstraint};
-  use htf::credential::{Self, Credential};
   use htf::permission_to_attest::{Self, PersmissionsToAttest};
   use htf::permission_to_accredit::{Self, PermissionsToAccredit};
   use htf::permission::{Self, Permissions};
@@ -46,9 +45,9 @@ module htf::main {
     // Trusted Properties all are properties that are trusted by the Federation
     trusted_constraints : TrustedPropertyConstraints,
     // user-id => permission_to_accredit
-    issued_permissions_to_accredit : Table<ID, PermissionsToAccredit>,
+    accreditors : Table<ID, PermissionsToAccredit>,
     // trusted_delegate_id => attestation
-    issued_permissions_to_attest : Table<ID, PersmissionsToAttest>,
+    attesters : Table<ID, PersmissionsToAttest>,
   }
 
 
@@ -65,6 +64,12 @@ module htf::main {
     federation_address : address,
   }
 
+  public struct Credential has key {
+    id : UID,
+    issued_by : ID,
+    trusted_properties : VecMap<TrustedPropertyName, TrustedPropertyValue>,
+  }
+
   public fun new_federation(ctx :&mut TxContext)  {
     let federation_id = object::new(ctx);
     let mut federation = Federation {
@@ -74,8 +79,8 @@ module htf::main {
       governance : Governance {
         id : object::new(ctx),
         trusted_constraints : trusted_constraint::new_trusted_property_constraints(),
-        issued_permissions_to_accredit : table::new(ctx),
-        issued_permissions_to_attest : table::new(ctx),
+        accreditors : table::new(ctx),
+        attesters : table::new(ctx),
       },
     };
     let cap = Self::new_root_authority_cap(&federation, ctx);
@@ -96,19 +101,19 @@ module htf::main {
   }
 
   fun find_permissions_to_attest(self : &Federation, user_id : ID)  :  &PersmissionsToAttest {
-      self.governance.issued_permissions_to_attest.borrow(user_id)
+      self.governance.attesters.borrow(user_id)
   }
 
   fun has_permissions_to_attest(self :&Federation, user_id :ID)  : bool {
-    self.governance.issued_permissions_to_attest.contains(user_id)
+    self.governance.attesters.contains(user_id)
   }
 
   fun find_permissions_to_accredit(self : &Federation, user_id : ID) : &PermissionsToAccredit {
-    self.governance.issued_permissions_to_accredit.borrow(user_id)
+    self.governance.accreditors.borrow(user_id)
   }
 
   fun has_permissions_to_accredit(self : &Federation, user_id :ID)  : bool {
-    self.governance.issued_permissions_to_accredit.contains(user_id)
+    self.governance.accreditors.contains(user_id)
   }
 
 
@@ -151,7 +156,7 @@ module htf::main {
 
   fun add_root_authority(
       cap : &RootAuthorityCap,
-     federation : &mut Federation,
+      federation : &mut Federation,
       account_id : String,
       ctx : &mut TxContext,
     ) {
@@ -170,7 +175,7 @@ module htf::main {
     }
   }
 
-  fun new_root_authority(federation : &mut Federation, account_id : String, ctx : &mut TxContext)  : RootAuthority {
+  fun new_root_authority(federation: &mut Federation, account_id: String, ctx: &mut TxContext)  : RootAuthority {
     Self::add_trust_service(federation, b"account".to_string(), ctx);
 
     RootAuthority {
@@ -206,12 +211,12 @@ module htf::main {
 
 
       let permission = permission_to_accredit::new_permission_to_accredit(federation.federation_id(), trusted_constraints, ctx);
-      if ( federation.governance.issued_permissions_to_accredit.contains(receiver) ) {
-          federation.governance.issued_permissions_to_accredit.borrow_mut(receiver).add(permission);
+      if ( federation.governance.accreditors.contains(receiver) ) {
+          federation.governance.accreditors.borrow_mut(receiver).add(permission);
         } else {
           let mut permissions_to_accredit  = permission_to_accredit::new_permissions_to_accredit();
           permissions_to_accredit.add(permission);
-          federation.governance.issued_permissions_to_accredit.add(receiver, permissions_to_accredit);
+          federation.governance.accreditors.add(receiver, permissions_to_accredit);
 
           // also create a capability
           transfer::transfer(federation.new_cap_accredit(ctx), receiver.to_address());
@@ -229,12 +234,12 @@ module htf::main {
       federation.federation_id(), trusted_constraint::to_map_of_constraints(wanted_constraints), ctx
     );
 
-    if ( federation.governance.issued_permissions_to_attest.contains(receiver))  {
-      federation.governance.issued_permissions_to_attest.borrow_mut(receiver).add_permission_to_attest(permission);
+    if ( federation.governance.attesters.contains(receiver))  {
+      federation.governance.attesters.borrow_mut(receiver).add_permission_to_attest(permission);
     } else {
         let mut permissions_to_attest = permission_to_attest::new_permissions_to_attest();
         permissions_to_attest.add_permission_to_attest(permission);
-        federation.governance.issued_permissions_to_attest.add(receiver, permissions_to_attest);
+        federation.governance.attesters.add(receiver, permissions_to_attest);
 
         // also create a capability
         transfer::transfer(federation.new_cap_attest(ctx), receiver.to_address());
@@ -247,8 +252,8 @@ module htf::main {
       let permissions_to_attest = federation.find_permissions_to_attest(ctx.sender().to_id());
       assert!(permissions_to_attest.are_values_permitted(&trusted_properties), EUnauthorizedInsufficientAttestation);
 
-      let creds = credential::new(trusted_properties, ctx);
-      transfer::public_transfer(creds, receiver.to_address());
+      let creds = new_credential(trusted_properties, ctx);
+      transfer::transfer(creds, receiver.to_address());
   }
 
   public fun validate_credential(self:  &Federation, credential : &Credential) {
@@ -268,4 +273,20 @@ module htf::main {
     );
   }
 
+
+  fun new_credential(trusted_properties : VecMap<TrustedPropertyName, TrustedPropertyValue>, ctx : &mut TxContext) : Credential {
+      Credential {
+        id : object::new(ctx),
+        issued_by : ctx.sender().to_id(),
+        trusted_properties,
+      }
+  }
+
+  fun issued_by(self : &Credential)  : &ID {
+    &self.issued_by
+  }
+
+  fun trusted_properties(self : &Credential) :  &VecMap<TrustedPropertyName, TrustedPropertyValue> {
+    &self.trusted_properties
+  }
 }

@@ -86,8 +86,8 @@ classDiagram
     class Governance {
         +UID id
         +TrustedPropertyConstraints trusted_constraints
-        +Table~ID, PermissionsToAccredit~ issued_permissions_to_accredit
-        +Table~ID, PersmissionsToAttest~ issued_permissions_to_attest
+        +Table~ID, PermissionsToAccredit~ accreditors
+        +Table~ID, PersmissionsToAttest~ attesters
     }
 
     class RootAuthorityCap {

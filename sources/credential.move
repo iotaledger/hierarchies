@@ -4,7 +4,7 @@ module htf::credential {
   use htf::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
 
 
-  public(package) fun new(trusted_properties : VecMap<TrustedPropertyName, TrustedPropertyValue>, ctx : &mut TxContext) : Credential {
+  public fun new_credential(trusted_properties : VecMap<TrustedPropertyName, TrustedPropertyValue>, ctx : &mut TxContext) : Credential {
       Credential {
         id : object::new(ctx),
         issued_by : ctx.sender().to_id(),
