@@ -1,8 +1,6 @@
 // HTF Notary module
 module htf::main {
-
   use std::string::String;
-  use sui::object;
   use sui::vec_map::{Self, VecMap};
   use sui::table::{Self, Table};
   use sui::tx_context::{Self, TxContext};
@@ -16,8 +14,6 @@ module htf::main {
   use htf::permission_to_acredit::{Self, PermissionsToAcredit};
   use htf::permission::{Self, Permissions};
   use htf::trusted_service::{Self, TrustedService};
-  use htf::utils;
-
 
   const  EUnauthorizedWrongFederation  : u64  = 1;
   const  EUnauthorizedInsufficientAccreditation : u64 = 2;
@@ -83,7 +79,6 @@ module htf::main {
       },
     };
     let cap = Self::new_root_authority_cap(&federation, ctx);
-
     // add the root auhtority and the trust service
     Self::add_root_authority(&cap, &mut federation, ctx.sender().to_string(),  ctx);
 
@@ -126,12 +121,8 @@ module htf::main {
     allow_any : bool,
     _ctx : &mut TxContext)
   {
-    if  (cap.federation_id != federation.federation_id()) {
-      abort EUnauthorizedWrongFederation
-    };
-    if (allow_any && allowed_values.keys().length() > 0 ) {
-     abort EInvalidConstraint
-    };
+    assert!(cap.federation_id == federation.federation_id(), EUnauthorizedWrongFederation);
+    assert!(!(allow_any && allowed_values.keys().length() > 0), EInvalidConstraint);
 
     let constraint = trusted_constraint::new_trusted_property_constraint(
       property_name,
@@ -200,13 +191,10 @@ module htf::main {
 
   /// Issue an accredidation to acredit about given trusted properties
   public fun issue_permission_to_acredit(cap : &AccreditCap,  federation : &mut Federation, receiver : ID, want_property_constraints : vector<TrustedPropertyConstraint>,  ctx : &mut TxContext) {
-      if (cap.federation_id !=  federation.federation_id())   {
-        abort EUnauthorizedWrongFederation
-      };
+      assert!(cap.federation_id == federation.federation_id(), EUnauthorizedWrongFederation);
+
       let permissions_to_acredit = federation.find_permissions_to_acredit(ctx.sender().to_id());
-      if (! permissions_to_acredit.are_constraints_permitted(&want_property_constraints)) {
-        abort EUnauthorizedInsufficientAccreditation
-      };
+      assert!(permissions_to_acredit.are_constraints_permitted(&want_property_constraints), EUnauthorizedInsufficientAccreditation);
 
       let mut trusted_constraints :VecMap<TrustedPropertyName, TrustedPropertyConstraint> =  vec_map::empty();
       let want_property_constraints_len = vector::length<TrustedPropertyConstraint>(&want_property_constraints);
@@ -232,13 +220,10 @@ module htf::main {
 
   /// creates a permission  (permission_to_atest) to atest about attributes
   public fun issue_permission_to_atest(cap : &AttestCap, federation : &mut Federation, receiver : ID, wanted_constraints: vector<TrustedPropertyConstraint>, ctx : &mut TxContext) {
-    if (cap.federation_id !=  federation.federation_id())   {
-      abort EUnauthorizedWrongFederation
-    };
+    assert!(cap.federation_id == federation.federation_id(), EUnauthorizedWrongFederation);
+
     let permissions_to_acredit = federation.find_permissions_to_acredit(ctx.sender().to_id());
-    if (! permissions_to_acredit.are_constraints_permitted(&wanted_constraints)) {
-      abort EUnauthorizedInsufficientAccreditation
-    };
+    assert!(permissions_to_acredit.are_constraints_permitted(&wanted_constraints), EUnauthorizedInsufficientAccreditation);
 
     let permission = permission_to_atest::new_permission_to_atest(
       federation.federation_id(), trusted_constraint::to_map_of_constraints(wanted_constraints), ctx
@@ -257,31 +242,30 @@ module htf::main {
   }
 
   public fun issue_credential(cap : &AttestCap, federation : &mut Federation, receiver : ID,  trusted_properties : VecMap<TrustedPropertyName, TrustedPropertyValue>,  ctx : &mut TxContext)  {
-      if (cap.federation_id !=  federation.federation_id())   {
-        abort EUnauthorizedWrongFederation
-      };
+      assert!(cap.federation_id == federation.federation_id(), EUnauthorizedWrongFederation);
+
       let permissions_to_atest = federation.find_permissions_to_atest(ctx.sender().to_id());
-      if (!permissions_to_atest.are_values_permitted(&trusted_properties))  {
-        abort EUnauthorizedInsufficientAtestation
-      };
+      assert!(permissions_to_atest.are_values_permitted(&trusted_properties), EUnauthorizedInsufficientAtestation);
 
       let creds = credential::new(trusted_properties, ctx);
       transfer::public_transfer(creds, receiver.to_address());
   }
 
   public fun validate_credential(self:  &Federation, credential : &Credential) {
-    if (! self.governance.trusted_constraints.are_properties_correct(credential.trusted_properties())) {
-      abort EInvalidProperty
-    };
-
-    if (! self.has_permissions_to_atest(*credential.issued_by()) ) {
-      abort EInvalidIssuer
-    };
+    assert!(
+      self.governance.trusted_constraints.are_properties_correct(credential.trusted_properties()),
+      EInvalidProperty,
+    );
+    assert!(
+      self.has_permissions_to_acredit(*credential.issued_by()),
+      EInvalidIssuer,
+    );
 
     let issuer_permissions_to_atest = self.find_permissions_to_atest(*credential.issued_by());
-    if (! issuer_permissions_to_atest.are_values_permitted(credential.trusted_properties())) {
-      abort EInvalidIssuerInsufficientAtestation
-    } ;
+    assert!(
+      issuer_permissions_to_atest.are_values_permitted(credential.trusted_properties()),
+      EInvalidIssuerInsufficientAtestation,
+    );
   }
 
 }

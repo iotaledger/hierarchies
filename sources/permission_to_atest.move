@@ -62,6 +62,7 @@ module htf::permission_to_atest {
       if (! self.is_value_permitted(&property_name, property_value)  ) {
         return false
       };
+
       idx_property_names = idx_property_names + 1;
     };
 
@@ -75,8 +76,8 @@ module htf::permission_to_atest {
 
     while (idx_permissions_to_atest < len_permissions_to_atest) {
       let acreditation = &self.permissions_to_atest[idx_permissions_to_atest];
-
       let maybe_property_constraint = acreditation.trusted_properties.try_get(property_name) ;
+
       if ( maybe_property_constraint.is_none()) {
         continue
       };
