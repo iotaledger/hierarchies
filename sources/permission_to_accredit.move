@@ -9,7 +9,7 @@ module htf::permission_to_accredit {
   use htf::utils;
 
   public struct PermissionsToAccredit has store {
-    permissions_to_accredit  : vector<PermissionToAccredit>,
+    permissions  : vector<PermissionToAccredit>,
   }
 
   // Accredidation can be created only by the HTF module
@@ -17,21 +17,26 @@ module htf::permission_to_accredit {
     id : UID,
     federation_id : ID,
     created_by : String,
-    trusted_constraints : VecMap<TrustedPropertyName, TrustedPropertyConstraint>,
+    constraints : VecMap<TrustedPropertyName, TrustedPropertyConstraint>,
+  }
+
+
+  public(package) fun constriants(self : &PermissionToAccredit) : &VecMap<TrustedPropertyName, TrustedPropertyConstraint> {
+    &self.constraints
   }
 
   public(package) fun new_permission_to_accredit(federation_id  : ID, constraints : VecMap<TrustedPropertyName, TrustedPropertyConstraint>, ctx : &mut TxContext)  : PermissionToAccredit {
     PermissionToAccredit {
       id : object::new(ctx),
       federation_id,
-      trusted_constraints: constraints,
+      constraints: constraints,
       created_by : ctx.sender().to_string(),
     }
   }
 
   public(package) fun new_permissions_to_accredit() : PermissionsToAccredit {
     PermissionsToAccredit {
-      permissions_to_accredit: vector::empty(),
+      permissions: vector::empty(),
     }
   }
 
@@ -49,14 +54,14 @@ module htf::permission_to_accredit {
 
 
   public(package) fun is_constraint_permitted(self : &PermissionsToAccredit, constraint : &TrustedPropertyConstraint) :  bool {
-    let len_permissions_to_accredit = self.permissions_to_accredit.length();
+    let len_permissions_to_accredit = self.permissions.length();
     let mut idx_permissions_to_accredit = 0;
     let mut want_constraints : vector<TrustedPropertyValue> = utils::copy_vector(constraint.allowed_values().keys());
 
     while (idx_permissions_to_accredit < len_permissions_to_accredit) {
-      let permission = &self.permissions_to_accredit[idx_permissions_to_accredit];
+      let permission = &self.permissions[idx_permissions_to_accredit];
 
-      let maybe_property_constraint = permission.trusted_constraints.try_get(constraint.property_name()) ;
+      let maybe_property_constraint = permission.constraints.try_get(constraint.property_name()) ;
       if ( maybe_property_constraint.is_none()) {
         continue
       };
@@ -83,7 +88,35 @@ module htf::permission_to_accredit {
   }
 
   public(package) fun add(self : &mut PermissionsToAccredit, permission_to_accredit : PermissionToAccredit) {
-    self.permissions_to_accredit.push_back(permission_to_accredit);
+    self.permissions.push_back(permission_to_accredit);
   }
 
+  public(package)  fun permisssions(self : &PermissionsToAccredit) : &vector<PermissionToAccredit> {
+    &self.permissions
+  }
+
+  public(package) fun remove_permission(self : &mut PermissionsToAccredit, id : &ID) {
+    let mut idx = self.find_permission_idx(id);
+    if (idx.is_none()) {
+      return
+    };
+    let PermissionToAccredit {
+      id,
+      constraints : _,
+      federation_id : _,
+      created_by : _,
+     } = self.permissions.remove(idx.extract());
+    object::delete(id);
+  }
+
+  public(package) fun find_permission_idx(self : &PermissionsToAccredit, id : &ID) : Option<u64> {
+    let mut idx = 0;
+    while (idx < self.permissions.length()) {
+      if (self.permissions[idx].id.to_inner() == *id) {
+        return option::some(idx)
+      };
+      idx = idx + 1;
+    };
+    option::none()
+  }
 }

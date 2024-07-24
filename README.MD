@@ -87,7 +87,7 @@ classDiagram
         +UID id
         +TrustedPropertyConstraints trusted_constraints
         +Table~ID, PermissionsToAccredit~ accreditors
-        +Table~ID, PersmissionsToAttest~ attesters
+        +Table~ID, PermissionsToAttest~ attesters
     }
 
     class RootAuthorityCap {
@@ -134,7 +134,7 @@ classDiagram
         +VecMap~TrustedPropertyName, TrustedPropertyConstraint~ trusted_constraints
     }
 
-    class PersmissionsToAttest {
+    class PermissionsToAttest {
         +vector~PermissionToAttest~ permissions_to_attest
     }
 
@@ -169,9 +169,9 @@ classDiagram
     Federation --> "0..*" TrustedService : contains
     Governance --> "1" TrustedPropertyConstraints : contains
     Governance --> "0..*" PermissionsToAccredit : contains
-    Governance --> "0..*" PersmissionsToAttest : contains
+    Governance --> "0..*" PermissionsToAttest : contains
     PermissionsToAccredit --> "0..*" PermissionToAccredit : contains
-    PersmissionsToAttest --> "0..*" PermissionToAttest : contains
+    PermissionsToAttest --> "0..*" PermissionToAttest : contains
     TrustedPropertyConstraints --> "0..*" TrustedPropertyConstraint : contains
     TrustedPropertyConstraint --> "1" TrustedPropertyName : has
     TrustedPropertyConstraint --> "0..*" TrustedPropertyValue : has

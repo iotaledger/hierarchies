@@ -2,15 +2,13 @@
 module htf::main {
   use std::string::String;
   use sui::vec_map::{Self, VecMap};
-  use sui::table::{Self, Table};
   use sui::tx_context::{Self, TxContext};
   use sui::event;
   use sui::vec_set::{Self, VecSet};
-  use sui::clock::{Self,Clock};
 
   use htf::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
   use htf::trusted_constraint::{Self, TrustedPropertyConstraints, TrustedPropertyConstraint};
-  use htf::permission_to_attest::{Self, PersmissionsToAttest};
+  use htf::permission_to_attest::{Self, PermissionsToAttest};
   use htf::permission_to_accredit::{Self, PermissionsToAccredit};
   use htf::permission::{Self, Permissions};
   use htf::trusted_service::{Self, TrustedService};
@@ -18,11 +16,13 @@ module htf::main {
   const  EUnauthorizedWrongFederation  : u64  = 1;
   const  EUnauthorizedInsufficientAccreditation : u64 = 2;
   const  EUnauthorizedInsufficientAttestation : u64 = 3;
-  const  EInvalidProperty: u64 = 3;
-  const  EInvalidIssuer: u64 = 4;
-  const  EInvalidIssuerInsufficientAttestation: u64 = 4;
-  const  EInvalidConstraint  : u64 = 5;
-  const  EInvalidTimeSpan: u64 = 6;
+  const  EInvalidProperty: u64 = 4;
+  const  EInvalidIssuer: u64 = 5;
+  const  EInvalidIssuerInsufficientAttestation: u64 = 6;
+  const  EInvalidConstraint  : u64 = 7;
+  const  EInvalidTimeSpan: u64 = 8;
+  const  ECredentialRevoked: u64 = 9;
+  const  EPermissionNotFound: u64 = 10;
 
   // Federation is the hierarcy of trust in the system. Itsa a public, shared object
   public struct Federation has store, key {
@@ -49,8 +49,9 @@ module htf::main {
     // user-id => permission_to_accredit
     accreditors : VecMap<ID, PermissionsToAccredit>,
     // trusted_delegate_id => attestation
-    attesters : VecMap<ID, PersmissionsToAttest>,
-    //
+    attesters : VecMap<ID, PermissionsToAttest>,
+    // owener id ->
+    credentials_state : VecMap<ID, CredentialState>
   }
 
 
@@ -62,6 +63,7 @@ module htf::main {
   public struct Event<D> has copy, drop {
     data : D,
   }
+
 
   public struct FederationCreatedEvent has copy, drop {
     federation_address : address,
@@ -75,6 +77,16 @@ module htf::main {
     trusted_properties : VecMap<TrustedPropertyName, TrustedPropertyValue>,
   }
 
+  public struct CredentialState has store {
+    is_revoked : bool,
+  }
+
+  fun new_credential_state() : CredentialState {
+    CredentialState {
+      is_revoked : false,
+    }
+  }
+
   public fun new_federation(ctx :&mut TxContext)  {
     let federation_id = object::new(ctx);
     let mut federation = Federation {
@@ -86,6 +98,7 @@ module htf::main {
         trusted_constraints : trusted_constraint::new_trusted_property_constraints(),
         accreditors : vec_map::empty(),
         attesters : vec_map::empty(),
+        credentials_state : vec_map::empty(),
       },
     };
     let cap = Self::new_root_authority_cap(&federation, ctx);
@@ -105,9 +118,10 @@ module htf::main {
     self.id.to_inner()
   }
 
-  fun find_permissions_to_attest(self: &Federation, user_id : &ID)  :  &PersmissionsToAttest {
+  fun find_permissions_to_attest(self: &Federation, user_id : &ID)  :  &PermissionsToAttest {
       self.governance.attesters.get(user_id)
   }
+
 
   fun has_permissions_to_attest(self : &Federation, user_id : &ID)  : bool {
     self.governance.attesters.contains(user_id)
@@ -116,6 +130,7 @@ module htf::main {
   fun find_permissions_to_accredit(self : &Federation, user_id : &ID) : &PermissionsToAccredit {
     self.governance.accreditors.get(user_id)
   }
+
 
   fun has_permissions_to_accredit(self : &Federation, user_id :&ID)  : bool {
     self.governance.accreditors.contains(user_id)
@@ -251,6 +266,45 @@ module htf::main {
     };
   }
 
+  public fun revoke_permission_to_attest(cap : &AttestCap, federation : &mut Federation, user_id : &ID,  permission_id : &ID, ctx : &mut TxContext) {
+    assert!(cap.federation_id == federation.federation_id(), EUnauthorizedWrongFederation);
+
+    let remover_permissions = federation.find_permissions_to_attest(&ctx.sender().to_id());
+
+    let users_attest_permissions = federation.find_permissions_to_attest(user_id);
+    let mut permission_to_revoke_idx = users_attest_permissions.find_permission_idx(permission_id);
+    assert!(permission_to_revoke_idx.is_some(), EPermissionNotFound);
+
+    // Make suere that the sender has the right to revoke the permission
+    let permission_to_revoke = &users_attest_permissions.permisssions()[permission_to_revoke_idx.extract()];
+    let (_, constraints) = (*permission_to_revoke.constraints()).into_keys_values() ;
+    assert!(remover_permissions.are_constraints_permitted(&constraints), EUnauthorizedInsufficientAttestation);
+
+    // Remove the permission
+    let users_attest_permissions =  federation.governance.attesters.get_mut(user_id);
+    users_attest_permissions.remove_permission(permission_id);
+  }
+
+
+  public fun revoke_permission_to_accredit(cap : &AccreditCap, federation : &mut Federation, user_id : &ID,  permission_id : &ID, ctx : &mut TxContext) {
+    assert!(cap.federation_id == federation.federation_id(), EUnauthorizedWrongFederation);
+
+    let remover_permissions = federation.find_permissions_to_accredit(&ctx.sender().to_id());
+
+    let users_accredit_permissions = federation.find_permissions_to_accredit(user_id);
+    let mut permission_to_revoke_idx = users_accredit_permissions.find_permission_idx(permission_id);
+    assert!(permission_to_revoke_idx.is_some(), EPermissionNotFound);
+
+    // make suere that the sender has the right to revoke the permission
+    let permission_to_revoke = &users_accredit_permissions.permisssions()[permission_to_revoke_idx.extract()];
+    let (_, constraints) = (*permission_to_revoke.constriants()).into_keys_values() ;
+    assert!(remover_permissions.are_constraints_permitted(&constraints), EUnauthorizedInsufficientAccreditation);
+
+    // Remove the permission
+    let users_accredit_permissions =  federation.governance.accreditors.get_mut(user_id);
+    users_accredit_permissions.remove_permission(permission_id);
+  }
+
   public fun issue_credential(
       cap : &AttestCap,
       federation : &mut Federation,
@@ -265,6 +319,8 @@ module htf::main {
       assert!(permissions_to_attest.are_values_permitted(&trusted_properties), EUnauthorizedInsufficientAttestation);
 
       let creds = new_credential(trusted_properties, valid_from_ts_ms, valid_until_ts_ms, ctx);
+      federation.governance.credentials_state.insert(creds.id.to_inner(), new_credential_state());
+
       transfer::transfer(creds, receiver.to_address());
   }
 
@@ -276,6 +332,10 @@ module htf::main {
     assert!(
       self.has_permissions_to_accredit(credential.issued_by()),
       EInvalidIssuer,
+    );
+    assert!(
+      !self.is_credential_revoked(&credential.id.to_inner()),
+      ECredentialRevoked,
     );
 
     let current_time_ms = ctx.epoch_timestamp_ms();
@@ -313,5 +373,12 @@ module htf::main {
 
   fun trusted_properties(self : &Credential) :  &VecMap<TrustedPropertyName, TrustedPropertyValue> {
     &self.trusted_properties
+  }
+
+  fun is_credential_revoked(self : &Federation, credential_id : &ID) : bool {
+    if (!self.governance.credentials_state.contains(credential_id)) {
+      return false
+    };
+    self.governance.credentials_state.get(credential_id).is_revoked
   }
 }
