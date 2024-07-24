@@ -11,7 +11,6 @@ module htf::main {
   use htf::permission_to_attest::{Self, PermissionsToAttest};
   use htf::permission_to_accredit::{Self, PermissionsToAccredit};
   use htf::permission::{Self, Permissions};
-  use htf::trusted_service::{Self, TrustedService};
 
   const  EUnauthorizedWrongFederation  : u64  = 1;
   const  EUnauthorizedInsufficientAccreditation : u64 = 2;
@@ -29,7 +28,6 @@ module htf::main {
     id : UID,
     governance:        Governance,
     root_authorities:  vector<RootAuthority>,
-    trust_services:    VecMap<String, TrustedService>,
   }
 
 // Root authority has the highest trust in the system, it can delegate trust to other entities and itself
@@ -90,7 +88,6 @@ module htf::main {
     let federation_id = object::new(ctx);
     let mut federation = Federation {
       id : federation_id,
-      trust_services : vec_map::empty(),
       root_authorities : vector[],
       governance : Governance {
         id : object::new(ctx),
@@ -183,7 +180,7 @@ module htf::main {
       abort EUnauthorizedWrongFederation
     };
 
-    let root_authority = Self::new_root_authority(federation, account_id, ctx);
+    let root_authority = Self::new_root_authority(account_id, ctx);
     vector::push_back(&mut federation.root_authorities, root_authority);
   }
 
@@ -194,7 +191,7 @@ module htf::main {
     }
   }
 
-  fun new_root_authority(federation: &mut Federation, account_id: String, ctx: &mut TxContext)  : RootAuthority {
+  fun new_root_authority(account_id: String, ctx: &mut TxContext)  : RootAuthority {
     RootAuthority {
       id : object::new(ctx),
       account_id : account_id,
