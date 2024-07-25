@@ -69,6 +69,7 @@ module htf::main {
   public struct Credential has key {
     id : UID,
     issued_by : ID,
+    issued_for : ID,
     valid_from : u64,
     valid_until : u64,
     trusted_properties : VecMap<TrustedPropertyName, TrustedPropertyValue>,
@@ -304,7 +305,7 @@ module htf::main {
       let permissions_to_attest = federation.find_permissions_to_attest(&ctx.sender().to_id());
       assert!(permissions_to_attest.are_values_permitted(&trusted_properties), EUnauthorizedInsufficientAttestation);
 
-      let creds = new_credential(trusted_properties, valid_from_ts_ms, valid_until_ts_ms, ctx);
+      let creds = new_credential(trusted_properties, valid_from_ts_ms, valid_until_ts_ms, receiver, ctx);
       federation.governance.credentials_state.insert(creds.id.to_inner(), new_credential_state());
 
       transfer::transfer(creds, receiver.to_address());
@@ -342,11 +343,13 @@ module htf::main {
     trusted_properties : VecMap<TrustedPropertyName, TrustedPropertyValue>,
     valid_from_ts_ms : u64,
     valid_until_ts_ms : u64,
+    issued_for : ID,
     ctx : &mut TxContext,
   ) : Credential {
       Credential {
         id : object::new(ctx),
         issued_by : ctx.sender().to_id(),
+        issued_for,
         trusted_properties,
         valid_from:  valid_from_ts_ms,
         valid_until: valid_until_ts_ms,
