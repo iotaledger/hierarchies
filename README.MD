@@ -109,6 +109,122 @@ sequenceDiagram
     Federation-->>User: PermissionToAccredit revoked
 
 ```
+
+
+### Class diagram
+```mermaid
+classDiagram
+    class Federation {
+        +UID id
+        +Governance governance
+        +vector~RootAuthority~ root_authorities
+    }
+
+    class RootAuthority {
+        +UID id
+        +String account_id
+        +Permissions permissions
+    }
+
+    class Governance {
+        +UID id
+        +TrustedPropertyConstraints trusted_constraints
+        +VecMap~ID, PermissionsToAccredit~ accreditors
+        +VecMap~ID, PermissionsToAttest~ attesters
+        +VecMap~ID, CredentialState~ credentials_state
+    }
+
+    class RootAuthorityCap {
+        +UID id
+        +ID federation_id
+    }
+
+    class AttestCap {
+        +UID id
+        +ID federation_id
+    }
+
+    class AccreditCap {
+        +UID id
+        +ID federation_id
+    }
+
+    class Event {
+        +D data
+    }
+
+    class FederationCreatedEvent {
+        +address federation_address
+    }
+
+    class Credential {
+        +UID id
+        +ID issued_by
+        +u64 valid_from
+        +u64 valid_until
+        +VecMap~TrustedPropertyName, TrustedPropertyValue~ trusted_properties
+    }
+
+    class CredentialState {
+        +bool is_revoked
+    }
+
+    class PermissionsToAccredit {
+        +vector~PermissionToAccredit~ permissions
+    }
+
+    class PermissionToAccredit {
+        +UID id
+        +ID federation_id
+        +String created_by
+        +VecMap~TrustedPropertyName, TrustedPropertyConstraint~ constraints
+    }
+
+    class PermissionsToAttest {
+        +vector~PermissionToAttest~ permissions
+    }
+
+    class PermissionToAttest {
+        +UID id
+        +ID federation_id
+        +String created_by
+        +VecMap~TrustedPropertyName, TrustedPropertyConstraint~ constraints
+    }
+
+    class TrustedPropertyConstraints {
+        +VecMap~TrustedPropertyName, TrustedPropertyConstraint~ data
+    }
+
+    class TrustedPropertyConstraint {
+        +TrustedPropertyName property_name
+        +VecSet~TrustedPropertyValue~ allowed_values
+        +bool allow_any
+    }
+
+    class TrustedPropertyName {
+        +String name
+    }
+
+    class TrustedPropertyValue {
+        +String value
+    }
+
+    Federation --> Governance
+    Federation --> RootAuthority
+    Governance --> TrustedPropertyConstraints
+    Governance --> PermissionsToAccredit
+    Governance --> PermissionsToAttest
+    Governance --> CredentialState
+    TrustedPropertyConstraints --> TrustedPropertyConstraint
+    PermissionsToAccredit --> PermissionToAccredit
+    PermissionsToAttest --> PermissionToAttest
+    TrustedPropertyConstraint --> TrustedPropertyName
+    TrustedPropertyConstraint --> TrustedPropertyValue
+    Credential --> TrustedPropertyName
+    Credential --> TrustedPropertyValue
+
+```
+
 ## Functions
 
 ### new_federation
