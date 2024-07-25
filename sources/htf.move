@@ -171,7 +171,7 @@ module htf::main {
     }
   }
 
-  fun add_root_authority(
+  public fun add_root_authority(
       cap : &RootAuthorityCap,
       federation : &mut Federation,
       account_id : String,
