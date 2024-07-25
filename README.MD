@@ -247,8 +247,20 @@ public fun add_trusted_property(
   _ctx: &mut TxContext
 )
 ```
-
 Adds a trusted property to the federation with specified constraints. Only callable by a root authority.
+
+### add_root_authority
+
+```rust
+  public fun add_root_authority(
+      cap : &RootAuthorityCap,
+      federation : &mut Federation,
+      account_id : String,
+      ctx : &mut TxContext,
+    )
+```
+Adds a another Root Authority
+
 
 ### issue_permission_to_accredit
 
