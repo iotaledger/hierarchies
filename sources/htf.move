@@ -120,7 +120,7 @@ module htf::main {
   }
 
 
-  fun has_permissions_to_attest(self : &Federation, user_id : &ID)  : bool {
+  public fun has_permissions_to_attest(self : &Federation, user_id : &ID)  : bool {
     self.governance.attesters.contains(user_id)
   }
 
@@ -129,7 +129,7 @@ module htf::main {
   }
 
 
-  fun has_permissions_to_accredit(self : &Federation, user_id :&ID)  : bool {
+  public fun has_permissions_to_accredit(self : &Federation, user_id :&ID)  : bool {
     self.governance.accreditors.contains(user_id)
   }
 
