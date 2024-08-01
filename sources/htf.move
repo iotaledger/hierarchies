@@ -85,6 +85,7 @@ module htf::main {
     }
   }
 
+
   public fun new_federation(ctx :&mut TxContext)  {
     let federation_id = object::new(ctx);
     let mut federation = Federation {
@@ -113,6 +114,10 @@ module htf::main {
 
   fun federation_id(self : &Federation) : ID {
     self.id.to_inner()
+  }
+
+  public fun has_federation_property(self : &Federation, property_name : TrustedPropertyName) : bool {
+     self.governance.trusted_constraints.data().contains(&property_name)
   }
 
   fun find_permissions_to_attest(self: &Federation, user_id : &ID)  :  &PermissionsToAttest {

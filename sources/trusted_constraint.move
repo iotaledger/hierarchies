@@ -18,6 +18,10 @@ module htf::trusted_constraint {
     data : VecMap<TrustedPropertyName, TrustedPropertyConstraint>
   }
 
+  public(package)  fun data(self : &TrustedPropertyConstraints) : &VecMap<TrustedPropertyName, TrustedPropertyConstraint> {
+    &self.data
+  }
+
 
   public(package) fun are_properties_correct(self : &TrustedPropertyConstraints, properties : &VecMap<TrustedPropertyName, TrustedPropertyValue>)  : bool {
       let property_names = properties.keys() ;
