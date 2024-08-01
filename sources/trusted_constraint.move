@@ -52,7 +52,7 @@ module htf::trusted_constraint {
     TrustedPropertyConstraint {
       property_name,
       allowed_values,
-      allow_any: false,
+      allow_any,
     }
   }
 
