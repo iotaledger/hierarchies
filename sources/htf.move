@@ -116,6 +116,10 @@ module htf::main {
     self.id.to_inner()
   }
 
+  public fun get_federation_properties(self : &Federation) : vector<TrustedPropertyName> {
+    self.governance.trusted_constraints.data().keys()
+  }
+
   public fun has_federation_property(self : &Federation, property_name : TrustedPropertyName) : bool {
      self.governance.trusted_constraints.data().contains(&property_name)
   }
