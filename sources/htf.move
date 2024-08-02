@@ -33,7 +33,7 @@ module htf::main {
 // Root authority has the highest trust in the system, it can delegate trust to other entities and itself
   public struct RootAuthority  has store, key{
     id : UID,
-    account_id: String,
+    account_id: ID,
     permissions: Permissions,
   }
 
@@ -101,7 +101,7 @@ module htf::main {
     };
     let cap = Self::new_root_authority_cap(&federation, ctx);
     // add the root auhtority and the trust service
-    Self::add_root_authority(&cap, &mut federation, ctx.sender().to_string(),  ctx);
+    Self::add_root_authority(&cap, &mut federation, ctx.sender().to_id(),  ctx);
 
     event::emit(Event{data: FederationCreatedEvent{
       federation_address: federation.federation_id().to_address(),
@@ -189,15 +189,17 @@ module htf::main {
   public fun add_root_authority(
       cap : &RootAuthorityCap,
       federation : &mut Federation,
-      account_id : String,
+      account_id : ID,
       ctx : &mut TxContext,
     ) {
     if  (cap.federation_id != federation.federation_id()) {
       abort EUnauthorizedWrongFederation
     };
-
     let root_authority = Self::new_root_authority(account_id, ctx);
     vector::push_back(&mut federation.root_authorities, root_authority);
+
+    let cap = Self::new_root_authority_cap(federation, ctx);
+    transfer::transfer(cap, account_id.to_address());
   }
 
   fun new_root_authority_cap(federation : &Federation, ctx : &mut TxContext )  : RootAuthorityCap {
@@ -207,7 +209,7 @@ module htf::main {
     }
   }
 
-  fun new_root_authority(account_id: String, ctx: &mut TxContext)  : RootAuthority {
+  fun new_root_authority(account_id: ID, ctx: &mut TxContext)  : RootAuthority {
     RootAuthority {
       id : object::new(ctx),
       account_id : account_id,
