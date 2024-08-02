@@ -19,9 +19,8 @@ module htf::trusted_constraint {
     StartsWith(String),
     EndsWith(String),
     Contains(String),
-    // TODO
-    // MoreThan(u32),
-    // LessThan(u32),
+    GreaterThan(u64),
+    LowerThan(u64),
   }
 
   public struct TrustedPropertyConstraints has store {
@@ -137,7 +136,6 @@ module htf::trusted_constraint {
   }
 
 
-
   public(package) fun matches_expression(exp : &TrustedPropertyExpression,  value : &TrustedPropertyValue) : bool {
     match (exp) {
       TrustedPropertyExpression::StartsWith(req) => {
@@ -177,10 +175,25 @@ module htf::trusted_constraint {
           return false
         };
       },
+      TrustedPropertyExpression::GreaterThan(req) => {
+        let mut maybe_value_number = value.as_number();
+        if (maybe_value_number.is_none()) {
+          return false
+        };
+        let value_number = maybe_value_number.extract();
+        return value_number > *req
+      },
+      TrustedPropertyExpression::LowerThan(req) => {
+        let mut maybe_value_number = value.as_number();
+        if (maybe_value_number.is_none()) {
+          return false
+        };
+        let value_number = maybe_value_number.extract();
+        return value_number < *req
+      },
     };
     false
   }
-
 }
 
 
