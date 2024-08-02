@@ -160,6 +160,16 @@ module htf::main {
     federation.governance.trusted_constraints.add_constraint(property_name, constraint) ;
   }
 
+  public fun remove_trusted_property(
+    cap : &RootAuthorityCap,
+    federation : &mut Federation,
+    property_name : TrustedPropertyName,
+    _ctx : &mut TxContext)
+  {
+    assert!(cap.federation_id == federation.federation_id(), EUnauthorizedWrongFederation);
+    federation.governance.trusted_constraints.data_mut().remove(&property_name);
+  }
+
   /// Creates a new accredit capability
   fun new_cap_accredit(self : &Federation, ctx : &mut TxContext) : AccreditCap {
     AccreditCap {

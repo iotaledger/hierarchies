@@ -22,6 +22,10 @@ module htf::trusted_constraint {
     &self.data
   }
 
+  public(package)  fun data_mut(self : &mut TrustedPropertyConstraints) : &mut VecMap<TrustedPropertyName, TrustedPropertyConstraint> {
+    &mut self.data
+  }
+
 
   public(package) fun are_properties_correct(self : &TrustedPropertyConstraints, properties : &VecMap<TrustedPropertyName, TrustedPropertyValue>)  : bool {
       let property_names = properties.keys() ;
