@@ -326,6 +326,26 @@ module htf::main {
       transfer::transfer(creds, receiver.to_address());
   }
 
+  public fun validate_trusted_properties(self : &Federation, issuer_id : &ID, trusted_properties: VecMap<TrustedPropertyName, TrustedPropertyValue>) {
+    // check if every property belongs to the federation
+    let property_names = trusted_properties.keys();
+    let mut idx = 0;
+    while (idx < property_names.length()) {
+      let property_name = property_names[idx];
+      assert!(
+        self.has_federation_property(property_name),
+        EInvalidProperty,
+      );
+      idx = idx + 1;
+    };
+    // then check if names and values are permitted for given issuser
+    let issuer_permissions_to_attest = self.find_permissions_to_attest(issuer_id);
+    assert!(
+      issuer_permissions_to_attest.are_values_permitted(&trusted_properties),
+      EInvalidIssuerInsufficientAttestation,
+    );
+  }
+
   public fun validate_credential(self : &Federation, credential : &Credential, ctx : &mut TxContext) {
     assert!(
       self.governance.trusted_constraints.are_properties_correct(credential.trusted_properties()),
