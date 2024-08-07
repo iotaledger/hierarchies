@@ -1,7 +1,5 @@
 <div id="top"></div>
 
-
-
 <!-- PROJECT SHIELDS -->
 <!--
 *** I'm using markdown "reference style" links for readability.
@@ -10,21 +8,6 @@
 *** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
 *** https://www.markdownguide.org/basic-syntax/#reference-style-links
 -->
-[![Contributors][contributors-shield]][contributors-url]
-[![Forks][forks-shield]][forks-url]
-[![Stargazers][stars-shield]][stars-url]
-[![Issues][issues-shield]][issues-url]
-[![Apache 2.0 license][license-shield]][license-url]
-[![Discord][discord-shield]][discord-url]
-[![StackExchange][stackexchange-shield]][stackexchange-url]
-<!-- Add additional Badges. Some examples >
-![Format Badge](https://github.com/iotaledger/template/workflows/Format/badge.svg "Format Badge")
-![Audit Badge](https://github.com/iotaledger/template/workflows/Audit/badge.svg "Audit Badge")
-![Clippy Badge](https://github.com/iotaledger/template/workflows/Clippy/badge.svg "Clippy Badge")
-![BuildBadge](https://github.com/iotaledger/template/workflows/Build/badge.svg "Build Badge")
-![Test Badge](https://github.com/iotaledger/template/workflows/Test/badge.svg "Test Badge")
-![Coverage Badge](https://coveralls.io/repos/github/iotaledger/template/badge.svg "Coverage Badge")
-
 
 <!-- PROJECT LOGO -->
 <br />
