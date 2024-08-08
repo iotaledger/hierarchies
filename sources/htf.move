@@ -1,10 +1,10 @@
 // HTF Notary module
 module htf::main {
   use std::string::String;
-  use sui::vec_map::{Self, VecMap};
-  use sui::tx_context::{Self, TxContext};
-  use sui::event;
-  use sui::vec_set::{Self, VecSet};
+  use iota::vec_map::{Self, VecMap};
+  use iota::tx_context::{Self, TxContext};
+  use iota::event;
+  use iota::vec_set::{Self, VecSet};
 
   use htf::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
   use htf::trusted_constraint::{Self, TrustedPropertyConstraints, TrustedPropertyConstraint};
@@ -121,7 +121,7 @@ module htf::main {
   }
 
   public fun has_federation_property(self : &Federation, property_name : TrustedPropertyName) : bool {
-     self.governance.trusted_constraints.data().contains(&property_name)
+    self.governance.trusted_constraints.data().contains(&property_name)
   }
 
   fun find_permissions_to_attest(self: &Federation, user_id : &ID)  :  &PermissionsToAttest {

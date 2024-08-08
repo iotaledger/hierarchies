@@ -2,23 +2,24 @@
 
 [move]
 version = 1
-manifest_digest = "F37DDD2442EFCBD8627358B5D16A9DD5BCB44D774D991530083895BE1EE13F8A"
-deps_digest = "F8BBB0CCB2491CA29A3DF03D6F92277A4F3574266507ACD77214D37ECA3F3082"
+manifest_digest = "AE46E6826B2C98BD5FC1D91B682225756BEED2956B70E5AF8E9CAB0444A9A6CA"
+deps_digest = "3C4103934B1E040BB6B23F1D610B4EF9F2F1166A50A104EADCF77467C004C600"
 dependencies = [
-  { name = "Sui" },
+  { name = "Iota" },
+  { name = "MoveStdlib" },
 ]
 
 [[move.package]]
-name = "MoveStdlib"
-source = { local = "../../../../sui/crates/sui-framework/packages/move-stdlib" }
-
-[[move.package]]
-name = "Sui"
-source = { local = "../../../../sui/crates/sui-framework/packages/sui-framework" }
+name = "Iota"
+source = { git = "https://github.com/iotaledger/iota.git", rev = "develop", subdir = "crates/iota-framework/packages/iota-framework" }
 
 dependencies = [
   { name = "MoveStdlib" },
 ]
+
+[[move.package]]
+name = "MoveStdlib"
+source = { git = "https://github.com/iotaledger/iota.git", rev = "develop", subdir = "crates/iota-framework/packages/move-stdlib" }
 
 [move.toolchain-version]
 compiler-version = "1.22.0"
