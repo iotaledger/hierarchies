@@ -29,6 +29,10 @@ module htf::permission_to_attest {
     }
   }
 
+  public(package) fun id(self : &PermissionToAttest) : &UID {
+    &self.id
+  }
+
   public(package) fun new_permissions_to_attest(): PermissionsToAttest {
     PermissionsToAttest {
       permissions: vector::empty(),
