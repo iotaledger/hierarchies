@@ -101,7 +101,7 @@ module htf::main {
     };
     let cap = Self::new_root_authority_cap(&federation, ctx);
     // add the root auhtority and the trust service
-    Self::add_root_authority(&cap, &mut federation, ctx.sender().to_id(),  ctx);
+    Self::add_root_authority(&mut federation, &cap, ctx.sender().to_id(),  ctx);
 
     event::emit(Event{data: FederationCreatedEvent{
       federation_address: federation.federation_id().to_address(),
@@ -145,8 +145,8 @@ module htf::main {
 
   /// adds the trusted property to the federation, optionally a specifc type can be given
   public fun add_trusted_property(
-    cap : &RootAuthorityCap,
     federation : &mut Federation,
+    cap : &RootAuthorityCap,
     property_name : TrustedPropertyName,
     allowed_values : VecSet<TrustedPropertyValue>,
     allow_any : bool,
@@ -191,8 +191,8 @@ module htf::main {
   }
 
   public fun add_root_authority(
-      cap : &RootAuthorityCap,
       federation : &mut Federation,
+      cap : &RootAuthorityCap,
       account_id : ID,
       ctx : &mut TxContext,
     ) {
@@ -213,7 +213,7 @@ module htf::main {
     }
   }
 
-  fun new_root_authority(account_id: ID, ctx: &mut TxContext)  : RootAuthority {
+  public(package) fun new_root_authority(account_id: ID, ctx: &mut TxContext)  : RootAuthority {
     RootAuthority {
       id : object::new(ctx),
       account_id : account_id,
@@ -223,7 +223,7 @@ module htf::main {
 
 
   /// Issue an accredidation to accredit about given trusted properties
-  public fun issue_permission_to_accredit(cap : &AccreditCap,  federation : &mut Federation, receiver : ID, want_property_constraints : vector<TrustedPropertyConstraint>,  ctx : &mut TxContext) {
+  public fun issue_permission_to_accredit(federation : &mut Federation, cap : &AccreditCap,  receiver : ID, want_property_constraints : vector<TrustedPropertyConstraint>,  ctx : &mut TxContext) {
       assert!(cap.federation_id == federation.federation_id(), EUnauthorizedWrongFederation);
 
       let permissions_to_accredit = federation.find_permissions_to_accredit(&ctx.sender().to_id());
@@ -410,5 +410,277 @@ module htf::main {
       return false
     };
     self.governance.credentials_state.get(credential_id).is_revoked
+  }
+
+  public(package) fun root_authorities(self : &Federation) : &vector<RootAuthority> {
+    &self.root_authorities
+  }
+
+}
+
+
+#[test_only]
+module htf::main_tests {
+  use std::string::{String, utf8};
+  use htf::main::{
+    new_federation, RootAuthorityCap, Federation, new_root_authority, RootAuthority, 
+    add_trusted_property, issue_permission_to_accredit, issue_permission_to_attest, 
+    revoke_permission_to_attest, revoke_permission_to_accredit, issue_credential
+  };
+  use sui::test_scenario;
+  use sui::vec_set::{Self, VecSet};
+  use sui::vec_map::VecMap;
+  use htf::trusted_property::{TrustedPropertyName,new_property_value_number, new_property_name,TrustedPropertyValue};
+  use htf::trusted_constraint::{TrustedPropertyConstraint};
+
+  #[test]
+  fun creating_new_federation_works() {
+    let alice = @0x1;
+
+    let mut scenario = test_scenario::begin(alice);
+
+    // create new federation
+    new_federation(scenario.ctx());
+
+    scenario.next_tx(alice);
+
+    // Check that the alice has RootAuthorityCap
+    let cap: RootAuthorityCap = scenario.take_from_address(alice);
+
+    // check the federation
+    let fed: Federation = scenario.take_shared();
+
+    // Return the cap to the alice
+    test_scenario::return_to_address(alice, cap);
+    test_scenario::return_shared(fed);
+
+    let _ = scenario.end();
+  }
+
+  #[test]
+  fun test_adding_root_authority_to_the_federation() {
+    let alice = @0x1;
+
+    let mut scenario = test_scenario::begin(alice);
+
+    let new_object = scenario.new_object();
+    let bob = new_object.uid_to_inner();
+
+    scenario.next_tx(alice);
+
+    // Create a new federation
+    new_federation(scenario.ctx());
+
+    scenario.next_tx(alice);
+
+    let mut fed: Federation = scenario.take_shared();
+    let cap: RootAuthorityCap = scenario.take_from_address(alice);
+
+    // Add a new root authority
+    fed.add_root_authority(&cap, bob, scenario.ctx());
+
+    scenario.next_tx(alice);
+
+    // check that bob has RootAuthorityCap
+    let bob_cap: RootAuthorityCap = scenario.take_from_address(bob.to_address());
+    // let authority: RootAuthority = scenario.take_shared();
+
+    // assert!(fed.root_authorities().contains(&authority), 0);
+
+    // Return the cap to the alice
+    test_scenario::return_to_address(alice, cap);
+    test_scenario::return_to_address(bob.to_address(), bob_cap);
+    test_scenario::return_shared(fed);
+    new_object.delete();
+
+    let _ = scenario.end();
+  }
+
+  #[test]
+  fun test_adding_trusted_property() {
+    let alice = @0x1;
+    let mut scenario = test_scenario::begin(alice);
+
+    // Create a new federation
+    new_federation(scenario.ctx());
+    scenario.next_tx(alice);
+
+    let mut fed: Federation = scenario.take_shared();
+    let cap: RootAuthorityCap = scenario.take_from_address(alice);
+
+    // Add a trusted property
+    let property_name = new_property_name(utf8(b"property_name"));
+    let property_value = new_property_value_number(10);
+    let mut allowed_values = vec_set::empty();
+    allowed_values.insert(property_value);
+
+    fed.add_trusted_property(&cap,property_name, allowed_values, false, scenario.ctx());
+    scenario.next_tx(alice);
+
+    // Check if the property was added
+    assert!(fed.has_federation_property(property_name), 0);
+
+    // Return the cap to the alice
+    test_scenario::return_to_address(alice, cap);
+    test_scenario::return_shared(fed);
+
+    let _ = scenario.end();
+  }
+
+  #[test]
+  fun test_issue_permission_to_accredit() {
+    let alice = @0x1;
+    let mut scenario = test_scenario::begin(alice);
+
+    // Create a new federation
+    new_federation(scenario.ctx());
+    scenario.next_tx(alice);
+
+    let mut fed: Federation = scenario.take_shared();
+    let cap: RootAuthorityCap = scenario.take_from_address(alice);
+
+    // Add a trusted property
+    let property_name = new_property_name(utf8(b"property_name"));
+    let property_value = new_property_value_number(10);
+    let mut allowed_values = vec_set::empty();
+    allowed_values.insert(property_value);
+    fed.add_trusted_property(&cap, property_name, allowed_values, true, scenario.ctx());
+
+    scenario.next_tx(alice);
+
+    // Issue permission to accredit
+    let constraints = vector::empty();
+    fed.issue_permission_to_accredit(&cap, alice.to_id(), constraints, scenario.ctx());
+    scenario.next_tx(alice);
+
+    // Check if the permission was issued
+    assert!(fed.has_permissions_to_accredit(alice.to_id()), 0);
+
+    // Return the cap to the alice
+    test_scenario::return_to_address(alice, cap);
+    test_scenario::return_shared(fed);
+
+    let _ = scenario.end();
+  }
+
+  #[test]
+  fun test_issue_permission_to_attest() {
+    let alice = @0x1;
+    let mut scenario = test_scenario::begin(alice);
+
+    // Create a new federation
+    new_federation(scenario.ctx());
+    scenario.next_tx(alice);
+
+    let mut fed: Federation = scenario.take_shared();
+    let cap: RootAuthorityCap = scenario.take_from_address(alice);
+
+    // Add a trusted property
+    let property_name = TrustedPropertyName { name: "property1".to_string() };
+    let allowed_values = VecSet::empty();
+    add_trusted_property(&cap, &mut fed, property_name, allowed_values, true, scenario.ctx());
+    scenario.next_tx(alice);
+
+    // Issue permission to accredit
+    let constraints = vector[];
+    issue_permission_to_accredit(&cap, &mut fed, alice.to_id(), constraints, scenario.ctx());
+    scenario.next_tx(alice);
+
+    // Issue permission to attest
+    issue_permission_to_attest(&cap, &mut fed, alice.to_id(), constraints, scenario.ctx());
+    scenario.next_tx(alice);
+
+    // Check if the permission was issued
+    assert!(fed.has_permissions_to_attest(alice.to_id()), 0);
+
+    // Return the cap to the alice
+    test_scenario::return_to_address(alice, cap);
+    test_scenario::return_shared(fed);
+
+    let _ = scenario.end();
+  }
+
+  #[test]
+  fun test_revoke_permission_to_attest() {
+    let alice = @0x1;
+    let mut scenario = test_scenario::begin(alice);
+
+    // Create a new federation
+    new_federation(scenario.ctx());
+    scenario.next_tx(alice);
+
+    let mut fed: Federation = scenario.take_shared();
+    let cap: RootAuthorityCap = scenario.take_from_address(alice);
+
+    // Add a trusted property
+    let property_name = TrustedPropertyName { name: "property1".to_string() };
+    let allowed_values = VecSet::empty();
+    add_trusted_property(&cap, &mut fed, property_name, allowed_values, true, scenario.ctx());
+    scenario.next_tx(alice);
+
+    // Issue permission to accredit
+    let constraints = vector[];
+    issue_permission_to_accredit(&cap, &mut fed, alice.to_id(), constraints, scenario.ctx());
+    scenario.next_tx(alice);
+
+    // Issue permission to attest
+    issue_permission_to_attest(&cap, &mut fed, alice.to_id(), constraints, scenario.ctx());
+    scenario.next_tx(alice);
+
+    // Revoke permission to attest
+    let permission_id = fed.find_permissions_to_attest(&alice.to_id()).permisssions()[0].id.to_inner();
+    revoke_permission_to_attest(&cap, &mut fed, &alice.to_id(), &permission_id, scenario.ctx());
+    scenario.next_tx(alice);
+
+    // Check if the permission was revoked
+    assert!(!fed.has_permissions_to_attest(alice.to_id()), 0);
+
+    // Return the cap to the alice
+    test_scenario::return_to_address(alice, cap);
+    test_scenario::return_shared(fed);
+
+    let _ = scenario.end();
+  }
+
+  #[test]
+  fun test_issue_credential() {
+    let alice = @0x1;
+    let mut scenario = test_scenario::begin(alice);
+
+    // Create a new federation
+    new_federation(scenario.ctx());
+    scenario.next_tx(alice);
+
+    let mut fed: Federation = scenario.take_shared();
+    let cap: RootAuthorityCap = scenario.take_from_address(alice);
+
+    // Add a trusted property
+    let property_name = TrustedPropertyName { name: "property1".to_string() };
+    let allowed_values = VecSet::empty();
+    add_trusted_property(&cap, &mut fed, property_name, allowed_values, true, scenario.ctx());
+    scenario.next_tx(alice);
+
+    // Issue permission to accredit
+    let constraints = vector[];
+    issue_permission_to_accredit(&cap, &mut fed, alice.to_id(), constraints, scenario.ctx());
+    scenario.next_tx(alice);
+
+    // Issue permission to attest
+    issue_permission_to_attest(&cap, &mut fed, alice.to_id(), constraints, scenario.ctx());
+    scenario.next_tx(alice);
+
+    // Issue credential
+    let trusted_properties = VecMap::empty();
+    issue_credential(&cap, &mut fed, alice.to_id(), trusted_properties, 0, 1000, scenario.ctx());
+    scenario.next_tx(alice);
+
+    // Check if the credential was issued
+    // (Assuming there's a way to retrieve and check the issued credential)
+
+    // Return the cap to the alice
+    test_scenario::return_to_address(alice, cap);
+    test_scenario::return_shared(fed);
+
+    let _ = scenario.end();
   }
 }

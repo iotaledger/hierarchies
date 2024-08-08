@@ -10,8 +10,8 @@ authors = [
 
 [dependencies]
 # TODO change this to the acutal release
-# Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/testnet" }
-Sui = { local = "../../../../sui/crates/sui-framework/packages/sui-framework" }
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "testnet-v1.29.2" }
+# Sui = { local = "../../../../sui/crates/sui-framework/packages/sui-framework" }
 # MoveStdlib = { git = "https://github.com/iotaledger/iota.git", subdir = "crates/iota-framework/packages/move-stdlib", rev = "develop" }
 # Iota = { git = "https://github.com/iotaledger/iota.git", subdir = "crates/iota-framework/packages/iota-framework", rev = "develop" }
 
