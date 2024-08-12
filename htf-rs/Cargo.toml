@@ -20,10 +20,9 @@ bcs = "0.1.6"
 
 fastcrypto = { git = "https://github.com/MystenLabs/fastcrypto", rev = "d7a33a9f79271bfc19fc4c8816ea5467e4205e17" }
 iota = { git = "https://github.com/iotaledger/iota.git", package = "iota" }
-
-
 secret-storage = { git = "https://github.com/iotaledger/secret-storage" }
 async-trait = "0.1.81"
 
 [dev-dependencies]
 iota = { git = "https://github.com/iotaledger/iota.git", package = "iota" }
+jsonpath-rust = "0.7"

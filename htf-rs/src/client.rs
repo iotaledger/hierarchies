@@ -272,7 +272,7 @@ impl HTFClient {
 
 impl HTFClient {
     pub async fn new_federation(&mut self) -> anyhow::Result<Federation> {
-        let federation = Federation::new(self).await?;
+        let federation = Federation::create_new_federation(self).await?;
 
         Ok(federation)
     }

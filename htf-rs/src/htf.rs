@@ -40,15 +40,7 @@ impl Federation {
         *self.id.object_id()
     }
 
-    pub async fn refresh(&mut self, client: &HTFClient) -> anyhow::Result<()> {
-        let res: Federation = get_object_by_id(self.id(), client).await?;
-
-        *self = res;
-
-        Ok(())
-    }
-
-    pub async fn get_by_id(id: ObjectID, client: &HTFClient) -> anyhow::Result<Self> {
+    async fn get_by_id(id: ObjectID, client: &HTFClient) -> anyhow::Result<Self> {
         let res = client
             .read_api()
             .get_object_with_options(id, IotaObjectDataOptions::new().with_content())
@@ -69,7 +61,11 @@ impl Federation {
         Ok(data)
     }
 
-    pub async fn new(client: &HTFClient) -> anyhow::Result<Self> {
+    pub async fn get_federation_by_id(id: ObjectID, client: &HTFClient) -> anyhow::Result<Self> {
+        Self::get_by_id(id, client).await
+    }
+
+    pub async fn create_new_federation(client: &HTFClient) -> anyhow::Result<Self> {
         let mut ptb = ProgrammableTransactionBuilder::new();
 
         ptb.command(Command::MoveCall(Box::new(ProgrammableMoveCall {
@@ -463,7 +459,6 @@ impl Federation {
 
         let tx = ptb.finish();
 
-        // Add effects
         let iota_res = client.execute_transaction(tx).await?;
 
         // check if the ID has AccreditCap
@@ -665,7 +660,6 @@ where
         .ok_or_else(|| anyhow::anyhow!("missing content"))
         .and_then(|content| content.try_into_move().context("invalid content"))
         .and_then(|data| {
-            println!("Data {data:?}");
             serde_json::from_value(data.fields.to_json_value()).context("invalid data")
         })?;
 

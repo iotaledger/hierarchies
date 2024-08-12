@@ -3217,6 +3217,7 @@ dependencies = [
  "iota-config",
  "iota-keys",
  "iota-sdk 1.22.0",
+ "jsonpath-rust",
  "move-core-types",
  "secret-storage",
  "serde",
@@ -5050,6 +5051,19 @@ source = "git+https://github.com/zhiburt/tabled.git?rev=e449317a1c02eb6b29e409ad
 dependencies = [
  "serde_json",
  "tabled",
+]
+
+[[package]]
+name = "jsonpath-rust"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d64f9886fc067a709ab27faf63b7d3f4d1ec570a700705408b0b0683e2f43897"
+dependencies = [
+ "pest",
+ "pest_derive",
+ "regex",
+ "serde_json",
+ "thiserror",
 ]
 
 [[package]]
