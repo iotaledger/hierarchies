@@ -124,7 +124,6 @@ impl Federation {
     pub async fn add_trusted_property(
         &self,
         client: &HTFClient,
-
         property_name: TrustedPropertyName,
         allowed_values: VecSet<TrustedPropertyValue>,
         allow_any: bool,
@@ -178,7 +177,6 @@ impl Federation {
     pub async fn add_root_authority(
         &self,
         client: &HTFClient,
-
         account_id: ID,
     ) -> anyhow::Result<()> {
         let cap = get_cap("main", "RootAuthorityCap", None, client).await?;
@@ -251,7 +249,7 @@ impl Federation {
         );
 
         let tx = ptb.finish();
-        // Add effects
+
         let tx_res = client.execute_transaction(tx).await?;
 
         // check if the ID has AccreditCap
@@ -302,7 +300,7 @@ impl Federation {
         );
 
         let tx = ptb.finish();
-        // Add effects
+
         let tx_res = client.execute_transaction(tx).await?;
 
         // check if the ID has AccreditCap
@@ -353,7 +351,7 @@ impl Federation {
         );
 
         let tx = ptb.finish();
-        // Add effects
+
         let iota_tx = client.execute_transaction(tx).await?;
 
         // check if the ID has AccreditCap
@@ -401,7 +399,6 @@ impl Federation {
 
         let tx = ptb.finish();
 
-        // Add effects
         let iota_res = client.execute_transaction(tx).await?;
 
         // check if the ID has AccreditCap
