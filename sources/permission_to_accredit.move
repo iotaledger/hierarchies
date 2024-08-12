@@ -20,6 +20,10 @@ module htf::permission_to_accredit {
     constraints : VecMap<TrustedPropertyName, TrustedPropertyConstraint>,
   }
 
+  public(package) fun id(self : &PermissionToAccredit) : &UID {
+    &self.id
+  }
+
 
   public(package) fun constriants(self : &PermissionToAccredit) : &VecMap<TrustedPropertyName, TrustedPropertyConstraint> {
     &self.constraints

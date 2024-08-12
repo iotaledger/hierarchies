@@ -1,3 +1,62 @@
+<div id="top"></div>
+
+<!-- PROJECT SHIELDS -->
+<!--
+*** I'm using markdown "reference style" links for readability.
+*** Reference links are enclosed in brackets [ ] instead of parentheses ( ).
+*** See the bottom of this document for the declaration of the reference variables
+*** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
+*** https://www.markdownguide.org/basic-syntax/#reference-style-links
+-->
+
+<!-- PROJECT LOGO -->
+<br />
+<div align="center">
+    <a href="https://github.com/iotaledger/template">
+        <img src="banner.png" alt="Banner">
+    </a>
+    <h3 align="center">HTF</h3>
+    <p align="center">
+        Hierarchical Trust Framework
+        <br />
+        <a href="https://wiki.iota.org"><strong>Explore the docs »</strong></a>
+        <br />
+        <br />
+        <a href="https://github.com/iotaledger/template/labels/bug">Report Bug</a>
+        ·
+        <a href="https://github.com/iotaledger/template/labels/request">Request Feature</a>
+    </p>
+</div>
+<details>
+  <summary>Table of Contents</summary>
+  <ol>
+    <li>
+      <a href="#htf-notary-module">About The Project</a>
+    </li>
+    <li>
+      <a href="#overview">Overview</a>
+    </li>
+    <li>
+      <a href="#key-components">Key components</a>
+      <ul>
+        <li><a href="#federation">Federation</a></li>
+        <li><a href="#root-authority">Root Authority</a></li>
+        <li><a href="#governance">Governance</a></li>
+        <li><a href="#credentials">Credentials</a></li>
+        <li><a href="#permissions">Permissions</a></li>
+        <li><a href="#trusted-property-constraints">Trusted Property Constraints</a></li>
+      </ul>
+    </li>
+    <li>
+      <a href="#workflow">Workflow</a>
+    </li>
+    <li><a href="#sequence-diagram">Sequence Diagram</a></li>
+    <li><a href="#class-diagram">Class Diagram</a></li>
+    <li><a href="#functions">API - Functions</a></li>
+    <li><a href="#usage">Usage</a></li>
+  </ol>
+</details>
+
 # HTF Notary Module
 
 The HTF Notary module is designed to manage a hierarchical trust system within a federation. It includes structures and methods for creating federations, issuing credentials, and managing permissions to attest and accredit trusted properties. This module leverages the Move programming language and the Sui blockchain.
@@ -65,6 +124,10 @@ Trusted property constraints define the rules and allowed values for properties 
    - Revoke or update credentials as needed based on the federation's governance rules.
    - Use the `revoke_permission_to_attest` and `revoke_permission_to_accredit` functions to manage permissions.
 
+
+
+## Sequence Diagram
+
 ```mermaid
 sequenceDiagram
     participant User
@@ -112,6 +175,7 @@ sequenceDiagram
 
 
 ### Class diagram
+
 ```mermaid
 classDiagram
     class Federation {

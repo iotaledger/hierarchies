@@ -27,7 +27,11 @@ module htf::permission_to_attest {
         created_by : ctx.sender().to_string(),
         constraints: constraints,
     }
-   }
+  }
+
+  public(package) fun id(self : &PermissionToAttest) : &UID {
+    &self.id
+  }
 
   public(package) fun new_permissions_to_attest(): PermissionsToAttest {
     PermissionsToAttest {
