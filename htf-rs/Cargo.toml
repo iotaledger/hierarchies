@@ -4,7 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-ota-config = { git = "https://github.com/iotaledger/iota.git", package = "iota-config" }
 iota-sdk = { git = "https://github.com/iotaledger/iota.git", package = "iota-sdk" }
 move-core-types = { git = "https://github.com/iotaledger/iota.git", package = "move-core-types", version = "0.0.4" }
 serde = { version = "1.0", features = ["derive"] }
@@ -17,7 +16,6 @@ anyhow = "1.0"
 iota-keys = { git = "https://github.com/iotaledger/iota.git", package = "iota-keys" }
 shared-crypto = { git = "https://github.com/iotaledger/iota.git", package = "shared-crypto" }
 bcs = "0.1.6"
-
 fastcrypto = { git = "https://github.com/MystenLabs/fastcrypto", rev = "d7a33a9f79271bfc19fc4c8816ea5467e4205e17" }
 iota = { git = "https://github.com/iotaledger/iota.git", package = "iota" }
 secret-storage = { git = "https://github.com/iotaledger/secret-storage" }

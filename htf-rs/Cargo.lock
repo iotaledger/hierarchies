@@ -3214,7 +3214,6 @@ dependencies = [
  "bcs",
  "fastcrypto",
  "iota",
- "iota-config",
  "iota-keys",
  "iota-sdk 1.22.0",
  "jsonpath-rust",

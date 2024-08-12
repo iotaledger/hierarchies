@@ -160,7 +160,8 @@ impl Federation {
             .status_ok()
             .ok_or_else(|| anyhow::anyhow!("missing status"))?
         {
-            anyhow::bail!("failed to add trusted property");
+            let err = res.errors;
+            anyhow::bail!("failed to add trusted property {:?}", err);
         }
 
         if !self

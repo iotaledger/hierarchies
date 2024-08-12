@@ -169,8 +169,6 @@ impl HTFClient {
             .expect("signing info should be set")
             .sender_address;
 
-        println!("Sender address: {:?}", sender);
-
         let coin = self.get_coin_for_transaction().await?;
         let tx_data = TransactionData::new_programmable(
             sender,
