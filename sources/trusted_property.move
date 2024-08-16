@@ -5,8 +5,11 @@ module htf::trusted_property {
   use std::type_name::{Self, TypeName};
 
   public struct TrustedPropertyName  has copy, drop, store {
-    // initially its a string, but it could be more complex structure that implements copy and drop
-    name : String,
+    names : vector<String>,
+  }
+
+  public fun names(self : &TrustedPropertyName) : &vector<String> {
+    &self.names
   }
 
 
@@ -57,8 +60,16 @@ module htf::trusted_property {
 
 
   public fun new_property_name(v : String) : TrustedPropertyName {
+    let mut names = vector::empty();
+    names.push_back(v);
     TrustedPropertyName {
-      name: v,
+      names,
+    }
+  }
+
+  public fun new_property_name_from_vector(v : vector<String>) : TrustedPropertyName {
+    TrustedPropertyName {
+      names : v,
     }
   }
 }
