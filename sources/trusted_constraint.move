@@ -107,7 +107,26 @@ module htf::trusted_constraint {
   }
 
   public(package) fun matches_name(self : &TrustedPropertyConstraint, name : &TrustedPropertyName) : bool {
-      self.property_name == name
+      // considering the constraint name is a.b.c
+      // the allowed name should be equal a.b.c or longer
+      let len_constraint = self.property_name.names().length();
+      let len_names = name.names().length();
+
+      // if contraint is longer than the name, it is not possible to match
+      if (len_constraint > len_names) {
+        return false
+      };
+
+      let mut idx = 0;
+      while (idx < len_constraint) {
+        if (self.property_name.names()[idx] != name.names()[idx]) {
+          // if you have a.b.c and a.b.d, it is not possible to match
+          return false
+        };
+        idx = idx + 1;
+      };
+
+      true
   }
 
   public(package) fun matches_value(self : &TrustedPropertyConstraint, value : &TrustedPropertyValue) : bool {
