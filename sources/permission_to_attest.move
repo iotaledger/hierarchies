@@ -14,6 +14,7 @@ module htf::permission_to_attest {
 
   /// PermissionToAttest can be created only by the HTF module
   public struct PermissionToAttest has store {
+    // TODO fixme when auditit the security model
     id : UID,
     federation_id : ID,
     created_by : String,
