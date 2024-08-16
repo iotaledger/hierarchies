@@ -1,7 +1,7 @@
 // HTF Notary module
 module htf::permission {
 
-  use iota::vec_map::{VecMap, Self};
+  use sui::vec_map::{VecMap, Self};
 
   use htf::permission_to_attest::{PermissionToAttest};
   use htf::permission_to_accredit::{PermissionToAccredit};

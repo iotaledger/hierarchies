@@ -1,10 +1,10 @@
 // HTF Notary module
 module htf::main {
   use std::string::String;
-  use iota::vec_map::{Self, VecMap};
-  use iota::tx_context::{Self, TxContext};
-  use iota::event;
-  use iota::vec_set::{Self, VecSet};
+  use sui::vec_map::{Self, VecMap};
+  use sui::tx_context::{Self, TxContext};
+  use sui::event;
+  use sui::vec_set::{Self, VecSet};
 
   use htf::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
   use htf::trusted_constraint::{Self, TrustedPropertyConstraints, TrustedPropertyConstraint};
@@ -442,9 +442,9 @@ module htf::main_tests {
     add_trusted_property, issue_permission_to_accredit, issue_permission_to_attest,
     revoke_permission_to_attest, revoke_permission_to_accredit, issue_credential
   };
-  use iota::test_scenario;
-  use iota::vec_set::{Self};
-  use iota::vec_map;
+  use sui::test_scenario;
+  use sui::vec_set::{Self};
+  use sui::vec_map;
   use htf::trusted_property::{new_property_value_number, new_property_name};
   use htf::trusted_constraint::{new_trusted_property_constraint};
 
