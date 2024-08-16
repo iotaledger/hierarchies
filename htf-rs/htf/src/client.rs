@@ -1,11 +1,7 @@
-use anyhow::Context;
 use fastcrypto::hash::HashFunction;
 use fastcrypto::traits::ToFromBytes;
 
-use iota_sdk::rpc_types::{
-    IotaData, IotaObjectDataOptions, IotaTransactionBlockResponse,
-    IotaTransactionBlockResponseOptions,
-};
+use iota_sdk::rpc_types::{IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions};
 use iota_sdk::types::base_types::{IotaAddress, ObjectID};
 use iota_sdk::types::crypto::{DefaultHash, Signature, SignatureScheme};
 use iota_sdk::types::quorum_driver_types::ExecuteTransactionRequestType;
@@ -277,31 +273,6 @@ impl HTFClient {
         let federation = Federation::create_new_federation(self).await?;
 
         Ok(federation)
-    }
-
-    pub async fn get_object_by_id<R>(&self, id: ObjectID) -> anyhow::Result<R>
-    where
-        R: serde::de::DeserializeOwned,
-    {
-        let res = self
-            .iota_client
-            .read_api()
-            .get_object_with_options(id, IotaObjectDataOptions::new().with_content())
-            .await?;
-
-        let Some(data) = res.data else {
-            return Err(anyhow::anyhow!("no data"));
-        };
-
-        let data = data
-            .content
-            .ok_or_else(|| anyhow::anyhow!("missing content"))
-            .and_then(|content| content.try_into_move().context("invalid content"))
-            .and_then(|data| {
-                serde_json::from_value(data.fields.to_json_value()).context("invalid data")
-            })?;
-
-        Ok(data)
     }
 }
 
