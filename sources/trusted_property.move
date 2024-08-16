@@ -9,44 +9,50 @@ module htf::trusted_property {
     name : String,
   }
 
-  public enum TrustedPropertyValue has copy, drop, store {
-    String(String),
-    Number(u64),
-  }
 
-
-  // length return optional value as the Value in the future could be a number or more complex structure
-  public fun length(self : &TrustedPropertyValue) :  Option<u64> {
-    match (self) {
-      TrustedPropertyValue::String(v) => option::some(v.length()),
-      TrustedPropertyValue::Number(_) => option::none(),
-    };
-    option::none()
+  public struct TrustedPropertyValue has copy, drop, store {
+    text : Option<String>,
+    number : Option<u64>,
   }
 
   public fun as_string(self : &TrustedPropertyValue) : Option<String> {
-    match (self) {
-      TrustedPropertyValue::String(v) => option::some(*v),
-      TrustedPropertyValue::Number(_) => option::none(),
-    };
-    option::none()
+    self.text
   }
 
   public fun as_number(self : &TrustedPropertyValue) : Option<u64> {
-    match (self) {
-      TrustedPropertyValue::Number(v) => option::some(*v),
-      TrustedPropertyValue::String(_) => option::none(),
-    };
-    option::none()
+    self.number
   }
 
+  public fun is_string(self : &TrustedPropertyValue) : bool {
+    self.text.is_some()
+  }
+
+  public fun is_number(self : &TrustedPropertyValue) : bool {
+    self.number.is_some()
+  }
+
+  // length return optional value as the Value in the future could be a number or more complex structure
+  public fun length(self : &TrustedPropertyValue) :  Option<u64> {
+    if (self.is_string()) {
+      let text = self.as_string();
+      option::some(text.borrow().length())
+    } else {
+      option::none()
+    }
+  }
 
   public fun new_property_value_string(v : String)  : TrustedPropertyValue {
-    TrustedPropertyValue::String(v)
+        TrustedPropertyValue{
+          text: option::some(v),
+          number : option::none(),
+        }
   }
 
   public fun new_property_value_number(v : u64)  : TrustedPropertyValue {
-    TrustedPropertyValue::Number(v)
+    TrustedPropertyValue {
+      text: option::none(),
+      number: option::some(v),
+    }
   }
 
 
