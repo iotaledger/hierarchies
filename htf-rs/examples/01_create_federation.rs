@@ -11,7 +11,6 @@ use htf::htf::Federation;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    println!("Creating new client");
     let htf_client = get_client().await?;
 
     println!("Creating new federation");

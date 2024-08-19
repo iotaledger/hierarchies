@@ -1,9 +1,8 @@
 module htf::trusted_constraint {
 
-  use iota::object::{Self, UID};
   use iota::vec_map::{Self, VecMap};
-  use iota::vec_set::{Self, VecSet};
-  use std::string::{Self, String};
+  use iota::vec_set::VecSet;
+  use std::string::String;
 
   use htf::trusted_property::{TrustedPropertyValue, TrustedPropertyName};
   use htf::utils;

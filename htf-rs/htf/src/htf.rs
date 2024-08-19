@@ -68,23 +68,25 @@ impl Federation {
     pub async fn create_new_federation(client: &HTFClient) -> anyhow::Result<Self> {
         let mut ptb = ProgrammableTransactionBuilder::new();
 
-        ptb.command(Command::MoveCall(Box::new(ProgrammableMoveCall {
-            package: client.htf_package_id(),
-            module: Identifier::from_str("main").unwrap(),
-            function: Identifier::from_str("new_federation").unwrap(),
-            type_arguments: vec![],
-            arguments: vec![],
-        })));
+        ptb.move_call(
+            client.htf_package_id(),
+            Identifier::from_str("main")?,
+            Identifier::from_str("new_federation")?,
+            vec![],
+            vec![],
+        )?;
 
         let tx = ptb.finish();
 
         let iota_tx = client.execute_transaction(tx).await?;
 
+        println!("TX {:#?}", iota_tx);
+
         if !iota_tx
             .status_ok()
             .ok_or_else(|| anyhow::anyhow!("missing status"))?
         {
-            anyhow::bail!("failed to add trusted property");
+            anyhow::bail!("failed to create federation, errors : {:?}", iota_tx.errors);
         }
 
         // Check event emitted

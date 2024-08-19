@@ -1,16 +1,12 @@
 // Copyright 2020-2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::ops::Deref;
-
 use anyhow::anyhow;
 use anyhow::Context;
 use htf::client::HTFClient;
-use htf::htf::Federation;
 use iota::{client_commands, iota_commands};
 
 use iota_sdk::types::base_types::{IotaAddress, ObjectID};
-use iota_sdk::IotaClient;
 use iota_sdk::IotaClientBuilder;
 use jsonpath_rust::JsonPathQuery;
 
@@ -36,11 +32,12 @@ pub const GAS_LOCAL_NETWORK: &str = "http://127.0.0.1:9123/gas";
 
 const CACHED_PKG_ID: &str = "target/htf_pkg_id.txt";
 
-pub const TEST_GAS_BUDGET: u64 = 50_000_000;
+pub const TEST_GAS_BUDGET: u64 = 5_000_000_000;
 
 pub async fn get_client() -> anyhow::Result<HTFClient> {
     let active_address = active_address().await?;
     faucet(active_address).await?;
+
     let package_id =
         if let Ok(id) = std::env::var("HTF_PKG_ID").or(get_cached_id(active_address).await) {
             std::env::set_var("HTF_PKG_ID", id.clone());

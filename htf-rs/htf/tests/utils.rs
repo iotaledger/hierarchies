@@ -29,14 +29,14 @@ use iota_sdk::types::crypto::{IotaSignature, SignatureScheme};
 use secret_storage::prelude::KeySignatureTypes;
 use secret_storage::signer::Signer as SignerTrait;
 
-const SCRIPT_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../scripts/");
+const SCRIPT_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../scripts");
 
 pub const TEST_ALIAS: &str = "strange-prase";
 pub const GAS_LOCAL_NETWORK: &str = "http://127.0.0.1:9123/gas";
 
-const CACHED_PKG_ID: &str = "target/htf_pkg_id.txt";
+const CACHED_PKG_ID: &str = "../target/htf_pkg_id.txt";
 
-pub const TEST_GAS_BUDGET: u64 = 50_000_000;
+pub const TEST_GAS_BUDGET: u64 = 500_000_000;
 
 #[derive(Clone)]
 pub struct TestClient {

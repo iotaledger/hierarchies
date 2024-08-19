@@ -2,7 +2,7 @@
 module htf::permission_to_accredit {
 
   use std::string::String;
-  use iota::vec_map::{Self, VecMap};
+  use iota::vec_map::VecMap;
 
   use htf::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
   use htf::trusted_constraint::{TrustedPropertyConstraint};
