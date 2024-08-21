@@ -7,7 +7,7 @@ use anyhow::anyhow;
 use anyhow::Context;
 use htf::client::HTFClient;
 use htf::htf::Federation;
-use iota::{client_commands, iota_commands};
+use iota::client_commands;
 
 use iota_sdk::types::base_types::{IotaAddress, ObjectID};
 use iota_sdk::IotaClient;
@@ -26,8 +26,8 @@ use htf::key::IotaKeySignature;
 use iota_keys::keystore::{AccountKeystore, InMemKeystore};
 
 use iota_sdk::types::crypto::{IotaSignature, SignatureScheme};
-use secret_storage::prelude::KeySignatureTypes;
-use secret_storage::signer::Signer as SignerTrait;
+use secret_storage::SignatureScheme as SignerSignatureScheme;
+use secret_storage::Signer as SignerTrait;
 
 const SCRIPT_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../scripts");
 
@@ -215,14 +215,33 @@ impl Default for TestMemSigner {
 
 #[async_trait::async_trait]
 impl SignerTrait<IotaKeySignature> for TestMemSigner {
+    type KeyId = ();
     async fn sign(
         &self,
         hash: &[u8],
-    ) -> Result<<IotaKeySignature as KeySignatureTypes>::Signature, anyhow::Error> {
-        let address = self.0.get_address_by_alias(TEST_ALIAS.to_owned())?;
+    ) -> secret_storage::Result<<IotaKeySignature as SignerSignatureScheme>::Signature> {
+        let address = self.0.get_address_by_alias(TEST_ALIAS.to_owned()).unwrap();
 
-        let signature = self.0.sign_hashed(address, hash)?;
+        let signature = self.0.sign_hashed(address, hash).unwrap();
 
         Ok(signature.signature_bytes().to_vec())
+    }
+
+    async fn public_key(
+        &self,
+    ) -> secret_storage::Result<<IotaKeySignature as secret_storage::SignatureScheme>::PublicKey>
+    {
+        let address = self.0.get_address_by_alias(TEST_ALIAS.to_owned()).unwrap();
+        let res = self.0.get_key(address).unwrap();
+
+        let public_key = match res {
+            iota_sdk::types::crypto::IotaKeyPair::Ed25519(key) => key.public().as_bytes().to_vec(),
+            _ => panic!(),
+        };
+
+        Ok(public_key)
+    }
+    fn key_id(&self) -> &Self::KeyId {
+        unimplemented!()
     }
 }

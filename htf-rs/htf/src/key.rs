@@ -1,13 +1,13 @@
 use iota_sdk::types::base_types::IotaAddress;
 
-use secret_storage::prelude::KeySignatureTypes;
+use secret_storage::SignatureScheme;
 
 pub struct IotaKeySignature {
     pub public_key: Vec<u8>,
     pub signature: Vec<u8>,
 }
 
-impl KeySignatureTypes for IotaKeySignature {
+impl SignatureScheme for IotaKeySignature {
     type PublicKey = Vec<u8>;
 
     type Signature = Vec<u8>;

@@ -22,6 +22,6 @@ name = "MoveStdlib"
 source = { git = "https://github.com/iotaledger/iota.git", rev = "v0.1.4", subdir = "crates/iota-framework/packages/move-stdlib" }
 
 [move.toolchain-version]
-compiler-version = "1.22.0"
+compiler-version = "0.1.4"
 edition = "legacy"
 flavor = "iota"

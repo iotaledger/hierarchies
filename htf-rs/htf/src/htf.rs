@@ -11,7 +11,7 @@ use iota_sdk::types::id::{ID, UID};
 use iota_sdk::types::object::Owner;
 use iota_sdk::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 use iota_sdk::types::transaction::{
-    CallArg, Command, ObjectArg, ProgrammableMoveCall, TransactionKind,
+    CallArg,  ObjectArg,  TransactionKind,
 };
 use iota_sdk::types::Identifier;
 use move_core_types::language_storage::StructTag;
