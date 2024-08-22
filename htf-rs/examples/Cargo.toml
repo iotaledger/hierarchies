@@ -4,25 +4,24 @@ edition.workspace = true
 authors.workspace = true
 
 [dependencies]
-iota-sdk = { git = "https://github.com/iotaledger/iota.git", package = "iota-sdk" }
-move-core-types = { git = "https://github.com/iotaledger/iota.git", package = "move-core-types", version = "0.0.4" }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0.0"
-axum = "0.7.5"
-tokio = { version = "1.0", features = ["full"] }
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-anyhow = "1.0"
-iota-keys = { git = "https://github.com/iotaledger/iota.git", package = "iota-keys" }
-shared-crypto = { git = "https://github.com/iotaledger/iota.git", package = "shared-crypto" }
-bcs = "0.1.6"
-fastcrypto = { git = "https://github.com/MystenLabs/fastcrypto", rev = "d7a33a9f79271bfc19fc4c8816ea5467e4205e17" }
-iota = { git = "https://github.com/iotaledger/iota.git", package = "iota" }
-secret-storage = { git = "https://github.com/iotaledger/secret-storage" }
-async-trait = "0.1.81"
-jsonpath-rust = "0.7"
+iota-sdk = { workspace = true }
+move-core-types = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+axum = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }
+iota-keys = { workspace = true }
+shared-crypto = { workspace = true }
+bcs = { workspace = true }
+fastcrypto = { workspace = true }
+iota = { workspace = true }
+secret-storage = { workspace = true }
+async-trait.workspace = true
 htf = { path = "../htf" }
-
+jsonpath-rust = "0.7"
 
 [lib]
 path = "utils.rs"

@@ -2,7 +2,7 @@
 module htf::permission_to_attest {
 
   use std::string::String;
-  use sui::vec_map::{Self, VecMap};
+  use iota::vec_map::VecMap;
 
   use htf::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
   use htf::trusted_constraint::{TrustedPropertyConstraint};
@@ -13,7 +13,8 @@ module htf::permission_to_attest {
   }
 
   /// PermissionToAttest can be created only by the HTF module
-  public struct PermissionToAttest has store {
+  public struct PermissionToAttest has store, key {
+    // TODO fixme when auditit the security model
     id : UID,
     federation_id : ID,
     created_by : String,

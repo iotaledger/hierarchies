@@ -13,7 +13,7 @@ use iota_sdk::types::transaction::{ProgrammableTransaction, Transaction, Transac
 
 use iota_sdk::{IotaClient, IotaClientBuilder};
 
-use secret_storage::signer::Signer;
+use secret_storage::Signer;
 use shared_crypto::intent::{Intent, IntentMessage};
 use std::ops::Deref;
 
@@ -27,7 +27,7 @@ pub struct HTFClientBuilder {
     pub(crate) iota_client: Option<IotaClient>,
     pub(crate) sender_pk: Option<Vec<u8>>,
     pub(crate) htf_package_id: Option<ObjectID>,
-    pub(crate) signer: Option<Box<dyn Signer<IotaKeySignature>>>,
+    pub(crate) signer: Option<Box<dyn Signer<IotaKeySignature, KeyId = ()>>>, // TODO:: use a better type here
     pub(crate) gas_budget: Option<u64>,
 }
 
@@ -51,7 +51,7 @@ impl HTFClientBuilder {
     }
 
     #[must_use]
-    pub fn signer(mut self, signer: Box<dyn Signer<IotaKeySignature>>) -> Self {
+    pub fn signer(mut self, signer: Box<dyn Signer<IotaKeySignature, KeyId = ()>>) -> Self {
         self.signer = Some(signer);
         self
     }
@@ -77,7 +77,7 @@ pub struct HTFClient {
     /// This is the client used to connect to the IOTA network.
     iota_client: IotaClient,
     signing_info: Option<SigningInfo>,
-    signer: Box<dyn Signer<IotaKeySignature>>,
+    signer: Box<dyn Signer<IotaKeySignature, KeyId = ()>>,
     gas_budget: u64,
 }
 
@@ -100,7 +100,7 @@ impl HTFClient {
         url: &str,
         package_id: ObjectID,
         pub_key: Vec<u8>,
-        signer: Box<dyn Signer<IotaKeySignature>>,
+        signer: Box<dyn Signer<IotaKeySignature, KeyId = ()>>,
         gas_budget: u64,
     ) -> anyhow::Result<Self> {
         let client = IotaClientBuilder::default().build(url).await?;

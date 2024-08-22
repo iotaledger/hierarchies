@@ -1,19 +1,15 @@
 // Copyright 2020-2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::ops::Deref;
-
 use anyhow::anyhow;
 use anyhow::Context;
 use htf::client::HTFClient;
-use htf::htf::Federation;
-use iota::{client_commands, iota_commands};
+use iota::client_commands;
 
 use iota_sdk::types::base_types::{IotaAddress, ObjectID};
-use iota_sdk::IotaClient;
 use iota_sdk::IotaClientBuilder;
-use jsonpath_rust::JsonPathQuery;
 
+use jsonpath_rust::JsonPathQuery;
 use serde_json::Value;
 use std::io::Write;
 use tokio::process::Command;
@@ -26,8 +22,8 @@ use htf::key::IotaKeySignature;
 use iota_keys::keystore::{AccountKeystore, InMemKeystore};
 
 use iota_sdk::types::crypto::{IotaSignature, SignatureScheme};
-use secret_storage::prelude::KeySignatureTypes;
-use secret_storage::signer::Signer as SignerTrait;
+use secret_storage::SignatureScheme as SignerSignatureScheme;
+use secret_storage::Signer as SignerTrait;
 
 const SCRIPT_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../scripts");
 
@@ -36,11 +32,12 @@ pub const GAS_LOCAL_NETWORK: &str = "http://127.0.0.1:9123/gas";
 
 const CACHED_PKG_ID: &str = "target/htf_pkg_id.txt";
 
-pub const TEST_GAS_BUDGET: u64 = 50_000_000;
+pub const TEST_GAS_BUDGET: u64 = 5_000_000_000;
 
 pub async fn get_client() -> anyhow::Result<HTFClient> {
     let active_address = active_address().await?;
     faucet(active_address).await?;
+
     let package_id =
         if let Ok(id) = std::env::var("HTF_PKG_ID").or(get_cached_id(active_address).await) {
             std::env::set_var("HTF_PKG_ID", id.clone());
@@ -183,14 +180,39 @@ impl Default for TestMemSigner {
 
 #[async_trait::async_trait]
 impl SignerTrait<IotaKeySignature> for TestMemSigner {
+    type KeyId = ();
     async fn sign(
         &self,
         hash: &[u8],
-    ) -> Result<<IotaKeySignature as KeySignatureTypes>::Signature, anyhow::Error> {
-        let address = self.0.get_address_by_alias(EXAMPLE_ALIAS.to_owned())?;
+    ) -> secret_storage::Result<<IotaKeySignature as SignerSignatureScheme>::Signature> {
+        let address = self
+            .0
+            .get_address_by_alias(EXAMPLE_ALIAS.to_owned())
+            .unwrap();
 
-        let signature = self.0.sign_hashed(address, hash)?;
+        let signature = self.0.sign_hashed(address, hash).unwrap();
 
         Ok(signature.signature_bytes().to_vec())
+    }
+
+    async fn public_key(
+        &self,
+    ) -> secret_storage::Result<<IotaKeySignature as secret_storage::SignatureScheme>::PublicKey>
+    {
+        let address = self
+            .0
+            .get_address_by_alias(EXAMPLE_ALIAS.to_owned())
+            .unwrap();
+        let res = self.0.get_key(address).unwrap();
+
+        let public_key = match res {
+            iota_sdk::types::crypto::IotaKeyPair::Ed25519(key) => key.public().as_bytes().to_vec(),
+            _ => panic!(),
+        };
+
+        Ok(public_key)
+    }
+    fn key_id(&self) -> &Self::KeyId {
+        unimplemented!()
     }
 }

@@ -1,10 +1,8 @@
 // HTF Notary module
 module htf::main {
-  use std::string::String;
-  use sui::vec_map::{Self, VecMap};
-  use sui::tx_context::{Self, TxContext};
-  use sui::event;
-  use sui::vec_set::{Self, VecSet};
+  use iota::vec_map::{Self, VecMap};
+  use iota::event;
+  use iota::vec_set::{VecSet};
 
   use htf::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
   use htf::trusted_constraint::{Self, TrustedPropertyConstraints, TrustedPropertyConstraint};

@@ -16,6 +16,6 @@ module htf::permission {
       attestations : vec_map::empty(),
       permissions_to_accredit : vec_map::empty(),
     }
-   }
+  }
 
 }

@@ -1,9 +1,8 @@
 module htf::trusted_constraint {
 
-  use sui::object::{Self, UID};
-  use sui::vec_map::{Self, VecMap};
-  use sui::vec_set::{Self, VecSet};
-  use std::string::{Self, String};
+  use iota::vec_map::{Self, VecMap};
+  use iota::vec_set::VecSet;
+  use std::string::String;
 
   use htf::trusted_property::{TrustedPropertyValue, TrustedPropertyName};
   use htf::utils;
@@ -15,12 +14,54 @@ module htf::trusted_constraint {
     }
   }
 
-  public enum TrustedPropertyExpression has store, copy, drop {
-    StartsWith(String),
-    EndsWith(String),
-    Contains(String),
-    GreaterThan(u64),
-    LowerThan(u64),
+
+  public struct TrustedPropertyExpression has store, copy, drop {
+    starts_with : Option<String>,
+    ends_with : Option<String>,
+    contains : Option<String>,
+    greater_than : Option<u64>,
+    lower_than : Option<u64>,
+  }
+
+
+  public fun as_starts_with(self : &TrustedPropertyExpression) : Option<String> {
+    self.starts_with
+  }
+
+  public fun as_ends_with(self : &TrustedPropertyExpression) : Option<String> {
+    self.ends_with
+  }
+
+  public fun as_lower_than(self : &TrustedPropertyExpression) : Option<u64> {
+    self.lower_than
+  }
+
+  public fun as_greater_than(self : &TrustedPropertyExpression) : Option<u64> {
+    self.greater_than
+  }
+
+  public fun as_contains(self : &TrustedPropertyExpression) : Option<String> {
+    self.contains
+  }
+
+  public fun is_starts_with(self : &TrustedPropertyExpression) : bool {
+    self.starts_with.is_some()
+  }
+
+  public fun is_ends_with(self : &TrustedPropertyExpression) : bool {
+    self.ends_with.is_some()
+  }
+
+  public fun is_contains(self : &TrustedPropertyExpression) : bool {
+    self.contains.is_some()
+  }
+
+  public fun is_greater_than(self : &TrustedPropertyExpression) : bool {
+    self.greater_than.is_some()
+  }
+
+  public fun is_lower_than(self : &TrustedPropertyExpression) : bool {
+    self.lower_than.is_some()
   }
 
   public struct TrustedPropertyConstraints has store {
@@ -82,6 +123,7 @@ module htf::trusted_constraint {
   }
 
 
+
   public(package) fun allowed_values(self : &TrustedPropertyConstraint) : &VecSet<TrustedPropertyValue> {
     &self.allowed_values
   }
@@ -107,7 +149,26 @@ module htf::trusted_constraint {
   }
 
   public(package) fun matches_name(self : &TrustedPropertyConstraint, name : &TrustedPropertyName) : bool {
-      self.property_name == name
+      // considering the constraint name is a.b.c
+      // the allowed name should be equal a.b.c or longer
+      let len_constraint = self.property_name.names().length();
+      let len_names = name.names().length();
+
+      // if contraint is longer than the name, it is not possible to match
+      if (len_constraint > len_names) {
+        return false
+      };
+
+      let mut idx = 0;
+      while (idx < len_constraint) {
+        if (self.property_name.names()[idx] != name.names()[idx]) {
+          // if you have a.b.c and a.b.d, it is not possible to match
+          return false
+        };
+        idx = idx + 1;
+      };
+
+      true
   }
 
   public(package) fun matches_value(self : &TrustedPropertyConstraint, value : &TrustedPropertyValue) : bool {
@@ -135,65 +196,127 @@ module htf::trusted_constraint {
     return map
   }
 
-
   public(package) fun matches_expression(exp : &TrustedPropertyExpression,  value : &TrustedPropertyValue) : bool {
-    match (exp) {
-      TrustedPropertyExpression::StartsWith(req) => {
-        let mut maybe_value_string = value.as_string();
-        if (maybe_value_string.is_none()) {
-          return false
-        };
-        let value_string = maybe_value_string.extract();
-        if (value_string.length() < req.length()) {
-          return false
-        };
-        return value_string.index_of(req) == 0
-      },
-      TrustedPropertyExpression::EndsWith(req) => {
-        let mut maybe_value_string = value.as_string();
-        if (maybe_value_string.is_none()) {
-          return false
-        };
-        let value_string = maybe_value_string.extract();
-        if (value_string.length() < req.length()) {
-          return false
-        };
-        return value_string.index_of(req) == value_string.length() - req.length()
-      },
-      TrustedPropertyExpression::Contains(req) => {
-        let mut maybe_value_string = value.as_string();
-        if (maybe_value_string.is_none()) {
-          return false
-        };
-        let value_string = maybe_value_string.extract();
-        if (value_string.length() < req.length()) {
-          return false
-        };
-        let value_string_len = value_string.length();
-        let index = value_string.index_of(req);
-        if (index == value_string_len) {
-          return false
-        };
-      },
-      TrustedPropertyExpression::GreaterThan(req) => {
-        let mut maybe_value_number = value.as_number();
-        if (maybe_value_number.is_none()) {
-          return false
-        };
-        let value_number = maybe_value_number.extract();
-        return value_number > *req
-      },
-      TrustedPropertyExpression::LowerThan(req) => {
-        let mut maybe_value_number = value.as_number();
-        if (maybe_value_number.is_none()) {
-          return false
-        };
-        let value_number = maybe_value_number.extract();
-        return value_number < *req
-      },
+    if (exp.is_starts_with()) {
+      let mut maybe_value_string = value.as_string();
+      if (maybe_value_string.is_none()) {
+        return false
+      };
+      let value_string = maybe_value_string.extract();
+      if (value_string.length() < exp.as_starts_with().borrow().length()) {
+        return false
+      };
+      return value_string.index_of(exp.as_starts_with().borrow()) == 0
     };
+
+    if (exp.is_ends_with()) {
+      let mut maybe_value_string = value.as_string();
+      if (maybe_value_string.is_none()) {
+        return false
+      };
+      let value_string = maybe_value_string.extract();
+      if (value_string.length() < exp.as_ends_with().borrow().length()) {
+        return false
+      };
+      return value_string.index_of(exp.as_ends_with().borrow()) == value_string.length() - exp.as_ends_with().borrow().length()
+    };
+
+    if (exp.is_contains()) {
+      let mut maybe_value_string = value.as_string();
+      if (maybe_value_string.is_none()) {
+        return false
+      };
+      let value_string = maybe_value_string.extract();
+      if (value_string.length() < exp.as_contains().borrow().length()) {
+        return false
+      };
+      let value_string_len = value_string.length();
+      let index = value_string.index_of(exp.as_contains().borrow());
+      if (index == value_string_len) {
+        return false
+      };
+    };
+
+    if (exp.is_greater_than()) {
+      let mut maybe_value_number = value.as_number();
+      if (maybe_value_number.is_none()) {
+        return false
+      };
+      let value_number = maybe_value_number.extract();
+      return value_number > *exp.as_greater_than().borrow()
+    };
+
+    if (exp.is_lower_than()) {
+      let mut maybe_value_number = value.as_number();
+      if (maybe_value_number.is_none()) {
+        return false
+      };
+      let value_number = maybe_value_number.extract();
+      return value_number < *exp.as_lower_than().borrow()
+    };
+
     false
   }
+
+
+  // public(package) fun matches_expression(exp : &TrustedPropertyExpression,  value : &TrustedPropertyValue) : bool {
+  //   match (exp) {
+  //     TrustedPropertyExpression::StartsWith(req) => {
+  //       let mut maybe_value_string = value.as_string();
+  //       if (maybe_value_string.is_none()) {
+  //         return false
+  //       };
+  //       let value_string = maybe_value_string.extract();
+  //       if (value_string.length() < req.length()) {
+  //         return false
+  //       };
+  //       return value_string.index_of(req) == 0
+  //     },
+  //     TrustedPropertyExpression::EndsWith(req) => {
+  //       let mut maybe_value_string = value.as_string();
+  //       if (maybe_value_string.is_none()) {
+  //         return false
+  //       };
+  //       let value_string = maybe_value_string.extract();
+  //       if (value_string.length() < req.length()) {
+  //         return false
+  //       };
+  //       return value_string.index_of(req) == value_string.length() - req.length()
+  //     },
+  //     TrustedPropertyExpression::Contains(req) => {
+  //       let mut maybe_value_string = value.as_string();
+  //       if (maybe_value_string.is_none()) {
+  //         return false
+  //       };
+  //       let value_string = maybe_value_string.extract();
+  //       if (value_string.length() < req.length()) {
+  //         return false
+  //       };
+  //       let value_string_len = value_string.length();
+  //       let index = value_string.index_of(req);
+  //       if (index == value_string_len) {
+  //         return false
+  //       };
+  //     },
+  //     TrustedPropertyExpression::GreaterThan(req) => {
+  //       let mut maybe_value_number = value.as_number();
+  //       if (maybe_value_number.is_none()) {
+  //         return false
+  //       };
+  //       let value_number = maybe_value_number.extract();
+  //       return value_number > *req
+  //     },
+  //     TrustedPropertyExpression::LowerThan(req) => {
+  //       let mut maybe_value_number = value.as_number();
+  //       if (maybe_value_number.is_none()) {
+  //         return false
+  //       };
+  //       let value_number = maybe_value_number.extract();
+  //       return value_number < *req
+  //     },
+  //   };
+  //   false
+  // }
 }
 
 
