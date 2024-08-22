@@ -44,11 +44,11 @@ module htf::permission_to_accredit {
     }
   }
 
-  public(package) fun are_constraints_permitted(self : &PermissionsToAccredit, constraints: &vector<TrustedPropertyConstraint> ) :bool {
+  public(package) fun are_constraints_permitted(self : &PermissionsToAccredit, constraints: &vector<TrustedPropertyConstraint>, current_time_ms : u64) :bool {
     let mut idx = 0;
     while ( idx < constraints.length()  ) {
         let constraint = constraints[idx];
-        if ( ! self.is_constraint_permitted(&constraint)  )  {
+        if ( ! self.is_constraint_permitted(&constraint, current_time_ms)  )  {
           return false
         };
         idx = idx + 1;
@@ -57,7 +57,7 @@ module htf::permission_to_accredit {
   }
 
 
-  public(package) fun is_constraint_permitted(self : &PermissionsToAccredit, constraint : &TrustedPropertyConstraint) :  bool {
+  public(package) fun is_constraint_permitted(self : &PermissionsToAccredit, constraint : &TrustedPropertyConstraint, current_time_ms : u64) :  bool {
     let len_permissions_to_accredit = self.permissions.length();
     let mut idx_permissions_to_accredit = 0;
     let mut want_constraints : vector<TrustedPropertyValue> = utils::copy_vector(constraint.allowed_values().keys());
@@ -74,7 +74,7 @@ module htf::permission_to_accredit {
       let mut idx_want_constraints = 0;
       while (idx_want_constraints < len_want_constraints ) {
         let constraint_value = want_constraints[idx_want_constraints];
-        if ( maybe_property_constraint.borrow().matches_value(&constraint_value) ) {
+        if ( maybe_property_constraint.borrow().matches_value(&constraint_value, current_time_ms) ) {
           want_constraints.remove(idx_want_constraints);
           len_want_constraints = len_want_constraints - 1;
         };
