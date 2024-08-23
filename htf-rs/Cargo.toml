@@ -1,7 +1,6 @@
 [workspace]
-members = ["htf", "examples"]
+members = ["examples", "htf"]
 resolver = "2"
-
 
 [workspace.package]
 authors = ["IOTA Stiftung"]
@@ -10,19 +9,18 @@ homepage = "https://www.iota.org"
 license = "Apache-2.0"
 repository = "https://github.com/iotaledger/htf"
 
-
 [workspace.dependencies]
-iota-sdk = { git = "https://github.com/iotaledger/iota.git", package = "iota-sdk", tag = "v0.1.4" }
-move-core-types = { git = "https://github.com/iotaledger/iota.git", package = "move-core-types", tag = "v0.1.4" }
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-tokio = { version = "1", features = ["full"] }
 anyhow = "1.0"
-iota-keys = { git = "https://github.com/iotaledger/iota.git", package = "iota-keys", tag = "v0.1.4" }
-shared-crypto = { git = "https://github.com/iotaledger/iota.git", package = "shared-crypto", tag = "v0.1.4" }
+async-trait = "0.1"
 bcs = "0.1"
 fastcrypto = { git = "https://github.com/MystenLabs/fastcrypto", rev = "fastcrypto-zkp-v0.1.3", package = "fastcrypto" }
 iota = { git = "https://github.com/iotaledger/iota.git", package = "iota", tag = "v0.1.4" }
-secret-storage = { git = "https://github.com/iotaledger/secret-storage", branch = "proposal-for-changes" }
+iota-keys = { git = "https://github.com/iotaledger/iota.git", package = "iota-keys", tag = "v0.1.4" }
+iota-sdk = { git = "https://github.com/iotaledger/iota.git", package = "iota-sdk", tag = "v0.1.4" }
 jsonpath-rust = "0.7"
-async-trait = "0.1"
+move-core-types = { git = "https://github.com/iotaledger/iota.git", package = "move-core-types", tag = "v0.1.4" }
+secret-storage = { git = "https://github.com/iotaledger/secret-storage", branch = "proposal-for-changes" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+shared-crypto = { git = "https://github.com/iotaledger/iota.git", package = "shared-crypto", tag = "v0.1.4" }
+tokio = { version = "1", features = ["full"] }

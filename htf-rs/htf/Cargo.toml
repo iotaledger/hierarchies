@@ -1,22 +1,22 @@
 [package]
 name = "htf"
-edition.workspace = true
 authors.workspace = true
+edition.workspace = true
 
 [dependencies]
-iota-sdk.workspace = true
-move-core-types.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-tokio.workspace = true
 anyhow.workspace = true
-iota-keys.workspace = true
-shared-crypto.workspace = true
 bcs.workspace = true
 fastcrypto.workspace = true
 iota.workspace = true
+iota-keys.workspace = true
+iota-sdk.workspace = true
+move-core-types.workspace = true
 secret-storage.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+shared-crypto.workspace = true
+tokio.workspace = true
 
 [dev-dependencies]
-jsonpath-rust.workspace = true
 async-trait.workspace = true
+jsonpath-rust.workspace = true
