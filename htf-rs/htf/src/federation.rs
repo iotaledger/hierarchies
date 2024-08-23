@@ -1,18 +1,525 @@
 use async_trait::async_trait;
+use iota_sdk::types::base_types::ObjectID;
+use iota_sdk::types::collection_types::VecMap;
 use iota_sdk::types::id::ID;
+use std::str::FromStr;
 
-use crate::htf::Federation;
-use crate::types::TrustedPropertyName;
+use anyhow::Context;
+use iota_sdk::rpc_types::IotaObjectDataFilter;
+use iota_sdk::rpc_types::IotaObjectResponseQuery;
+use iota_sdk::rpc_types::IotaTransactionBlockEffectsAPI;
+use iota_sdk::types::base_types::IotaAddress;
+use iota_sdk::types::base_types::ObjectRef;
+use iota_sdk::types::collection_types::VecSet;
 
+use iota_sdk::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
+use iota_sdk::types::transaction::ObjectArg;
+use iota_sdk::types::Identifier;
+use move_core_types::language_storage::StructTag;
+use secret_storage::Signer;
+
+use crate::client::HTFClient;
+use crate::key::IotaKeySignature;
+use crate::types::credentials::Credential;
+use crate::types::event::Event;
+use crate::types::event::FederationCreatedEvent;
+use crate::types::trusted_constraints::TrustedPropertyConstraints;
+use crate::types::trusted_property::TrustedPropertyName;
+use crate::types::trusted_property::TrustedPropertyValue;
+
+/// FederationReadOperations defines the read operations that can be performed
+/// on a federation.
 #[async_trait]
-pub trait FederationOperations {
-    async fn federation(&self) -> anyhow::Result<Federation>;
-    async fn validate_credential(&self, credential_id: ID) -> anyhow::Result<()>;
-    async fn has_permission_to_attest(&self, user_id: ID) -> anyhow::Result<bool>;
-    async fn has_permissions_to_accredit(&self, user_id: ID) -> anyhow::Result<bool>;
-    async fn has_federation_property(
-        &self,
+pub trait FederationReadOperations {
+  /// Returns the ID of the federation.
+  async fn federation_id(&self) -> ObjectID;
 
-        property_name: &TrustedPropertyName,
-    ) -> anyhow::Result<bool>;
+  /// Checks if a user has permission to attest.
+  async fn has_permission_to_attest(&self, user_id: ID) -> anyhow::Result<bool>;
+
+  /// Checks if a user has permission to accredit.
+  async fn has_permissions_to_accredit(&self, user_id: ID) -> anyhow::Result<bool>;
+
+  /// Checks if a federation has a trusted property.
+  async fn has_federation_property(&self, property_name: &TrustedPropertyName) -> anyhow::Result<bool>;
+
+  ///  Validates the trusted properties of the federation.
+  async fn validate_trusted_properties(
+    &self,
+    issuer_id: ID,
+    trusted_properties: VecMap<TrustedPropertyName, TrustedPropertyValue>,
+  ) -> anyhow::Result<()>;
+
+  /// Returns the trusted properties of the federation.
+  async fn get_federation_properties(&self) -> anyhow::Result<Vec<TrustedPropertyName>>;
+}
+
+pub mod ops {
+  use super::*;
+
+  pub async fn create_new_federation<S>(client: &HTFClient<S>) -> anyhow::Result<ObjectID>
+  where
+    S: Signer<IotaKeySignature>,
+  {
+    let mut ptb = ProgrammableTransactionBuilder::new();
+
+    ptb.move_call(
+      client.htf_package_id(),
+      Identifier::from_str("main")?,
+      Identifier::from_str("new_federation")?,
+      vec![],
+      vec![],
+    )?;
+
+    let tx = ptb.finish();
+
+    let iota_tx = client.execute_transaction(tx).await?;
+
+    // Check event emitted
+    let fed_event: Event<FederationCreatedEvent> = iota_tx
+      .events
+      .ok_or_else(|| anyhow::anyhow!("missing events"))?
+      .data
+      .first()
+      .map(|data| bcs::from_bytes(data.bcs.as_slice()))
+      .transpose()?
+      .ok_or_else(|| anyhow::anyhow!("missing federation event"))?;
+
+    let fed_address = IotaAddress::from_str(&fed_event.data.federation_address.to_string())?;
+
+    Ok(ObjectID::from(fed_address))
+  }
+
+  pub async fn add_trusted_property<S>(
+    client: &HTFClient<S>,
+    federation_id: ObjectID,
+    property_name: TrustedPropertyName,
+    allowed_values: VecSet<TrustedPropertyValue>,
+    allow_any: bool,
+  ) -> anyhow::Result<()>
+  where
+    S: Signer<IotaKeySignature>,
+  {
+    let mut ptb = ProgrammableTransactionBuilder::new();
+
+    let cap = get_cap(client, "main", "RootAuthorityCap", None).await?;
+
+    let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
+    let fed_ref = ptb.obj(ObjectArg::SharedObject {
+      id: federation_id,
+      initial_shared_version: client.initial_shared_version(&federation_id).await?,
+      mutable: true,
+    })?;
+
+    let property_name_arg = ptb.pure(&property_name)?;
+    let allow_any = ptb.pure(allow_any)?;
+    let allowed_values = ptb.pure(allowed_values)?;
+
+    ptb.programmable_move_call(
+      client.htf_package_id(),
+      Identifier::from_str("main").unwrap(),
+      Identifier::from_str("add_trusted_property").unwrap(),
+      vec![],
+      vec![cap, fed_ref, property_name_arg, allowed_values, allow_any],
+    );
+
+    let tx = ptb.finish();
+
+    let res = client.execute_transaction(tx).await?;
+
+    if !res.status_ok().ok_or_else(|| anyhow::anyhow!("missing status"))? {
+      let err = res.errors;
+      anyhow::bail!("failed to add trusted property {:?}", err);
+    }
+
+    let federation_operations = client.onchain(federation_id);
+
+    if !federation_operations
+      .has_federation_property(&property_name)
+      .await
+      .context("failed to check if federation has property")?
+    {
+      anyhow::bail!("failed to add trusted property");
+    }
+
+    Ok(())
+  }
+
+  async fn get_cap<S>(
+    client: &HTFClient<S>,
+    module: &str,
+    cap_type: &str,
+    address: Option<IotaAddress>,
+  ) -> anyhow::Result<ObjectRef>
+  where
+    S: Signer<IotaKeySignature>,
+  {
+    let cap_tag = StructTag::from_str(&format!("{}::{module}::{cap_type}", client.htf_package_id()))?;
+
+    let filter = IotaObjectResponseQuery::new_with_filter(IotaObjectDataFilter::StructType(cap_tag));
+
+    let mut cursor = None;
+    loop {
+      let sender = address.unwrap_or(client.sender_address());
+
+      let mut page = client
+        .read_api()
+        .get_owned_objects(sender, Some(filter.clone()), cursor, None)
+        .await?;
+      let cap = std::mem::take(&mut page.data)
+        .into_iter()
+        .find_map(|res| res.data.map(|obj| obj.object_ref()));
+
+      cursor = page.next_cursor;
+      if let Some(cap) = cap {
+        return Ok(cap);
+      }
+      if !page.has_next_page {
+        break;
+      }
+    }
+
+    anyhow::bail!("no cap of type `{cap_type}`",)
+  }
+
+  pub async fn issue_credential<S>(
+    client: &HTFClient<S>,
+    federation_id: ObjectID,
+    receiver: ID,
+    trusted_properties: VecMap<TrustedPropertyName, TrustedPropertyValue>,
+    valid_from_ts: u64,
+    valid_until_ts: u64,
+  ) -> anyhow::Result<()>
+  where
+    S: Signer<IotaKeySignature>,
+  {
+    let mut ptb = ProgrammableTransactionBuilder::new();
+
+    let cap = get_cap(client, "main", "AttestCap", None).await?;
+
+    let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
+    let fed_ref = ptb.obj(ObjectArg::SharedObject {
+      id: federation_id,
+      initial_shared_version: client.initial_shared_version(&federation_id).await?,
+      mutable: true,
+    })?;
+
+    let receiver_arg = ptb.pure(&receiver)?;
+    let trusted_properties_arg = ptb.pure(&trusted_properties)?;
+    let valid_from_ts_arg = ptb.pure(valid_from_ts)?;
+    let valid_until_ts_arg = ptb.pure(valid_until_ts)?;
+
+    ptb.programmable_move_call(
+      client.htf_package_id(),
+      Identifier::from_str("main").unwrap(),
+      Identifier::from_str("issue_credential").unwrap(),
+      vec![],
+      vec![
+        cap,
+        fed_ref,
+        receiver_arg,
+        trusted_properties_arg,
+        valid_from_ts_arg,
+        valid_until_ts_arg,
+      ],
+    );
+
+    let tx = ptb.finish();
+
+    let iota_res = client.execute_transaction(tx).await?;
+
+    let created_object = iota_res
+      .effects
+      .ok_or_else(|| anyhow::anyhow!("missing effects"))?
+      .created()
+      .first()
+      .ok_or_else(|| anyhow::anyhow!("missing created object"))?
+      .object_id();
+
+    let cred: Credential = client.get_object_by_id(created_object).await?;
+
+    assert_eq!(cred.issued_for, receiver, "invalid issued_for");
+
+    assert_eq!(cred.valid_from, valid_from_ts, "invalid valid_from");
+    assert_eq!(cred.valid_to, valid_until_ts, "invalid valid_until");
+
+    Ok(())
+  }
+
+  pub async fn revoke_permission_to_attest<S>(
+    client: &HTFClient<S>,
+    federation_id: ObjectID,
+    user_id: ID,
+    permission_id: ID,
+  ) -> anyhow::Result<()>
+  where
+    S: Signer<IotaKeySignature>,
+  {
+    let cap = get_cap(client, "main", "AttestCap", None).await?;
+
+    let mut ptb = ProgrammableTransactionBuilder::new();
+
+    let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
+    let fed_ref = ptb.obj(ObjectArg::SharedObject {
+      id: federation_id,
+      initial_shared_version: client.initial_shared_version(&federation_id).await?,
+      mutable: true,
+    })?;
+
+    let user_id_arg = ptb.pure(&user_id)?;
+    let permission_id = ptb.pure(permission_id)?;
+
+    ptb.programmable_move_call(
+      client.htf_package_id(),
+      Identifier::from_str("main").unwrap(),
+      Identifier::from_str("revoke_permission_to_accredit").unwrap(),
+      vec![],
+      vec![cap, fed_ref, user_id_arg, permission_id],
+    );
+
+    let tx = ptb.finish();
+
+    client.execute_transaction(tx).await?;
+
+    let federation_operations = client.onchain(federation_id);
+
+    if federation_operations
+      .has_permission_to_attest(user_id)
+      .await
+      .context("failed to check if federation has property")?
+    {
+      anyhow::bail!("failed to revoke permission to accredit");
+    }
+
+    Ok(())
+  }
+
+  pub async fn add_root_authority<S>(
+    client: &HTFClient<S>,
+    federation_id: ObjectID,
+    account_id: ID,
+  ) -> anyhow::Result<()>
+  where
+    S: Signer<IotaKeySignature>,
+  {
+    let cap = get_cap(client, "main", "RootAuthorityCap", None).await?;
+
+    let mut ptb = ProgrammableTransactionBuilder::new();
+
+    let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
+    let fed_ref = ptb.obj(ObjectArg::SharedObject {
+      id: federation_id,
+      initial_shared_version: client.initial_shared_version(&federation_id).await?,
+      mutable: true,
+    })?;
+
+    let account_id_arg = ptb.pure(&account_id)?;
+
+    ptb.programmable_move_call(
+      client.htf_package_id(),
+      Identifier::from_str("main").unwrap(),
+      Identifier::from_str("add_root_authority").unwrap(),
+      vec![],
+      vec![cap, fed_ref, account_id_arg],
+    );
+
+    let tx = ptb.finish();
+
+    let tx_res = client.execute_transaction(tx).await?;
+
+    if !tx_res.status_ok().ok_or_else(|| anyhow::anyhow!("missing status"))? {
+      anyhow::bail!("failed to add root authority");
+    }
+
+    let address: IotaAddress = account_id.bytes.into();
+
+    let Ok(_) = get_cap(client, "main", "RootAuthorityCap", Some(address)).await else {
+      anyhow::bail!("failed to get new authority");
+    };
+
+    Ok(())
+  }
+
+  pub async fn issue_permission_to_accredit<S>(
+    client: &HTFClient<S>,
+    federation_id: ObjectID,
+    receiver: ID,
+    want_property_constraints: Vec<TrustedPropertyConstraints>,
+  ) -> anyhow::Result<()>
+  where
+    S: Signer<IotaKeySignature>,
+  {
+    let cap = get_cap(client, "main", "AccreditCap", None).await?;
+
+    let mut ptb = ProgrammableTransactionBuilder::new();
+
+    let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
+    let fed_ref = ptb.obj(ObjectArg::SharedObject {
+      id: federation_id,
+      initial_shared_version: client.initial_shared_version(&federation_id).await?,
+      mutable: true,
+    })?;
+
+    let receiver_arg = ptb.pure(&receiver)?;
+    let want_property_constraints = ptb.pure(want_property_constraints)?;
+
+    ptb.programmable_move_call(
+      client.htf_package_id(),
+      Identifier::from_str("main").unwrap(),
+      Identifier::from_str("issue_permission_to_accredit").unwrap(),
+      vec![],
+      vec![cap, fed_ref, receiver_arg, want_property_constraints],
+    );
+
+    let tx = ptb.finish();
+
+    let tx_res = client.execute_transaction(tx).await?;
+
+    // check if the ID has AccreditCap
+    if !tx_res.status_ok().ok_or_else(|| anyhow::anyhow!("missing status"))? {
+      anyhow::bail!("failed to issue permission to accredit");
+    }
+
+    let Ok(_) = get_cap(client, "main", "AccreditCap", Some(receiver.bytes.into())).await else {
+      anyhow::bail!("failed to get new accredit");
+    };
+
+    Ok(())
+  }
+
+  pub async fn validate_credential<S>(
+    client: &HTFClient<S>,
+    federation_id: ObjectID,
+    credential_id: ObjectID,
+  ) -> anyhow::Result<()>
+  where
+    S: Signer<IotaKeySignature>,
+  {
+    let mut ptb = ProgrammableTransactionBuilder::new();
+
+    let cred = client.get_object_ref_by_id(credential_id).await?;
+
+    let cred = ptb.obj(ObjectArg::ImmOrOwnedObject(cred))?;
+    let fed_ref = ptb.obj(ObjectArg::SharedObject {
+      id: federation_id,
+      initial_shared_version: client.initial_shared_version(&federation_id).await?,
+      mutable: false,
+    })?;
+
+    ptb.programmable_move_call(
+      client.htf_package_id(),
+      Identifier::from_str("main").unwrap(),
+      Identifier::from_str("validate_credential").unwrap(),
+      vec![],
+      vec![cred, fed_ref],
+    );
+
+    let tx = ptb.finish();
+
+    if !client
+      .execute_transaction(tx)
+      .await?
+      .status_ok()
+      .ok_or_else(|| anyhow::anyhow!("Transaction failed"))?
+    {
+      return Err(anyhow::anyhow!("Transaction failed"));
+    }
+
+    Ok(())
+  }
+
+  pub async fn issue_permission_to_attest<S>(
+    client: &HTFClient<S>,
+    federation_id: ObjectID,
+    receiver: ID,
+    want_property_constraints: Vec<TrustedPropertyConstraints>,
+  ) -> anyhow::Result<()>
+  where
+    S: Signer<IotaKeySignature>,
+  {
+    let cap = get_cap(client, "main", "AttestCap", None).await?;
+
+    let mut ptb = ProgrammableTransactionBuilder::new();
+
+    let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
+    let fed_ref = ptb.obj(ObjectArg::SharedObject {
+      id: federation_id,
+      initial_shared_version: client.initial_shared_version(&federation_id).await?,
+      mutable: true,
+    })?;
+
+    let receiver_arg = ptb.pure(&receiver)?;
+    let want_property_constraints = ptb.pure(want_property_constraints)?;
+
+    ptb.programmable_move_call(
+      client.htf_package_id(),
+      Identifier::from_str("main").unwrap(),
+      Identifier::from_str("issue_permission_to_accredit").unwrap(),
+      vec![],
+      vec![cap, fed_ref, receiver_arg, want_property_constraints],
+    );
+
+    let tx = ptb.finish();
+
+    let tx_res = client.execute_transaction(tx).await?;
+
+    // check if the ID has AccreditCap
+    if !tx_res.status_ok().ok_or_else(|| anyhow::anyhow!("missing status"))? {
+      anyhow::bail!("failed to issue permission to accredit");
+    }
+
+    let Ok(_) = get_cap(client, "main", "AttestCap", Some(receiver.bytes.into())).await else {
+      anyhow::bail!("failed to get new accredit");
+    };
+
+    Ok(())
+  }
+
+  pub async fn revoke_permission_to_accredit<S>(
+    client: &HTFClient<S>,
+    federation_id: ObjectID,
+    user_id: ID,
+    permission_id: ID,
+  ) -> anyhow::Result<()>
+  where
+    S: Signer<IotaKeySignature>,
+  {
+    let cap = get_cap(client, "main", "AccreditCap", None).await?;
+
+    let mut ptb = ProgrammableTransactionBuilder::new();
+
+    let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
+    let fed_ref = ptb.obj(ObjectArg::SharedObject {
+      id: federation_id,
+      initial_shared_version: client.initial_shared_version(&federation_id).await?,
+      mutable: true,
+    })?;
+
+    let user_id_arg = ptb.pure(&user_id)?;
+    let permission_id = ptb.pure(permission_id)?;
+
+    ptb.programmable_move_call(
+      client.htf_package_id(),
+      Identifier::from_str("main").unwrap(),
+      Identifier::from_str("revoke_permission_to_accredit").unwrap(),
+      vec![],
+      vec![cap, fed_ref, user_id_arg, permission_id],
+    );
+
+    let tx = ptb.finish();
+
+    client.execute_transaction(tx).await?;
+
+    let federation_operations = client.onchain(federation_id);
+
+    if federation_operations
+      .has_permissions_to_accredit(user_id)
+      .await
+      .context("failed to check if federation has property")?
+    {
+      anyhow::bail!("failed to revoke permission to accredit");
+    }
+
+    Ok(())
+  }
 }

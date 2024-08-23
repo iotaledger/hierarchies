@@ -1,8 +1,7 @@
 pub mod client;
-mod event;
-pub mod htf;
+mod de;
+pub mod federation;
 pub mod key;
+mod provider;
 pub mod types;
 mod utils;
-mod provider;
-mod federation;

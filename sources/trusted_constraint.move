@@ -10,7 +10,7 @@ module htf::trusted_constraint {
 
   public(package) fun new_trusted_property_constraints() : TrustedPropertyConstraints {
     TrustedPropertyConstraints {
-      data  : vec_map::empty(),
+      data : vec_map::empty(),
     }
   }
 
@@ -68,6 +68,7 @@ module htf::trusted_constraint {
     data : VecMap<TrustedPropertyName, TrustedPropertyConstraint>
   }
 
+
   public(package)  fun data(self : &TrustedPropertyConstraints) : &VecMap<TrustedPropertyName, TrustedPropertyConstraint> {
     &self.data
   }
@@ -107,7 +108,7 @@ module htf::trusted_constraint {
       property_name,
       allowed_values,
       allow_any,
-      experssion: option::none(),
+      expression: option::none(),
     }
   }
 
@@ -117,7 +118,7 @@ module htf::trusted_constraint {
     // allow only set of values
     allowed_values : VecSet<TrustedPropertyValue>,
     // allow only values that match the expression.
-    experssion : Option<TrustedPropertyExpression>,
+    expression : Option<TrustedPropertyExpression>,
     // allow_any - takes a precedence over the allowed_values
     allow_any : bool,
   }
@@ -136,9 +137,9 @@ module htf::trusted_constraint {
     if (constraint.allow_any) {
       return self.allow_any
     };
-    if (constraint.experssion.is_some()) {
-      if (self.experssion.is_some()) {
-        return self.experssion == constraint.experssion
+    if (constraint.expression.is_some()) {
+      if (self.expression.is_some()) {
+        return self.expression == constraint.expression
       }
     };
    utils::contains_all_from(self.allowed_values.keys(), constraint.allowed_values.keys())
@@ -175,8 +176,8 @@ module htf::trusted_constraint {
     if ( self.allow_any ) {
       return true
     };
-    if (self.experssion.is_some()) {
-      if (Self::matches_expression(self.experssion.borrow(), value)) {
+    if (self.expression.is_some()) {
+      if (Self::matches_expression(self.expression.borrow(), value)) {
         return true
       }
     };

@@ -1,12 +1,13 @@
 use iota_sdk::types::base_types::IotaAddress;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Event<D> {
-    pub data: D,
+  pub data: D,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct FederationCreatedEvent {
-    pub federation_address: IotaAddress,
+  pub federation_address: IotaAddress,
 }

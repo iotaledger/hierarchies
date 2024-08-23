@@ -6,10 +6,11 @@ use std::ops::Deref;
 use anyhow::anyhow;
 use anyhow::Context;
 use htf::client::HTFClient;
-use htf::htf::Federation;
+use htf::client::HTFClientReadOnly;
 use iota::client_commands;
 
-use iota_sdk::types::base_types::{IotaAddress, ObjectID};
+use iota_sdk::types::base_types::IotaAddress;
+use iota_sdk::types::base_types::ObjectID;
 use iota_sdk::IotaClient;
 use iota_sdk::IotaClientBuilder;
 use jsonpath_rust::JsonPathQuery;
@@ -20,12 +21,15 @@ use tokio::process::Command;
 
 use std::sync::Arc;
 
-use fastcrypto::traits::{KeyPair, ToFromBytes};
+use fastcrypto::traits::KeyPair;
+use fastcrypto::traits::ToFromBytes;
 use htf::key::IotaKeySignature;
 
-use iota_keys::keystore::{AccountKeystore, InMemKeystore};
+use iota_keys::keystore::AccountKeystore;
+use iota_keys::keystore::InMemKeystore;
 
-use iota_sdk::types::crypto::{IotaSignature, SignatureScheme};
+use iota_sdk::types::crypto::IotaSignature;
+use iota_sdk::types::crypto::SignatureScheme;
 use secret_storage::SignatureScheme as SignerSignatureScheme;
 use secret_storage::Signer as SignerTrait;
 
@@ -40,208 +44,188 @@ pub const TEST_GAS_BUDGET: u64 = 500_000_000;
 
 #[derive(Clone)]
 pub struct TestClient {
-    client: IotaClient,
-    package_id: ObjectID,
-    address: IotaAddress,
-    signer: TestMemSigner,
+  client: IotaClient,
+  package_id: ObjectID,
+  address: IotaAddress,
+  signer: TestMemSigner,
 }
 
 impl TestClient {
-    pub async fn init() -> anyhow::Result<TestClient> {
-        let client = IotaClientBuilder::default().build_localnet().await?;
+  pub async fn init() -> anyhow::Result<TestClient> {
+    let client = IotaClientBuilder::default().build_localnet().await?;
 
-        let signer = TestMemSigner::new();
+    let signer = TestMemSigner::new();
 
-        let deployer_address = Self::active_address().await?;
+    let deployer_address = Self::active_address().await?;
 
-        let address = signer.get_address()?;
+    let address = signer.get_address()?;
 
-        client_commands::request_tokens_from_faucet(
-            deployer_address.to_owned(),
-            GAS_LOCAL_NETWORK.to_owned(),
-        )
-        .await
-        .context("Failed to request tokens from faucet")?;
+    client_commands::request_tokens_from_faucet(deployer_address.to_owned(), GAS_LOCAL_NETWORK.to_owned())
+      .await
+      .context("Failed to request tokens from faucet")?;
 
-        client_commands::request_tokens_from_faucet(
-            address.to_owned(),
-            GAS_LOCAL_NETWORK.to_owned(),
-        )
-        .await
-        .context("Failed to request tokens from faucet")?;
+    client_commands::request_tokens_from_faucet(address.to_owned(), GAS_LOCAL_NETWORK.to_owned())
+      .await
+      .context("Failed to request tokens from faucet")?;
 
-        // Sleep 1 second
-        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+    // Sleep 1 second
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 
-        let package_id =
-            if let Ok(id) = std::env::var("HTF_PKG_ID").or(get_cached_id(deployer_address).await) {
-                std::env::set_var("HTF_PKG_ID", id.clone());
-                id.parse()?
-            } else {
-                publish_package(deployer_address).await?
-            };
+    let package_id = if let Ok(id) = std::env::var("HTF_PKG_ID").or(get_cached_id(deployer_address).await) {
+      std::env::set_var("HTF_PKG_ID", id.clone());
+      id.parse()?
+    } else {
+      publish_package(deployer_address).await?
+    };
 
-        Ok(TestClient {
-            client,
-            package_id,
-            address,
-            signer,
-        })
-    }
+    Ok(TestClient {
+      client,
+      package_id,
+      address,
+      signer,
+    })
+  }
 
-    pub async fn create_new_federation(&self) -> anyhow::Result<(Federation, HTFClient)> {
-        let htf_client = htf::client::HTFClientBuilder::default()
-            .htf_package_id(self.package_id)
-            .iota_client(self.client.clone())
-            .sender_public_key(&self.signer.get_pub_key(&self.address)?)
-            .signer(Box::new(self.signer.clone()))
-            .gas_budget(TEST_GAS_BUDGET)
-            .build()?;
+  pub async fn htf_client(&self) -> anyhow::Result<HTFClient<TestMemSigner>> {
+    let read_only_client = HTFClientReadOnly::new(self.client.clone(), self.package_id);
 
-        let federation = Federation::create_new_federation(&htf_client).await?;
+    HTFClient::new(read_only_client, self.signer.clone(), TEST_GAS_BUDGET).await
+  }
 
-        Ok((federation, htf_client))
-    }
-
-    async fn active_address() -> anyhow::Result<IotaAddress> {
-        Command::new("iota")
-            .arg("client")
-            .arg("active-address")
-            .arg("--json")
-            .output()
-            .await
-            .context("Failed to execute command")
-            .and_then(|output| Ok(serde_json::from_slice::<IotaAddress>(&output.stdout)?))
-    }
+  async fn active_address() -> anyhow::Result<IotaAddress> {
+    Command::new("iota")
+      .arg("client")
+      .arg("active-address")
+      .arg("--json")
+      .output()
+      .await
+      .context("Failed to execute command")
+      .and_then(|output| Ok(serde_json::from_slice::<IotaAddress>(&output.stdout)?))
+  }
 }
 
 impl Deref for TestClient {
-    type Target = IotaClient;
-    fn deref(&self) -> &Self::Target {
-        &self.client
-    }
+  type Target = IotaClient;
+  fn deref(&self) -> &Self::Target {
+    &self.client
+  }
 }
 
 async fn get_cached_id(active_address: IotaAddress) -> anyhow::Result<String> {
-    let cache = tokio::fs::read_to_string(CACHED_PKG_ID).await?;
-    let (cached_id, cached_address) = cache
-        .split_once(';')
-        .ok_or(anyhow!("Invalid or empty cached data"))?;
+  let cache = tokio::fs::read_to_string(CACHED_PKG_ID).await?;
+  let (cached_id, cached_address) = cache.split_once(';').ok_or(anyhow!("Invalid or empty cached data"))?;
 
-    if cached_address == active_address.to_string().as_str() {
-        Ok(cached_id.to_owned())
-    } else {
-        Err(anyhow!("A network change has invalidated the cached data"))
-    }
+  if cached_address == active_address.to_string().as_str() {
+    Ok(cached_id.to_owned())
+  } else {
+    Err(anyhow!("A network change has invalidated the cached data"))
+  }
 }
 
 async fn publish_package(active_address: IotaAddress) -> anyhow::Result<ObjectID> {
-    let output = Command::new("sh")
-        .current_dir(SCRIPT_DIR)
-        .arg("publish_htf.sh")
-        .output()
-        .await?;
+  let output = Command::new("sh")
+    .current_dir(SCRIPT_DIR)
+    .arg("publish_htf.sh")
+    .output()
+    .await?;
 
-    if !output.status.success() {
-        anyhow::bail!(
-            "Failed to publish move package: \n\n{}\n\n{}",
-            std::str::from_utf8(&output.stdout).unwrap(),
-            std::str::from_utf8(&output.stderr).unwrap()
-        );
-    }
+  if !output.status.success() {
+    anyhow::bail!(
+      "Failed to publish move package: \n\n{}\n\n{}",
+      std::str::from_utf8(&output.stdout).unwrap(),
+      std::str::from_utf8(&output.stderr).unwrap()
+    );
+  }
 
-    let publish_result = {
-        let output_str = std::str::from_utf8(&output.stdout).unwrap();
-        let start_of_json = output_str.find('{').ok_or(anyhow!("No json in output"))?;
-        serde_json::from_str::<Value>(output_str[start_of_json..].trim())?
-    };
+  let publish_result = {
+    let output_str = std::str::from_utf8(&output.stdout).unwrap();
+    let start_of_json = output_str.find('{').ok_or(anyhow!("No json in output"))?;
+    serde_json::from_str::<Value>(output_str[start_of_json..].trim())?
+  };
 
-    let package_id = publish_result
-        .path("$.objectChanges[?(@.type == 'published')].packageId")
-        .map_err(|e| anyhow!("Failed to parse JSONPath: {e}"))
-        .and_then(|value| Ok(serde_json::from_value::<Vec<ObjectID>>(value)?))?
-        .first()
-        .copied()
-        .ok_or_else(|| anyhow!("Failed to parse package ID after publishing"))?;
+  let package_id = publish_result
+    .path("$.objectChanges[?(@.type == 'published')].packageId")
+    .map_err(|e| anyhow!("Failed to parse JSONPath: {e}"))
+    .and_then(|value| Ok(serde_json::from_value::<Vec<ObjectID>>(value)?))?
+    .first()
+    .copied()
+    .ok_or_else(|| anyhow!("Failed to parse package ID after publishing"))?;
 
-    // Persist package ID in order to avoid publishing the package for every test.
-    let package_id_str = package_id.to_string();
-    std::env::set_var("HTF_PKG_ID", package_id_str.as_str());
-    let mut file = std::fs::File::create(CACHED_PKG_ID)?;
-    write!(&mut file, "{};{}", package_id_str, active_address)?;
+  // Persist package ID in order to avoid publishing the package for every test.
+  let package_id_str = package_id.to_string();
+  std::env::set_var("HTF_PKG_ID", package_id_str.as_str());
+  let mut file = std::fs::File::create(CACHED_PKG_ID)?;
+  write!(&mut file, "{};{}", package_id_str, active_address)?;
 
-    Ok(package_id)
+  Ok(package_id)
 }
 
 #[derive(Clone)]
 pub struct TestMemSigner(pub Arc<InMemKeystore>);
 
 impl TestMemSigner {
-    pub fn new() -> Self {
-        let mut mem = InMemKeystore::new_insecure_for_tests(0);
-        mem.generate_and_add_new_key(
-            SignatureScheme::ED25519,
-            Some(TEST_ALIAS.to_owned()).to_owned(),
-            None,
-            None,
-        )
-        .expect("Could not generate key");
+  pub fn new() -> Self {
+    let mut mem = InMemKeystore::new_insecure_for_tests(0);
+    mem
+      .generate_and_add_new_key(
+        SignatureScheme::ED25519,
+        Some(TEST_ALIAS.to_owned()).to_owned(),
+        None,
+        None,
+      )
+      .expect("Could not generate key");
 
-        TestMemSigner(Arc::new(mem))
-    }
+    TestMemSigner(Arc::new(mem))
+  }
 
-    pub fn get_address(&self) -> anyhow::Result<IotaAddress> {
-        let address = self.0.get_address_by_alias(TEST_ALIAS.to_owned())?;
-        Ok(*address)
-    }
+  pub fn get_address(&self) -> anyhow::Result<IotaAddress> {
+    let address = self.0.get_address_by_alias(TEST_ALIAS.to_owned())?;
+    Ok(*address)
+  }
 
-    pub fn get_pub_key(&self, address: &IotaAddress) -> anyhow::Result<Vec<u8>> {
-        let res = self.0.get_key(address)?;
+  pub fn get_pub_key(&self, address: &IotaAddress) -> anyhow::Result<Vec<u8>> {
+    let res = self.0.get_key(address)?;
 
-        let public_key = match res {
-            iota_sdk::types::crypto::IotaKeyPair::Ed25519(key) => key.public().as_bytes().to_vec(),
-            _ => panic!(),
-        };
+    let public_key = match res {
+      iota_sdk::types::crypto::IotaKeyPair::Ed25519(key) => key.public().as_bytes().to_vec(),
+      _ => panic!(),
+    };
 
-        Ok(public_key)
-    }
+    Ok(public_key)
+  }
 }
 
 impl Default for TestMemSigner {
-    fn default() -> Self {
-        Self::new()
-    }
+  fn default() -> Self {
+    Self::new()
+  }
 }
 
 #[async_trait::async_trait]
 impl SignerTrait<IotaKeySignature> for TestMemSigner {
-    type KeyId = ();
-    async fn sign(
-        &self,
-        hash: &[u8],
-    ) -> secret_storage::Result<<IotaKeySignature as SignerSignatureScheme>::Signature> {
-        let address = self.0.get_address_by_alias(TEST_ALIAS.to_owned()).unwrap();
+  type KeyId = ();
+  async fn sign(&self, hash: &[u8]) -> secret_storage::Result<<IotaKeySignature as SignerSignatureScheme>::Signature> {
+    let address = self.0.get_address_by_alias(TEST_ALIAS.to_owned()).unwrap();
 
-        let signature = self.0.sign_hashed(address, hash).unwrap();
+    let signature = self.0.sign_hashed(address, hash).unwrap();
 
-        Ok(signature.signature_bytes().to_vec())
-    }
+    Ok(signature.signature_bytes().to_vec())
+  }
 
-    async fn public_key(
-        &self,
-    ) -> secret_storage::Result<<IotaKeySignature as secret_storage::SignatureScheme>::PublicKey>
-    {
-        let address = self.0.get_address_by_alias(TEST_ALIAS.to_owned()).unwrap();
-        let res = self.0.get_key(address).unwrap();
+  async fn public_key(
+    &self,
+  ) -> secret_storage::Result<<IotaKeySignature as secret_storage::SignatureScheme>::PublicKey> {
+    let address = self.0.get_address_by_alias(TEST_ALIAS.to_owned()).unwrap();
+    let res = self.0.get_key(address).unwrap();
 
-        let public_key = match res {
-            iota_sdk::types::crypto::IotaKeyPair::Ed25519(key) => key.public().as_bytes().to_vec(),
-            _ => panic!(),
-        };
+    let public_key = match res {
+      iota_sdk::types::crypto::IotaKeyPair::Ed25519(key) => key.public().as_bytes().to_vec(),
+      _ => panic!(),
+    };
 
-        Ok(public_key)
-    }
-    fn key_id(&self) -> &Self::KeyId {
-        unimplemented!()
-    }
+    Ok(public_key)
+  }
+  fn key_id(&self) -> &Self::KeyId {
+    unimplemented!()
+  }
 }

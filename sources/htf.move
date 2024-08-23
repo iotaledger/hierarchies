@@ -88,18 +88,19 @@ module htf::main {
     let federation_id = object::new(ctx);
     let mut federation = Federation {
       id : federation_id,
-      root_authorities : vector[],
+      root_authorities : vector::empty(),
       governance : Governance {
         id : object::new(ctx),
-        trusted_constraints : trusted_constraint::new_trusted_property_constraints(),
+        trusted_constraints: trusted_constraint::new_trusted_property_constraints(),
         accreditors : vec_map::empty(),
         attesters : vec_map::empty(),
         credentials_state : vec_map::empty(),
       },
     };
+
     let root_auth_cap = Self::new_root_authority_cap(&federation, ctx);
-    // add the root auhtority and the trust service
-    Self::add_root_authority(&mut federation, &root_auth_cap, ctx.sender().to_id(),  ctx);
+    let root_authority = Self::new_root_authority(ctx.sender().to_id(), ctx);
+    vector::push_back(&mut federation.root_authorities, root_authority);
 
     // Add permission to attest
     let permission = permission_to_accredit::new_permissions_to_accredit();
@@ -440,9 +441,9 @@ module htf::main_tests {
     add_trusted_property, issue_permission_to_accredit, issue_permission_to_attest,
     revoke_permission_to_attest, revoke_permission_to_accredit, issue_credential
   };
-  use sui::test_scenario;
-  use sui::vec_set::{Self};
-  use sui::vec_map;
+  use iota::test_scenario;
+  use iota::vec_set::{Self};
+  use iota::vec_map;
   use htf::trusted_property::{new_property_value_number, new_property_name};
   use htf::trusted_constraint::{new_trusted_property_constraint};
 

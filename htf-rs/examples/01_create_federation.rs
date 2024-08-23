@@ -1,5 +1,5 @@
 use examples::get_client;
-use htf::htf::Federation;
+use htf::types::Federation;
 
 /// Demonstrates how to create a a Federation and publish it on chain.
 ///
@@ -11,12 +11,14 @@ use htf::htf::Federation;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let htf_client = get_client().await?;
+  let htf_client = get_client().await?;
 
-    println!("Creating new federation");
-    let federation = Federation::create_new_federation(&htf_client).await?;
+  println!("Creating new federation");
+  let federation_id = htf_client.new_federation().await?;
 
-    println!("Federation created: {:#?}", federation);
+  let federation: Federation = htf_client.get_object_by_id(federation_id).await?;
 
-    Ok(())
+  println!("Federation created: {:#?}", federation);
+
+  Ok(())
 }
