@@ -1,39 +1,26 @@
-use fastcrypto::hash::HashFunction;
-use fastcrypto::traits::ToFromBytes;
-
-use iota_sdk::rpc_types::IotaExecutionStatus;
-use iota_sdk::rpc_types::IotaTransactionBlockEffects;
-use iota_sdk::rpc_types::IotaTransactionBlockEffectsV1;
-use iota_sdk::rpc_types::IotaTransactionBlockResponse;
-use iota_sdk::rpc_types::IotaTransactionBlockResponseOptions;
-use iota_sdk::types::base_types::IotaAddress;
-use iota_sdk::types::base_types::ObjectID;
-use iota_sdk::types::collection_types::VecMap;
-use iota_sdk::types::collection_types::VecSet;
-use iota_sdk::types::crypto::DefaultHash;
-use iota_sdk::types::crypto::Signature;
-use iota_sdk::types::crypto::SignatureScheme;
-use iota_sdk::types::id::ID;
-use iota_sdk::types::quorum_driver_types::ExecuteTransactionRequestType;
-use iota_sdk::types::transaction::ProgrammableTransaction;
-use iota_sdk::types::transaction::Transaction;
-use iota_sdk::types::transaction::TransactionData;
-
-use secret_storage::Signer;
-use shared_crypto::intent::Intent;
-use shared_crypto::intent::IntentMessage;
 use std::ops::Deref;
 
-use crate::federation;
-use crate::key::IotaKeySignature;
-use crate::key::SigningInfo;
-
-use crate::types::trusted_constraints::TrustedPropertyConstraints;
-use crate::types::trusted_property::TrustedPropertyName;
-use crate::types::trusted_property::TrustedPropertyValue;
-use crate::utils::convert_to_address;
+use fastcrypto::hash::HashFunction;
+use fastcrypto::traits::ToFromBytes;
+use iota_sdk::rpc_types::{
+  IotaExecutionStatus, IotaTransactionBlockEffects, IotaTransactionBlockEffectsV1, IotaTransactionBlockResponse,
+  IotaTransactionBlockResponseOptions,
+};
+use iota_sdk::types::base_types::{IotaAddress, ObjectID};
+use iota_sdk::types::collection_types::{VecMap, VecSet};
+use iota_sdk::types::crypto::{DefaultHash, Signature, SignatureScheme};
+use iota_sdk::types::id::ID;
+use iota_sdk::types::quorum_driver_types::ExecuteTransactionRequestType;
+use iota_sdk::types::transaction::{ProgrammableTransaction, Transaction, TransactionData};
+use secret_storage::Signer;
+use shared_crypto::intent::{Intent, IntentMessage};
 
 use super::HTFClientReadOnly;
+use crate::federation;
+use crate::key::{IotaKeySignature, SigningInfo};
+use crate::types::trusted_constraints::TrustedPropertyConstraints;
+use crate::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
+use crate::utils::convert_to_address;
 
 /// The `HTFClient` struct is responsible for managing the connection to the
 /// IOTA network and

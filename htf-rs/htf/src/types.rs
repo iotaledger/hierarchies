@@ -7,19 +7,14 @@ pub mod trusted_property;
 
 use std::collections::HashMap;
 
+use credentials::CredentialState;
+use iota_sdk::types::id::{ID, UID};
+use permission::{Permissions, PermissionsToAccredit, PermissionsToAttest};
+use serde::{Deserialize, Serialize};
+use trusted_constraints::TrustedPropertyConstraints;
+
 use crate::de::deserialize_vec_map;
 use crate::utils::Hashable;
-
-use credentials::CredentialState;
-
-use iota_sdk::types::id::ID;
-use iota_sdk::types::id::UID;
-use permission::Permissions;
-use permission::PermissionsToAccredit;
-use permission::PermissionsToAttest;
-use serde::Deserialize;
-use serde::Serialize;
-use trusted_constraints::TrustedPropertyConstraints;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Federation {

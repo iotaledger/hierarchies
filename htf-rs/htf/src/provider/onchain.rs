@@ -1,22 +1,16 @@
 use std::str::FromStr;
 
-use axum::async_trait;
-use iota_sdk::types::base_types::IotaAddress;
-use iota_sdk::types::base_types::ObjectID;
+use iota_sdk::types::base_types::{IotaAddress, ObjectID};
 use iota_sdk::types::collection_types::VecMap;
 use iota_sdk::types::id::ID;
 use iota_sdk::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use iota_sdk::types::transaction::CallArg;
-use iota_sdk::types::transaction::ObjectArg;
-use iota_sdk::types::transaction::TransactionKind;
+use iota_sdk::types::transaction::{CallArg, ObjectArg, TransactionKind};
 use iota_sdk::types::Identifier;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 use crate::client::HTFClientReadOnly;
-use crate::federation::FederationReadOperations;
-use crate::types::trusted_property::TrustedPropertyName;
-use crate::types::trusted_property::TrustedPropertyValue;
+use crate::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
 
 pub struct OnChainFederation<'c> {
   federation_id: ObjectID,
@@ -70,22 +64,21 @@ impl<'c> OnChainFederation<'c> {
   }
 }
 
-#[async_trait]
-impl FederationReadOperations for OnChainFederation<'_> {
-  async fn federation_id(&self) -> ObjectID {
+impl OnChainFederation<'_> {
+  pub async fn federation_id(&self) -> ObjectID {
     self.federation_id
   }
-  async fn has_permission_to_attest(&self, user_id: ID) -> anyhow::Result<bool> {
+  pub async fn has_permission_to_attest(&self, user_id: ID) -> anyhow::Result<bool> {
     self.execute_query("has_permission_to_attest", user_id).await
   }
-  async fn has_permissions_to_accredit(&self, user_id: ID) -> anyhow::Result<bool> {
+  pub async fn has_permissions_to_accredit(&self, user_id: ID) -> anyhow::Result<bool> {
     self.execute_query("has_permissions_to_accredit", user_id).await
   }
-  async fn has_federation_property(&self, property_name: &TrustedPropertyName) -> anyhow::Result<bool> {
+  pub async fn has_federation_property(&self, property_name: &TrustedPropertyName) -> anyhow::Result<bool> {
     self.execute_query("has_federation_property", property_name).await
   }
 
-  async fn validate_trusted_properties(
+  pub async fn validate_trusted_properties(
     &self,
     issuer_id: ID,
     trusted_properties: VecMap<TrustedPropertyName, TrustedPropertyValue>,
@@ -95,7 +88,7 @@ impl FederationReadOperations for OnChainFederation<'_> {
       .await
   }
 
-  async fn get_federation_properties(&self) -> anyhow::Result<Vec<TrustedPropertyName>> {
+  pub async fn get_federation_properties(&self) -> anyhow::Result<Vec<TrustedPropertyName>> {
     self.execute_query("get_federation_properties", ()).await
   }
 }

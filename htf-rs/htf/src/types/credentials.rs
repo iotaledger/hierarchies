@@ -2,16 +2,12 @@ use std::collections::HashMap;
 
 use iota_sdk::rpc_types::IotaObjectDataOptions;
 use iota_sdk::types::base_types::ObjectRef;
-use iota_sdk::types::id::ID;
-use iota_sdk::types::id::UID;
-use serde::Deserialize;
-use serde::Serialize;
+use iota_sdk::types::id::{ID, UID};
+use serde::{Deserialize, Serialize};
 
+use super::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
 use crate::client::HTFClient;
 use crate::de::deserialize_vec_map;
-
-use super::trusted_property::TrustedPropertyName;
-use super::trusted_property::TrustedPropertyValue;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CredentialState {

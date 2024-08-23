@@ -1,17 +1,10 @@
-use async_trait::async_trait;
-use iota_sdk::types::base_types::ObjectID;
-use iota_sdk::types::collection_types::VecMap;
-use iota_sdk::types::id::ID;
 use std::str::FromStr;
 
 use anyhow::Context;
-use iota_sdk::rpc_types::IotaObjectDataFilter;
-use iota_sdk::rpc_types::IotaObjectResponseQuery;
-use iota_sdk::rpc_types::IotaTransactionBlockEffectsAPI;
-use iota_sdk::types::base_types::IotaAddress;
-use iota_sdk::types::base_types::ObjectRef;
-use iota_sdk::types::collection_types::VecSet;
-
+use iota_sdk::rpc_types::{IotaObjectDataFilter, IotaObjectResponseQuery, IotaTransactionBlockEffectsAPI};
+use iota_sdk::types::base_types::{IotaAddress, ObjectID, ObjectRef};
+use iota_sdk::types::collection_types::{VecMap, VecSet};
+use iota_sdk::types::id::ID;
 use iota_sdk::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 use iota_sdk::types::transaction::ObjectArg;
 use iota_sdk::types::Identifier;
@@ -21,38 +14,9 @@ use secret_storage::Signer;
 use crate::client::HTFClient;
 use crate::key::IotaKeySignature;
 use crate::types::credentials::Credential;
-use crate::types::event::Event;
-use crate::types::event::FederationCreatedEvent;
+use crate::types::event::{Event, FederationCreatedEvent};
 use crate::types::trusted_constraints::TrustedPropertyConstraints;
-use crate::types::trusted_property::TrustedPropertyName;
-use crate::types::trusted_property::TrustedPropertyValue;
-
-/// FederationReadOperations defines the read operations that can be performed
-/// on a federation.
-#[async_trait]
-pub trait FederationReadOperations {
-  /// Returns the ID of the federation.
-  async fn federation_id(&self) -> ObjectID;
-
-  /// Checks if a user has permission to attest.
-  async fn has_permission_to_attest(&self, user_id: ID) -> anyhow::Result<bool>;
-
-  /// Checks if a user has permission to accredit.
-  async fn has_permissions_to_accredit(&self, user_id: ID) -> anyhow::Result<bool>;
-
-  /// Checks if a federation has a trusted property.
-  async fn has_federation_property(&self, property_name: &TrustedPropertyName) -> anyhow::Result<bool>;
-
-  ///  Validates the trusted properties of the federation.
-  async fn validate_trusted_properties(
-    &self,
-    issuer_id: ID,
-    trusted_properties: VecMap<TrustedPropertyName, TrustedPropertyValue>,
-  ) -> anyhow::Result<()>;
-
-  /// Returns the trusted properties of the federation.
-  async fn get_federation_properties(&self) -> anyhow::Result<Vec<TrustedPropertyName>>;
-}
+use crate::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
 
 pub mod ops {
   use super::*;

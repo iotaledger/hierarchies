@@ -1,5 +1,4 @@
 use iota_sdk::types::base_types::IotaAddress;
-
 use secret_storage::SignatureScheme;
 
 pub struct IotaKeySignature {

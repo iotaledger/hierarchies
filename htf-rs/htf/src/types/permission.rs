@@ -1,16 +1,12 @@
 use std::collections::HashMap;
 
-use iota_sdk::types::id::ID;
-use iota_sdk::types::id::UID;
-use serde::Deserialize;
-use serde::Serialize;
-
-use crate::de::deserialize_vec_map;
-use crate::utils::Hashable;
+use iota_sdk::types::id::{ID, UID};
+use serde::{Deserialize, Serialize};
 
 use super::trusted_constraints::TrustedPropertyConstraint;
-use super::trusted_property::TrustedPropertyName;
-use super::trusted_property::TrustedPropertyValue;
+use super::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
+use crate::de::deserialize_vec_map;
+use crate::utils::Hashable;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Permissions {

@@ -1,34 +1,22 @@
 // Copyright 2020-2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use anyhow::anyhow;
-use anyhow::Context;
-use htf::client::HTFClient;
-use htf::client::HTFClientReadOnly;
-use iota::client_commands;
-
-use iota_sdk::types::base_types::IotaAddress;
-use iota_sdk::types::base_types::ObjectID;
-use iota_sdk::IotaClientBuilder;
-
-use jsonpath_rust::JsonPathQuery;
-use serde_json::Value;
 use std::io::Write;
-use tokio::process::Command;
-
 use std::sync::Arc;
 
-use fastcrypto::traits::KeyPair;
-use fastcrypto::traits::ToFromBytes;
+use anyhow::{anyhow, Context};
+use fastcrypto::traits::{KeyPair, ToFromBytes};
+use htf::client::{HTFClient, HTFClientReadOnly};
 use htf::key::IotaKeySignature;
-
-use iota_keys::keystore::AccountKeystore;
-use iota_keys::keystore::InMemKeystore;
-
-use iota_sdk::types::crypto::IotaSignature;
-use iota_sdk::types::crypto::SignatureScheme;
-use secret_storage::SignatureScheme as SignerSignatureScheme;
-use secret_storage::Signer as SignerTrait;
+use iota::client_commands;
+use iota_keys::keystore::{AccountKeystore, InMemKeystore};
+use iota_sdk::types::base_types::{IotaAddress, ObjectID};
+use iota_sdk::types::crypto::{IotaSignature, SignatureScheme};
+use iota_sdk::IotaClientBuilder;
+use jsonpath_rust::JsonPathQuery;
+use secret_storage::{SignatureScheme as SignerSignatureScheme, Signer as SignerTrait};
+use serde_json::Value;
+use tokio::process::Command;
 
 const SCRIPT_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../scripts");
 

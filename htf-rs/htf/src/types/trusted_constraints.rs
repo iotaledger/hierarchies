@@ -1,14 +1,9 @@
-use std::collections::HashMap;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
-use serde::Deserialize;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-use crate::de::deserialize_vec_map;
-use crate::de::deserialize_vec_set;
-
-use super::trusted_property::TrustedPropertyName;
-use super::trusted_property::TrustedPropertyValue;
+use super::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
+use crate::de::{deserialize_vec_map, deserialize_vec_set};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TrustedPropertyConstraints {

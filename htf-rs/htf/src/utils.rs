@@ -5,10 +5,8 @@ use fastcrypto::ed25519::Ed25519PublicKey;
 use fastcrypto::traits::ToFromBytes;
 use iota_sdk::types::base_types::IotaAddress;
 use iota_sdk::types::collection_types::VecMap;
-use iota_sdk::types::id::ID;
-use iota_sdk::types::id::UID;
-use serde::Deserialize;
-use serde::Serialize;
+use iota_sdk::types::id::{ID, UID};
+use serde::{Deserialize, Serialize};
 
 pub fn convert_to_address(sender_public_key: &[u8]) -> anyhow::Result<IotaAddress> {
   let public_key = Ed25519PublicKey::from_bytes(sender_public_key)

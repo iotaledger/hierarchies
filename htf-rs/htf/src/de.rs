@@ -1,11 +1,8 @@
-use iota_sdk::types::collection_types::VecMap;
-use iota_sdk::types::collection_types::VecSet;
-use serde::Deserialize;
-use serde::Deserializer;
-
-use std::collections::HashMap;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
+
+use iota_sdk::types::collection_types::{VecMap, VecSet};
+use serde::{Deserialize, Deserializer};
 
 pub fn deserialize_vec_map<'de, D, K, V>(deserializer: D) -> Result<HashMap<K, V>, D::Error>
 where
@@ -34,9 +31,10 @@ where
 
 #[cfg(test)]
 mod tests {
-  use super::*;
   use iota_sdk::types::collection_types::Entry;
   use serde_json::Value;
+
+  use super::*;
 
   #[test]
   fn test_deserialize_vec_map_roundtrip() {

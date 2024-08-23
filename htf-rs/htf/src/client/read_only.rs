@@ -1,16 +1,12 @@
 use std::ops::Deref;
 
 use anyhow::Context;
-use iota_sdk::rpc_types::IotaData;
-use iota_sdk::rpc_types::IotaObjectDataOptions;
-use iota_sdk::types::base_types::ObjectID;
-use iota_sdk::types::base_types::ObjectRef;
-use iota_sdk::types::base_types::SequenceNumber;
+use iota_sdk::rpc_types::{IotaData, IotaObjectDataOptions};
+use iota_sdk::types::base_types::{ObjectID, ObjectRef, SequenceNumber};
 use iota_sdk::types::object::Owner;
 use iota_sdk::IotaClient;
 
-use crate::provider::OffChainFederation;
-use crate::provider::OnChainFederation;
+use crate::provider::{OffChainFederation, OnChainFederation};
 
 /// A read-only client for the HTF.
 ///
