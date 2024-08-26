@@ -29,15 +29,6 @@ pub struct TrustedPropertyConstraint {
   allow_any: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct TrustedPropertyExpression {
-  starts_with: Option<String>,
-  ends_with: Option<String>,
-  contains: Option<String>,
-  greater_than: Option<u64>,
-  lower_than: Option<u64>,
-}
-
 impl TrustedPropertyConstraint {
   pub fn matches_constraint(&self, constraint: &TrustedPropertyConstraint) -> bool {
     if constraint.allow_any {
@@ -92,31 +83,51 @@ impl TrustedPropertyConstraint {
   }
 
   pub fn matches_expression(exp: &TrustedPropertyExpression, value: &TrustedPropertyValue) -> bool {
-    match value {
-      TrustedPropertyValue::Text(value_string) => {
-        if let Some(ref starts_with) = exp.starts_with {
-          return value_string.starts_with(starts_with);
-        }
-
-        if let Some(ref ends_with) = exp.ends_with {
-          return value_string.ends_with(ends_with);
-        }
-
-        if let Some(ref contains) = exp.contains {
-          return value_string.contains(contains);
+    match exp {
+      TrustedPropertyExpression::StartsWith(prefix) => {
+        if let TrustedPropertyValue::Text(text) = value {
+          text.starts_with(prefix)
+        } else {
+          false
         }
       }
-      TrustedPropertyValue::Number(value_number) => {
-        if let Some(greater_than) = exp.greater_than {
-          return *value_number > greater_than;
+      TrustedPropertyExpression::EndsWith(suffix) => {
+        if let TrustedPropertyValue::Text(text) = value {
+          text.ends_with(suffix)
+        } else {
+          false
         }
-
-        if let Some(lower_than) = exp.lower_than {
-          return *value_number < lower_than;
+      }
+      TrustedPropertyExpression::Contains(substring) => {
+        if let TrustedPropertyValue::Text(text) = value {
+          text.contains(substring)
+        } else {
+          false
+        }
+      }
+      TrustedPropertyExpression::GreaterThan(num) => {
+        if let TrustedPropertyValue::Number(value) = value {
+          value > num
+        } else {
+          false
+        }
+      }
+      TrustedPropertyExpression::LowerThan(num) => {
+        if let TrustedPropertyValue::Number(value) = value {
+          value < num
+        } else {
+          false
         }
       }
     }
-
-    false
   }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum TrustedPropertyExpression {
+  StartsWith(String),
+  EndsWith(String),
+  Contains(String),
+  GreaterThan(u64),
+  LowerThan(u64),
 }

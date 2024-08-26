@@ -358,7 +358,7 @@ module htf::main {
       );
       idx = idx + 1;
     };
-    // then check if names and values are permitted for given issuser
+    // then check if names and values are permitted for given issuer
     let issuer_permissions_to_attest = self.find_permissions_to_attest(issuer_id);
     assert!(
       issuer_permissions_to_attest.are_values_permitted(&trusted_properties),
