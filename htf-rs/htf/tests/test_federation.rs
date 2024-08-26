@@ -15,13 +15,13 @@ async fn test_add_root_authority() -> anyhow::Result<()> {
 
   let id = ID::new(ObjectID::random());
   htf_client
-    .add_root_authority(federation, id.clone())
+    .add_root_authority(*federation.id.object_id(), id.clone())
     .await
     .context("Failed to add trusted property")?;
 
   println!("added_authority: {:?}", ());
 
-  let federation = htf_client.offchain(federation).await?;
+  let federation = htf_client.offchain(*federation.id.object_id()).await?;
 
   // Check the account
   assert!(federation
@@ -34,26 +34,29 @@ async fn test_add_root_authority() -> anyhow::Result<()> {
 }
 
 #[tokio::test]
+#[ignore = "This test is not working"]
 async fn test_adding_trusted_properties() -> anyhow::Result<()> {
-  // let client = TestClient::init().await?;
+  let client = TestClient::init().await?;
 
-  // let federation = client.htf_client().await?.new_federation().await?;
+  let htf_client = client.htf_client().await?;
 
-  // federation
-  //     .add_trusted_property(
-  //         &client,
-  //         TrustedPropertyName {
-  //             name: vec!["Home".to_string()],
-  //         },
-  //         VecSet {
-  //             contents: vec![TrustedPropertyValue {
-  //                 value: "12345".to_string(),
-  //             }],
-  //         },
-  //         true,
-  //     )
-  //     .await
-  //     .context("Failed to add trusted property")?;
+  let _federation = htf_client.new_federation().await?;
+
+  // htf_client
+  //   .add_trusted_property(
+  //     &client,
+  //     TrustedPropertyName {
+  //       name: vec!["Home".to_string()],
+  //     },
+  //     VecSet {
+  //       contents: vec![TrustedPropertyValue {
+  //         value: "12345".to_string(),
+  //       }],
+  //     },
+  //     true,
+  //   )
+  //   .await
+  //   .context("Failed to add trusted property")?;
 
   Ok(())
 }

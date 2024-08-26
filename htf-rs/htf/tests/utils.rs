@@ -32,7 +32,6 @@ pub const TEST_GAS_BUDGET: u64 = 500_000_000;
 pub struct TestClient {
   client: IotaClient,
   package_id: ObjectID,
-  address: IotaAddress,
   signer: TestMemSigner,
 }
 
@@ -67,7 +66,6 @@ impl TestClient {
     Ok(TestClient {
       client,
       package_id,
-      address,
       signer,
     })
   }
@@ -167,17 +165,6 @@ impl TestMemSigner {
   pub fn get_address(&self) -> anyhow::Result<IotaAddress> {
     let address = self.0.get_address_by_alias(TEST_ALIAS.to_owned())?;
     Ok(*address)
-  }
-
-  pub fn get_pub_key(&self, address: &IotaAddress) -> anyhow::Result<Vec<u8>> {
-    let res = self.0.get_key(address)?;
-
-    let public_key = match res {
-      iota_sdk::types::crypto::IotaKeyPair::Ed25519(key) => key.public().as_bytes().to_vec(),
-      _ => panic!(),
-    };
-
-    Ok(public_key)
   }
 }
 

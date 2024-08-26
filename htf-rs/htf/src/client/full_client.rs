@@ -1,3 +1,4 @@
+use std::collections::{HashMap, HashSet};
 use std::ops::Deref;
 
 use fastcrypto::hash::HashFunction;
@@ -7,7 +8,6 @@ use iota_sdk::rpc_types::{
   IotaTransactionBlockResponseOptions,
 };
 use iota_sdk::types::base_types::{IotaAddress, ObjectID};
-use iota_sdk::types::collection_types::{VecMap, VecSet};
 use iota_sdk::types::crypto::{DefaultHash, Signature, SignatureScheme};
 use iota_sdk::types::id::ID;
 use iota_sdk::types::quorum_driver_types::ExecuteTransactionRequestType;
@@ -20,6 +20,7 @@ use crate::federation;
 use crate::key::{IotaKeySignature, SigningInfo};
 use crate::types::trusted_constraints::TrustedPropertyConstraints;
 use crate::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
+use crate::types::Federation;
 use crate::utils::convert_to_address;
 
 /// The `HTFClient` struct is responsible for managing the connection to the
@@ -36,20 +37,18 @@ impl<S> HTFClient<S>
 where
   S: Signer<IotaKeySignature>,
 {
-  /// Creates a new `HTFClient` instance with the given IOTA network URL and
-  /// the HTF package ID.
+  /// Creates a new [`HTFClient`] instance.
   ///
-  /// This function initializes an `IotaClient` instance using the provided
-  /// URL and returns a new `HTFClient`
-  /// instance with the given HTF package ID.
+  /// This function initializes an `HTFClient` with the provided [`HTFClientReadOnly`], `Signer`, and gas budget.
+  /// The `SigningInfo` struct is also initialized with the signer's public key and the derived sender address.
   ///
   /// # Arguments
-  /// * `url` - The URL of the IOTA network to connect to.
-  /// * `package_id` - The package ID of the HTF package.
+  /// * `read_client` - The [`HTFClientReadOnly`] instance to use for read operations.
+  /// * `signer` - The `Signer` instance to use for signing transactions.
+  /// * `gas_budget` - The gas budget to use for transactions.
   ///
   /// # Returns
-  /// A new `HTFClient` instance, or an error if the `IotaClient` could not
-  /// be created.
+  /// A new `HTFClient` instance.
   pub async fn new(read_client: HTFClientReadOnly, signer: S, gas_budget: u64) -> anyhow::Result<Self> {
     let pub_key = signer.public_key().await?;
     let address = convert_to_address(&pub_key)?;
@@ -60,13 +59,13 @@ where
 
     Ok(Self {
       read_client,
-
       signer,
       signing_info: info,
       gas_budget,
     })
   }
 
+  /// Returns the sender's address.
   pub fn sender_address(&self) -> IotaAddress {
     self.signing_info.sender_address
   }
@@ -172,8 +171,10 @@ where
   ///
   /// # Returns
   /// The ID of the newly created federation.
-  pub async fn new_federation(&self) -> anyhow::Result<ObjectID> {
+  pub async fn new_federation(&self) -> anyhow::Result<Federation> {
     let federation = federation::ops::create_new_federation(self).await?;
+
+    let federation = self.get_object_by_id(federation).await?;
 
     Ok(federation)
   }
@@ -191,17 +192,28 @@ where
     &self,
     federation_id: ObjectID,
     property_name: TrustedPropertyName,
-    allowed_values: VecSet<TrustedPropertyValue>,
+    allowed_values: HashSet<TrustedPropertyValue>,
     allow_any: bool,
   ) -> anyhow::Result<()> {
     federation::ops::add_trusted_property(self, federation_id, property_name, allowed_values, allow_any).await
   }
 
+  /// Issues a credential for an account in a federation.
+  ///
+  /// # Arguments
+  /// * `federation_id` - The ID of the federation.
+  /// * `account_id` - The ID of the account to issue the credential for.
+  /// * `trusted_properties` - A map of trusted property names to their values.
+  /// * `valid_from_ts` - The timestamp from which the credential is valid.
+  /// * `valid_until_ts` - The timestamp until which the credential is valid.
+  ///
+  /// # Returns
+  /// A Result indicating success or failure.
   pub async fn issue_credential(
     &self,
     federation_id: ObjectID,
     account_id: ID,
-    trusted_properties: VecMap<TrustedPropertyName, TrustedPropertyValue>,
+    trusted_properties: HashMap<TrustedPropertyName, TrustedPropertyValue>,
     valid_from_ts: u64,
     valid_until_ts: u64,
   ) -> anyhow::Result<()> {
@@ -216,6 +228,15 @@ where
     .await
   }
 
+  /// Revokes a permission to attest for a user in a federation.
+  ///
+  /// # Arguments
+  /// * `federation_id` - The ID of the federation.
+  /// * `user_id` - The ID of the user whose permission is being revoked.
+  /// * `permission_id` - The ID of the permission being revoked.
+  ///
+  /// # Returns
+  /// A Result indicating success or failure.
   pub async fn revoke_permission_to_attest(
     &self,
     federation_id: ObjectID,
@@ -225,6 +246,15 @@ where
     federation::ops::revoke_permission_to_attest(self, federation_id, user_id, permission_id).await
   }
 
+  /// Issues a permission to accredit to a receiver in a federation.
+  ///
+  /// # Arguments
+  /// * `federation_id` - The ID of the federation.
+  /// * `receiver` - The ID of the receiver of the permission.
+  /// * `want_property_constraints` - A vector of trusted property constraints.
+  ///
+  /// # Returns
+  /// A Result indicating success or failure.
   pub async fn issue_permission_to_accredit(
     &self,
     federation_id: ObjectID,
@@ -234,10 +264,27 @@ where
     federation::ops::issue_permission_to_accredit(self, federation_id, receiver, want_property_constraints).await
   }
 
+  /// Validates a credential in a federation.
+  ///
+  /// # Arguments
+  /// * `federation_id` - The ID of the federation.
+  /// * `credential_id` - The ID of the credential to validate.
+  ///
+  /// # Returns
+  /// A Result indicating success or failure.
   pub async fn validate_credential(&self, federation_id: ObjectID, credential_id: ObjectID) -> anyhow::Result<()> {
     federation::ops::validate_credential(self, federation_id, credential_id).await
   }
 
+  /// Issues a permission to attest to a receiver in a federation.
+  ///
+  /// # Arguments
+  /// * `federation_id` - The ID of the federation.
+  /// * `receiver` - The ID of the receiver of the permission.
+  /// * `want_property_constraints` - A vector of trusted property constraints.
+  ///
+  /// # Returns
+  /// A Result indicating success or failure.
   pub async fn issue_permission_to_attest(
     &self,
     federation_id: ObjectID,
@@ -247,7 +294,15 @@ where
     federation::ops::issue_permission_to_attest(self, federation_id, receiver, want_property_constraints).await
   }
 
-  /// Revokes a permission to accredit.
+  /// Revokes a permission to accredit for a user in a federation.
+  ///
+  /// # Arguments
+  /// * `federation_id` - The ID of the federation.
+  /// * `user_id` - The ID of the user whose permission is being revoked.
+  /// * `permission_id` - The ID of the permission being revoked.
+  ///
+  /// # Returns
+  /// A Result indicating success or failure.
   pub async fn revoke_permission_to_accredit(
     &self,
     federation_id: ObjectID,
@@ -257,7 +312,6 @@ where
     federation::ops::revoke_permission_to_accredit(self, federation_id, user_id, permission_id).await
   }
 }
-
 impl<S> Deref for HTFClient<S> {
   type Target = HTFClientReadOnly;
 

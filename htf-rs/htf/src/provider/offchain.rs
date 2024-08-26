@@ -1,11 +1,10 @@
+use std::collections::HashMap;
+
 use iota_sdk::types::base_types::ObjectID;
-use iota_sdk::types::collection_types::VecMap;
-use iota_sdk::types::id::ID;
 
 use crate::client::HTFClientReadOnly;
 use crate::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
 use crate::types::Federation;
-use crate::utils::{Hashable, IntoCollectionHash};
 
 pub struct OffChainFederation {
   federation: Federation,
@@ -41,11 +40,11 @@ impl OffChainFederation {
     *self.federation.id.object_id()
   }
 
-  pub fn has_permission_to_attest(&self, user_id: ID) -> bool {
-    self.federation.governance.attesters.contains_key(&Hashable(user_id))
+  pub fn has_permission_to_attest(&self, user_id: ObjectID) -> bool {
+    self.federation.governance.attesters.contains_key(&user_id)
   }
-  pub fn has_permissions_to_accredit(&self, user_id: ID) -> bool {
-    self.federation.governance.accreditors.contains_key(&Hashable(user_id))
+  pub fn has_permissions_to_accredit(&self, user_id: ObjectID) -> bool {
+    self.federation.governance.accreditors.contains_key(&user_id)
   }
   pub fn has_federation_property(&self, property_name: &TrustedPropertyName) -> bool {
     let federation = self.federation();
@@ -58,11 +57,10 @@ impl OffChainFederation {
 
   pub fn validate_trusted_properties(
     &self,
-    issuer_id: ID,
-    trusted_properties: VecMap<TrustedPropertyName, TrustedPropertyValue>,
+    issuer_id: ObjectID,
+    trusted_properties: HashMap<TrustedPropertyName, TrustedPropertyValue>,
   ) -> anyhow::Result<bool> {
     let federation = self.federation();
-    let trusted_properties = trusted_properties.to_hashmap();
 
     // Has federation property
     trusted_properties.keys().try_for_each(|property_name| {
@@ -76,11 +74,11 @@ impl OffChainFederation {
       Ok(())
     })?;
 
-    // then check if names and values are permitted for given issuser
+    // then check if names and values are permitted for given i
     let issuer_permissions_to_attest = federation
       .governance
       .attesters
-      .get(&Hashable(issuer_id))
+      .get(&issuer_id)
       .ok_or_else(|| anyhow::anyhow!("issuer not found"))?;
 
     let res = issuer_permissions_to_attest.are_values_permitted(&trusted_properties);

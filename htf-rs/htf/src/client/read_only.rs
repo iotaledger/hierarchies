@@ -78,7 +78,7 @@ impl HTFClientReadOnly {
 
     match owner {
       Owner::Shared { initial_shared_version } => Ok(initial_shared_version),
-      _ => anyhow::bail!("`TransferProposal` is not a shared object"),
+      _ => anyhow::bail!(format!("object {object_id} is not a shared object")),
     }
   }
 

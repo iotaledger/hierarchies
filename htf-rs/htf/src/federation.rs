@@ -1,13 +1,14 @@
+use std::collections::{HashMap, HashSet};
 use std::str::FromStr;
 
 use anyhow::Context;
 use iota_sdk::rpc_types::{IotaObjectDataFilter, IotaObjectResponseQuery, IotaTransactionBlockEffectsAPI};
 use iota_sdk::types::base_types::{IotaAddress, ObjectID, ObjectRef};
-use iota_sdk::types::collection_types::{VecMap, VecSet};
+use iota_sdk::types::collection_types::{Entry, VecMap};
 use iota_sdk::types::id::ID;
 use iota_sdk::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 use iota_sdk::types::transaction::ObjectArg;
-use iota_sdk::types::Identifier;
+use move_core_types::ident_str;
 use move_core_types::language_storage::StructTag;
 use secret_storage::Signer;
 
@@ -16,9 +17,9 @@ use crate::key::IotaKeySignature;
 use crate::types::credentials::Credential;
 use crate::types::event::{Event, FederationCreatedEvent};
 use crate::types::trusted_constraints::TrustedPropertyConstraints;
-use crate::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
+use crate::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue, TrustedPropertyValueMove};
 
-pub mod ops {
+pub(crate) mod ops {
   use super::*;
 
   pub async fn create_new_federation<S>(client: &HTFClient<S>) -> anyhow::Result<ObjectID>
@@ -29,8 +30,8 @@ pub mod ops {
 
     ptb.move_call(
       client.htf_package_id(),
-      Identifier::from_str("main")?,
-      Identifier::from_str("new_federation")?,
+      ident_str!("main").into(),
+      ident_str!("new_federation").into(),
       vec![],
       vec![],
     )?;
@@ -58,7 +59,7 @@ pub mod ops {
     client: &HTFClient<S>,
     federation_id: ObjectID,
     property_name: TrustedPropertyName,
-    allowed_values: VecSet<TrustedPropertyValue>,
+    allowed_values: HashSet<TrustedPropertyValue>,
     allow_any: bool,
   ) -> anyhow::Result<()>
   where
@@ -77,12 +78,16 @@ pub mod ops {
 
     let property_name_arg = ptb.pure(&property_name)?;
     let allow_any = ptb.pure(allow_any)?;
+    let allowed_values = allowed_values
+      .into_iter()
+      .map(TrustedPropertyValueMove::from)
+      .collect::<HashSet<_>>();
     let allowed_values = ptb.pure(allowed_values)?;
 
     ptb.programmable_move_call(
       client.htf_package_id(),
-      Identifier::from_str("main").unwrap(),
-      Identifier::from_str("add_trusted_property").unwrap(),
+      ident_str!("main").into(),
+      ident_str!("add_trusted_property").into(),
       vec![],
       vec![cap, fed_ref, property_name_arg, allowed_values, allow_any],
     );
@@ -150,7 +155,7 @@ pub mod ops {
     client: &HTFClient<S>,
     federation_id: ObjectID,
     receiver: ID,
-    trusted_properties: VecMap<TrustedPropertyName, TrustedPropertyValue>,
+    trusted_properties: HashMap<TrustedPropertyName, TrustedPropertyValue>,
     valid_from_ts: u64,
     valid_until_ts: u64,
   ) -> anyhow::Result<()>
@@ -169,14 +174,29 @@ pub mod ops {
     })?;
 
     let receiver_arg = ptb.pure(&receiver)?;
-    let trusted_properties_arg = ptb.pure(&trusted_properties)?;
+
+    let trusted_properties_vec = {
+      let trusted_properties_vec = trusted_properties
+        .into_iter()
+        .map(|(k, v)| {
+          let v = TrustedPropertyValueMove::from(v);
+          Entry { key: k, value: v }
+        })
+        .collect();
+
+      VecMap {
+        contents: trusted_properties_vec,
+      }
+    };
+
+    let trusted_properties_arg = ptb.pure(&trusted_properties_vec)?;
     let valid_from_ts_arg = ptb.pure(valid_from_ts)?;
     let valid_until_ts_arg = ptb.pure(valid_until_ts)?;
 
     ptb.programmable_move_call(
       client.htf_package_id(),
-      Identifier::from_str("main").unwrap(),
-      Identifier::from_str("issue_credential").unwrap(),
+      ident_str!("main").into(),
+      ident_str!("issue_credential").into(),
       vec![],
       vec![
         cap,
@@ -235,8 +255,8 @@ pub mod ops {
 
     ptb.programmable_move_call(
       client.htf_package_id(),
-      Identifier::from_str("main").unwrap(),
-      Identifier::from_str("revoke_permission_to_accredit").unwrap(),
+      ident_str!("main").into(),
+      ident_str!("revoke_permission_to_accredit").into(),
       vec![],
       vec![cap, fed_ref, user_id_arg, permission_id],
     );
@@ -281,8 +301,8 @@ pub mod ops {
 
     ptb.programmable_move_call(
       client.htf_package_id(),
-      Identifier::from_str("main").unwrap(),
-      Identifier::from_str("add_root_authority").unwrap(),
+      ident_str!("main").into(),
+      ident_str!("add_root_authority").into(),
       vec![],
       vec![cap, fed_ref, account_id_arg],
     );
@@ -329,8 +349,8 @@ pub mod ops {
 
     ptb.programmable_move_call(
       client.htf_package_id(),
-      Identifier::from_str("main").unwrap(),
-      Identifier::from_str("issue_permission_to_accredit").unwrap(),
+      ident_str!("main").into(),
+      ident_str!("issue_permission_to_accredit").into(),
       vec![],
       vec![cap, fed_ref, receiver_arg, want_property_constraints],
     );
@@ -372,8 +392,8 @@ pub mod ops {
 
     ptb.programmable_move_call(
       client.htf_package_id(),
-      Identifier::from_str("main").unwrap(),
-      Identifier::from_str("validate_credential").unwrap(),
+      ident_str!("main").into(),
+      ident_str!("validate_credential").into(),
       vec![],
       vec![cred, fed_ref],
     );
@@ -417,8 +437,8 @@ pub mod ops {
 
     ptb.programmable_move_call(
       client.htf_package_id(),
-      Identifier::from_str("main").unwrap(),
-      Identifier::from_str("issue_permission_to_accredit").unwrap(),
+      ident_str!("main").into(),
+      ident_str!("issue_permission_to_accredit").into(),
       vec![],
       vec![cap, fed_ref, receiver_arg, want_property_constraints],
     );
@@ -464,8 +484,8 @@ pub mod ops {
 
     ptb.programmable_move_call(
       client.htf_package_id(),
-      Identifier::from_str("main").unwrap(),
-      Identifier::from_str("revoke_permission_to_accredit").unwrap(),
+      ident_str!("main").into(),
+      ident_str!("revoke_permission_to_accredit").into(),
       vec![],
       vec![cap, fed_ref, user_id_arg, permission_id],
     );

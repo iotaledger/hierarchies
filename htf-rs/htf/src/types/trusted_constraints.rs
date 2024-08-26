@@ -3,7 +3,7 @@ use std::collections::{HashMap, HashSet};
 use serde::{Deserialize, Serialize};
 
 use super::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
-use crate::de::{deserialize_vec_map, deserialize_vec_set};
+use crate::utils::{deserialize_vec_map, deserialize_vec_set};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TrustedPropertyConstraints {
@@ -92,33 +92,28 @@ impl TrustedPropertyConstraint {
   }
 
   pub fn matches_expression(exp: &TrustedPropertyExpression, value: &TrustedPropertyValue) -> bool {
-    if let Some(ref starts_with) = exp.starts_with {
-      if let Some(value_string) = &value.text {
-        return value_string.starts_with(starts_with);
-      }
-    }
+    match value {
+      TrustedPropertyValue::Text(value_string) => {
+        if let Some(ref starts_with) = exp.starts_with {
+          return value_string.starts_with(starts_with);
+        }
 
-    if let Some(ref ends_with) = exp.ends_with {
-      if let Some(value_string) = &value.text {
-        return value_string.ends_with(ends_with);
-      }
-    }
+        if let Some(ref ends_with) = exp.ends_with {
+          return value_string.ends_with(ends_with);
+        }
 
-    if let Some(ref contains) = exp.contains {
-      if let Some(value_string) = &value.text {
-        return value_string.contains(contains);
+        if let Some(ref contains) = exp.contains {
+          return value_string.contains(contains);
+        }
       }
-    }
+      TrustedPropertyValue::Number(value_number) => {
+        if let Some(greater_than) = exp.greater_than {
+          return *value_number > greater_than;
+        }
 
-    if let Some(greater_than) = exp.greater_than {
-      if let Some(value_number) = value.number {
-        return value_number > greater_than;
-      }
-    }
-
-    if let Some(lower_than) = exp.lower_than {
-      if let Some(value_number) = value.number {
-        return value_number < lower_than;
+        if let Some(lower_than) = exp.lower_than {
+          return *value_number < lower_than;
+        }
       }
     }
 

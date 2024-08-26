@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use super::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
 use crate::client::HTFClient;
-use crate::de::deserialize_vec_map;
+use crate::utils::deserialize_vec_map;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CredentialState {
@@ -33,7 +33,7 @@ impl Credential {
       .await?;
 
     let Some(data) = res.data else {
-      return Err(anyhow::anyhow!("no data"));
+      anyhow::bail!("no data");
     };
 
     Ok(data.object_ref())
