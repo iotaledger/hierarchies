@@ -55,7 +55,7 @@ impl PermissionsToAttest {
 /// PermissionToAttest can be created only by the HTF module
 pub struct PermissionToAttest {
   id: UID,
-  federation_id: ID,
+  federation_id: ObjectID,
   created_by: String,
   #[serde(deserialize_with = "deserialize_vec_map")]
   pub constraints: HashMap<TrustedPropertyName, TrustedPropertyConstraint>,

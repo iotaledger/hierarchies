@@ -9,7 +9,7 @@ use std::collections::HashMap;
 
 use credentials::CredentialState;
 use iota_sdk::types::base_types::ObjectID;
-use iota_sdk::types::id::{ID, UID};
+use iota_sdk::types::id::UID;
 use permission::{Permissions, PermissionsToAccredit, PermissionsToAttest};
 use serde::{Deserialize, Serialize};
 use trusted_constraints::TrustedPropertyConstraints;
@@ -26,7 +26,7 @@ pub struct Federation {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RootAuthority {
   pub id: UID,
-  pub account_id: ID,
+  pub account_id: ObjectID,
   pub permissions: Permissions,
 }
 

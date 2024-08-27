@@ -5,7 +5,6 @@ use anyhow::Context;
 use iota_sdk::rpc_types::{IotaObjectDataFilter, IotaObjectResponseQuery, IotaTransactionBlockEffectsAPI};
 use iota_sdk::types::base_types::{IotaAddress, ObjectID, ObjectRef};
 use iota_sdk::types::collection_types::{Entry, VecMap};
-use iota_sdk::types::id::ID;
 use iota_sdk::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 use iota_sdk::types::transaction::ObjectArg;
 use move_core_types::ident_str;
@@ -154,7 +153,7 @@ pub(crate) mod ops {
   pub async fn issue_credential<S>(
     client: &HTFClient<S>,
     federation_id: ObjectID,
-    receiver: ID,
+    receiver: ObjectID,
     trusted_properties: HashMap<TrustedPropertyName, TrustedPropertyValue>,
     valid_from_ts: u64,
     valid_until_ts: u64,
@@ -173,7 +172,7 @@ pub(crate) mod ops {
       mutable: true,
     })?;
 
-    let receiver_arg = ptb.pure(&receiver)?;
+    let receiver_arg = ptb.pure(receiver)?;
 
     let trusted_properties_vec = {
       let trusted_properties_vec = trusted_properties
@@ -233,8 +232,8 @@ pub(crate) mod ops {
   pub async fn revoke_permission_to_attest<S>(
     client: &HTFClient<S>,
     federation_id: ObjectID,
-    user_id: ID,
-    permission_id: ID,
+    user_id: ObjectID,
+    permission_id: ObjectID,
   ) -> anyhow::Result<()>
   where
     S: Signer<IotaKeySignature>,
@@ -250,7 +249,7 @@ pub(crate) mod ops {
       mutable: true,
     })?;
 
-    let user_id_arg = ptb.pure(&user_id)?;
+    let user_id_arg = ptb.pure(user_id)?;
     let permission_id = ptb.pure(permission_id)?;
 
     ptb.programmable_move_call(
@@ -281,7 +280,7 @@ pub(crate) mod ops {
   pub async fn add_root_authority<S>(
     client: &HTFClient<S>,
     federation_id: ObjectID,
-    account_id: ID,
+    account_id: ObjectID,
   ) -> anyhow::Result<()>
   where
     S: Signer<IotaKeySignature>,
@@ -297,7 +296,7 @@ pub(crate) mod ops {
       mutable: true,
     })?;
 
-    let account_id_arg = ptb.pure(&account_id)?;
+    let account_id_arg = ptb.pure(account_id)?;
 
     ptb.programmable_move_call(
       client.htf_package_id(),
@@ -315,7 +314,7 @@ pub(crate) mod ops {
       anyhow::bail!("failed to add root authority");
     }
 
-    let address: IotaAddress = account_id.bytes.into();
+    let address: IotaAddress = account_id.into();
 
     let Ok(_) = get_cap(client, "main", "RootAuthorityCap", Some(address)).await else {
       anyhow::bail!("failed to get new authority");
@@ -327,7 +326,7 @@ pub(crate) mod ops {
   pub async fn issue_permission_to_accredit<S>(
     client: &HTFClient<S>,
     federation_id: ObjectID,
-    receiver: ID,
+    receiver: ObjectID,
     want_property_constraints: Vec<TrustedPropertyConstraints>,
   ) -> anyhow::Result<()>
   where
@@ -344,7 +343,7 @@ pub(crate) mod ops {
       mutable: true,
     })?;
 
-    let receiver_arg = ptb.pure(&receiver)?;
+    let receiver_arg = ptb.pure(receiver)?;
     let want_property_constraints = ptb.pure(want_property_constraints)?;
 
     ptb.programmable_move_call(
@@ -364,7 +363,7 @@ pub(crate) mod ops {
       anyhow::bail!("failed to issue permission to accredit");
     }
 
-    let Ok(_) = get_cap(client, "main", "AccreditCap", Some(receiver.bytes.into())).await else {
+    let Ok(_) = get_cap(client, "main", "AccreditCap", Some(receiver.into())).await else {
       anyhow::bail!("failed to get new accredit");
     };
 
@@ -415,7 +414,7 @@ pub(crate) mod ops {
   pub async fn issue_permission_to_attest<S>(
     client: &HTFClient<S>,
     federation_id: ObjectID,
-    receiver: ID,
+    receiver: ObjectID,
     want_property_constraints: Vec<TrustedPropertyConstraints>,
   ) -> anyhow::Result<()>
   where
@@ -432,7 +431,7 @@ pub(crate) mod ops {
       mutable: true,
     })?;
 
-    let receiver_arg = ptb.pure(&receiver)?;
+    let receiver_arg = ptb.pure(receiver)?;
     let want_property_constraints = ptb.pure(want_property_constraints)?;
 
     ptb.programmable_move_call(
@@ -452,7 +451,7 @@ pub(crate) mod ops {
       anyhow::bail!("failed to issue permission to accredit");
     }
 
-    let Ok(_) = get_cap(client, "main", "AttestCap", Some(receiver.bytes.into())).await else {
+    let Ok(_) = get_cap(client, "main", "AttestCap", Some(receiver.into())).await else {
       anyhow::bail!("failed to get new accredit");
     };
 
@@ -462,8 +461,8 @@ pub(crate) mod ops {
   pub async fn revoke_permission_to_accredit<S>(
     client: &HTFClient<S>,
     federation_id: ObjectID,
-    user_id: ID,
-    permission_id: ID,
+    user_id: ObjectID,
+    permission_id: ObjectID,
   ) -> anyhow::Result<()>
   where
     S: Signer<IotaKeySignature>,
@@ -479,7 +478,7 @@ pub(crate) mod ops {
       mutable: true,
     })?;
 
-    let user_id_arg = ptb.pure(&user_id)?;
+    let user_id_arg = ptb.pure(user_id)?;
     let permission_id = ptb.pure(permission_id)?;
 
     ptb.programmable_move_call(

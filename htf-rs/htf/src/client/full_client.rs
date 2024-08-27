@@ -9,7 +9,6 @@ use iota_sdk::rpc_types::{
 };
 use iota_sdk::types::base_types::{IotaAddress, ObjectID};
 use iota_sdk::types::crypto::{DefaultHash, Signature, SignatureScheme};
-use iota_sdk::types::id::ID;
 use iota_sdk::types::quorum_driver_types::ExecuteTransactionRequestType;
 use iota_sdk::types::transaction::{ProgrammableTransaction, Transaction, TransactionData};
 use secret_storage::Signer;
@@ -183,7 +182,7 @@ where
   ///
   /// The root authority is an account that has the ability to add other
   /// authorities to the federation.
-  pub async fn add_root_authority(&self, federation_id: ObjectID, account_id: ID) -> anyhow::Result<()> {
+  pub async fn add_root_authority(&self, federation_id: ObjectID, account_id: ObjectID) -> anyhow::Result<()> {
     federation::ops::add_root_authority(self, federation_id, account_id).await
   }
 
@@ -212,7 +211,7 @@ where
   pub async fn issue_credential(
     &self,
     federation_id: ObjectID,
-    account_id: ID,
+    account_id: ObjectID,
     trusted_properties: HashMap<TrustedPropertyName, TrustedPropertyValue>,
     valid_from_ts: u64,
     valid_until_ts: u64,
@@ -240,8 +239,8 @@ where
   pub async fn revoke_permission_to_attest(
     &self,
     federation_id: ObjectID,
-    user_id: ID,
-    permission_id: ID,
+    user_id: ObjectID,
+    permission_id: ObjectID,
   ) -> anyhow::Result<()> {
     federation::ops::revoke_permission_to_attest(self, federation_id, user_id, permission_id).await
   }
@@ -258,7 +257,7 @@ where
   pub async fn issue_permission_to_accredit(
     &self,
     federation_id: ObjectID,
-    receiver: ID,
+    receiver: ObjectID,
     want_property_constraints: Vec<TrustedPropertyConstraints>,
   ) -> anyhow::Result<()> {
     federation::ops::issue_permission_to_accredit(self, federation_id, receiver, want_property_constraints).await
@@ -288,7 +287,7 @@ where
   pub async fn issue_permission_to_attest(
     &self,
     federation_id: ObjectID,
-    receiver: ID,
+    receiver: ObjectID,
     want_property_constraints: Vec<TrustedPropertyConstraints>,
   ) -> anyhow::Result<()> {
     federation::ops::issue_permission_to_attest(self, federation_id, receiver, want_property_constraints).await
@@ -306,8 +305,8 @@ where
   pub async fn revoke_permission_to_accredit(
     &self,
     federation_id: ObjectID,
-    user_id: ID,
-    permission_id: ID,
+    user_id: ObjectID,
+    permission_id: ObjectID,
   ) -> anyhow::Result<()> {
     federation::ops::revoke_permission_to_accredit(self, federation_id, user_id, permission_id).await
   }

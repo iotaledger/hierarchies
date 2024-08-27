@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use iota_sdk::rpc_types::IotaObjectDataOptions;
-use iota_sdk::types::base_types::ObjectRef;
-use iota_sdk::types::id::{ID, UID};
+use iota_sdk::types::base_types::{ObjectID, ObjectRef};
+use iota_sdk::types::id::UID;
 use serde::{Deserialize, Serialize};
 
 use super::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
@@ -17,8 +17,8 @@ pub struct CredentialState {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Credential {
   pub id: UID,
-  pub issued_by: ID,
-  pub issued_for: ID,
+  pub issued_by: ObjectID,
+  pub issued_for: ObjectID,
   pub valid_from: u64,
   pub valid_to: u64,
   #[serde(deserialize_with = "deserialize_vec_map")]
@@ -26,10 +26,10 @@ pub struct Credential {
 }
 
 impl Credential {
-  pub async fn get_object_reference<S>(id: UID, client: &HTFClient<S>) -> anyhow::Result<ObjectRef> {
+  pub async fn get_object_reference<S>(id: ObjectID, client: &HTFClient<S>) -> anyhow::Result<ObjectRef> {
     let res = client
       .read_api()
-      .get_object_with_options(*id.object_id(), IotaObjectDataOptions::new().with_content())
+      .get_object_with_options(id, IotaObjectDataOptions::new().with_content())
       .await?;
 
     let Some(data) = res.data else {

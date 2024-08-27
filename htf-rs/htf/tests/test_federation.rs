@@ -1,6 +1,5 @@
 use anyhow::Context;
 use iota_sdk::types::base_types::ObjectID;
-use iota_sdk::types::id::ID;
 use utils::TestClient;
 
 mod utils;
@@ -13,9 +12,9 @@ async fn test_add_root_authority() -> anyhow::Result<()> {
 
   let federation = htf_client.new_federation().await?;
 
-  let id = ID::new(ObjectID::random());
+  let id = ObjectID::random();
   htf_client
-    .add_root_authority(*federation.id.object_id(), id.clone())
+    .add_root_authority(*federation.id.object_id(), id)
     .await
     .context("Failed to add trusted property")?;
 

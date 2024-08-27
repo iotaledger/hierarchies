@@ -2,7 +2,6 @@ use std::str::FromStr;
 
 use iota_sdk::types::base_types::{IotaAddress, ObjectID};
 use iota_sdk::types::collection_types::VecMap;
-use iota_sdk::types::id::ID;
 use iota_sdk::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 use iota_sdk::types::transaction::{CallArg, ObjectArg, TransactionKind};
 use iota_sdk::types::Identifier;
@@ -68,10 +67,10 @@ impl OnChainFederation<'_> {
   pub async fn federation_id(&self) -> ObjectID {
     self.federation_id
   }
-  pub async fn has_permission_to_attest(&self, user_id: ID) -> anyhow::Result<bool> {
+  pub async fn has_permission_to_attest(&self, user_id: ObjectID) -> anyhow::Result<bool> {
     self.execute_query("has_permission_to_attest", user_id).await
   }
-  pub async fn has_permissions_to_accredit(&self, user_id: ID) -> anyhow::Result<bool> {
+  pub async fn has_permissions_to_accredit(&self, user_id: ObjectID) -> anyhow::Result<bool> {
     self.execute_query("has_permissions_to_accredit", user_id).await
   }
   pub async fn has_federation_property(&self, property_name: &TrustedPropertyName) -> anyhow::Result<bool> {
@@ -80,7 +79,7 @@ impl OnChainFederation<'_> {
 
   pub async fn validate_trusted_properties(
     &self,
-    issuer_id: ID,
+    issuer_id: ObjectID,
     trusted_properties: VecMap<TrustedPropertyName, TrustedPropertyValue>,
   ) -> anyhow::Result<()> {
     self
