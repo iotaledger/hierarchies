@@ -6,7 +6,7 @@ use examples::get_client;
 /// to run on any IOTA node by setting the network and faucet endpoints.
 ///
 /// See the following instructions on running your own private network
-/// https://github.com/iotaledger/iota-test-validator
+/// https://github.com/iotaledger/iota/blob/develop/docs/content/developer/getting-started/connect.mdx
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

@@ -167,9 +167,6 @@ where
   S: Signer<IotaKeySignature>,
 {
   /// Creates a new federation.
-  ///
-  /// # Returns
-  /// The ID of the newly created federation.
   pub async fn new_federation(&self) -> anyhow::Result<Federation> {
     let federation = federation::ops::create_new_federation(self).await?;
 
@@ -198,16 +195,6 @@ where
   }
 
   /// Issues a credential for an account in a federation.
-  ///
-  /// # Arguments
-  /// * `federation_id` - The ID of the federation.
-  /// * `account_id` - The ID of the account to issue the credential for.
-  /// * `trusted_properties` - A map of trusted property names to their values.
-  /// * `valid_from_ts` - The timestamp from which the credential is valid.
-  /// * `valid_until_ts` - The timestamp until which the credential is valid.
-  ///
-  /// # Returns
-  /// A Result indicating success or failure.
   pub async fn issue_credential(
     &self,
     federation_id: ObjectID,
@@ -228,14 +215,7 @@ where
   }
 
   /// Revokes a permission to attest for a user in a federation.
-  ///
-  /// # Arguments
-  /// * `federation_id` - The ID of the federation.
-  /// * `user_id` - The ID of the user whose permission is being revoked.
-  /// * `permission_id` - The ID of the permission being revoked.
-  ///
-  /// # Returns
-  /// A Result indicating success or failure.
+
   pub async fn revoke_permission_to_attest(
     &self,
     federation_id: ObjectID,
@@ -246,14 +226,6 @@ where
   }
 
   /// Issues a permission to accredit to a receiver in a federation.
-  ///
-  /// # Arguments
-  /// * `federation_id` - The ID of the federation.
-  /// * `receiver` - The ID of the receiver of the permission.
-  /// * `want_property_constraints` - A vector of trusted property constraints.
-  ///
-  /// # Returns
-  /// A Result indicating success or failure.
   pub async fn issue_permission_to_accredit(
     &self,
     federation_id: ObjectID,
@@ -264,26 +236,11 @@ where
   }
 
   /// Validates a credential in a federation.
-  ///
-  /// # Arguments
-  /// * `federation_id` - The ID of the federation.
-  /// * `credential_id` - The ID of the credential to validate.
-  ///
-  /// # Returns
-  /// A Result indicating success or failure.
   pub async fn validate_credential(&self, federation_id: ObjectID, credential_id: ObjectID) -> anyhow::Result<()> {
     federation::ops::validate_credential(self, federation_id, credential_id).await
   }
 
   /// Issues a permission to attest to a receiver in a federation.
-  ///
-  /// # Arguments
-  /// * `federation_id` - The ID of the federation.
-  /// * `receiver` - The ID of the receiver of the permission.
-  /// * `want_property_constraints` - A vector of trusted property constraints.
-  ///
-  /// # Returns
-  /// A Result indicating success or failure.
   pub async fn issue_permission_to_attest(
     &self,
     federation_id: ObjectID,
@@ -294,14 +251,6 @@ where
   }
 
   /// Revokes a permission to accredit for a user in a federation.
-  ///
-  /// # Arguments
-  /// * `federation_id` - The ID of the federation.
-  /// * `user_id` - The ID of the user whose permission is being revoked.
-  /// * `permission_id` - The ID of the permission being revoked.
-  ///
-  /// # Returns
-  /// A Result indicating success or failure.
   pub async fn revoke_permission_to_accredit(
     &self,
     federation_id: ObjectID,
