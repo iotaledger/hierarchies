@@ -1,0 +1,24 @@
+[package]
+name = "examples"
+authors.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+async-trait.workspace = true
+fastcrypto.workspace = true
+htf = { path = "../htf" }
+iota.workspace = true
+iota-keys.workspace = true
+iota-sdk.workspace = true
+jsonpath-rust.workspace = true
+secret-storage.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+
+[lib]
+path = "utils.rs"
+
+[[example]]
+path = "01_create_federation.rs"
+name = "01_create_federation"

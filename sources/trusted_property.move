@@ -1,8 +1,7 @@
 
 module htf::trusted_property {
   use std::string::String;
-  use std::option::{Self, Option};
-  use std::type_name::{Self, TypeName};
+
 
   public struct TrustedPropertyName  has copy, drop, store {
     names : vector<String>,

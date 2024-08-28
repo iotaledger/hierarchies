@@ -1,5 +1,4 @@
 module htf::utils {
-  use sui::vec_map::{VecMap, Self};
 
   public(package) fun contains_one_of<D : copy + drop>(source : &vector<D>, one_of : &vector<D>)  : bool {
     let len_one_of = vector::length<D>(one_of);
