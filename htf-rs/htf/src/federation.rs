@@ -21,7 +21,7 @@ use crate::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue, 
 pub(crate) mod ops {
   use super::*;
 
-  pub async fn create_new_federation<S>(client: &HTFClient<S>) -> anyhow::Result<ObjectID>
+  pub async fn create_new_federation<S>(client: &HTFClient<S>, gas_budget: Option<u64>) -> anyhow::Result<ObjectID>
   where
     S: Signer<IotaKeySignature>,
   {
@@ -37,7 +37,7 @@ pub(crate) mod ops {
 
     let tx = ptb.finish();
 
-    let iota_tx = client.execute_transaction(tx).await?;
+    let iota_tx = client.execute_transaction(tx, gas_budget).await?;
 
     // Check event emitted
     let fed_event: Event<FederationCreatedEvent> = iota_tx
@@ -60,6 +60,7 @@ pub(crate) mod ops {
     property_name: TrustedPropertyName,
     allowed_values: HashSet<TrustedPropertyValue>,
     allow_any: bool,
+    gas_budget: Option<u64>,
   ) -> anyhow::Result<()>
   where
     S: Signer<IotaKeySignature>,
@@ -93,7 +94,7 @@ pub(crate) mod ops {
 
     let tx = ptb.finish();
 
-    let res = client.execute_transaction(tx).await?;
+    let res = client.execute_transaction(tx, gas_budget).await?;
 
     if !res.status_ok().ok_or_else(|| anyhow::anyhow!("missing status"))? {
       let err = res.errors;
@@ -113,43 +114,6 @@ pub(crate) mod ops {
     Ok(())
   }
 
-  async fn get_cap<S>(
-    client: &HTFClient<S>,
-    module: &str,
-    cap_type: &str,
-    address: Option<IotaAddress>,
-  ) -> anyhow::Result<ObjectRef>
-  where
-    S: Signer<IotaKeySignature>,
-  {
-    let cap_tag = StructTag::from_str(&format!("{}::{module}::{cap_type}", client.htf_package_id()))?;
-
-    let filter = IotaObjectResponseQuery::new_with_filter(IotaObjectDataFilter::StructType(cap_tag));
-
-    let mut cursor = None;
-    loop {
-      let sender = address.unwrap_or(client.sender_address());
-
-      let mut page = client
-        .read_api()
-        .get_owned_objects(sender, Some(filter.clone()), cursor, None)
-        .await?;
-      let cap = std::mem::take(&mut page.data)
-        .into_iter()
-        .find_map(|res| res.data.map(|obj| obj.object_ref()));
-
-      cursor = page.next_cursor;
-      if let Some(cap) = cap {
-        return Ok(cap);
-      }
-      if !page.has_next_page {
-        break;
-      }
-    }
-
-    anyhow::bail!("no cap of type `{cap_type}`",)
-  }
-
   pub async fn issue_credential<S>(
     client: &HTFClient<S>,
     federation_id: ObjectID,
@@ -157,6 +121,7 @@ pub(crate) mod ops {
     trusted_properties: HashMap<TrustedPropertyName, TrustedPropertyValue>,
     valid_from_ts: u64,
     valid_until_ts: u64,
+    gas_budget: Option<u64>,
   ) -> anyhow::Result<()>
   where
     S: Signer<IotaKeySignature>,
@@ -209,7 +174,7 @@ pub(crate) mod ops {
 
     let tx = ptb.finish();
 
-    let iota_res = client.execute_transaction(tx).await?;
+    let iota_res = client.execute_transaction(tx, gas_budget).await?;
 
     let created_object = iota_res
       .effects
@@ -234,6 +199,7 @@ pub(crate) mod ops {
     federation_id: ObjectID,
     user_id: ObjectID,
     permission_id: ObjectID,
+    gas_budget: Option<u64>,
   ) -> anyhow::Result<()>
   where
     S: Signer<IotaKeySignature>,
@@ -262,7 +228,7 @@ pub(crate) mod ops {
 
     let tx = ptb.finish();
 
-    client.execute_transaction(tx).await?;
+    client.execute_transaction(tx, gas_budget).await?;
 
     let federation_operations = client.onchain(federation_id);
 
@@ -281,6 +247,7 @@ pub(crate) mod ops {
     client: &HTFClient<S>,
     federation_id: ObjectID,
     account_id: ObjectID,
+    gas_budget: Option<u64>,
   ) -> anyhow::Result<()>
   where
     S: Signer<IotaKeySignature>,
@@ -308,7 +275,7 @@ pub(crate) mod ops {
 
     let tx = ptb.finish();
 
-    let tx_res = client.execute_transaction(tx).await?;
+    let tx_res = client.execute_transaction(tx, gas_budget).await?;
 
     if !tx_res.status_ok().ok_or_else(|| anyhow::anyhow!("missing status"))? {
       anyhow::bail!("failed to add root authority");
@@ -328,6 +295,7 @@ pub(crate) mod ops {
     federation_id: ObjectID,
     receiver: ObjectID,
     want_property_constraints: Vec<TrustedPropertyConstraints>,
+    gas_budget: Option<u64>,
   ) -> anyhow::Result<()>
   where
     S: Signer<IotaKeySignature>,
@@ -356,7 +324,7 @@ pub(crate) mod ops {
 
     let tx = ptb.finish();
 
-    let tx_res = client.execute_transaction(tx).await?;
+    let tx_res = client.execute_transaction(tx, gas_budget).await?;
 
     // check if the ID has AccreditCap
     if !tx_res.status_ok().ok_or_else(|| anyhow::anyhow!("missing status"))? {
@@ -374,6 +342,7 @@ pub(crate) mod ops {
     client: &HTFClient<S>,
     federation_id: ObjectID,
     credential_id: ObjectID,
+    gas_budget: Option<u64>,
   ) -> anyhow::Result<()>
   where
     S: Signer<IotaKeySignature>,
@@ -400,7 +369,7 @@ pub(crate) mod ops {
     let tx = ptb.finish();
 
     if !client
-      .execute_transaction(tx)
+      .execute_transaction(tx, gas_budget)
       .await?
       .status_ok()
       .ok_or_else(|| anyhow::anyhow!("Transaction failed"))?
@@ -416,6 +385,7 @@ pub(crate) mod ops {
     federation_id: ObjectID,
     receiver: ObjectID,
     want_property_constraints: Vec<TrustedPropertyConstraints>,
+    gas_budget: Option<u64>,
   ) -> anyhow::Result<()>
   where
     S: Signer<IotaKeySignature>,
@@ -444,13 +414,9 @@ pub(crate) mod ops {
 
     let tx = ptb.finish();
 
-    let tx_res = client.execute_transaction(tx).await?;
+    client.execute_transaction(tx, gas_budget).await?;
 
-    // check if the ID has AccreditCap
-    if !tx_res.status_ok().ok_or_else(|| anyhow::anyhow!("missing status"))? {
-      anyhow::bail!("failed to issue permission to accredit");
-    }
-
+    // Check if the ID has AttestCap
     let Ok(_) = get_cap(client, "main", "AttestCap", Some(receiver.into())).await else {
       anyhow::bail!("failed to get new accredit");
     };
@@ -463,6 +429,7 @@ pub(crate) mod ops {
     federation_id: ObjectID,
     user_id: ObjectID,
     permission_id: ObjectID,
+    gas_budget: Option<u64>,
   ) -> anyhow::Result<()>
   where
     S: Signer<IotaKeySignature>,
@@ -491,18 +458,46 @@ pub(crate) mod ops {
 
     let tx = ptb.finish();
 
-    client.execute_transaction(tx).await?;
-
-    let federation_operations = client.onchain(federation_id);
-
-    if federation_operations
-      .has_permissions_to_accredit(user_id)
-      .await
-      .context("failed to check if federation has property")?
-    {
-      anyhow::bail!("failed to revoke permission to accredit");
-    }
+    client.execute_transaction(tx, gas_budget).await?;
 
     Ok(())
+  }
+
+  /// Helper function to get a capability of an address
+  async fn get_cap<S>(
+    client: &HTFClient<S>,
+    module: &str,
+    cap_type: &str,
+    address: Option<IotaAddress>,
+  ) -> anyhow::Result<ObjectRef>
+  where
+    S: Signer<IotaKeySignature>,
+  {
+    let cap_tag = StructTag::from_str(&format!("{}::{module}::{cap_type}", client.htf_package_id()))?;
+
+    let filter = IotaObjectResponseQuery::new_with_filter(IotaObjectDataFilter::StructType(cap_tag));
+
+    let mut cursor = None;
+    loop {
+      let sender = address.unwrap_or(client.sender_address());
+
+      let mut page = client
+        .read_api()
+        .get_owned_objects(sender, Some(filter.clone()), cursor, None)
+        .await?;
+      let cap = std::mem::take(&mut page.data)
+        .into_iter()
+        .find_map(|res| res.data.map(|obj| obj.object_ref()));
+
+      cursor = page.next_cursor;
+      if let Some(cap) = cap {
+        return Ok(cap);
+      }
+      if !page.has_next_page {
+        break;
+      }
+    }
+
+    anyhow::bail!("no cap of type `{cap_type}`",)
   }
 }

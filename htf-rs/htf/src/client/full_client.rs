@@ -4,8 +4,8 @@ use std::ops::Deref;
 use fastcrypto::hash::HashFunction;
 use fastcrypto::traits::ToFromBytes;
 use iota_sdk::rpc_types::{
-  IotaExecutionStatus, IotaTransactionBlockEffects, IotaTransactionBlockEffectsV1, IotaTransactionBlockResponse,
-  IotaTransactionBlockResponseOptions,
+  IotaExecutionStatus, IotaTransactionBlockEffects, IotaTransactionBlockEffectsAPI, IotaTransactionBlockEffectsV1,
+  IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions,
 };
 use iota_sdk::types::base_types::{IotaAddress, ObjectID};
 use iota_sdk::types::crypto::{DefaultHash, Signature, SignatureScheme};
@@ -27,9 +27,8 @@ use crate::utils::convert_to_address;
 /// executing transactions on behalf of the HTF (Hierarchial Trust Framework) package.
 pub struct HTFClient<S> {
   read_client: HTFClientReadOnly,
-  signer: S,
-  gas_budget: u64,
   signing_info: SigningInfo,
+  signer: S,
 }
 
 impl<S> HTFClient<S>
@@ -48,10 +47,10 @@ where
   ///
   /// # Returns
   /// A new `HTFClient` instance.
-  pub async fn new(read_client: HTFClientReadOnly, signer: S, gas_budget: u64) -> anyhow::Result<Self> {
+  pub async fn new(read_client: HTFClientReadOnly, signer: S) -> anyhow::Result<Self> {
     let pub_key = signer.public_key().await?;
     let address = convert_to_address(&pub_key)?;
-    let info = SigningInfo {
+    let signing_info = SigningInfo {
       sender_address: address,
       sender_public_key: pub_key,
     };
@@ -59,8 +58,7 @@ where
     Ok(Self {
       read_client,
       signer,
-      signing_info: info,
-      gas_budget,
+      signing_info,
     })
   }
 
@@ -76,8 +74,14 @@ where
   pub(crate) async fn execute_transaction(
     &self,
     tx: ProgrammableTransaction,
+    gas_budget: Option<u64>,
   ) -> anyhow::Result<IotaTransactionBlockResponse> {
-    let tx_data = self.get_transaction_data(tx).await?;
+    let gas = match gas_budget {
+      Some(gas) => gas,
+      None => self.estimate_gas(&tx).await?,
+    };
+
+    let tx_data = self.get_transaction_data(tx, gas).await?;
     let kinesis_signature = self.sign_transaction_data(&tx_data).await?;
 
     // execute tx
@@ -105,6 +109,7 @@ where
   async fn get_transaction_data(
     &self,
     programmable_transaction: ProgrammableTransaction,
+    gas_budget: u64,
   ) -> anyhow::Result<TransactionData> {
     let gas_price = self.read_client.read_api().get_reference_gas_price().await?;
 
@@ -115,7 +120,7 @@ where
       sender,
       vec![coin.object_ref()],
       programmable_transaction,
-      self.gas_budget,
+      gas_budget,
       gas_price,
     );
 
@@ -160,6 +165,40 @@ where
 
     Signature::from_bytes(signature_bytes).map_err(|e| anyhow::anyhow!("Failed to create signature: {}", e))
   }
+
+  /// Estimates the gas budget for a transaction.
+  ///
+  /// This function calculates the gas budget for a transaction by executing a dry run of the transaction
+  /// and returning the gas used with a small buffer.
+  pub(crate) async fn estimate_gas(&self, tx: &ProgrammableTransaction) -> anyhow::Result<u64> {
+    let gas_price = self.read_api().get_reference_gas_price().await?;
+    let gas_coin = self.get_coin_for_transaction().await?;
+
+    let tx_data = TransactionData::new_programmable(
+      self.sender_address(),
+      vec![gas_coin.object_ref()],
+      tx.clone(),
+      50_000_000_000,
+      gas_price,
+    );
+
+    let dry_run_gas_result = self.read_api().dry_run_transaction_block(tx_data).await?.effects;
+    if dry_run_gas_result.status().is_err() {
+      let IotaExecutionStatus::Failure { error } = dry_run_gas_result.into_status() else {
+        unreachable!();
+      };
+
+      anyhow::bail!("Failed to dry run transaction: {}", error);
+    }
+
+    let gas_summary = dry_run_gas_result.gas_cost_summary();
+    let overhead = gas_price * 1000;
+    let net_used = gas_summary.net_gas_usage();
+    let computation = gas_summary.computation_cost;
+
+    let budget = overhead + (net_used.max(0) as u64).max(computation);
+    Ok(budget)
+  }
 }
 
 impl<S> HTFClient<S>
@@ -167,8 +206,8 @@ where
   S: Signer<IotaKeySignature>,
 {
   /// Creates a new federation.
-  pub async fn new_federation(&self) -> anyhow::Result<Federation> {
-    let federation = federation::ops::create_new_federation(self).await?;
+  pub async fn new_federation(&self, gas_budget: Option<u64>) -> anyhow::Result<Federation> {
+    let federation = federation::ops::create_new_federation(self, gas_budget).await?;
 
     let federation = self.get_object_by_id(federation).await?;
 
@@ -179,8 +218,13 @@ where
   ///
   /// The root authority is an account that has the ability to add other
   /// authorities to the federation.
-  pub async fn add_root_authority(&self, federation_id: ObjectID, account_id: ObjectID) -> anyhow::Result<()> {
-    federation::ops::add_root_authority(self, federation_id, account_id).await
+  pub async fn add_root_authority(
+    &self,
+    federation_id: ObjectID,
+    account_id: ObjectID,
+    gas_budget: Option<u64>,
+  ) -> anyhow::Result<()> {
+    federation::ops::add_root_authority(self, federation_id, account_id, gas_budget).await
   }
 
   /// Adds a trusted property to a federation.
@@ -190,8 +234,17 @@ where
     property_name: TrustedPropertyName,
     allowed_values: HashSet<TrustedPropertyValue>,
     allow_any: bool,
+    gas_budget: Option<u64>,
   ) -> anyhow::Result<()> {
-    federation::ops::add_trusted_property(self, federation_id, property_name, allowed_values, allow_any).await
+    federation::ops::add_trusted_property(
+      self,
+      federation_id,
+      property_name,
+      allowed_values,
+      allow_any,
+      gas_budget,
+    )
+    .await
   }
 
   /// Issues a credential for an account in a federation.
@@ -202,6 +255,7 @@ where
     trusted_properties: HashMap<TrustedPropertyName, TrustedPropertyValue>,
     valid_from_ts: u64,
     valid_until_ts: u64,
+    gas_budget: Option<u64>,
   ) -> anyhow::Result<()> {
     federation::ops::issue_credential(
       self,
@@ -210,6 +264,7 @@ where
       trusted_properties,
       valid_from_ts,
       valid_until_ts,
+      gas_budget,
     )
     .await
   }
@@ -221,8 +276,9 @@ where
     federation_id: ObjectID,
     user_id: ObjectID,
     permission_id: ObjectID,
+    gas_budget: Option<u64>,
   ) -> anyhow::Result<()> {
-    federation::ops::revoke_permission_to_attest(self, federation_id, user_id, permission_id).await
+    federation::ops::revoke_permission_to_attest(self, federation_id, user_id, permission_id, gas_budget).await
   }
 
   /// Issues a permission to accredit to a receiver in a federation.
@@ -231,13 +287,20 @@ where
     federation_id: ObjectID,
     receiver: ObjectID,
     want_property_constraints: Vec<TrustedPropertyConstraints>,
+    gas_budget: Option<u64>,
   ) -> anyhow::Result<()> {
-    federation::ops::issue_permission_to_accredit(self, federation_id, receiver, want_property_constraints).await
+    federation::ops::issue_permission_to_accredit(self, federation_id, receiver, want_property_constraints, gas_budget)
+      .await
   }
 
   /// Validates a credential in a federation.
-  pub async fn validate_credential(&self, federation_id: ObjectID, credential_id: ObjectID) -> anyhow::Result<()> {
-    federation::ops::validate_credential(self, federation_id, credential_id).await
+  pub async fn validate_credential(
+    &self,
+    federation_id: ObjectID,
+    credential_id: ObjectID,
+    gas_budget: Option<u64>,
+  ) -> anyhow::Result<()> {
+    federation::ops::validate_credential(self, federation_id, credential_id, gas_budget).await
   }
 
   /// Issues a permission to attest to a receiver in a federation.
@@ -246,8 +309,10 @@ where
     federation_id: ObjectID,
     receiver: ObjectID,
     want_property_constraints: Vec<TrustedPropertyConstraints>,
+    gas_budget: Option<u64>,
   ) -> anyhow::Result<()> {
-    federation::ops::issue_permission_to_attest(self, federation_id, receiver, want_property_constraints).await
+    federation::ops::issue_permission_to_attest(self, federation_id, receiver, want_property_constraints, gas_budget)
+      .await
   }
 
   /// Revokes a permission to accredit for a user in a federation.
@@ -256,8 +321,9 @@ where
     federation_id: ObjectID,
     user_id: ObjectID,
     permission_id: ObjectID,
+    gas_budget: Option<u64>,
   ) -> anyhow::Result<()> {
-    federation::ops::revoke_permission_to_accredit(self, federation_id, user_id, permission_id).await
+    federation::ops::revoke_permission_to_accredit(self, federation_id, user_id, permission_id, gas_budget).await
   }
 }
 impl<S> Deref for HTFClient<S> {
