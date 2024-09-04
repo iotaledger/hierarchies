@@ -170,7 +170,7 @@ where
   ///
   /// This function calculates the gas budget for a transaction by executing a dry run of the transaction
   /// and returning the gas used with a small buffer.
-  pub(crate) async fn estimate_gas(&self, tx: &ProgrammableTransaction) -> anyhow::Result<u64> {
+  pub async fn estimate_gas(&self, tx: &ProgrammableTransaction) -> anyhow::Result<u64> {
     let gas_price = self.read_api().get_reference_gas_price().await?;
     let gas_coin = self.get_coin_for_transaction().await?;
 
