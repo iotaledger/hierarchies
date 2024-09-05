@@ -10,11 +10,11 @@ async fn test_add_root_authority() -> anyhow::Result<()> {
 
   let htf_client = client.htf_client().await?;
 
-  let federation = htf_client.new_federation().await?;
+  let federation = htf_client.new_federation(None).await?;
 
   let id = ObjectID::random();
   htf_client
-    .add_root_authority(*federation.id.object_id(), id)
+    .add_root_authority(*federation.id.object_id(), id, None)
     .await
     .context("Failed to add trusted property")?;
 
@@ -39,7 +39,7 @@ async fn test_adding_trusted_properties() -> anyhow::Result<()> {
 
   let htf_client = client.htf_client().await?;
 
-  let _federation = htf_client.new_federation().await?;
+  let _federation = htf_client.new_federation(None).await?;
 
   // htf_client
   //   .add_trusted_property(

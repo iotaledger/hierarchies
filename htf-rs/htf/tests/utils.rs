@@ -26,8 +26,6 @@ pub const GAS_LOCAL_NETWORK: &str = "http://127.0.0.1:9123/gas";
 
 const CACHED_PKG_ID: &str = "../target/htf_pkg_id.txt";
 
-pub const TEST_GAS_BUDGET: u64 = 500_000_000;
-
 #[derive(Clone)]
 pub struct TestClient {
   client: IotaClient,
@@ -73,7 +71,7 @@ impl TestClient {
   pub async fn htf_client(&self) -> anyhow::Result<HTFClient<TestMemSigner>> {
     let read_only_client = HTFClientReadOnly::new(self.client.clone(), self.package_id);
 
-    HTFClient::new(read_only_client, self.signer.clone(), TEST_GAS_BUDGET).await
+    HTFClient::new(read_only_client, self.signer.clone()).await
   }
 
   async fn active_address() -> anyhow::Result<IotaAddress> {

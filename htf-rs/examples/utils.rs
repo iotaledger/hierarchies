@@ -47,7 +47,7 @@ pub async fn get_client() -> anyhow::Result<HTFClient<TestMemSigner>> {
 
   let read_only_client = HTFClientReadOnly::new(client.clone(), package_id);
 
-  let htf_client = htf::client::HTFClient::new(read_only_client, signer, TEST_GAS_BUDGET).await?;
+  let htf_client = htf::client::HTFClient::new(read_only_client, signer).await?;
 
   Ok(htf_client)
 }
