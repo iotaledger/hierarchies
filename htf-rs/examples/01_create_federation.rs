@@ -10,12 +10,12 @@ use examples::get_client;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let htf_client = get_client().await?;
+  let htf_client = get_client().await?;
 
-    println!("Creating new federation");
-    let federation = htf_client.new_federation(None).await?;
+  println!("Creating new federation");
+  let federation = htf_client.new_federation(None).await?;
 
-    println!("Federation created: {:#?}", federation);
+  println!("Federation created: {:#?}", federation);
 
-    Ok(())
+  Ok(())
 }
