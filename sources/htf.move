@@ -32,7 +32,6 @@ module htf::main {
   public struct RootAuthority  has store, key{
     id : UID,
     account_id: ID,
-    permissions: Permissions,
   }
 
 
@@ -231,7 +230,6 @@ module htf::main {
     RootAuthority {
       id : object::new(ctx),
       account_id : account_id,
-      permissions : permission::empty(ctx),
     }
   }
 
