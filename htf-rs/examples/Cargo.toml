@@ -17,8 +17,17 @@ serde_json.workspace = true
 tokio.workspace = true
 
 [lib]
-path = "utils.rs"
+path = "utils/utils.rs"
 
 [[example]]
 path = "01_create_federation.rs"
 name = "01_create_federation"
+
+[[example]]
+path = "02_add_root_authority.rs"
+name = "02_add_root_authority"
+
+
+[[example]]
+path = "03_add_trusted_property.rs"
+name = "03_add_trusted_property"

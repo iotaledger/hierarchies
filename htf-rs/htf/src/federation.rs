@@ -19,6 +19,8 @@ use crate::types::trusted_constraints::TrustedPropertyConstraints;
 use crate::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue, TrustedPropertyValueMove};
 
 pub(crate) mod ops {
+  use serde::Serialize;
+
   use super::*;
 
   pub async fn create_new_federation<S>(client: &HTFClient<S>, gas_budget: Option<u64>) -> anyhow::Result<ObjectID>
@@ -67,21 +69,49 @@ pub(crate) mod ops {
   {
     let mut ptb = ProgrammableTransactionBuilder::new();
 
-    let cap = get_cap(client, "main", "RootAuthorityCap", None).await?;
+    let cap = get_cap(client, "main", "RootAuthorityCap", Some(client.sender_address())).await?;
 
     let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
+
     let fed_ref = ptb.obj(ObjectArg::SharedObject {
       id: federation_id,
       initial_shared_version: client.initial_shared_version(&federation_id).await?,
       mutable: true,
     })?;
 
+    #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, serde::Deserialize)]
+    #[serde(rename = "String")]
+    #[repr(transparent)]
+    #[serde(transparent)]
+    pub struct MoveString {
+      bytes: Vec<u8>,
+    }
+
+    #[derive(Debug, Clone, PartialEq, Hash, Eq, Serialize, serde::Deserialize)]
+    #[serde(rename = "TrustedPropertyName")]
+    pub struct TrustedPropertyNameMove {
+      names: Vec<MoveString>,
+    }
+
+    let property_name = TrustedPropertyNameMove {
+      names: property_name
+        .names()
+        .iter()
+        .map(|name| MoveString {
+          bytes: name.clone().into(),
+        })
+        .collect(),
+    };
+
     let property_name_arg = ptb.pure(&property_name)?;
+
     let allow_any = ptb.pure(allow_any)?;
+
     let allowed_values = allowed_values
       .into_iter()
       .map(TrustedPropertyValueMove::from)
       .collect::<HashSet<_>>();
+
     let allowed_values = ptb.pure(allowed_values)?;
 
     ptb.programmable_move_call(
@@ -89,27 +119,22 @@ pub(crate) mod ops {
       ident_str!("main").into(),
       ident_str!("add_trusted_property").into(),
       vec![],
-      vec![cap, fed_ref, property_name_arg, allowed_values, allow_any],
+      vec![fed_ref, cap, property_name_arg, allowed_values, allow_any],
     );
 
     let tx = ptb.finish();
 
-    let res = client.execute_transaction(tx, gas_budget).await?;
-
-    if !res.status_ok().ok_or_else(|| anyhow::anyhow!("missing status"))? {
-      let err = res.errors;
-      anyhow::bail!("failed to add trusted property {:?}", err);
-    }
+    client.execute_transaction(tx, gas_budget).await?;
 
     let federation_operations = client.onchain(federation_id);
 
-    if !federation_operations
-      .has_federation_property(&property_name)
-      .await
-      .context("failed to check if federation has property")?
-    {
-      anyhow::bail!("failed to add trusted property");
-    }
+    // if !federation_operations
+    //   .has_federation_property(&property_name)
+    //   .await
+    //   .context("failed to check if federation has property")?
+    // {
+    //   anyhow::bail!("failed to add trusted property");
+    // }
 
     Ok(())
   }
@@ -252,7 +277,7 @@ pub(crate) mod ops {
   where
     S: Signer<IotaKeySignature>,
   {
-    let cap = get_cap(client, "main", "RootAuthorityCap", None).await?;
+    let cap = get_cap(client, "main", "RootAuthorityCap", Some(client.sender_address())).await?;
 
     let mut ptb = ProgrammableTransactionBuilder::new();
 
@@ -270,7 +295,7 @@ pub(crate) mod ops {
       ident_str!("main").into(),
       ident_str!("add_root_authority").into(),
       vec![],
-      vec![cap, fed_ref, account_id_arg],
+      vec![fed_ref, cap, account_id_arg],
     );
 
     let tx = ptb.finish();

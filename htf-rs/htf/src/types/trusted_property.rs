@@ -2,7 +2,35 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct TrustedPropertyName {
-  pub names: Vec<String>,
+  names: Vec<MoveString>,
+}
+
+impl TrustedPropertyName {
+  /// Create a new TrustedPropertyName
+  pub fn new(names: Vec<String>) -> Self {
+    Self {
+      names: names
+        .into_iter()
+        .map(|name| MoveString {
+          bytes: name.into_bytes(),
+        })
+        .collect(),
+    }
+  }
+
+  pub fn names(&self) -> Vec<String> {
+    self
+      .names
+      .iter()
+      .map(|name| String::from_utf8_lossy(&name.bytes).to_string())
+      .collect()
+  }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename = "String")]
+pub struct MoveString {
+  bytes: Vec<u8>,
 }
 
 #[derive(Debug, Clone, PartialEq, Hash, Eq, Serialize, Deserialize)]
@@ -54,9 +82,7 @@ mod tests {
 
   #[test]
   fn test_trusted_property_name() {
-    let name = TrustedPropertyName {
-      names: vec!["name".to_string(), "name2".to_string()],
-    };
+    let name = TrustedPropertyName::new(vec!["name".to_string(), "name2".to_string()]);
 
     let json = json!({
       "names": ["name", "name2"]

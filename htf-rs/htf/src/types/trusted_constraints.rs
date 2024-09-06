@@ -46,8 +46,8 @@ impl TrustedPropertyConstraint {
   }
 
   pub fn matches_name(&self, name: &TrustedPropertyName) -> bool {
-    let len_constraint = self.property_name.names.len();
-    let len_names = name.names.len();
+    let len_constraint = self.property_name.names().len();
+    let len_names = name.names().len();
 
     if len_constraint > len_names {
       return false;
@@ -55,9 +55,9 @@ impl TrustedPropertyConstraint {
 
     self
       .property_name
-      .names
+      .names()
       .iter()
-      .zip(name.names.iter())
+      .zip(name.names().iter())
       .all(|(a, b)| a == b)
   }
 

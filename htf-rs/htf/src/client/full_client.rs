@@ -183,6 +183,7 @@ where
     );
 
     let dry_run_gas_result = self.read_api().dry_run_transaction_block(tx_data).await?.effects;
+
     if dry_run_gas_result.status().is_err() {
       let IotaExecutionStatus::Failure { error } = dry_run_gas_result.into_status() else {
         unreachable!();
