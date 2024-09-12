@@ -57,7 +57,7 @@ module htf::permission_to_attest {
   }
 
   /// checks if all constraints matches the given in Accredidations
-  public(package) fun are_values_permitted(self : &PermissionsToAttest, trusted_properties: &VecMap<TrustedPropertyName, TrustedPropertyValue> ) :bool {
+  public(package) fun are_values_permitted(self : &PermissionsToAttest, trusted_properties: &VecMap<TrustedPropertyName, TrustedPropertyValue>, current_time_ms : u64) :bool {
     let property_names = trusted_properties.keys() ;
     let mut idx_property_names = 0;
 
@@ -65,7 +65,7 @@ module htf::permission_to_attest {
       let property_name = property_names[idx_property_names];
       let property_value = trusted_properties.get(&property_name);
 
-      if (! self.is_value_permitted(&property_name, property_value)  ) {
+      if (! self.is_value_permitted(&property_name, property_value, current_time_ms)  ) {
         return false
       };
 
@@ -76,7 +76,7 @@ module htf::permission_to_attest {
   }
 
 
-  public(package) fun is_value_permitted(self : &PermissionsToAttest, property_name : &TrustedPropertyName, property_value : &TrustedPropertyValue) :  bool {
+  public(package) fun is_value_permitted(self : &PermissionsToAttest, property_name : &TrustedPropertyName, property_value : &TrustedPropertyValue, current_time_ms : u64) :  bool {
     let len_permissions_to_attest = self.permissions.length();
     let mut idx_permissions_to_attest = 0;
 
@@ -87,7 +87,7 @@ module htf::permission_to_attest {
       if ( maybe_property_constraint.is_none()) {
         continue
       };
-      if (maybe_property_constraint.borrow().matches_property(property_name, property_value)) {
+      if (maybe_property_constraint.borrow().matches_property(property_name, property_value, current_time_ms)) {
         return true
       };
       idx_permissions_to_attest = idx_permissions_to_attest + 1;
@@ -97,11 +97,11 @@ module htf::permission_to_attest {
     return false
   }
 
-  public(package) fun are_constraints_permitted(self : &PermissionsToAttest, constraints: &vector<TrustedPropertyConstraint> ) :bool {
+  public(package) fun are_constraints_permitted(self : &PermissionsToAttest, constraints: &vector<TrustedPropertyConstraint>, current_time_ms : u64 ) :bool {
     let mut idx = 0;
     while ( idx < constraints.length()  ) {
         let constraint = constraints[idx];
-        if ( ! self.is_constraint_permitted(&constraint)  )  {
+        if ( ! self.is_constraint_permitted(&constraint, current_time_ms)  )  {
           return false
         };
         idx = idx + 1;
@@ -109,7 +109,7 @@ module htf::permission_to_attest {
     return true
   }
 
-  public(package) fun is_constraint_permitted(self : &PermissionsToAttest, constraint : &TrustedPropertyConstraint) :  bool {
+  public(package) fun is_constraint_permitted(self : &PermissionsToAttest, constraint : &TrustedPropertyConstraint, current_time_ms : u64) :  bool {
     let len_permissions = self.permissions.length();
     let mut idx_permissions = 0;
     let mut want_constraints : vector<TrustedPropertyValue> = utils::copy_vector(constraint.allowed_values().keys());
@@ -126,7 +126,7 @@ module htf::permission_to_attest {
       let mut idx_want_constraints = 0;
       while (idx_want_constraints < len_want_constraints ) {
         let constraint_value = want_constraints[idx_want_constraints];
-        if ( maybe_property_constraint.borrow().matches_value(&constraint_value) ) {
+        if ( maybe_property_constraint.borrow().matches_value(&constraint_value, current_time_ms) ) {
           want_constraints.remove(idx_want_constraints);
           len_want_constraints = len_want_constraints - 1;
         };

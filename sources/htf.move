@@ -177,6 +177,9 @@ module htf::main {
     self.governance.trusted_constraints.add_constraint(property_name, constraint) ;
   }
 
+
+  // TODO should be removed
+  // This has left due to of compatilibity with the rust abstraction
   public fun remove_trusted_property(
     self : &mut Federation,
     cap : &RootAuthorityCap,
@@ -193,6 +196,13 @@ module htf::main {
       id : object::new(ctx),
       federation_id : self.federation_id(),
     }
+  }
+
+  // Revoke trusted property by setting the validity to a specific time
+  public fun revoke_trusted_property(federation : &mut Federation, cap : &RootAuthorityCap, property_name : TrustedPropertyName, valid_to_ms : u64) {
+    assert!(cap.federation_id == federation.federation_id(), EUnauthorizedWrongFederation);
+    let property_constraint = federation.governance.trusted_constraints.data_mut().get_mut(&property_name);
+    property_constraint.revoke_constraint(valid_to_ms);
   }
 
   /// Creates a new attest capability
@@ -238,8 +248,9 @@ module htf::main {
   public fun issue_permission_to_accredit(self : &mut Federation, cap : &AccreditCap,  receiver : ID, want_property_constraints : vector<TrustedPropertyConstraint>,  ctx : &mut TxContext) {
       assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
 
+      let current_time_ms = ctx.epoch_timestamp_ms();
       let permissions_to_accredit = self.find_permissions_to_accredit(&ctx.sender().to_id());
-      assert!(permissions_to_accredit.are_constraints_permitted(&want_property_constraints), EUnauthorizedInsufficientAccreditation);
+      assert!(permissions_to_accredit.are_constraints_permitted(&want_property_constraints, current_time_ms), EUnauthorizedInsufficientAccreditation);
 
       let mut trusted_constraints :VecMap<TrustedPropertyName, TrustedPropertyConstraint> =  vec_map::empty();
       let want_property_constraints_len = vector::length<TrustedPropertyConstraint>(&want_property_constraints);
@@ -267,8 +278,9 @@ module htf::main {
   public fun issue_permission_to_attest(self : &mut Federation, cap : &AttestCap, receiver : ID, wanted_constraints: vector<TrustedPropertyConstraint>, ctx : &mut TxContext) {
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
 
+    let current_time_ms = ctx.epoch_timestamp_ms();
     let permissions_to_accredit = self.find_permissions_to_accredit(&ctx.sender().to_id());
-    assert!(permissions_to_accredit.are_constraints_permitted(&wanted_constraints), EUnauthorizedInsufficientAccreditation);
+    assert!(permissions_to_accredit.are_constraints_permitted(&wanted_constraints, current_time_ms), EUnauthorizedInsufficientAccreditation);
 
     let permission = permission_to_attest::new_permission_to_attest(
       self.federation_id(), trusted_constraint::to_map_of_constraints(wanted_constraints), ctx
@@ -287,6 +299,7 @@ module htf::main {
   }
 
   public fun revoke_permission_to_attest(self : &mut Federation, cap : &AttestCap, user_id : &ID,  permission_id : &ID, ctx : &mut TxContext) {
+    let current_time_ms = ctx.epoch_timestamp_ms();
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
 
     let remover_permissions = self.find_permissions_to_attest(&ctx.sender().to_id());
@@ -298,7 +311,7 @@ module htf::main {
     // Make suere that the sender has the right to revoke the permission
     let permission_to_revoke = &users_attest_permissions.permisssions()[permission_to_revoke_idx.extract()];
     let (_, constraints) = (*permission_to_revoke.constraints()).into_keys_values() ;
-    assert!(remover_permissions.are_constraints_permitted(&constraints), EUnauthorizedInsufficientAttestation);
+    assert!(remover_permissions.are_constraints_permitted(&constraints, current_time_ms), EUnauthorizedInsufficientAttestation);
 
     // Remove the permission
     let users_attest_permissions =  self.governance.attesters.get_mut(user_id);
@@ -308,7 +321,6 @@ module htf::main {
 
   public fun revoke_permission_to_accredit(self : &mut Federation, cap : &AccreditCap, user_id : &ID,  permission_id : &ID, ctx : &mut TxContext) {
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
-
     let remover_permissions = self.find_permissions_to_accredit(&ctx.sender().to_id());
 
     let users_accredit_permissions = self.find_permissions_to_accredit(user_id);
@@ -317,8 +329,9 @@ module htf::main {
 
     // make suere that the sender has the right to revoke the permission
     let permission_to_revoke = &users_accredit_permissions.permisssions()[permission_to_revoke_idx.extract()];
+    let current_time_ms   = ctx.epoch_timestamp_ms();
     let (_, constraints) = (*permission_to_revoke.constriants()).into_keys_values() ;
-    assert!(remover_permissions.are_constraints_permitted(&constraints), EUnauthorizedInsufficientAccreditation);
+    assert!(remover_permissions.are_constraints_permitted(&constraints, current_time_ms), EUnauthorizedInsufficientAccreditation);
 
     // Remove the permission
     let users_accredit_permissions =  self.governance.accreditors.get_mut(user_id);
@@ -336,7 +349,7 @@ module htf::main {
       assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
 
       let permissions_to_attest = self.find_permissions_to_attest(&ctx.sender().to_id());
-      assert!(permissions_to_attest.are_values_permitted(&trusted_properties), EUnauthorizedInsufficientAttestation);
+      assert!(permissions_to_attest.are_values_permitted(&trusted_properties, ctx.epoch_timestamp_ms()), EUnauthorizedInsufficientAttestation);
 
       let creds = new_credential(trusted_properties, valid_from_ts_ms, valid_until_ts_ms, receiver, ctx);
       self.governance.credentials_state.insert(creds.id.to_inner(), new_credential_state());
@@ -344,9 +357,11 @@ module htf::main {
       transfer::transfer(creds, receiver.to_address());
   }
 
-  public fun validate_trusted_properties(self : &Federation, issuer_id : &ID, trusted_properties: VecMap<TrustedPropertyName, TrustedPropertyValue>) {
-    // check if every property belongs to the federation
+  public fun validate_trusted_properties(self : &Federation, issuer_id : &ID, trusted_properties: VecMap<TrustedPropertyName, TrustedPropertyValue>, ctx : &mut TxContext) {
+    // ? Should the user of trust framework be allowed to use any timestamp to validate the properites at any point in time?
+    let current_time_ms = ctx.epoch_timestamp_ms();
     let property_names = trusted_properties.keys();
+
     let mut idx = 0;
     while (idx < property_names.length()) {
       let property_name = property_names[idx];
@@ -359,14 +374,15 @@ module htf::main {
     // then check if names and values are permitted for given issuer
     let issuer_permissions_to_attest = self.find_permissions_to_attest(issuer_id);
     assert!(
-      issuer_permissions_to_attest.are_values_permitted(&trusted_properties),
+      issuer_permissions_to_attest.are_values_permitted(&trusted_properties, current_time_ms),
       EInvalidIssuerInsufficientAttestation,
     );
   }
 
   public fun validate_credential(self : &Federation, credential : &Credential, ctx : &mut TxContext) {
+    let current_time_ms = ctx.epoch_timestamp_ms();
     assert!(
-      self.governance.trusted_constraints.are_properties_correct(credential.trusted_properties()),
+      self.governance.trusted_constraints.are_properties_correct(credential.trusted_properties(), current_time_ms),
       EInvalidProperty,
     );
     assert!(
@@ -386,7 +402,7 @@ module htf::main {
 
     let issuer_permissions_to_attest = self.find_permissions_to_attest(credential.issued_by());
     assert!(
-      issuer_permissions_to_attest.are_values_permitted(credential.trusted_properties()),
+      issuer_permissions_to_attest.are_values_permitted(credential.trusted_properties(), current_time_ms),
       EInvalidIssuerInsufficientAttestation,
     );
   }

@@ -7,11 +7,51 @@ module htf::trusted_constraint {
   use htf::trusted_property::{TrustedPropertyValue, TrustedPropertyName};
   use htf::utils;
 
+  public struct TrustedPropertyConstraints has store {
+    data : VecMap<TrustedPropertyName, TrustedPropertyConstraint>
+  }
 
-  public(package) fun new_trusted_property_constraints() : TrustedPropertyConstraints {
-    TrustedPropertyConstraints {
-      data : vec_map::empty(),
+  // The evaluation order: allow_any => expression => allowed_values
+  public struct TrustedPropertyConstraint has  store, copy, drop {
+    property_name : TrustedPropertyName,
+    // allow only set of values
+    allowed_values : VecSet<TrustedPropertyValue>,
+    // allow only values that match the expression.
+    expression : Option<TrustedPropertyExpression>,
+    // allow_any - takes a precedence over the allowed_values
+    allow_any : bool,
+
+    timespan : Timespan,
+  }
+
+  public struct Timespan has store, copy, drop {
+    valid_from_ms : Option<u64>,
+    valid_until_ms : Option<u64>,
+  }
+
+
+  public(package) fun new_timespan(valid_from_ms : Option<u64>, valid_until_ms : Option<u64>) : Timespan {
+    Timespan {
+      valid_from_ms,
+      valid_until_ms,
     }
+  }
+
+  public(package) fun new_empty_timespan() : Timespan {
+    Timespan {
+      valid_from_ms: option::none(),
+      valid_until_ms: option::none(),
+    }
+  }
+
+  public(package) fun matches_time(self : &Timespan, now_ms : u64) : bool {
+    if (self.valid_from_ms.is_some() && *self.valid_from_ms.borrow() > now_ms) {
+      return false
+    };
+    if (self.valid_until_ms.is_some() && *self.valid_until_ms.borrow() < now_ms) {
+      return false
+    };
+    true
   }
 
 
@@ -64,8 +104,10 @@ module htf::trusted_constraint {
     self.lower_than.is_some()
   }
 
-  public struct TrustedPropertyConstraints has store {
-    data : VecMap<TrustedPropertyName, TrustedPropertyConstraint>
+  public(package) fun new_trusted_property_constraints() : TrustedPropertyConstraints {
+    TrustedPropertyConstraints {
+      data  : vec_map::empty(),
+    }
   }
 
 
@@ -78,12 +120,12 @@ module htf::trusted_constraint {
   }
 
 
-  public(package) fun are_properties_correct(self : &TrustedPropertyConstraints, properties : &VecMap<TrustedPropertyName, TrustedPropertyValue>)  : bool {
+  public(package) fun are_properties_correct(self : &TrustedPropertyConstraints, properties : &VecMap<TrustedPropertyName, TrustedPropertyValue>, current_time_ms : u64)  : bool {
       let property_names = properties.keys() ;
       let mut  idx = 0;
 
       while (idx < property_names.length())  {
-        if (! self.is_property_correct(&property_names[idx], properties.get(&property_names[idx]))) {
+        if (! self.is_property_correct(&property_names[idx], properties.get(&property_names[idx]), current_time_ms)) {
           return false
         };
         idx = idx +1;
@@ -92,11 +134,11 @@ module htf::trusted_constraint {
       true
   }
 
-  public(package) fun is_property_correct(self : &TrustedPropertyConstraints, property_name : &TrustedPropertyName, value : &TrustedPropertyValue) : bool {
+  public(package) fun is_property_correct(self : &TrustedPropertyConstraints, property_name : &TrustedPropertyName, value : &TrustedPropertyValue, current_time_ms : u64) : bool {
     if ( ! self.data.contains(property_name) ) {
       return false
     };
-    self.data.get(property_name).matches_property(property_name, value)
+    self.data.get(property_name).matches_property(property_name, value, current_time_ms)
   }
 
   public(package) fun add_constraint(self : &mut TrustedPropertyConstraints, name : TrustedPropertyName, constraint : TrustedPropertyConstraint)  {
@@ -109,21 +151,9 @@ module htf::trusted_constraint {
       allowed_values,
       allow_any,
       expression: option::none(),
+      timespan: new_empty_timespan(),
     }
   }
-
-  // The evaluation order: allow_any => expression => allowed_values
-  public struct TrustedPropertyConstraint has  store, copy, drop {
-    property_name : TrustedPropertyName,
-    // allow only set of values
-    allowed_values : VecSet<TrustedPropertyValue>,
-    // allow only values that match the expression.
-    expression : Option<TrustedPropertyExpression>,
-    // allow_any - takes a precedence over the allowed_values
-    allow_any : bool,
-  }
-
-
 
   public(package) fun allowed_values(self : &TrustedPropertyConstraint) : &VecSet<TrustedPropertyValue> {
     &self.allowed_values
@@ -145,8 +175,8 @@ module htf::trusted_constraint {
    utils::contains_all_from(self.allowed_values.keys(), constraint.allowed_values.keys())
   }
 
-  public(package) fun matches_property(self: &TrustedPropertyConstraint, name: &TrustedPropertyName, value: &TrustedPropertyValue) : bool {
-    self.matches_name(name) && self.matches_value(value)
+  public(package) fun matches_property(self: &TrustedPropertyConstraint, name: &TrustedPropertyName, value: &TrustedPropertyValue, current_time_ms : u64) : bool {
+    self.matches_name(name) && self.matches_value(value, current_time_ms)
   }
 
   public(package) fun matches_name(self : &TrustedPropertyConstraint, name : &TrustedPropertyName) : bool {
@@ -172,7 +202,11 @@ module htf::trusted_constraint {
       true
   }
 
-  public(package) fun matches_value(self : &TrustedPropertyConstraint, value : &TrustedPropertyValue) : bool {
+  public(package) fun matches_value(self : &TrustedPropertyConstraint, value : &TrustedPropertyValue, current_time_ms : u64) : bool {
+    if ( ! self.timespan.matches_time(current_time_ms) ) {
+      return false
+    };
+
     if ( self.allow_any ) {
       return true
     };
@@ -182,6 +216,10 @@ module htf::trusted_constraint {
       }
     };
     self.allowed_values.contains(value)
+  }
+
+  public(package) fun revoke_constraint(self : &mut TrustedPropertyConstraint, valid_to_ms : u64) {
+    self.timespan.valid_until_ms = option::some(valid_to_ms)
   }
 
 
@@ -258,66 +296,6 @@ module htf::trusted_constraint {
 
     false
   }
-
-
-  // public(package) fun matches_expression(exp : &TrustedPropertyExpression,  value : &TrustedPropertyValue) : bool {
-  //   match (exp) {
-  //     TrustedPropertyExpression::StartsWith(req) => {
-  //       let mut maybe_value_string = value.as_string();
-  //       if (maybe_value_string.is_none()) {
-  //         return false
-  //       };
-  //       let value_string = maybe_value_string.extract();
-  //       if (value_string.length() < req.length()) {
-  //         return false
-  //       };
-  //       return value_string.index_of(req) == 0
-  //     },
-  //     TrustedPropertyExpression::EndsWith(req) => {
-  //       let mut maybe_value_string = value.as_string();
-  //       if (maybe_value_string.is_none()) {
-  //         return false
-  //       };
-  //       let value_string = maybe_value_string.extract();
-  //       if (value_string.length() < req.length()) {
-  //         return false
-  //       };
-  //       return value_string.index_of(req) == value_string.length() - req.length()
-  //     },
-  //     TrustedPropertyExpression::Contains(req) => {
-  //       let mut maybe_value_string = value.as_string();
-  //       if (maybe_value_string.is_none()) {
-  //         return false
-  //       };
-  //       let value_string = maybe_value_string.extract();
-  //       if (value_string.length() < req.length()) {
-  //         return false
-  //       };
-  //       let value_string_len = value_string.length();
-  //       let index = value_string.index_of(req);
-  //       if (index == value_string_len) {
-  //         return false
-  //       };
-  //     },
-  //     TrustedPropertyExpression::GreaterThan(req) => {
-  //       let mut maybe_value_number = value.as_number();
-  //       if (maybe_value_number.is_none()) {
-  //         return false
-  //       };
-  //       let value_number = maybe_value_number.extract();
-  //       return value_number > *req
-  //     },
-  //     TrustedPropertyExpression::LowerThan(req) => {
-  //       let mut maybe_value_number = value.as_number();
-  //       if (maybe_value_number.is_none()) {
-  //         return false
-  //       };
-  //       let value_number = maybe_value_number.extract();
-  //       return value_number < *req
-  //     },
-  //   };
-  //   false
-  // }
 }
 
 
