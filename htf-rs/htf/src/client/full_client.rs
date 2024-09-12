@@ -17,7 +17,7 @@ use shared_crypto::intent::{Intent, IntentMessage};
 use super::HTFClientReadOnly;
 use crate::federation;
 use crate::key::{IotaKeySignature, SigningInfo};
-use crate::types::trusted_constraints::TrustedPropertyConstraints;
+use crate::types::trusted_constraints::{TrustedPropertyConstraint, TrustedPropertyConstraints};
 use crate::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
 use crate::types::Federation;
 use crate::utils::convert_to_address;
@@ -248,6 +248,63 @@ where
     .await
   }
 
+  /// Issues a permission to attest to a receiver in a federation.
+  pub async fn issue_permission_to_attest(
+    &self,
+    federation_id: ObjectID,
+    receiver: ObjectID,
+    want_property_constraints: Vec<TrustedPropertyConstraint>,
+    gas_budget: Option<u64>,
+  ) -> anyhow::Result<()> {
+    federation::ops::issue_permission_to_attest(self, federation_id, receiver, want_property_constraints, gas_budget)
+      .await
+  }
+
+  /// Revokes a permission to attest for a user in a federation.
+
+  pub async fn revoke_permission_to_attest(
+    &self,
+    federation_id: ObjectID,
+    user_id: ObjectID,
+    permission_id: ObjectID,
+    gas_budget: Option<u64>,
+  ) -> anyhow::Result<()> {
+    federation::ops::revoke_permission_to_attest(self, federation_id, user_id, permission_id, gas_budget).await
+  }
+
+  /// Issues a permission to accredit to a receiver in a federation.
+  pub async fn issue_permission_to_accredit(
+    &self,
+    federation_id: ObjectID,
+    receiver: ObjectID,
+    want_property_constraints: Vec<TrustedPropertyConstraint>,
+    gas_budget: Option<u64>,
+  ) -> anyhow::Result<()> {
+    federation::ops::issue_permission_to_accredit(self, federation_id, receiver, want_property_constraints, gas_budget)
+      .await
+  }
+
+  /// Revokes a permission to accredit for a user in a federation.
+  pub async fn revoke_permission_to_accredit(
+    &self,
+    federation_id: ObjectID,
+    user_id: ObjectID,
+    permission_id: ObjectID,
+    gas_budget: Option<u64>,
+  ) -> anyhow::Result<()> {
+    federation::ops::revoke_permission_to_accredit(self, federation_id, user_id, permission_id, gas_budget).await
+  }
+
+  /// Validates a credential in a federation.
+  pub async fn validate_credential(
+    &self,
+    federation_id: ObjectID,
+    credential_id: ObjectID,
+    gas_budget: Option<u64>,
+  ) -> anyhow::Result<()> {
+    federation::ops::validate_credential(self, federation_id, credential_id, gas_budget).await
+  }
+
   /// Issues a credential for an account in a federation.
   pub async fn issue_credential(
     &self,
@@ -269,64 +326,8 @@ where
     )
     .await
   }
-
-  /// Revokes a permission to attest for a user in a federation.
-
-  pub async fn revoke_permission_to_attest(
-    &self,
-    federation_id: ObjectID,
-    user_id: ObjectID,
-    permission_id: ObjectID,
-    gas_budget: Option<u64>,
-  ) -> anyhow::Result<()> {
-    federation::ops::revoke_permission_to_attest(self, federation_id, user_id, permission_id, gas_budget).await
-  }
-
-  /// Issues a permission to accredit to a receiver in a federation.
-  pub async fn issue_permission_to_accredit(
-    &self,
-    federation_id: ObjectID,
-    receiver: ObjectID,
-    want_property_constraints: Vec<TrustedPropertyConstraints>,
-    gas_budget: Option<u64>,
-  ) -> anyhow::Result<()> {
-    federation::ops::issue_permission_to_accredit(self, federation_id, receiver, want_property_constraints, gas_budget)
-      .await
-  }
-
-  /// Validates a credential in a federation.
-  pub async fn validate_credential(
-    &self,
-    federation_id: ObjectID,
-    credential_id: ObjectID,
-    gas_budget: Option<u64>,
-  ) -> anyhow::Result<()> {
-    federation::ops::validate_credential(self, federation_id, credential_id, gas_budget).await
-  }
-
-  /// Issues a permission to attest to a receiver in a federation.
-  pub async fn issue_permission_to_attest(
-    &self,
-    federation_id: ObjectID,
-    receiver: ObjectID,
-    want_property_constraints: Vec<TrustedPropertyConstraints>,
-    gas_budget: Option<u64>,
-  ) -> anyhow::Result<()> {
-    federation::ops::issue_permission_to_attest(self, federation_id, receiver, want_property_constraints, gas_budget)
-      .await
-  }
-
-  /// Revokes a permission to accredit for a user in a federation.
-  pub async fn revoke_permission_to_accredit(
-    &self,
-    federation_id: ObjectID,
-    user_id: ObjectID,
-    permission_id: ObjectID,
-    gas_budget: Option<u64>,
-  ) -> anyhow::Result<()> {
-    federation::ops::revoke_permission_to_accredit(self, federation_id, user_id, permission_id, gas_budget).await
-  }
 }
+
 impl<S> Deref for HTFClient<S> {
   type Target = HTFClientReadOnly;
 

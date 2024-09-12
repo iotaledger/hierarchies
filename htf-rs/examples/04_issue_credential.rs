@@ -1,4 +1,5 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
+use std::time::SystemTime;
 
 use anyhow::Context;
 use examples::get_client;
@@ -28,28 +29,36 @@ async fn main() -> anyhow::Result<()> {
   // Trusted property value
   let value = TrustedPropertyValue::Text("Hello".to_owned());
 
-  let allowed_values = HashSet::from_iter([value]);
+  let trusted_properties = HashMap::from_iter([(property_name, value)]);
 
-  // Add the trusted property to the federation
+  let bob_id = ObjectID::from_single_byte(5);
+
+  let now_ts = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH)?.as_secs();
+
+  let valid_until_ts = now_ts + 3_600_000;
+
+  // Issue a credential
   htf_client
-    .add_trusted_property(federation_id, property_name.clone(), allowed_values, false, None)
+    .issue_credential(federation_id, bob_id, trusted_properties, now_ts, valid_until_ts, None)
     .await
     .context("Failed to add trusted property")?;
 
   // Get the updated federation and print it
   let federation: Federation = htf_client.get_object_by_id(federation_id).await?;
 
-  // Check if the trusted property was added
-  let trusted_properties = federation
-    .governance
-    .trusted_constraints
-    .contains_property(&property_name);
+  // print!("Trusted Properties : {:#?}", federation.governance.trusted_constraints);
 
-  assert!(trusted_properties);
+  // // Check if the trusted property was added
+  // let trusted_properties = federation
+  //   .governance
+  //   .trusted_constraints
+  //   .contains_property(&property_name);
 
-  if let Some(constraint) = federation.governance.trusted_constraints.data.get(&property_name) {
-    println!("Trusted Property: {:#?}", constraint)
-  }
+  // assert!(trusted_properties);
+
+  // if let Some(constraint) = federation.governance.trusted_constraints.data.get(&property_name) {
+  //   println!("Trusted Property: {:#?}", constraint)
+  // }
 
   Ok(())
 }

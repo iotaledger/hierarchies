@@ -20,27 +20,16 @@ impl TrustedPropertyConstraints {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 /// The evaluation order: allow_any => expression => allowed_values
 pub struct TrustedPropertyConstraint {
-  property_name: TrustedPropertyName,
+  pub property_name: TrustedPropertyName,
   // allow only set of values
   #[serde(deserialize_with = "deserialize_vec_set")]
-  allowed_values: HashSet<TrustedPropertyValue>,
-  expression: Option<TrustedPropertyExpression>,
+  pub allowed_values: HashSet<TrustedPropertyValue>,
+  pub expression: Option<TrustedPropertyExpression>,
   // allow_any - takes a precedence over the allowed_values
-  allow_any: bool,
+  pub allow_any: bool,
 }
 
 impl TrustedPropertyConstraint {
-  pub fn matches_constraint(&self, constraint: &TrustedPropertyConstraint) -> bool {
-    if constraint.allow_any {
-      return self.allow_any;
-    }
-    if constraint.expression.is_some() && self.expression.is_some() {
-      return self.expression == constraint.expression;
-    }
-
-    self.allowed_values.is_superset(&constraint.allowed_values)
-  }
-
   pub fn matches_property(&self, name: &TrustedPropertyName, value: &TrustedPropertyValue) -> bool {
     self.matches_name(name) && self.matches_value(value)
   }
@@ -71,15 +60,6 @@ impl TrustedPropertyConstraint {
       }
     }
     self.allowed_values.contains(value)
-  }
-
-  pub fn to_map_of_constraints(
-    constraints: Vec<TrustedPropertyConstraint>,
-  ) -> HashMap<TrustedPropertyName, TrustedPropertyConstraint> {
-    constraints
-      .into_iter()
-      .map(|constraint| (constraint.property_name.clone(), constraint))
-      .collect()
   }
 
   pub fn matches_expression(exp: &TrustedPropertyExpression, value: &TrustedPropertyValue) -> bool {

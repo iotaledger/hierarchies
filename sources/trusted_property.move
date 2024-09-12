@@ -7,6 +7,7 @@ module htf::trusted_property {
     names : vector<String>,
   }
 
+
   public fun names(self : &TrustedPropertyName) : &vector<String> {
     &self.names
   }

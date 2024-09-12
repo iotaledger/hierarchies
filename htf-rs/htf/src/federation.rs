@@ -19,7 +19,13 @@ use crate::types::trusted_constraints::TrustedPropertyConstraints;
 use crate::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue, TrustedPropertyValueMove};
 
 pub(crate) mod ops {
+  use iota_sdk::types::collection_types::VecSet;
+  use iota_sdk::types::iota_system_state::IOTA_SYSTEM_MODULE_NAME;
+  use iota_sdk::types::transaction::{Argument, CallArg, Command};
+  use iota_sdk::types::{TypeTag, IOTA_FRAMEWORK_ADDRESS, IOTA_FRAMEWORK_PACKAGE_ID, IOTA_SYSTEM_PACKAGE_ID};
   use serde::Serialize;
+
+  use crate::types::trusted_constraints::TrustedPropertyConstraint;
 
   use super::*;
 
@@ -79,62 +85,64 @@ pub(crate) mod ops {
       mutable: true,
     })?;
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, serde::Deserialize)]
-    #[serde(rename = "String")]
-    #[repr(transparent)]
-    #[serde(transparent)]
-    pub struct MoveString {
-      bytes: Vec<u8>,
-    }
+    let allow_any = ptb.pure(allow_any)?;
+    let names = ptb.pure(property_name.names())?;
+    let property_names: Argument = ptb.programmable_move_call(
+      client.htf_package_id(),
+      ident_str!("trusted_property").into(),
+      ident_str!("new_property_name_from_vector").into(),
+      vec![],
+      vec![names],
+    );
 
-    #[derive(Debug, Clone, PartialEq, Hash, Eq, Serialize, serde::Deserialize)]
-    #[serde(rename = "TrustedPropertyName")]
-    pub struct TrustedPropertyNameMove {
-      names: Vec<MoveString>,
-    }
+    let tag =
+      TypeTag::from_str(format!("{}::trusted_property::TrustedPropertyValue", client.htf_package_id()).as_str())?;
 
-    let property_name = TrustedPropertyNameMove {
-      names: property_name
-        .names()
-        .iter()
-        .map(|name| MoveString {
-          bytes: name.clone().into(),
-        })
-        .collect(),
+    let values_of_property = allowed_values.iter().collect::<Vec<_>>();
+
+    // TODO::@itsyaasir: Fix this
+    let value = match values_of_property[0] {
+      TrustedPropertyValue::Text(text) => {
+        let v = ptb.pure(text)?;
+        ptb.programmable_move_call(
+          client.htf_package_id(),
+          ident_str!("trusted_property").into(),
+          ident_str!("new_property_value_string").into(),
+          vec![],
+          vec![v],
+        )
+      }
+      TrustedPropertyValue::Number(number) => {
+        let v = ptb.pure(number)?;
+        ptb.programmable_move_call(
+          client.htf_package_id(),
+          ident_str!("trusted_property").into(),
+          ident_str!("new_property_value_number").into(),
+          vec![],
+          vec![v],
+        )
+      }
     };
 
-    let property_name_arg = ptb.pure(&property_name)?;
-
-    let allow_any = ptb.pure(allow_any)?;
-
-    let allowed_values = allowed_values
-      .into_iter()
-      .map(TrustedPropertyValueMove::from)
-      .collect::<HashSet<_>>();
-
-    let allowed_values = ptb.pure(allowed_values)?;
+    let vec_set = ptb.programmable_move_call(
+      IOTA_FRAMEWORK_PACKAGE_ID,
+      ident_str!("vec_set").into(),
+      ident_str!("singleton").into(),
+      vec![tag],
+      vec![value],
+    );
 
     ptb.programmable_move_call(
       client.htf_package_id(),
       ident_str!("main").into(),
       ident_str!("add_trusted_property").into(),
       vec![],
-      vec![fed_ref, cap, property_name_arg, allowed_values, allow_any],
+      vec![fed_ref, cap, property_names, vec_set, allow_any],
     );
 
     let tx = ptb.finish();
 
     client.execute_transaction(tx, gas_budget).await?;
-
-    let federation_operations = client.onchain(federation_id);
-
-    // if !federation_operations
-    //   .has_federation_property(&property_name)
-    //   .await
-    //   .context("failed to check if federation has property")?
-    // {
-    //   anyhow::bail!("failed to add trusted property");
-    // }
 
     Ok(())
   }
@@ -319,7 +327,7 @@ pub(crate) mod ops {
     client: &HTFClient<S>,
     federation_id: ObjectID,
     receiver: ObjectID,
-    want_property_constraints: Vec<TrustedPropertyConstraints>,
+    want_property_constraints: Vec<TrustedPropertyConstraint>,
     gas_budget: Option<u64>,
   ) -> anyhow::Result<()>
   where
@@ -409,7 +417,7 @@ pub(crate) mod ops {
     client: &HTFClient<S>,
     federation_id: ObjectID,
     receiver: ObjectID,
-    want_property_constraints: Vec<TrustedPropertyConstraints>,
+    want_property_constraints: Vec<TrustedPropertyConstraint>,
     gas_budget: Option<u64>,
   ) -> anyhow::Result<()>
   where

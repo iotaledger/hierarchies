@@ -2,39 +2,21 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct TrustedPropertyName {
-  names: Vec<MoveString>,
+  names: Vec<String>,
 }
 
 impl TrustedPropertyName {
   /// Create a new TrustedPropertyName
   pub fn new(names: Vec<String>) -> Self {
-    Self {
-      names: names
-        .into_iter()
-        .map(|name| MoveString {
-          bytes: name.into_bytes(),
-        })
-        .collect(),
-    }
+    Self { names }
   }
 
-  pub fn names(&self) -> Vec<String> {
-    self
-      .names
-      .iter()
-      .map(|name| String::from_utf8_lossy(&name.bytes).to_string())
-      .collect()
+  pub fn names(&self) -> &Vec<String> {
+    &self.names
   }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(rename = "String")]
-pub struct MoveString {
-  bytes: Vec<u8>,
 }
 
 #[derive(Debug, Clone, PartialEq, Hash, Eq, Serialize, Deserialize)]
-#[serde(from = "TrustedPropertyValue")]
 pub(crate) struct TrustedPropertyValueMove {
   pub text: Option<String>,
   pub number: Option<u64>,
@@ -74,11 +56,46 @@ impl TryFrom<TrustedPropertyValueMove> for TrustedPropertyValue {
   }
 }
 
+#[test]
+fn lol() {
+  let constraints_str = r#" {
+        "data": {
+          "contents": [
+            {
+              "key": {
+                "names": ["Example LTD"]
+              },
+              "value": {
+                "allow_any": false,
+                "allowed_values": {
+                  "contents": [
+                    {
+                      "number": null,
+                      "text": "Hello"
+                    }
+                  ]
+                },
+                "expression": null,
+                "property_name": {
+                  "names": ["Example LTD"]
+                }
+              }
+            }
+          ]
+        }"#;
+
+  let constraints: crate::types::trusted_constraints::TrustedPropertyConstraints =
+    serde_json::from_str(constraints_str).unwrap();
+
+  println!("{:?}", constraints);
+}
+
 #[cfg(test)]
 mod tests {
   use serde_json::json;
 
   use super::*;
+  use crate::types::trusted_constraints::TrustedPropertyConstraints;
 
   #[test]
   fn test_trusted_property_name() {

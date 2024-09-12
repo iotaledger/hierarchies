@@ -31,3 +31,11 @@ name = "02_add_root_authority"
 [[example]]
 path = "03_add_trusted_property.rs"
 name = "03_add_trusted_property"
+
+[[example]]
+path = "04_issue_credential.rs"
+name = "04_issue_credential"
+
+[[example]]
+path = "05_issue_permission_to_attest.rs"
+name = "05_issue_permission_to_attest"

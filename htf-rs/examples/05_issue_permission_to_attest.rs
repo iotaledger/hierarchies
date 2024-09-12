@@ -2,11 +2,12 @@ use std::collections::HashSet;
 
 use anyhow::Context;
 use examples::get_client;
+use htf::types::trusted_constraints::{TrustedPropertyConstraint, TrustedPropertyConstraints};
 use htf::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
 use htf::types::Federation;
 use iota_sdk::types::base_types::ObjectID;
 
-/// Demonstrate how to add a trusted property to a federation.
+/// Demonstrate how to issue a permission to attest to a trusted property.
 ///
 /// In this example we connect to a locally running private network, but it can
 /// be adapted to run on any IOTA node by setting the network and faucet
@@ -32,24 +33,44 @@ async fn main() -> anyhow::Result<()> {
 
   // Add the trusted property to the federation
   htf_client
-    .add_trusted_property(federation_id, property_name.clone(), allowed_values, false, None)
+    .add_trusted_property(
+      federation_id,
+      property_name.clone(),
+      allowed_values.clone(),
+      false,
+      None,
+    )
     .await
     .context("Failed to add trusted property")?;
 
-  // Get the updated federation and print it
+  // A receiver is an account that will receive the attestation
+  let receiver = ObjectID::random();
+
+  // Property constraints
+  let constraints = TrustedPropertyConstraint {
+    property_name,
+    allowed_values,
+    expression: None,
+    allow_any: true,
+  };
+
+  // Let us issue a permission to attest to the trusted property
+  htf_client
+    .issue_permission_to_attest(federation_id, receiver, vec![constraints], None)
+    .await
+    .context("Failed to issue permission to attest")?;
+
+  println!("Issued permission to attest");
+
+  // Check if the permission was issued
   let federation: Federation = htf_client.get_object_by_id(federation_id).await?;
 
+  println!("Federation: {:#?}", federation);
+
   // Check if the trusted property was added
-  let trusted_properties = federation
-    .governance
-    .trusted_constraints
-    .contains_property(&property_name);
+  let trusted_properties = federation.governance.attesters.contains_key(&receiver);
 
   assert!(trusted_properties);
-
-  if let Some(constraint) = federation.governance.trusted_constraints.data.get(&property_name) {
-    println!("Trusted Property: {:#?}", constraint)
-  }
 
   Ok(())
 }

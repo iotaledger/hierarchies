@@ -1,4 +1,6 @@
 module htf::utils {
+  use iota::vec_set::{Self, VecSet};
+
 
   public(package) fun contains_one_of<D : copy + drop>(source : &vector<D>, one_of : &vector<D>)  : bool {
     let len_one_of = vector::length<D>(one_of);
@@ -37,4 +39,15 @@ module htf::utils {
     };
     cloned
   }
+
+  public fun create_vec_set<T: copy + drop + store>(mut values: vector<T>): VecSet<T> {
+    let mut set = vec_set::empty();
+    while (!vector::is_empty(&values)) {
+        let value = vector::pop_back(&mut values);
+        vec_set::insert(&mut set, value);
+    };
+
+    values.destroy_empty();
+    set
+}
 }
