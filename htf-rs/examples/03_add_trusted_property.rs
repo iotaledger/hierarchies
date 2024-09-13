@@ -27,8 +27,9 @@ async fn main() -> anyhow::Result<()> {
 
   // Trusted property value
   let value = TrustedPropertyValue::Text("Hello".to_owned());
+  let another_value = TrustedPropertyValue::Text("World".to_owned());
 
-  let allowed_values = HashSet::from_iter([value]);
+  let allowed_values = HashSet::from_iter([value, another_value]);
 
   // Add the trusted property to the federation
   htf_client

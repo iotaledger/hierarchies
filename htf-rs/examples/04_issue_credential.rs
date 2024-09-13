@@ -7,7 +7,7 @@ use htf::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
 use htf::types::Federation;
 use iota_sdk::types::base_types::ObjectID;
 
-/// Demonstrate how to add a trusted property to a federation.
+/// Demonstrate how to issue a credential to a federation.
 ///
 /// In this example we connect to a locally running private network, but it can
 /// be adapted to run on any IOTA node by setting the network and faucet
@@ -29,6 +29,21 @@ async fn main() -> anyhow::Result<()> {
   // Trusted property value
   let value = TrustedPropertyValue::Text("Hello".to_owned());
 
+  println!("Adding trusted property");
+  // Add the trusted property to the federation
+  htf_client
+    .add_trusted_property(
+      federation_id,
+      property_name.clone(),
+      HashSet::from_iter([value.clone()]),
+      false,
+      None,
+    )
+    .await
+    .context("Failed to add trusted property")?;
+
+  println!("Trusted Property: {:#?}", property_name);
+
   let trusted_properties = HashMap::from_iter([(property_name, value)]);
 
   let bob_id = ObjectID::from_single_byte(5);
@@ -42,6 +57,8 @@ async fn main() -> anyhow::Result<()> {
     .issue_credential(federation_id, bob_id, trusted_properties, now_ts, valid_until_ts, None)
     .await
     .context("Failed to add trusted property")?;
+
+  println!("Issued credential");
 
   // Get the updated federation and print it
   let federation: Federation = htf_client.get_object_by_id(federation_id).await?;

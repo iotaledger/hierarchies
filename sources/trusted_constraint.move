@@ -24,6 +24,16 @@ module htf::trusted_constraint {
     timespan : Timespan,
   }
 
+  public fun new_trusted_property_constraint(property_name : TrustedPropertyName, allowed_values : VecSet<TrustedPropertyValue>, allow_any : bool, expression : Option<TrustedPropertyExpression>) : TrustedPropertyConstraint {
+    TrustedPropertyConstraint {
+      property_name,
+      allowed_values,
+      expression,
+      allow_any,
+      timespan: new_empty_timespan(),
+    }
+  }
+
   public struct Timespan has store, copy, drop {
     valid_from_ms : Option<u64>,
     valid_until_ms : Option<u64>,
@@ -61,6 +71,36 @@ module htf::trusted_constraint {
     contains : Option<String>,
     greater_than : Option<u64>,
     lower_than : Option<u64>,
+  }
+
+  public fun new_trusted_property_expression(starts_with : Option<String>, ends_with : Option<String>, contains : Option<String>, greater_than : Option<u64>, lower_than : Option<u64>) : TrustedPropertyExpression {
+    TrustedPropertyExpression {
+      starts_with,
+      ends_with,
+      contains,
+      greater_than,
+      lower_than,
+    }
+  }
+
+  public fun set_starts_with(self: &mut TrustedPropertyExpression, value: Option<String>) {
+    self.starts_with = value;
+  }
+
+  public fun set_ends_with(self: &mut TrustedPropertyExpression, value: Option<String>) {
+    self.ends_with = value;
+  }
+
+  public fun set_contains(self: &mut TrustedPropertyExpression, value: Option<String>) {
+    self.contains = value;
+  }
+
+  public fun set_greater_than(self: &mut TrustedPropertyExpression, value: Option<u64>) {
+    self.greater_than = value;
+  }
+
+  public fun set_lower_than(self: &mut TrustedPropertyExpression, value: Option<u64>) {
+    self.lower_than = value;
   }
 
 
@@ -145,15 +185,6 @@ module htf::trusted_constraint {
     self.data.insert(name, constraint)
   }
 
-  public(package) fun new_trusted_property_constraint(property_name : TrustedPropertyName, allowed_values : VecSet<TrustedPropertyValue>, allow_any : bool) : TrustedPropertyConstraint {
-    TrustedPropertyConstraint {
-      property_name,
-      allowed_values,
-      allow_any,
-      expression: option::none(),
-      timespan: new_empty_timespan(),
-    }
-  }
 
   public(package) fun allowed_values(self : &TrustedPropertyConstraint) : &VecSet<TrustedPropertyValue> {
     &self.allowed_values

@@ -117,6 +117,7 @@ module htf::main {
       federation_address: federation.federation_id().to_address(),
       }
     });
+
     transfer::transfer(root_auth_cap, ctx.sender());
     transfer::transfer(accredit_cap, ctx.sender());
     transfer::transfer(attest_cap, ctx.sender());
@@ -172,6 +173,7 @@ module htf::main {
       property_name,
       allowed_values,
       allow_any,
+      option::none(),
     );
 
     self.governance.trusted_constraints.add_constraint(property_name, constraint) ;
@@ -711,7 +713,7 @@ module htf::main_tests {
 
     let mut wanted_constraints = vector::empty();
     let constraints = new_trusted_property_constraint(
-      property_name, allowed_values, true
+      property_name, allowed_values, true, option::none()
     );
 
     wanted_constraints.push_back(constraints);

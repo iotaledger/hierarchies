@@ -8,7 +8,7 @@ use iota_sdk::types::base_types::{IotaAddress, ObjectID, STD_OPTION_MODULE_NAME}
 use iota_sdk::types::collection_types::{VecMap, VecSet};
 use iota_sdk::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 use iota_sdk::types::transaction::Argument;
-use iota_sdk::types::{MoveTypeTagTrait, MOVE_STDLIB_PACKAGE_ID};
+use iota_sdk::types::{MoveTypeTagTrait, TypeTag, MOVE_STDLIB_PACKAGE_ID};
 use move_core_types::ident_str;
 use serde::{Deserialize, Deserializer, Serialize};
 
@@ -44,8 +44,9 @@ where
   Ok(vec_set.contents.into_iter().collect())
 }
 
-pub fn option_to_move<T: MoveTypeTagTrait + Serialize>(
+pub fn option_to_move<T: Serialize>(
   option: Option<T>,
+  tag: TypeTag,
   ptb: &mut ProgrammableTransactionBuilder,
 ) -> Result<Argument, anyhow::Error> {
   let arg = if let Some(t) = option {
@@ -54,7 +55,7 @@ pub fn option_to_move<T: MoveTypeTagTrait + Serialize>(
       MOVE_STDLIB_PACKAGE_ID,
       STD_OPTION_MODULE_NAME.into(),
       ident_str!("some").into(),
-      vec![T::get_type_tag()],
+      vec![tag],
       vec![t],
     )
   } else {
@@ -62,7 +63,7 @@ pub fn option_to_move<T: MoveTypeTagTrait + Serialize>(
       MOVE_STDLIB_PACKAGE_ID,
       STD_OPTION_MODULE_NAME.into(),
       ident_str!("none").into(),
-      vec![T::get_type_tag()],
+      vec![tag],
       vec![],
     )
   };

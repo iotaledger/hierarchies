@@ -111,3 +111,36 @@ pub enum TrustedPropertyExpression {
   GreaterThan(u64),
   LowerThan(u64),
 }
+
+impl TrustedPropertyExpression {
+  pub fn as_starts_with(&self) -> Option<String> {
+    match self {
+      TrustedPropertyExpression::StartsWith(value) => Some(value.clone()),
+      _ => None,
+    }
+  }
+  pub fn as_ends_with(&self) -> Option<String> {
+    match self {
+      TrustedPropertyExpression::EndsWith(value) => Some(value.clone()),
+      _ => None,
+    }
+  }
+  pub fn as_contains(&self) -> Option<String> {
+    match self {
+      TrustedPropertyExpression::Contains(value) => Some(value.clone()),
+      _ => None,
+    }
+  }
+  pub fn as_greater_than(&self) -> Option<u64> {
+    match self {
+      TrustedPropertyExpression::GreaterThan(value) => Some(*value),
+      _ => None,
+    }
+  }
+  pub fn as_lower_than(&self) -> Option<u64> {
+    match self {
+      TrustedPropertyExpression::LowerThan(value) => Some(*value),
+      _ => None,
+    }
+  }
+}

@@ -31,6 +31,8 @@ async fn main() -> anyhow::Result<()> {
 
   let allowed_values = HashSet::from_iter([value]);
 
+  println!("Adding trusted property");
+
   // Add the trusted property to the federation
   htf_client
     .add_trusted_property(
@@ -43,6 +45,8 @@ async fn main() -> anyhow::Result<()> {
     .await
     .context("Failed to add trusted property")?;
 
+  println!("Added trusted property");
+
   // A receiver is an account that will receive the attestation
   let receiver = ObjectID::random();
 
@@ -51,7 +55,7 @@ async fn main() -> anyhow::Result<()> {
     property_name,
     allowed_values,
     expression: None,
-    allow_any: true,
+    allow_any: false,
   };
 
   // Let us issue a permission to attest to the trusted property
