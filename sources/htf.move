@@ -4,6 +4,8 @@ module htf::main {
   use iota::event;
   use iota::vec_set::{VecSet};
   use iota::object::{Self, UID, ID};
+  use iota::transfer;
+  use iota::tx_context::TxContext;
 
   use htf::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
   use htf::trusted_constraint::{Self, TrustedPropertyConstraints, TrustedPropertyConstraint};
@@ -19,7 +21,6 @@ module htf::main {
   const  EInvalidIssuerInsufficientAttestation: u64 = 6;
   const  EInvalidConstraint  : u64 = 7;
   const  EInvalidTimeSpan: u64 = 8;
-  const  ECredentialRevoked: u64 = 9;
   const  EPermissionNotFound: u64 = 10;
 
   // Federation is the hierarcy of trust in the system. Itsa a public, shared object
@@ -45,8 +46,6 @@ module htf::main {
     accreditors : VecMap<ID, PermissionsToAccredit>,
     // trusted_delegate_id => attestation
     attesters : VecMap<ID, PermissionsToAttest>,
-    // owener id ->
-    credentials_state : VecMap<ID, CredentialState>
   }
 
 
@@ -62,25 +61,6 @@ module htf::main {
 
   public struct FederationCreatedEvent has copy, drop {
     federation_address : address,
-  }
-
-  public struct Credential has key {
-    id : UID,
-    issued_by : ID,
-    issued_for : ID,
-    valid_from : u64,
-    valid_until : u64,
-    trusted_properties : VecMap<TrustedPropertyName, TrustedPropertyValue>,
-  }
-
-  public struct CredentialState has store {
-    is_revoked : bool,
-  }
-
-  fun new_credential_state() : CredentialState {
-    CredentialState {
-      is_revoked : false,
-    }
   }
 
   fun is_root_authority(self : &Federation, id : &ID) : bool {
@@ -105,7 +85,6 @@ module htf::main {
         trusted_constraints: trusted_constraint::new_trusted_property_constraints(),
         accreditors : vec_map::empty(),
         attesters : vec_map::empty(),
-        credentials_state : vec_map::empty(),
       },
     };
 
@@ -357,25 +336,6 @@ module htf::main {
     users_accredit_permissions.remove_permission(permission_id);
   }
 
-  public fun issue_credential(
-      federation : &mut Federation,
-      cap : &AttestCap,
-      receiver : ID,
-      trusted_properties : VecMap<TrustedPropertyName, TrustedPropertyValue>,
-      valid_from_ts_ms : u64,
-      valid_until_ts_ms : u64,
-      ctx : &mut TxContext)  {
-      assert!(cap.federation_id == federation.federation_id(), EUnauthorizedWrongFederation);
-
-      let permissions_to_attest = federation.find_permissions_to_attest(&ctx.sender().to_id());
-      assert!(permissions_to_attest.are_values_permitted(&trusted_properties, ctx.epoch_timestamp_ms()), EUnauthorizedInsufficientAttestation);
-
-      let creds = new_credential(trusted_properties, valid_from_ts_ms, valid_until_ts_ms, receiver, ctx);
-      federation.governance.credentials_state.insert(creds.id.to_inner(), new_credential_state());
-
-      transfer::transfer(creds, receiver.to_address());
-  }
-
   public fun validate_trusted_properties(self : &Federation, issuer_id : &ID, trusted_properties: VecMap<TrustedPropertyName, TrustedPropertyValue>, ctx : &mut TxContext) {
     // ? Should the user of trust framework be allowed to use any timestamp to validate the properites at any point in time?
     let current_time_ms = ctx.epoch_timestamp_ms();
@@ -398,67 +358,6 @@ module htf::main {
     );
   }
 
-  public fun validate_credential(self : &Federation, credential : &Credential, ctx : &mut TxContext) {
-    let current_time_ms = ctx.epoch_timestamp_ms();
-    assert!(
-      self.governance.trusted_constraints.are_properties_correct(credential.trusted_properties(), current_time_ms),
-      EInvalidProperty,
-    );
-    assert!(
-      self.has_permissions_to_accredit(credential.issued_by()),
-      EInvalidIssuer,
-    );
-    assert!(
-      !self.is_credential_revoked(&credential.id.to_inner()),
-      ECredentialRevoked,
-    );
-
-    let current_time_ms = ctx.epoch_timestamp_ms();
-    assert!(
-      credential.valid_from <= current_time_ms && credential.valid_until >= current_time_ms,
-      EInvalidTimeSpan,
-    );
-
-    let issuer_permissions_to_attest = self.find_permissions_to_attest(credential.issued_by());
-    assert!(
-      issuer_permissions_to_attest.are_values_permitted(credential.trusted_properties(), current_time_ms),
-      EInvalidIssuerInsufficientAttestation,
-    );
-  }
-
-
-  fun new_credential(
-    trusted_properties : VecMap<TrustedPropertyName, TrustedPropertyValue>,
-    valid_from_ts_ms : u64,
-    valid_until_ts_ms : u64,
-    issued_for : ID,
-    ctx : &mut TxContext,
-  ) : Credential {
-      Credential {
-        id : object::new(ctx),
-        issued_by : ctx.sender().to_id(),
-        issued_for,
-        trusted_properties,
-        valid_from:  valid_from_ts_ms,
-        valid_until: valid_until_ts_ms,
-      }
-  }
-
-  fun issued_by(self : &Credential)  : &ID {
-    &self.issued_by
-  }
-
-  fun trusted_properties(self : &Credential) :  &VecMap<TrustedPropertyName, TrustedPropertyValue> {
-    &self.trusted_properties
-  }
-
-  fun is_credential_revoked(self : &Federation, credential_id : &ID) : bool {
-    if (!self.governance.credentials_state.contains(credential_id)) {
-      return false
-    };
-    self.governance.credentials_state.get(credential_id).is_revoked
-  }
-
   public(package) fun root_authorities(self : &Federation) : &vector<RootAuthority> {
     &self.root_authorities
   }
@@ -470,9 +369,9 @@ module htf::main {
 module htf::main_tests {
   use std::string::{utf8};
   use htf::main::{
-    new_federation, RootAuthorityCap, Federation, AccreditCap,AttestCap, Credential,
+    new_federation, RootAuthorityCap, Federation, AccreditCap,AttestCap,
     add_trusted_property, issue_permission_to_accredit, issue_permission_to_attest,
-    revoke_permission_to_attest, revoke_permission_to_accredit, issue_credential
+    revoke_permission_to_attest, revoke_permission_to_accredit,
   };
   use iota::test_scenario;
   use iota::vec_set::{Self};
@@ -702,64 +601,4 @@ module htf::main_tests {
     let _ = scenario.end();
   }
 
-  #[test]
-  fun test_issue_credential() {
-    let alice = @0x1;
-    let mut scenario = test_scenario::begin(alice);
-
-    // Create a new federation
-    new_federation(scenario.ctx());
-    scenario.next_tx(alice);
-
-    let mut fed: Federation = scenario.take_shared();
-    let cap: RootAuthorityCap = scenario.take_from_address(alice);
-    let attest_cap: AttestCap = scenario.take_from_address(alice);
-    let accredit_cap: AccreditCap = scenario.take_from_address(alice);
-
-    // Add a trusted property
-    let property_name = new_property_name(utf8(b"property_name"));
-    let property_value = new_property_value_number(10);
-    let mut allowed_values = vec_set::empty();
-    allowed_values.insert(property_value);
-
-    fed.add_trusted_property(&cap, property_name, allowed_values, false, scenario.ctx());
-    scenario.next_tx(alice);
-
-    let new_id = scenario.new_object();
-    let bob = new_id.uid_to_inner();
-
-    let mut wanted_constraints = vector::empty();
-    let constraints = new_trusted_property_constraint(
-      property_name, allowed_values, true
-    );
-
-    wanted_constraints.push_back(constraints);
-
-    fed.issue_permission_to_attest(&attest_cap, bob, wanted_constraints, scenario.ctx());
-    scenario.next_tx(bob.to_address());
-
-    // Issue credential
-    let mut trusted_properties = vec_map::empty();
-    trusted_properties.insert(property_name, property_value);
-    fed.issue_credential(&attest_cap, bob, trusted_properties, 0, 1000, scenario.ctx());
-
-    scenario.next_tx(alice);
-
-    // Let us validate the credential
-    let cred: Credential = scenario.take_from_address(bob.to_address());
-
-    // Validate the credential
-    fed.validate_credential(&cred, scenario.ctx());
-
-    // Return the cap to the alice
-    test_scenario::return_to_address(alice, cap);
-    test_scenario::return_shared(fed);
-    test_scenario::return_to_address(alice, accredit_cap);
-    test_scenario::return_to_address(alice, attest_cap);
-    test_scenario::return_to_address(bob.to_address(), cred);
-
-
-    new_id.delete();
-    let _ = scenario.end();
-  }
 }
