@@ -113,6 +113,7 @@ pub enum TrustedPropertyExpression {
 }
 
 impl TrustedPropertyExpression {
+  
   pub fn as_starts_with(&self) -> Option<String> {
     match self {
       TrustedPropertyExpression::StartsWith(value) => Some(value.clone()),

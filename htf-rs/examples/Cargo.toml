@@ -39,3 +39,8 @@ name = "04_issue_credential"
 [[example]]
 path = "05_issue_permission_to_attest.rs"
 name = "05_issue_permission_to_attest"
+
+
+[[example]]
+path = "07_issue_permission_to_accredit.rs"
+name = "07_issue_permission_to_accredit"

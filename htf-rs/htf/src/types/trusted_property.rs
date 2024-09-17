@@ -95,7 +95,6 @@ mod tests {
   use serde_json::json;
 
   use super::*;
-  use crate::types::trusted_constraints::TrustedPropertyConstraints;
 
   #[test]
   fn test_trusted_property_name() {

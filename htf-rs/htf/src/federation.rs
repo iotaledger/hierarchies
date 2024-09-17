@@ -19,11 +19,13 @@ use crate::types::trusted_constraints::TrustedPropertyConstraints;
 use crate::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue, TrustedPropertyValueMove};
 
 pub(crate) mod ops {
+  use iota_sdk::types::base_types::{STD_OPTION_MODULE_NAME, STD_UTF8_MODULE_NAME};
   use iota_sdk::types::collection_types::VecSet;
   use iota_sdk::types::iota_system_state::IOTA_SYSTEM_MODULE_NAME;
   use iota_sdk::types::transaction::{Argument, CallArg, Command};
-  use iota_sdk::types::{TypeTag, IOTA_FRAMEWORK_ADDRESS, IOTA_FRAMEWORK_PACKAGE_ID, IOTA_SYSTEM_PACKAGE_ID};
-  use serde::Serialize;
+  use iota_sdk::types::{
+    TypeTag, IOTA_FRAMEWORK_ADDRESS, IOTA_FRAMEWORK_PACKAGE_ID, IOTA_SYSTEM_PACKAGE_ID, MOVE_STDLIB_PACKAGE_ID,
+  };
 
   use crate::types::trusted_constraints::TrustedPropertyConstraint;
   use crate::utils;
@@ -355,7 +357,7 @@ pub(crate) mod ops {
 
     let tx = ptb.finish();
 
-    let tx_res = client.execute_transaction(tx, gas_budget).await?;
+    client.execute_transaction(tx, gas_budget).await?;
 
     let address: IotaAddress = account_id.into();
 
@@ -388,24 +390,169 @@ pub(crate) mod ops {
     })?;
 
     let receiver_arg = ptb.pure(receiver)?;
-    let want_property_constraints = ptb.pure(want_property_constraints)?;
+
+    let want_property_constraints = {
+      let mut constraints = vec![];
+      for constraint in want_property_constraints {
+        let property_value_tag =
+          TypeTag::from_str(format!("{}::trusted_property::TrustedPropertyValue", client.htf_package_id()).as_str())?;
+
+        let names = ptb.pure(constraint.property_name.names())?;
+        let property_names: Argument = ptb.programmable_move_call(
+          client.htf_package_id(),
+          ident_str!("trusted_property").into(),
+          ident_str!("new_property_name_from_vector").into(),
+          vec![],
+          vec![names],
+        );
+
+        let allow_any = ptb.pure(constraint.allow_any)?;
+        let allowed_values = constraint
+          .allowed_values
+          .iter()
+          .map(|value| match value {
+            TrustedPropertyValue::Text(text) => {
+              let v = ptb.pure(text).expect("");
+              ptb.programmable_move_call(
+                client.htf_package_id(),
+                ident_str!("trusted_property").into(),
+                ident_str!("new_property_value_string").into(),
+                vec![],
+                vec![v],
+              )
+            }
+            TrustedPropertyValue::Number(number) => {
+              let v = ptb.pure(number).expect("");
+              ptb.programmable_move_call(
+                client.htf_package_id(),
+                ident_str!("trusted_property").into(),
+                ident_str!("new_property_value_number").into(),
+                vec![],
+                vec![v],
+              )
+            }
+          })
+          .collect();
+        let allowed_values = ptb.command(Command::MakeMoveVec(Some(property_value_tag.clone()), allowed_values));
+
+        let allowed_values = ptb.programmable_move_call(
+          client.htf_package_id(),
+          ident_str!("utils").into(),
+          ident_str!("create_vec_set").into(),
+          vec![property_value_tag],
+          vec![allowed_values],
+        );
+
+        let property_expression_tag = TypeTag::from_str(
+          format!(
+            "{}::trusted_constraint::TrustedPropertyExpression",
+            client.htf_package_id()
+          )
+          .as_str(),
+        )?;
+
+        let expression = match constraint.expression {
+          Some(expression) => {
+            let string_tag = TypeTag::from_str(format!("{}::string::String", MOVE_STDLIB_PACKAGE_ID).as_str())?;
+
+            let starts_with = match expression.as_starts_with() {
+              Some(value) => {
+                let v = ptb.pure(value.as_bytes())?;
+                ptb.programmable_move_call(
+                  MOVE_STDLIB_PACKAGE_ID,
+                  STD_UTF8_MODULE_NAME.into(),
+                  ident_str!("utf8").into(),
+                  vec![],
+                  vec![v],
+                )
+              }
+              None => utils::option_to_move::<String>(None, string_tag.clone(), &mut ptb)?,
+            };
+
+            let ends_with = match expression.as_ends_with() {
+              Some(value) => {
+                let v = ptb.pure(value.as_bytes())?;
+                ptb.programmable_move_call(
+                  MOVE_STDLIB_PACKAGE_ID,
+                  STD_UTF8_MODULE_NAME.into(),
+                  ident_str!("utf8").into(),
+                  vec![],
+                  vec![v],
+                )
+              }
+              None => utils::option_to_move::<String>(None, string_tag.clone(), &mut ptb)?,
+            };
+
+            let contains = match expression.as_contains() {
+              Some(value) => {
+                let v = ptb.pure(value.as_bytes())?;
+                ptb.programmable_move_call(
+                  MOVE_STDLIB_PACKAGE_ID,
+                  STD_UTF8_MODULE_NAME.into(),
+                  ident_str!("utf8").into(),
+                  vec![],
+                  vec![v],
+                )
+              }
+              None => utils::option_to_move::<String>(None, string_tag.clone(), &mut ptb)?,
+            };
+
+            let greater_than = utils::option_to_move(expression.as_greater_than(), TypeTag::U64, &mut ptb)?;
+            let lower_than = utils::option_to_move(expression.as_lower_than(), TypeTag::U64, &mut ptb)?;
+
+            let arg = ptb.programmable_move_call(
+              client.htf_package_id(),
+              ident_str!("trusted_constraint").into(),
+              ident_str!("new_trusted_property_expression").into(),
+              vec![],
+              vec![starts_with, ends_with, contains, greater_than, lower_than],
+            );
+
+            ptb.programmable_move_call(
+              MOVE_STDLIB_PACKAGE_ID,
+              STD_OPTION_MODULE_NAME.into(),
+              ident_str!("some").into(),
+              vec![property_expression_tag],
+              vec![arg],
+            )
+          }
+
+          None => utils::option_to_move::<TrustedPropertyConstraint>(None, property_expression_tag, &mut ptb)?,
+        };
+
+        let constraint = ptb.programmable_move_call(
+          client.htf_package_id(),
+          ident_str!("trusted_constraint").into(),
+          ident_str!("new_trusted_property_constraint").into(),
+          vec![],
+          vec![property_names, allowed_values, allow_any, expression],
+        );
+        constraints.push(constraint);
+      }
+
+      ptb.command(Command::MakeMoveVec(
+        Some(TypeTag::from_str(
+          format!(
+            "{}::trusted_constraint::TrustedPropertyConstraint",
+            client.htf_package_id()
+          )
+          .as_str(),
+        )?),
+        constraints,
+      ))
+    };
 
     ptb.programmable_move_call(
       client.htf_package_id(),
       ident_str!("main").into(),
       ident_str!("issue_permission_to_accredit").into(),
       vec![],
-      vec![cap, fed_ref, receiver_arg, want_property_constraints],
+      vec![fed_ref, cap, receiver_arg, want_property_constraints],
     );
 
     let tx = ptb.finish();
 
-    let tx_res = client.execute_transaction(tx, gas_budget).await?;
-
-    // check if the ID has AccreditCap
-    if !tx_res.status_ok().ok_or_else(|| anyhow::anyhow!("missing status"))? {
-      anyhow::bail!("failed to issue permission to accredit");
-    }
+    client.execute_transaction(tx, gas_budget).await?;
 
     let Ok(_) = get_cap(client, "main", "AccreditCap", Some(receiver.into())).await else {
       anyhow::bail!("failed to get new accredit");
@@ -482,8 +629,6 @@ pub(crate) mod ops {
     let want_property_constraints = {
       let mut constraints = vec![];
       for constraint in want_property_constraints {
-        let property_name_tag =
-          TypeTag::from_str(format!("{}::trusted_property::TrustedPropertyName", client.htf_package_id()).as_str())?;
         let property_value_tag =
           TypeTag::from_str(format!("{}::trusted_property::TrustedPropertyValue", client.htf_package_id()).as_str())?;
 
@@ -533,22 +678,6 @@ pub(crate) mod ops {
           vec![allowed_values],
         );
 
-        let expression = constraint.expression.map(|expression| {
-          let starts_with = ptb.pure(expression.as_starts_with()).expect("");
-          let ends_with = ptb.pure(expression.as_ends_with()).expect("");
-          let contains = ptb.pure(expression.as_contains()).expect("");
-          let greater_than = ptb.pure(expression.as_greater_than()).expect("");
-          let lower_than = ptb.pure(expression.as_lower_than()).expect("");
-
-          ptb.programmable_move_call(
-            client.htf_package_id(),
-            ident_str!("trusted_constraint").into(),
-            ident_str!("new_trusted_property_expression").into(),
-            vec![],
-            vec![starts_with, ends_with, contains, greater_than, lower_than],
-          )
-        });
-
         let property_expression_tag = TypeTag::from_str(
           format!(
             "{}::trusted_constraint::TrustedPropertyExpression",
@@ -557,7 +686,74 @@ pub(crate) mod ops {
           .as_str(),
         )?;
 
-        let expression = utils::option_to_move(expression, property_expression_tag, &mut ptb)?;
+        let expression = match constraint.expression {
+          Some(expression) => {
+            let string_tag = TypeTag::from_str(format!("{}::string::String", MOVE_STDLIB_PACKAGE_ID).as_str())?;
+
+            let starts_with = match expression.as_starts_with() {
+              Some(value) => {
+                let v = ptb.pure(value.as_bytes())?;
+                ptb.programmable_move_call(
+                  MOVE_STDLIB_PACKAGE_ID,
+                  STD_UTF8_MODULE_NAME.into(),
+                  ident_str!("utf8").into(),
+                  vec![],
+                  vec![v],
+                )
+              }
+              None => utils::option_to_move::<String>(None, string_tag.clone(), &mut ptb)?,
+            };
+
+            let ends_with = match expression.as_ends_with() {
+              Some(value) => {
+                let v = ptb.pure(value.as_bytes())?;
+                ptb.programmable_move_call(
+                  MOVE_STDLIB_PACKAGE_ID,
+                  STD_UTF8_MODULE_NAME.into(),
+                  ident_str!("utf8").into(),
+                  vec![],
+                  vec![v],
+                )
+              }
+              None => utils::option_to_move::<String>(None, string_tag.clone(), &mut ptb)?,
+            };
+
+            let contains = match expression.as_contains() {
+              Some(value) => {
+                let v = ptb.pure(value.as_bytes())?;
+                ptb.programmable_move_call(
+                  MOVE_STDLIB_PACKAGE_ID,
+                  STD_UTF8_MODULE_NAME.into(),
+                  ident_str!("utf8").into(),
+                  vec![],
+                  vec![v],
+                )
+              }
+              None => utils::option_to_move::<String>(None, string_tag.clone(), &mut ptb)?,
+            };
+
+            let greater_than = utils::option_to_move(expression.as_greater_than(), TypeTag::U64, &mut ptb)?;
+            let lower_than = utils::option_to_move(expression.as_lower_than(), TypeTag::U64, &mut ptb)?;
+
+            let arg = ptb.programmable_move_call(
+              client.htf_package_id(),
+              ident_str!("trusted_constraint").into(),
+              ident_str!("new_trusted_property_expression").into(),
+              vec![],
+              vec![starts_with, ends_with, contains, greater_than, lower_than],
+            );
+
+            ptb.programmable_move_call(
+              MOVE_STDLIB_PACKAGE_ID,
+              STD_OPTION_MODULE_NAME.into(),
+              ident_str!("some").into(),
+              vec![property_expression_tag],
+              vec![arg],
+            )
+          }
+
+          None => utils::option_to_move::<TrustedPropertyConstraint>(None, property_expression_tag, &mut ptb)?,
+        };
 
         let constraint = ptb.programmable_move_call(
           client.htf_package_id(),
@@ -581,11 +777,10 @@ pub(crate) mod ops {
       ))
     };
 
-    println!("REACHED HERE");
     ptb.programmable_move_call(
       client.htf_package_id(),
       ident_str!("main").into(),
-      ident_str!("issue_permission_to_accredit").into(),
+      ident_str!("issue_permission_to_attest").into(),
       vec![],
       vec![fed_ref, cap, receiver_arg, want_property_constraints],
     );
