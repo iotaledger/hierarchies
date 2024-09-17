@@ -3,6 +3,7 @@ module htf::main {
   use iota::vec_map::{Self, VecMap};
   use iota::event;
   use iota::vec_set::{VecSet};
+  use iota::object::{Self, UID, ID};
 
   use htf::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
   use htf::trusted_constraint::{Self, TrustedPropertyConstraints, TrustedPropertyConstraint};
@@ -80,6 +81,17 @@ module htf::main {
     CredentialState {
       is_revoked : false,
     }
+  }
+
+  fun is_root_authority(self : &Federation, id : &ID) : bool {
+    let mut idx = 0 ;
+    while (idx < self.root_authorities.length()) {
+      if (self.root_authorities[idx].account_id == id) {
+        return true;
+      };
+      idx = idx + 1;
+    };
+    false
   }
 
 
@@ -248,11 +260,14 @@ module htf::main {
 
   /// Issue an accredidation to accredit about given trusted properties
   public fun issue_permission_to_accredit(self : &mut Federation, cap : &AccreditCap,  receiver : ID, want_property_constraints : vector<TrustedPropertyConstraint>,  ctx : &mut TxContext) {
-      assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
-
+      assert!(cap.federation_id == federation.federation_id(), EUnauthorizedWrongFederation);
       let current_time_ms = ctx.epoch_timestamp_ms();
-      let permissions_to_accredit = self.find_permissions_to_accredit(&ctx.sender().to_id());
-      assert!(permissions_to_accredit.are_constraints_permitted(&want_property_constraints, current_time_ms), EUnauthorizedInsufficientAccreditation);
+
+      // Check the permissions only if the sender is not a root authority
+      if (! self.is_root_authority(&ctx.sender().to_id())) {
+        let permissions_to_accredit = self.find_permissions_to_accredit(&ctx.sender().to_id());
+        assert!(permissions_to_accredit.are_constraints_permitted(&want_property_constraints, current_time_ms), EUnauthorizedInsufficientAccreditation);
+      };
 
       let mut trusted_constraints :VecMap<TrustedPropertyName, TrustedPropertyConstraint> =  vec_map::empty();
       let want_property_constraints_len = vector::length<TrustedPropertyConstraint>(&want_property_constraints);
@@ -281,8 +296,12 @@ module htf::main {
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
 
     let current_time_ms = ctx.epoch_timestamp_ms();
-    let permissions_to_accredit = self.find_permissions_to_accredit(&ctx.sender().to_id());
-    assert!(permissions_to_accredit.are_constraints_permitted(&wanted_constraints, current_time_ms), EUnauthorizedInsufficientAccreditation);
+
+    // Check the permissions only if the sender is not a root authority
+    if (! self.is_root_authority(&ctx.sender().to_id())) {
+      let permissions_to_accredit = self.find_permissions_to_accredit(&ctx.sender().to_id());
+      assert!(permissions_to_accredit.are_constraints_permitted(&wanted_constraints, current_time_ms), EUnauthorizedInsufficientAccreditation);
+    };
 
     let permission = permission_to_attest::new_permission_to_attest(
       self.federation_id(), trusted_constraint::to_map_of_constraints(wanted_constraints), ctx
