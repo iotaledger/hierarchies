@@ -1,13 +1,13 @@
-use std::collections::{HashMap, HashSet};
-use std::time::SystemTime;
+use std::collections::HashSet;
 
 use anyhow::Context;
 use examples::get_client;
+use htf::types::trusted_constraints::TrustedPropertyConstraint;
 use htf::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
 use htf::types::Federation;
 use iota_sdk::types::base_types::ObjectID;
 
-/// Demonstrate how to issue a credential to a federation.
+/// Demonstrate how to issue a permission to attest to a trusted property.
 ///
 /// In this example we connect to a locally running private network, but it can
 /// be adapted to run on any IOTA node by setting the network and faucet
@@ -29,53 +29,52 @@ async fn main() -> anyhow::Result<()> {
   // Trusted property value
   let value = TrustedPropertyValue::Text("Hello".to_owned());
 
+  let allowed_values = HashSet::from_iter([value]);
+
   println!("Adding trusted property");
+
   // Add the trusted property to the federation
   htf_client
     .add_trusted_property(
       federation_id,
       property_name.clone(),
-      HashSet::from_iter([value.clone()]),
+      allowed_values.clone(),
       false,
       None,
     )
     .await
     .context("Failed to add trusted property")?;
 
-  println!("Trusted Property: {:#?}", property_name);
+  println!("Added trusted property");
 
-  let trusted_properties = HashMap::from_iter([(property_name, value)]);
+  // A receiver is an account that will receive the attestation
+  let receiver = ObjectID::random();
 
-  let bob_id = ObjectID::from_single_byte(5);
+  // Property constraints
+  let constraints = TrustedPropertyConstraint {
+    property_name,
+    allowed_values,
+    expression: None,
+    allow_any: false,
+  };
 
-  let now_ts = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH)?.as_secs();
-
-  let valid_until_ts = now_ts + 3_600_000;
-
-  // Issue a credential
+  // Let us issue a permission to attest to the trusted property
   htf_client
-    .issue_credential(federation_id, bob_id, trusted_properties, now_ts, valid_until_ts, None)
+    .issue_permission_to_attest(federation_id, receiver, vec![constraints], None)
     .await
-    .context("Failed to add trusted property")?;
+    .context("Failed to issue permission to attest")?;
 
-  println!("Issued credential");
+  println!("Issued permission to attest");
 
-  // Get the updated federation and print it
+  // Check if the permission was issued
   let federation: Federation = htf_client.get_object_by_id(federation_id).await?;
 
-  // print!("Trusted Properties : {:#?}", federation.governance.trusted_constraints);
+  println!("Federation: {:#?}", federation);
 
-  // // Check if the trusted property was added
-  // let trusted_properties = federation
-  //   .governance
-  //   .trusted_constraints
-  //   .contains_property(&property_name);
+  // Check if the receiver has the permission to attest
+  let trusted_properties = federation.governance.attesters.contains_key(&receiver);
 
-  // assert!(trusted_properties);
-
-  // if let Some(constraint) = federation.governance.trusted_constraints.data.get(&property_name) {
-  //   println!("Trusted Property: {:#?}", constraint)
-  // }
+  assert!(trusted_properties);
 
   Ok(())
 }

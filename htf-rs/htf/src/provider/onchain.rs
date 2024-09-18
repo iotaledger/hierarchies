@@ -9,6 +9,7 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 use crate::client::HTFClientReadOnly;
+use crate::types::permission::{PermissionsToAccredit, PermissionsToAttest};
 use crate::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
 
 pub struct OnChainFederation<'c> {
@@ -23,7 +24,6 @@ impl<'c> OnChainFederation<'c> {
 
   async fn execute_query<T: Serialize, R: DeserializeOwned>(&self, function_name: &str, arg: T) -> anyhow::Result<R> {
     let mut ptb = ProgrammableTransactionBuilder::new();
-    let arg = ptb.pure(arg)?;
 
     let fed_ref = ObjectArg::SharedObject {
       id: self.federation_id,
@@ -46,18 +46,25 @@ impl<'c> OnChainFederation<'c> {
 
     let sender = IotaAddress::ZERO; //TODO::fix this
 
-    let return_values = self
+    let result = self
       .client
       .read_api()
       .dev_inspect_transaction_block(sender, tx, None, None, None)
       .await?
       .results
       .and_then(|res| res.first().cloned())
-      .ok_or_else(|| anyhow::anyhow!("no results"))?
-      .return_values;
+      .ok_or_else(|| anyhow::anyhow!("no results"))?;
 
-    let (res_bytes, _) = &return_values[0];
-    let res: R = bcs::from_bytes(res_bytes)?;
+    println!("result: {:?}", result);
+
+    let (return_value, _) = result
+      .return_values
+      .first()
+      .ok_or_else(|| anyhow::anyhow!("no return values"))?;
+
+    println!("return value: {:?}", return_value);
+
+    let res: R = bcs::from_bytes(return_value).map_err(|e| anyhow::anyhow!("Failed to deserialize result: {}", e))?;
 
     Ok(res)
   }
@@ -89,5 +96,13 @@ impl OnChainFederation<'_> {
 
   pub async fn get_federation_properties(&self) -> anyhow::Result<Vec<TrustedPropertyName>> {
     self.execute_query("get_federation_properties", ()).await
+  }
+
+  pub async fn find_permissions_to_attest(&self, user_id: ObjectID) -> anyhow::Result<PermissionsToAttest> {
+    self.execute_query("find_permissions_to_attest", user_id).await
+  }
+
+  pub async fn find_permissions_to_accredit(&self, user_id: ObjectID) -> anyhow::Result<PermissionsToAccredit> {
+    self.execute_query("find_permissions_to_accredit", user_id).await
   }
 }

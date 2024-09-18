@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use anyhow::Context;
 use examples::get_client;
-use htf::types::trusted_constraints::{TrustedPropertyConstraint, TrustedPropertyConstraints};
+use htf::types::trusted_constraints::TrustedPropertyConstraint;
 use htf::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
 use htf::types::Federation;
 use iota_sdk::types::base_types::ObjectID;

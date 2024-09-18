@@ -4,11 +4,11 @@ use std::hash::Hash;
 
 use fastcrypto::ed25519::Ed25519PublicKey;
 use fastcrypto::traits::ToFromBytes;
-use iota_sdk::types::base_types::{IotaAddress, ObjectID, STD_OPTION_MODULE_NAME};
+use iota_sdk::types::base_types::{IotaAddress, STD_OPTION_MODULE_NAME};
 use iota_sdk::types::collection_types::{VecMap, VecSet};
 use iota_sdk::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 use iota_sdk::types::transaction::Argument;
-use iota_sdk::types::{MoveTypeTagTrait, TypeTag, MOVE_STDLIB_PACKAGE_ID};
+use iota_sdk::types::{TypeTag, MOVE_STDLIB_PACKAGE_ID};
 use move_core_types::ident_str;
 use serde::{Deserialize, Deserializer, Serialize};
 
@@ -74,7 +74,7 @@ pub fn option_to_move<T: Serialize>(
 #[cfg(test)]
 mod tests {
   use iota_sdk::types::collection_types::Entry;
-  use iota_sdk::types::TypeTag;
+  
   use serde_json::Value;
 
   use super::*;

@@ -32,15 +32,25 @@ name = "02_add_root_authority"
 path = "03_add_trusted_property.rs"
 name = "03_add_trusted_property"
 
-[[example]]
-path = "04_issue_credential.rs"
-name = "04_issue_credential"
 
 [[example]]
-path = "05_issue_permission_to_attest.rs"
-name = "05_issue_permission_to_attest"
+path = "04_issue_permission_to_attest.rs"
+name = "04_issue_permission_to_attest"
+
+[[example]]
+path = "05_revoke_permission_to_attest.rs"
+name = "05_revoke_permission_to_attest"
 
 
 [[example]]
-path = "07_issue_permission_to_accredit.rs"
-name = "07_issue_permission_to_accredit"
+path = "06_issue_permission_to_accredit.rs"
+name = "06_issue_permission_to_accredit"
+
+[[example]]
+path = "07_revoke_permission_to_accredit.rs"
+name = "07_revoke_permission_to_accredit"
+
+# Validation
+[[example]]
+path = "validation/offchain/01_check_permission_attest_and_accredit.rs"
+name = "01_check_permission_attest"

@@ -4,7 +4,6 @@ use anyhow::Context;
 use examples::get_client;
 use htf::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
 use htf::types::Federation;
-use iota_sdk::types::base_types::ObjectID;
 
 /// Demonstrate how to add a trusted property to a federation.
 ///

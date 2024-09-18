@@ -1,10 +1,8 @@
 use std::collections::{HashMap, HashSet};
 use std::str::FromStr;
 
-use anyhow::Context;
 use iota_sdk::rpc_types::{IotaObjectDataFilter, IotaObjectResponseQuery, IotaTransactionBlockEffectsAPI};
 use iota_sdk::types::base_types::{IotaAddress, ObjectID, ObjectRef};
-use iota_sdk::types::collection_types::{Entry, VecMap};
 use iota_sdk::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 use iota_sdk::types::transaction::ObjectArg;
 use move_core_types::ident_str;
@@ -15,22 +13,20 @@ use crate::client::HTFClient;
 use crate::key::IotaKeySignature;
 use crate::types::credentials::Credential;
 use crate::types::event::{Event, FederationCreatedEvent};
-use crate::types::trusted_constraints::TrustedPropertyConstraints;
-use crate::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue, TrustedPropertyValueMove};
+use crate::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
 
 pub(crate) mod ops {
   use iota_sdk::types::base_types::{STD_OPTION_MODULE_NAME, STD_UTF8_MODULE_NAME};
-  use iota_sdk::types::collection_types::VecSet;
-  use iota_sdk::types::iota_system_state::IOTA_SYSTEM_MODULE_NAME;
-  use iota_sdk::types::transaction::{Argument, CallArg, Command};
+  
+  
+  use iota_sdk::types::transaction::{Argument, Command};
   use iota_sdk::types::{
-    TypeTag, IOTA_FRAMEWORK_ADDRESS, IOTA_FRAMEWORK_PACKAGE_ID, IOTA_SYSTEM_PACKAGE_ID, MOVE_STDLIB_PACKAGE_ID,
+    TypeTag, MOVE_STDLIB_PACKAGE_ID,
   };
 
+  use super::*;
   use crate::types::trusted_constraints::TrustedPropertyConstraint;
   use crate::utils;
-
-  use super::*;
 
   pub async fn create_new_federation<S>(client: &HTFClient<S>, gas_budget: Option<u64>) -> anyhow::Result<ObjectID>
   where
@@ -303,24 +299,14 @@ pub(crate) mod ops {
     ptb.programmable_move_call(
       client.htf_package_id(),
       ident_str!("main").into(),
-      ident_str!("revoke_permission_to_accredit").into(),
+      ident_str!("revoke_permission_to_attest").into(),
       vec![],
-      vec![cap, fed_ref, user_id_arg, permission_id],
+      vec![fed_ref, cap, user_id_arg, permission_id],
     );
 
     let tx = ptb.finish();
 
     client.execute_transaction(tx, gas_budget).await?;
-
-    let federation_operations = client.onchain(federation_id);
-
-    if federation_operations
-      .has_permission_to_attest(user_id)
-      .await
-      .context("failed to check if federation has property")?
-    {
-      anyhow::bail!("failed to revoke permission to accredit");
-    }
 
     Ok(())
   }
@@ -826,7 +812,7 @@ pub(crate) mod ops {
       ident_str!("main").into(),
       ident_str!("revoke_permission_to_accredit").into(),
       vec![],
-      vec![cap, fed_ref, user_id_arg, permission_id],
+      vec![fed_ref, cap, user_id_arg, permission_id],
     );
 
     let tx = ptb.finish();

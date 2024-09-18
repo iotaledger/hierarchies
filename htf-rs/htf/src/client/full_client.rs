@@ -17,7 +17,7 @@ use shared_crypto::intent::{Intent, IntentMessage};
 use super::HTFClientReadOnly;
 use crate::federation;
 use crate::key::{IotaKeySignature, SigningInfo};
-use crate::types::trusted_constraints::{TrustedPropertyConstraint, TrustedPropertyConstraints};
+use crate::types::trusted_constraints::TrustedPropertyConstraint;
 use crate::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
 use crate::types::Federation;
 use crate::utils::convert_to_address;

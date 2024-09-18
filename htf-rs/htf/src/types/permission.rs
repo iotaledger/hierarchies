@@ -23,9 +23,9 @@ pub struct PermissionsToAccredit {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PermissionToAccredit {
-  id: UID,
-  federation_id: ID,
-  created_by: String,
+  pub id: UID,
+  pub federation_id: ID,
+  pub created_by: String,
   #[serde(deserialize_with = "deserialize_vec_map")]
   pub constraints: HashMap<TrustedPropertyName, TrustedPropertyConstraint>,
 }
@@ -54,9 +54,9 @@ impl PermissionsToAttest {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 /// PermissionToAttest can be created only by the HTF module
 pub struct PermissionToAttest {
-  id: UID,
-  federation_id: ObjectID,
-  created_by: String,
+  pub id: UID,
+  pub federation_id: ObjectID,
+  pub created_by: String,
   #[serde(deserialize_with = "deserialize_vec_map")]
   pub constraints: HashMap<TrustedPropertyName, TrustedPropertyConstraint>,
 }

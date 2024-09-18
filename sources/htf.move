@@ -3,13 +3,11 @@ module htf::main {
   use iota::vec_map::{Self, VecMap};
   use iota::event;
   use iota::vec_set::{VecSet};
-  use iota::object::{Self, UID, ID};
 
   use htf::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
   use htf::trusted_constraint::{Self, TrustedPropertyConstraints, TrustedPropertyConstraint};
   use htf::permission_to_attest::{Self, PermissionsToAttest};
   use htf::permission_to_accredit::{Self, PermissionsToAccredit};
-  use htf::permission::{Self, Permissions};
 
   const  EUnauthorizedWrongFederation  : u64  = 1;
   const  EUnauthorizedInsufficientAccreditation : u64 = 2;
@@ -150,7 +148,7 @@ module htf::main {
     self.governance.trusted_constraints.data().contains(&property_name)
   }
 
-  public(package) fun find_permissions_to_attest(self: &Federation, user_id : &ID)  :  &PermissionsToAttest {
+  public fun find_permissions_to_attest(self: &Federation, user_id : &ID)  :  &PermissionsToAttest {
       self.governance.attesters.get(user_id)
   }
 
@@ -159,7 +157,7 @@ module htf::main {
     self.governance.attesters.contains(user_id)
   }
 
-  public(package) fun find_permissions_to_accredit(self : &Federation, user_id : &ID) : &PermissionsToAccredit {
+  public fun find_permissions_to_accredit(self : &Federation, user_id : &ID) : &PermissionsToAccredit {
     self.governance.accreditors.get(user_id)
   }
 
@@ -260,7 +258,7 @@ module htf::main {
 
   /// Issue an accredidation to accredit about given trusted properties
   public fun issue_permission_to_accredit(self : &mut Federation, cap : &AccreditCap,  receiver : ID, want_property_constraints : vector<TrustedPropertyConstraint>,  ctx : &mut TxContext) {
-      assert!(cap.federation_id == federation.federation_id(), EUnauthorizedWrongFederation);
+      assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
       let current_time_ms = ctx.epoch_timestamp_ms();
 
       // Check the permissions only if the sender is not a root authority

@@ -29,21 +29,6 @@ pub enum TrustedPropertyValue {
   Number(u64),
 }
 
-impl From<TrustedPropertyValue> for TrustedPropertyValueMove {
-  fn from(value: TrustedPropertyValue) -> Self {
-    match value {
-      TrustedPropertyValue::Text(text) => TrustedPropertyValueMove {
-        text: Some(text),
-        number: None,
-      },
-      TrustedPropertyValue::Number(number) => TrustedPropertyValueMove {
-        text: None,
-        number: Some(number),
-      },
-    }
-  }
-}
-
 impl TryFrom<TrustedPropertyValueMove> for TrustedPropertyValue {
   type Error = &'static str;
 
@@ -54,40 +39,6 @@ impl TryFrom<TrustedPropertyValueMove> for TrustedPropertyValue {
       _ => Err("Invalid TrustedPropertyValue: must have either text or number, not both or neither"),
     }
   }
-}
-
-#[test]
-fn lol() {
-  let constraints_str = r#" {
-        "data": {
-          "contents": [
-            {
-              "key": {
-                "names": ["Example LTD"]
-              },
-              "value": {
-                "allow_any": false,
-                "allowed_values": {
-                  "contents": [
-                    {
-                      "number": null,
-                      "text": "Hello"
-                    }
-                  ]
-                },
-                "expression": null,
-                "property_name": {
-                  "names": ["Example LTD"]
-                }
-              }
-            }
-          ]
-        }"#;
-
-  let constraints: crate::types::trusted_constraints::TrustedPropertyConstraints =
-    serde_json::from_str(constraints_str).unwrap();
-
-  println!("{:?}", constraints);
 }
 
 #[cfg(test)]

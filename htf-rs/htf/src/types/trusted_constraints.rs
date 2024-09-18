@@ -104,6 +104,7 @@ impl TrustedPropertyConstraint {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(try_from = "TrustedPropertyExpressionMove")]
 pub enum TrustedPropertyExpression {
   StartsWith(String),
   EndsWith(String),
@@ -113,7 +114,6 @@ pub enum TrustedPropertyExpression {
 }
 
 impl TrustedPropertyExpression {
-  
   pub fn as_starts_with(&self) -> Option<String> {
     match self {
       TrustedPropertyExpression::StartsWith(value) => Some(value.clone()),
@@ -142,6 +142,30 @@ impl TrustedPropertyExpression {
     match self {
       TrustedPropertyExpression::LowerThan(value) => Some(*value),
       _ => None,
+    }
+  }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct TrustedPropertyExpressionMove {
+  starts_with: Option<String>,
+  ends_with: Option<String>,
+  contains: Option<String>,
+  greater_than: Option<u64>,
+  lower_than: Option<u64>,
+}
+
+impl TryFrom<TrustedPropertyExpressionMove> for TrustedPropertyExpression {
+  type Error = &'static str;
+
+  fn try_from(value: TrustedPropertyExpressionMove) -> Result<Self, Self::Error> {
+    match (value.starts_with, value.ends_with, value.contains, value.greater_than, value.lower_than) {
+      (Some(starts_with), None, None, None, None) => Ok(TrustedPropertyExpression::StartsWith(starts_with)),
+      (None, Some(ends_with), None, None, None) => Ok(TrustedPropertyExpression::EndsWith(ends_with)),
+      (None, None, Some(contains), None, None) => Ok(TrustedPropertyExpression::Contains(contains)),
+      (None, None, None, Some(greater_than), None) => Ok(TrustedPropertyExpression::GreaterThan(greater_than)),
+      (None, None, None, None, Some(lower_than)) => Ok(TrustedPropertyExpression::LowerThan(lower_than)),
+      _ => Err("Invalid TrustedPropertyExpression: must have either starts_with, ends_with, contains, greater_than or lower_than"),
     }
   }
 }

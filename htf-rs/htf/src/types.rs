@@ -110,6 +110,6 @@ fn lol() {
       }
     ]
   }"#;
-  let fed: Federation = serde_json::from_str(&string_fed).unwrap();
+  let fed: Federation = serde_json::from_str(string_fed).unwrap();
   println!("Federation : {:#?}", fed);
 }

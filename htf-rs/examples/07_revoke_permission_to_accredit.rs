@@ -2,12 +2,12 @@ use std::collections::HashSet;
 
 use anyhow::Context;
 use examples::get_client;
-use htf::types::trusted_constraints::{TrustedPropertyConstraint, TrustedPropertyConstraints};
+use htf::types::trusted_constraints::TrustedPropertyConstraint;
 use htf::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
 use htf::types::Federation;
 use iota_sdk::types::base_types::ObjectID;
 
-/// Demonstrate how to issue a permission to attest to a trusted property.
+/// Demonstrate how to issue a permission to accredit to a trusted property.
 ///
 /// In this example we connect to a locally running private network, but it can
 /// be adapted to run on any IOTA node by setting the network and faucet
@@ -47,7 +47,7 @@ async fn main() -> anyhow::Result<()> {
 
   println!("Added trusted property");
 
-  // A receiver is an account that will receive the attestation
+  // A receiver is an account that will receive the accreditation
   let receiver = ObjectID::random();
 
   // Property constraints
@@ -58,9 +58,20 @@ async fn main() -> anyhow::Result<()> {
     allow_any: false,
   };
 
-  // Let us issue a permission to attest to the trusted property
+  // Let us issue a permission to accredit to the trusted property
   htf_client
-    .issue_permission_to_attest(federation_id, receiver, vec![constraints], None)
+    .issue_permission_to_accredit(federation_id, receiver, vec![constraints.clone()], None)
+    .await
+    .context("Failed to issue permission to attest")?;
+
+  // Issue permission to the original account
+  htf_client
+    .issue_permission_to_accredit(
+      federation_id,
+      htf_client.sender_address().into(),
+      vec![constraints],
+      None,
+    )
     .await
     .context("Failed to issue permission to attest")?;
 
@@ -69,12 +80,33 @@ async fn main() -> anyhow::Result<()> {
   // Check if the permission was issued
   let federation: Federation = htf_client.get_object_by_id(federation_id).await?;
 
+  // Check if the receiver has the permission to accredit
+  let can_accredit = federation.governance.accreditors.contains_key(&receiver);
+
+  assert!(can_accredit);
+
+  // Revoke the permission
+  let permissions = htf_client
+    .offchain(federation_id)
+    .await?
+    .find_permissions_to_accredit(receiver)
+    .context("Failed to find permission to accredit")?;
+
+  let permission_id = permissions.permissions[0].id.object_id();
+
+  htf_client
+    .revoke_permission_to_accredit(federation_id, receiver, *permission_id, None)
+    .await
+    .context("Failed to revoke permission to accredit")?;
+
+  // Check if the permission was revoked
+  let federation: Federation = htf_client.get_object_by_id(federation_id).await?;
+
   println!("Federation: {:#?}", federation);
 
-  // Check if the trusted property was added
-  let trusted_properties = federation.governance.attesters.contains_key(&receiver);
+  // Check if the receiver has the permission to accredit
+  let can_accredit = federation.governance.accreditors.get(&receiver).unwrap();
 
-  assert!(trusted_properties);
-
+  assert!(can_accredit.permissions.is_empty());
   Ok(())
 }
