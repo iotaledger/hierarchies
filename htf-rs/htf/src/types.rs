@@ -1,5 +1,4 @@
 mod cap;
-pub mod credentials;
 pub mod event;
 pub mod permission;
 pub mod trusted_constraints;
@@ -7,7 +6,6 @@ pub mod trusted_property;
 
 use std::collections::HashMap;
 
-use credentials::CredentialState;
 use iota_sdk::types::base_types::ObjectID;
 use iota_sdk::types::id::UID;
 use permission::{PermissionsToAccredit, PermissionsToAttest};
@@ -37,6 +35,4 @@ pub struct Governance {
   pub(crate) accreditors: HashMap<ObjectID, PermissionsToAccredit>,
   #[serde(deserialize_with = "deserialize_vec_map")]
   pub(crate) attesters: HashMap<ObjectID, PermissionsToAttest>,
-  #[serde(deserialize_with = "deserialize_vec_map")]
-  pub(crate) credentials_state: HashMap<ObjectID, CredentialState>,
 }

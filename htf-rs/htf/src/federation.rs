@@ -1,10 +1,9 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::str::FromStr;
 
 use anyhow::Context;
-use iota_sdk::rpc_types::{IotaObjectDataFilter, IotaObjectResponseQuery, IotaTransactionBlockEffectsAPI};
+use iota_sdk::rpc_types::{IotaObjectDataFilter, IotaObjectResponseQuery};
 use iota_sdk::types::base_types::{IotaAddress, ObjectID, ObjectRef};
-use iota_sdk::types::collection_types::{Entry, VecMap};
 use iota_sdk::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 use iota_sdk::types::transaction::ObjectArg;
 use move_core_types::ident_str;
@@ -13,15 +12,19 @@ use secret_storage::Signer;
 
 use crate::client::HTFClient;
 use crate::key::IotaKeySignature;
-use crate::types::credentials::Credential;
 use crate::types::event::{Event, FederationCreatedEvent};
 use crate::types::trusted_constraints::TrustedPropertyConstraints;
-use crate::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue, TrustedPropertyValueMove};
+use crate::types::trusted_property::{
+  TrustedPropertyName, TrustedPropertyValue, TrustedPropertyValueMove,
+};
 
 pub(crate) mod ops {
   use super::*;
 
-  pub async fn create_new_federation<S>(client: &HTFClient<S>, gas_budget: Option<u64>) -> anyhow::Result<ObjectID>
+  pub async fn create_new_federation<S>(
+    client: &HTFClient<S>,
+    gas_budget: Option<u64>,
+  ) -> anyhow::Result<ObjectID>
   where
     S: Signer<IotaKeySignature>,
   {
@@ -96,7 +99,10 @@ pub(crate) mod ops {
 
     let res = client.execute_transaction(tx, gas_budget).await?;
 
-    if !res.status_ok().ok_or_else(|| anyhow::anyhow!("missing status"))? {
+    if !res
+      .status_ok()
+      .ok_or_else(|| anyhow::anyhow!("missing status"))?
+    {
       let err = res.errors;
       anyhow::bail!("failed to add trusted property {:?}", err);
     }
@@ -110,86 +116,6 @@ pub(crate) mod ops {
     {
       anyhow::bail!("failed to add trusted property");
     }
-
-    Ok(())
-  }
-
-  pub async fn issue_credential<S>(
-    client: &HTFClient<S>,
-    federation_id: ObjectID,
-    receiver: ObjectID,
-    trusted_properties: HashMap<TrustedPropertyName, TrustedPropertyValue>,
-    valid_from_ts: u64,
-    valid_until_ts: u64,
-    gas_budget: Option<u64>,
-  ) -> anyhow::Result<()>
-  where
-    S: Signer<IotaKeySignature>,
-  {
-    let mut ptb = ProgrammableTransactionBuilder::new();
-
-    let cap = get_cap(client, "main", "AttestCap", None).await?;
-
-    let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
-    let fed_ref = ptb.obj(ObjectArg::SharedObject {
-      id: federation_id,
-      initial_shared_version: client.initial_shared_version(&federation_id).await?,
-      mutable: true,
-    })?;
-
-    let receiver_arg = ptb.pure(receiver)?;
-
-    let trusted_properties_vec = {
-      let trusted_properties_vec = trusted_properties
-        .into_iter()
-        .map(|(k, v)| {
-          let v = TrustedPropertyValueMove::from(v);
-          Entry { key: k, value: v }
-        })
-        .collect();
-
-      VecMap {
-        contents: trusted_properties_vec,
-      }
-    };
-
-    let trusted_properties_arg = ptb.pure(&trusted_properties_vec)?;
-    let valid_from_ts_arg = ptb.pure(valid_from_ts)?;
-    let valid_until_ts_arg = ptb.pure(valid_until_ts)?;
-
-    ptb.programmable_move_call(
-      client.htf_package_id(),
-      ident_str!("main").into(),
-      ident_str!("issue_credential").into(),
-      vec![],
-      vec![
-        cap,
-        fed_ref,
-        receiver_arg,
-        trusted_properties_arg,
-        valid_from_ts_arg,
-        valid_until_ts_arg,
-      ],
-    );
-
-    let tx = ptb.finish();
-
-    let iota_res = client.execute_transaction(tx, gas_budget).await?;
-
-    let created_object = iota_res
-      .effects
-      .ok_or_else(|| anyhow::anyhow!("missing effects"))?
-      .created()
-      .first()
-      .ok_or_else(|| anyhow::anyhow!("missing created object"))?
-      .object_id();
-
-    let cred: Credential = client.get_object_by_id(created_object).await?;
-
-    assert_eq!(cred.issued_for, receiver, "invalid issued_for");
-
-    assert_eq!(cred.valid_from, valid_from_ts, "invalid valid_from");
-    assert_eq!(cred.valid_to, valid_until_ts, "invalid valid_until");
 
     Ok(())
   }
@@ -277,7 +203,10 @@ pub(crate) mod ops {
 
     let tx_res = client.execute_transaction(tx, gas_budget).await?;
 
-    if !tx_res.status_ok().ok_or_else(|| anyhow::anyhow!("missing status"))? {
+    if !tx_res
+      .status_ok()
+      .ok_or_else(|| anyhow::anyhow!("missing status"))?
+    {
       anyhow::bail!("failed to add root authority");
     }
 
@@ -327,55 +256,16 @@ pub(crate) mod ops {
     let tx_res = client.execute_transaction(tx, gas_budget).await?;
 
     // check if the ID has AccreditCap
-    if !tx_res.status_ok().ok_or_else(|| anyhow::anyhow!("missing status"))? {
+    if !tx_res
+      .status_ok()
+      .ok_or_else(|| anyhow::anyhow!("missing status"))?
+    {
       anyhow::bail!("failed to issue permission to accredit");
     }
 
     let Ok(_) = get_cap(client, "main", "AccreditCap", Some(receiver.into())).await else {
       anyhow::bail!("failed to get new accredit");
     };
-
-    Ok(())
-  }
-
-  pub async fn validate_credential<S>(
-    client: &HTFClient<S>,
-    federation_id: ObjectID,
-    credential_id: ObjectID,
-    gas_budget: Option<u64>,
-  ) -> anyhow::Result<()>
-  where
-    S: Signer<IotaKeySignature>,
-  {
-    let mut ptb = ProgrammableTransactionBuilder::new();
-
-    let cred = client.get_object_ref_by_id(credential_id).await?;
-
-    let cred = ptb.obj(ObjectArg::ImmOrOwnedObject(cred))?;
-    let fed_ref = ptb.obj(ObjectArg::SharedObject {
-      id: federation_id,
-      initial_shared_version: client.initial_shared_version(&federation_id).await?,
-      mutable: false,
-    })?;
-
-    ptb.programmable_move_call(
-      client.htf_package_id(),
-      ident_str!("main").into(),
-      ident_str!("validate_credential").into(),
-      vec![],
-      vec![cred, fed_ref],
-    );
-
-    let tx = ptb.finish();
-
-    if !client
-      .execute_transaction(tx, gas_budget)
-      .await?
-      .status_ok()
-      .ok_or_else(|| anyhow::anyhow!("Transaction failed"))?
-    {
-      return Err(anyhow::anyhow!("Transaction failed"));
-    }
 
     Ok(())
   }
@@ -473,9 +363,13 @@ pub(crate) mod ops {
   where
     S: Signer<IotaKeySignature>,
   {
-    let cap_tag = StructTag::from_str(&format!("{}::{module}::{cap_type}", client.htf_package_id()))?;
+    let cap_tag = StructTag::from_str(&format!(
+      "{}::{module}::{cap_type}",
+      client.htf_package_id()
+    ))?;
 
-    let filter = IotaObjectResponseQuery::new_with_filter(IotaObjectDataFilter::StructType(cap_tag));
+    let filter =
+      IotaObjectResponseQuery::new_with_filter(IotaObjectDataFilter::StructType(cap_tag));
 
     let mut cursor = None;
     loop {

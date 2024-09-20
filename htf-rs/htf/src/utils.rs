@@ -8,8 +8,11 @@ use iota_sdk::types::collection_types::{VecMap, VecSet};
 use serde::{Deserialize, Deserializer};
 
 pub fn convert_to_address(sender_public_key: &[u8]) -> anyhow::Result<IotaAddress> {
-  let public_key = Ed25519PublicKey::from_bytes(sender_public_key)
-    .map_err(|err| anyhow::anyhow!(format!("could not parse public key to Ed25519 public key; {err}")))?;
+  let public_key = Ed25519PublicKey::from_bytes(sender_public_key).map_err(|err| {
+    anyhow::anyhow!(format!(
+      "could not parse public key to Ed25519 public key; {err}"
+    ))
+  })?;
 
   Ok(IotaAddress::from(&public_key))
 }
@@ -52,7 +55,9 @@ mod tests {
       key: 1,
       value: "value".to_string(),
     };
-    let vec_map = VecMap { contents: vec![entry] };
+    let vec_map = VecMap {
+      contents: vec![entry],
+    };
 
     let json = serde_json::to_value(&vec_map).unwrap();
 
