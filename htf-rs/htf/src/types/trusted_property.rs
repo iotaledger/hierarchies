@@ -41,7 +41,9 @@ impl TryFrom<TrustedPropertyValueMove> for TrustedPropertyValue {
     match (value.text, value.number) {
       (Some(text), None) => Ok(TrustedPropertyValue::Text(text)),
       (None, Some(number)) => Ok(TrustedPropertyValue::Number(number)),
-      _ => Err("Invalid TrustedPropertyValue: must have either text or number, not both or neither"),
+      _ => {
+        Err("Invalid TrustedPropertyValue: must have either text or number, not both or neither")
+      }
     }
   }
 }
@@ -63,7 +65,10 @@ mod tests {
     });
 
     assert_eq!(serde_json::to_value(&name).unwrap(), json);
-    assert_eq!(serde_json::from_value::<TrustedPropertyName>(json).unwrap(), name);
+    assert_eq!(
+      serde_json::from_value::<TrustedPropertyName>(json).unwrap(),
+      name
+    );
   }
 
   #[test]
@@ -80,7 +85,10 @@ mod tests {
     });
 
     assert_eq!(serde_json::to_value(&text).unwrap(), json_text);
-    assert_eq!(serde_json::from_value::<TrustedPropertyValue>(json_text).unwrap(), text);
+    assert_eq!(
+      serde_json::from_value::<TrustedPropertyValue>(json_text).unwrap(),
+      text
+    );
 
     assert_eq!(serde_json::to_value(&number).unwrap(), json_number);
     assert_eq!(
