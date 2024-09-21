@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use anyhow::Context;
 use examples::get_client;
@@ -6,14 +6,13 @@ use htf::types::trusted_constraints::TrustedPropertyConstraint;
 use htf::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
 use iota_sdk::types::base_types::ObjectID;
 
-/// Demonstrates how to use the offchain API to check if a user has a permission to attest and accredit.
-///
+/// Demonstrates how to use the offchain API to validate trusted properties.
 /// In this example we connect to a locally running private network, but it can be adapted
 /// to run on any IOTA node by setting the network and faucet endpoints.
 ///
 /// See the following instructions on running your own private network
 /// https://github.com/iotaledger/iota/blob/develop/docs/content/developer/getting-started/connect.md
-
+///
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
   let htf_client = get_client().await?;
@@ -21,19 +20,10 @@ async fn main() -> anyhow::Result<()> {
   let federation = htf_client.new_federation(None).await?;
   let federation_id = federation.id.object_id();
 
-  let user_id = htf_client.sender_address().into();
-
-  let permissions = htf_client
-    .offchain(*federation_id)
-    .await?
-    .find_permissions_to_attest(user_id);
-
-  println!("Permissions: {:#?}", permissions);
-
   //   Add trusted property
   let property_name = TrustedPropertyName::new(vec!["Example LTD".to_string()]);
   let value = TrustedPropertyValue::Text("Hello".to_owned());
-  let allowed_values = HashSet::from_iter([value]);
+  let allowed_values = HashSet::from_iter([value.clone()]);
 
   htf_client
     .add_trusted_property(
@@ -51,7 +41,7 @@ async fn main() -> anyhow::Result<()> {
 
   // Property constraints
   let constraints = TrustedPropertyConstraint {
-    property_name,
+    property_name: property_name.clone(),
     allowed_values,
     expression: None,
     allow_any: false,
@@ -65,33 +55,18 @@ async fn main() -> anyhow::Result<()> {
       .context("Failed to issue permission to attest")?;
   }
 
-  // Check if the permission was issued
-  let permissions = htf_client
+  // Validate trusted properties
+  let trusted_properties = HashMap::from_iter([(property_name, value)]);
+
+  let validate = htf_client
     .offchain(*federation_id)
     .await?
-    .find_permissions_to_attest(receiver)
-    .context("Failed to find permission to attest")?;
+    .validate_trusted_properties((*receiver).into(), trusted_properties)
+    .context("Failed to validate trusted properties")?;
 
-  assert!(permissions.permissions.len() == 1);
+  assert!(validate);
 
-  println!("Permissions: {:#?}", permissions);
-
-  // Issue Accredit permission
-  {
-    htf_client
-      .issue_permission_to_accredit(*federation_id, receiver, vec![constraints], None)
-      .await
-      .context("Failed to issue permission to accredit")?;
-  }
-
-  // Check if the permission was issued
-  let permissions = htf_client
-    .offchain(*federation_id)
-    .await?
-    .find_permissions_to_accredit(receiver)
-    .context("Failed to find permission to accredit")?;
-
-  assert!(permissions.permissions.len() == 1);
+  println!("Validated trusted properties");
 
   Ok(())
 }

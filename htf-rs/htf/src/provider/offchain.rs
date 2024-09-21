@@ -75,7 +75,7 @@ impl OffChainFederation {
       Ok(())
     })?;
 
-    // then check if names and values are permitted for given i
+    // then check if names and values are permitted for given issuer
     let issuer_permissions_to_attest = federation
       .governance
       .attesters
