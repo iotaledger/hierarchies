@@ -3,9 +3,6 @@ module htf::main {
   use iota::vec_map::{Self, VecMap};
   use iota::event;
   use iota::vec_set::{VecSet};
-  use iota::object::{Self, UID, ID};
-  use iota::transfer;
-  use iota::tx_context::TxContext;
 
   use htf::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
   use htf::trusted_constraint::{Self, TrustedPropertyConstraints, TrustedPropertyConstraint};
@@ -16,11 +13,9 @@ module htf::main {
   const  EUnauthorizedInsufficientAccreditation : u64 = 2;
   const  EUnauthorizedInsufficientAttestation : u64 = 3;
   const  EInvalidProperty: u64 = 4;
-  const  EInvalidIssuer: u64 = 5;
-  const  EInvalidIssuerInsufficientAttestation: u64 = 6;
-  const  EInvalidConstraint  : u64 = 7;
-  const  EInvalidTimeSpan: u64 = 8;
-  const  EPermissionNotFound: u64 = 10;
+  const  EInvalidIssuerInsufficientAttestation: u64 = 5;
+  const  EInvalidConstraint  : u64 = 6;
+  const  EPermissionNotFound: u64 = 7;
 
   // Federation is the hierarcy of trust in the system. Itsa a public, shared object
   public struct Federation has store, key {
@@ -66,7 +61,7 @@ module htf::main {
     let mut idx = 0 ;
     while (idx < self.root_authorities.length()) {
       if (self.root_authorities[idx].account_id == id) {
-        return true;
+        return true
       };
       idx = idx + 1;
     };
@@ -376,9 +371,7 @@ module htf::main_tests {
   };
   use iota::test_scenario;
   use iota::vec_set::{Self};
-  use iota::vec_map;
   use htf::trusted_property::{new_property_value_number, new_property_name};
-  use htf::trusted_constraint::{new_trusted_property_constraint};
 
   #[test]
   fun creating_new_federation_works() {

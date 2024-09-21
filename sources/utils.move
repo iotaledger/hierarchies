@@ -59,7 +59,7 @@ module htf::utils {
         mut values: vector<V>,
     ): VecMap<K, V> {
         assert!(keys.length() == values.length(), ELengthMismatch);
-        
+
         let mut map = vec_map::empty<K, V>();
         while (!keys.is_empty()) {
             let key = keys.swap_remove(0);
