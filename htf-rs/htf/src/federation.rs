@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::str::FromStr;
 
 use iota_sdk::rpc_types::{IotaObjectDataFilter, IotaObjectResponseQuery, IotaTransactionBlockEffectsAPI};
@@ -11,9 +11,11 @@ use secret_storage::Signer;
 
 use crate::client::HTFClient;
 use crate::key::IotaKeySignature;
-use crate::types::credentials::Credential;
 use crate::types::event::{Event, FederationCreatedEvent};
-use crate::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
+use crate::types::trusted_constraints::TrustedPropertyConstraints;
+use crate::types::trusted_property::{
+  TrustedPropertyName, TrustedPropertyValue, TrustedPropertyValueMove,
+};
 
 pub(crate) mod ops {
   use iota_sdk::types::base_types::{STD_OPTION_MODULE_NAME, STD_UTF8_MODULE_NAME};
@@ -28,7 +30,10 @@ pub(crate) mod ops {
   use crate::types::trusted_constraints::TrustedPropertyConstraint;
   use crate::utils;
 
-  pub async fn create_new_federation<S>(client: &HTFClient<S>, gas_budget: Option<u64>) -> anyhow::Result<ObjectID>
+  pub async fn create_new_federation<S>(
+    client: &HTFClient<S>,
+    gas_budget: Option<u64>,
+  ) -> anyhow::Result<ObjectID>
   where
     S: Signer<IotaKeySignature>,
   {
@@ -146,128 +151,6 @@ pub(crate) mod ops {
     let tx = ptb.finish();
 
     client.execute_transaction(tx, gas_budget).await?;
-
-    Ok(())
-  }
-
-  pub async fn issue_credential<S>(
-    client: &HTFClient<S>,
-    federation_id: ObjectID,
-    receiver: ObjectID,
-    trusted_properties: HashMap<TrustedPropertyName, TrustedPropertyValue>,
-    valid_from_ts: u64,
-    valid_until_ts: u64,
-    gas_budget: Option<u64>,
-  ) -> anyhow::Result<()>
-  where
-    S: Signer<IotaKeySignature>,
-  {
-    let mut ptb = ProgrammableTransactionBuilder::new();
-
-    let cap = get_cap(client, "main", "AttestCap", None).await?;
-
-    let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
-    let fed_ref = ptb.obj(ObjectArg::SharedObject {
-      id: federation_id,
-      initial_shared_version: client.initial_shared_version(&federation_id).await?,
-      mutable: true,
-    })?;
-
-    let receiver_arg = ptb.pure(receiver)?;
-
-    let property_name_tag =
-      TypeTag::from_str(format!("{}::trusted_property::TrustedPropertyName", client.htf_package_id()).as_str())?;
-    let property_value_tag =
-      TypeTag::from_str(format!("{}::trusted_property::TrustedPropertyValue", client.htf_package_id()).as_str())?;
-
-    let mut keys = vec![];
-    let mut values = vec![];
-
-    for (property_name, property_value) in trusted_properties {
-      let names = ptb.pure(property_name.names())?;
-      let property_names: Argument = ptb.programmable_move_call(
-        client.htf_package_id(),
-        ident_str!("trusted_property").into(),
-        ident_str!("new_property_name_from_vector").into(),
-        vec![],
-        vec![names],
-      );
-
-      keys.push(property_names);
-
-      let value = match property_value {
-        TrustedPropertyValue::Text(text) => {
-          let v = ptb.pure(text)?;
-          ptb.programmable_move_call(
-            client.htf_package_id(),
-            ident_str!("trusted_property").into(),
-            ident_str!("new_property_value_string").into(),
-            vec![],
-            vec![v],
-          )
-        }
-        TrustedPropertyValue::Number(number) => {
-          let v = ptb.pure(number)?;
-          ptb.programmable_move_call(
-            client.htf_package_id(),
-            ident_str!("trusted_property").into(),
-            ident_str!("new_property_value_number").into(),
-            vec![],
-            vec![v],
-          )
-        }
-      };
-
-      values.push(value);
-    }
-
-    let keys_vec = ptb.command(Command::MakeMoveVec(Some(property_name_tag.clone()), keys));
-    let values_vec = ptb.command(Command::MakeMoveVec(Some(property_value_tag.clone()), values));
-
-    let trusted_properties_vec = ptb.programmable_move_call(
-      client.htf_package_id(),
-      ident_str!("utils").into(),
-      ident_str!("vec_map_from_keys_values").into(),
-      vec![property_name_tag, property_value_tag],
-      vec![keys_vec, values_vec],
-    );
-
-    let valid_from_ts_arg = ptb.pure(valid_from_ts)?;
-    let valid_until_ts_arg = ptb.pure(valid_until_ts)?;
-
-    ptb.programmable_move_call(
-      client.htf_package_id(),
-      ident_str!("main").into(),
-      ident_str!("issue_credential").into(),
-      vec![],
-      vec![
-        fed_ref,
-        cap,
-        receiver_arg,
-        trusted_properties_vec,
-        valid_from_ts_arg,
-        valid_until_ts_arg,
-      ],
-    );
-
-    let tx = ptb.finish();
-
-    let iota_res = client.execute_transaction(tx, gas_budget).await?;
-
-    let created_object = iota_res
-      .effects
-      .ok_or_else(|| anyhow::anyhow!("missing effects"))?
-      .created()
-      .first()
-      .ok_or_else(|| anyhow::anyhow!("missing created object"))?
-      .object_id();
-
-    let cred: Credential = client.get_object_by_id(created_object).await?;
-
-    assert_eq!(cred.issued_for, receiver, "invalid issued_for");
-
-    assert_eq!(cred.valid_from, valid_from_ts, "invalid valid_from");
-    assert_eq!(cred.valid_to, valid_until_ts, "invalid valid_until");
 
     Ok(())
   }
@@ -547,48 +430,6 @@ pub(crate) mod ops {
     Ok(())
   }
 
-  pub async fn validate_credential<S>(
-    client: &HTFClient<S>,
-    federation_id: ObjectID,
-    credential_id: ObjectID,
-    gas_budget: Option<u64>,
-  ) -> anyhow::Result<()>
-  where
-    S: Signer<IotaKeySignature>,
-  {
-    let mut ptb = ProgrammableTransactionBuilder::new();
-
-    let cred = client.get_object_ref_by_id(credential_id).await?;
-
-    let cred = ptb.obj(ObjectArg::ImmOrOwnedObject(cred))?;
-    let fed_ref = ptb.obj(ObjectArg::SharedObject {
-      id: federation_id,
-      initial_shared_version: client.initial_shared_version(&federation_id).await?,
-      mutable: false,
-    })?;
-
-    ptb.programmable_move_call(
-      client.htf_package_id(),
-      ident_str!("main").into(),
-      ident_str!("validate_credential").into(),
-      vec![],
-      vec![cred, fed_ref],
-    );
-
-    let tx = ptb.finish();
-
-    if !client
-      .execute_transaction(tx, gas_budget)
-      .await?
-      .status_ok()
-      .ok_or_else(|| anyhow::anyhow!("Transaction failed"))?
-    {
-      return Err(anyhow::anyhow!("Transaction failed"));
-    }
-
-    Ok(())
-  }
-
   pub async fn issue_permission_to_attest<S>(
     client: &HTFClient<S>,
     federation_id: ObjectID,
@@ -832,9 +673,13 @@ pub(crate) mod ops {
   where
     S: Signer<IotaKeySignature>,
   {
-    let cap_tag = StructTag::from_str(&format!("{}::{module}::{cap_type}", client.htf_package_id()))?;
+    let cap_tag = StructTag::from_str(&format!(
+      "{}::{module}::{cap_type}",
+      client.htf_package_id()
+    ))?;
 
-    let filter = IotaObjectResponseQuery::new_with_filter(IotaObjectDataFilter::StructType(cap_tag));
+    let filter =
+      IotaObjectResponseQuery::new_with_filter(IotaObjectDataFilter::StructType(cap_tag));
 
     let mut cursor = None;
     loop {

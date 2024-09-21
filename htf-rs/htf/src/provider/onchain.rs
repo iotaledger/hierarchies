@@ -19,15 +19,25 @@ pub struct OnChainFederation<'c> {
 
 impl<'c> OnChainFederation<'c> {
   pub fn new(client: &'c HTFClientReadOnly, federation_id: ObjectID) -> Self {
-    Self { federation_id, client }
+    Self {
+      federation_id,
+      client,
+    }
   }
 
-  async fn execute_query<T: Serialize, R: DeserializeOwned>(&self, function_name: &str, arg: T) -> anyhow::Result<R> {
+  async fn execute_query<T: Serialize, R: DeserializeOwned>(
+    &self,
+    function_name: &str,
+    arg: T,
+  ) -> anyhow::Result<R> {
     let mut ptb = ProgrammableTransactionBuilder::new();
 
     let fed_ref = ObjectArg::SharedObject {
       id: self.federation_id,
-      initial_shared_version: self.client.initial_shared_version(&self.federation_id).await?,
+      initial_shared_version: self
+        .client
+        .initial_shared_version(&self.federation_id)
+        .await?,
       mutable: false,
     };
 
@@ -75,13 +85,22 @@ impl OnChainFederation<'_> {
     self.federation_id
   }
   pub async fn has_permission_to_attest(&self, user_id: ObjectID) -> anyhow::Result<bool> {
-    self.execute_query("has_permission_to_attest", user_id).await
+    self
+      .execute_query("has_permission_to_attest", user_id)
+      .await
   }
   pub async fn has_permissions_to_accredit(&self, user_id: ObjectID) -> anyhow::Result<bool> {
-    self.execute_query("has_permissions_to_accredit", user_id).await
+    self
+      .execute_query("has_permissions_to_accredit", user_id)
+      .await
   }
-  pub async fn has_federation_property(&self, property_name: &TrustedPropertyName) -> anyhow::Result<bool> {
-    self.execute_query("has_federation_property", property_name).await
+  pub async fn has_federation_property(
+    &self,
+    property_name: &TrustedPropertyName,
+  ) -> anyhow::Result<bool> {
+    self
+      .execute_query("has_federation_property", property_name)
+      .await
   }
 
   pub async fn validate_trusted_properties(
@@ -90,7 +109,10 @@ impl OnChainFederation<'_> {
     trusted_properties: VecMap<TrustedPropertyName, TrustedPropertyValue>,
   ) -> anyhow::Result<()> {
     self
-      .execute_query("validate_trusted_properties", (issuer_id, trusted_properties))
+      .execute_query(
+        "validate_trusted_properties",
+        (issuer_id, trusted_properties),
+      )
       .await
   }
 

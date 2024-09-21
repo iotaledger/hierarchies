@@ -2,6 +2,8 @@
 module htf::permission {
 
   use iota::vec_map::{VecMap, Self};
+  use iota::object::{ID, UID};
+  use iota::tx_context::{TxContext};
 
   use htf::permission_to_attest::{PermissionToAttest};
   use htf::permission_to_accredit::{PermissionToAccredit};

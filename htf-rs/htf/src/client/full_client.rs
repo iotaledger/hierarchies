@@ -1,11 +1,11 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::ops::Deref;
 
 use fastcrypto::hash::HashFunction;
 use fastcrypto::traits::ToFromBytes;
 use iota_sdk::rpc_types::{
-  IotaExecutionStatus, IotaTransactionBlockEffects, IotaTransactionBlockEffectsAPI, IotaTransactionBlockEffectsV1,
-  IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions,
+  IotaExecutionStatus, IotaTransactionBlockEffects, IotaTransactionBlockEffectsAPI,
+  IotaTransactionBlockEffectsV1, IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions,
 };
 use iota_sdk::types::base_types::{IotaAddress, ObjectID};
 use iota_sdk::types::crypto::{DefaultHash, Signature, SignatureScheme};
@@ -111,7 +111,11 @@ where
     programmable_transaction: ProgrammableTransaction,
     gas_budget: u64,
   ) -> anyhow::Result<TransactionData> {
-    let gas_price = self.read_client.read_api().get_reference_gas_price().await?;
+    let gas_price = self
+      .read_client
+      .read_api()
+      .get_reference_gas_price()
+      .await?;
 
     let sender = self.sender_address();
 
@@ -144,7 +148,9 @@ where
   }
 
   async fn sign_transaction_data(&self, tx_data: &TransactionData) -> anyhow::Result<Signature> {
-    let SigningInfo { sender_public_key, .. } = &self.signing_info;
+    let SigningInfo {
+      sender_public_key, ..
+    } = &self.signing_info;
 
     let intent = Intent::iota_transaction();
     let intent_msg = IntentMessage::new(intent, tx_data);
@@ -163,7 +169,8 @@ where
 
     let signature_bytes: &[u8] = binding.as_slice();
 
-    Signature::from_bytes(signature_bytes).map_err(|e| anyhow::anyhow!("Failed to create signature: {}", e))
+    Signature::from_bytes(signature_bytes)
+      .map_err(|e| anyhow::anyhow!("Failed to create signature: {}", e))
   }
 
   /// Estimates the gas budget for a transaction.
@@ -182,8 +189,11 @@ where
       gas_price,
     );
 
-    let dry_run_gas_result = self.read_api().dry_run_transaction_block(tx_data).await?.effects;
-
+    let dry_run_gas_result = self
+      .read_api()
+      .dry_run_transaction_block(tx_data)
+      .await?
+      .effects;
     if dry_run_gas_result.status().is_err() {
       let IotaExecutionStatus::Failure { error } = dry_run_gas_result.into_status() else {
         unreachable!();
