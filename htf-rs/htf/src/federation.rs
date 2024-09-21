@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::str::FromStr;
 
-use iota_sdk::rpc_types::{IotaObjectDataFilter, IotaObjectResponseQuery, IotaTransactionBlockEffectsAPI};
+use iota_sdk::rpc_types::{IotaObjectDataFilter, IotaObjectResponseQuery};
 use iota_sdk::types::base_types::{IotaAddress, ObjectID, ObjectRef};
 use iota_sdk::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 use iota_sdk::types::transaction::ObjectArg;
@@ -12,28 +12,18 @@ use secret_storage::Signer;
 use crate::client::HTFClient;
 use crate::key::IotaKeySignature;
 use crate::types::event::{Event, FederationCreatedEvent};
-use crate::types::trusted_constraints::TrustedPropertyConstraints;
-use crate::types::trusted_property::{
-  TrustedPropertyName, TrustedPropertyValue, TrustedPropertyValueMove,
-};
+use crate::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
 
 pub(crate) mod ops {
   use iota_sdk::types::base_types::{STD_OPTION_MODULE_NAME, STD_UTF8_MODULE_NAME};
-  
-  
   use iota_sdk::types::transaction::{Argument, Command};
-  use iota_sdk::types::{
-    TypeTag, MOVE_STDLIB_PACKAGE_ID,
-  };
+  use iota_sdk::types::{TypeTag, MOVE_STDLIB_PACKAGE_ID};
 
   use super::*;
   use crate::types::trusted_constraints::TrustedPropertyConstraint;
   use crate::utils;
 
-  pub async fn create_new_federation<S>(
-    client: &HTFClient<S>,
-    gas_budget: Option<u64>,
-  ) -> anyhow::Result<ObjectID>
+  pub async fn create_new_federation<S>(client: &HTFClient<S>, gas_budget: Option<u64>) -> anyhow::Result<ObjectID>
   where
     S: Signer<IotaKeySignature>,
   {
@@ -155,6 +145,49 @@ pub(crate) mod ops {
     Ok(())
   }
 
+  pub async fn remove_trusted_property<S>(
+    client: &HTFClient<S>,
+    federation_id: ObjectID,
+    property_name: TrustedPropertyName,
+    gas_budget: Option<u64>,
+  ) -> anyhow::Result<()>
+  where
+    S: Signer<IotaKeySignature>,
+  {
+    let mut ptb = ProgrammableTransactionBuilder::new();
+
+    let cap = get_cap(client, "main", "RootAuthorityCap", Some(client.sender_address())).await?;
+
+    let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
+    let fed_ref = ptb.obj(ObjectArg::SharedObject {
+      id: federation_id,
+      initial_shared_version: client.initial_shared_version(&federation_id).await?,
+      mutable: true,
+    })?;
+
+    let names = ptb.pure(property_name.names())?;
+    let property_name: Argument = ptb.programmable_move_call(
+      client.htf_package_id(),
+      ident_str!("trusted_property").into(),
+      ident_str!("new_property_name_from_vector").into(),
+      vec![],
+      vec![names],
+    );
+
+    ptb.programmable_move_call(
+      client.htf_package_id(),
+      ident_str!("main").into(),
+      ident_str!("remove_trusted_property").into(),
+      vec![],
+      vec![fed_ref, cap, property_name],
+    );
+
+    let tx = ptb.finish();
+
+    client.execute_transaction(tx, gas_budget).await?;
+
+    Ok(())
+  }
   pub async fn revoke_permission_to_attest<S>(
     client: &HTFClient<S>,
     federation_id: ObjectID,
@@ -673,13 +706,9 @@ pub(crate) mod ops {
   where
     S: Signer<IotaKeySignature>,
   {
-    let cap_tag = StructTag::from_str(&format!(
-      "{}::{module}::{cap_type}",
-      client.htf_package_id()
-    ))?;
+    let cap_tag = StructTag::from_str(&format!("{}::{module}::{cap_type}", client.htf_package_id()))?;
 
-    let filter =
-      IotaObjectResponseQuery::new_with_filter(IotaObjectDataFilter::StructType(cap_tag));
+    let filter = IotaObjectResponseQuery::new_with_filter(IotaObjectDataFilter::StructType(cap_tag));
 
     let mut cursor = None;
     loop {

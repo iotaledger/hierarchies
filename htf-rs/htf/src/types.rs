@@ -34,5 +34,5 @@ pub struct Governance {
   #[serde(deserialize_with = "deserialize_vec_map")]
   pub accreditors: HashMap<ObjectID, PermissionsToAccredit>,
   #[serde(deserialize_with = "deserialize_vec_map")]
-  pub(crate) attesters: HashMap<ObjectID, PermissionsToAttest>,
+  pub attesters: HashMap<ObjectID, PermissionsToAttest>,
 }

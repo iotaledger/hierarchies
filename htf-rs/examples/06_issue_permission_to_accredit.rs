@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use anyhow::Context;
 use examples::get_client;
-use htf::types::trusted_constraints::TrustedPropertyConstraint;
+use htf::types::trusted_constraints::{Timespan, TrustedPropertyConstraint};
 use htf::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
 use htf::types::Federation;
 use iota_sdk::types::base_types::ObjectID;
@@ -56,6 +56,7 @@ async fn main() -> anyhow::Result<()> {
     allowed_values,
     expression: None,
     allow_any: false,
+    timespan: Timespan::default(),
   };
 
   // Let us issue a permission to accredit to the trusted property

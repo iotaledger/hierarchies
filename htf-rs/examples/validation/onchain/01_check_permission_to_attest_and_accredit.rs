@@ -68,9 +68,9 @@ async fn main() -> anyhow::Result<()> {
 
   // Check if the permission was issued
   let permissions = htf_client
-    .offchain(*federation_id)
-    .await?
+    .onchain(*federation_id)
     .find_permissions_to_attest(receiver)
+    .await
     .context("Failed to find permission to attest")?;
 
   assert!(permissions.permissions.len() == 1);
@@ -87,9 +87,9 @@ async fn main() -> anyhow::Result<()> {
 
   // Check if the permission was issued
   let permissions = htf_client
-    .offchain(*federation_id)
-    .await?
+    .onchain(*federation_id)
     .find_permissions_to_accredit(receiver)
+    .await
     .context("Failed to find permission to accredit")?;
 
   assert!(permissions.permissions.len() == 1);

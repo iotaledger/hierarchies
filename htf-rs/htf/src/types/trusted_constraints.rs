@@ -27,6 +27,14 @@ pub struct TrustedPropertyConstraint {
   pub expression: Option<TrustedPropertyExpression>,
   // allow_any - takes a precedence over the allowed_values
   pub allow_any: bool,
+  pub timespan: Timespan,
+}
+
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// Timerange for the constraint
+pub struct Timespan {
+  pub valid_from_ms: Option<u64>,
+  pub valid_until_ms: Option<u64>,
 }
 
 impl TrustedPropertyConstraint {

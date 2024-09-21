@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use anyhow::Context;
 use examples::get_client;
-use htf::types::trusted_constraints::TrustedPropertyConstraint;
+use htf::types::trusted_constraints::{Timespan, TrustedPropertyConstraint};
 use htf::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
 use iota_sdk::types::base_types::ObjectID;
 
@@ -12,7 +12,6 @@ use iota_sdk::types::base_types::ObjectID;
 ///
 /// See the following instructions on running your own private network
 /// https://github.com/iotaledger/iota/blob/develop/docs/content/developer/getting-started/connect.md
-///
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
   let htf_client = get_client().await?;
@@ -45,6 +44,7 @@ async fn main() -> anyhow::Result<()> {
     allowed_values,
     expression: None,
     allow_any: false,
+    timespan: Timespan::default(),
   };
 
   // Let us issue a permission to attest to the trusted property

@@ -55,7 +55,7 @@ async fn main() -> anyhow::Result<()> {
       .context("Failed to add trusted property")?;
   }
 
-  let federation_properties = htf_client.offchain(*federation_id).await?.get_federation_properties();
+  let federation_properties = htf_client.onchain(*federation_id).get_federation_properties().await?;
 
   assert!(federation_properties.len() == 2);
 

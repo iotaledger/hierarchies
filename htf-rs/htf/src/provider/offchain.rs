@@ -30,9 +30,7 @@ impl OffChainFederation {
   /// This function can be scheduled to run periodically to keep the off-chain
   /// federation in sync with the on-chain federation.
   pub async fn sync(&mut self, client: &HTFClientReadOnly) -> anyhow::Result<()> {
-    self.federation = client
-      .get_object_by_id(*self.federation.id.object_id())
-      .await?;
+    self.federation = client.get_object_by_id(*self.federation.id.object_id()).await?;
 
     Ok(())
   }
@@ -47,11 +45,7 @@ impl OffChainFederation {
     self.federation.governance.attesters.contains_key(&user_id)
   }
   pub fn has_permissions_to_accredit(&self, user_id: ObjectID) -> bool {
-    self
-      .federation
-      .governance
-      .accreditors
-      .contains_key(&user_id)
+    self.federation.governance.accreditors.contains_key(&user_id)
   }
   pub fn has_federation_property(&self, property_name: &TrustedPropertyName) -> bool {
     let federation = self.federation();

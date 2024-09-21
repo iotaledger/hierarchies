@@ -31,10 +31,12 @@ async fn main() -> anyhow::Result<()> {
   let allowed_values = HashSet::from_iter([value, another_value]);
 
   // Add the trusted property to the federation
-  htf_client
-    .add_trusted_property(federation_id, property_name.clone(), allowed_values, false, None)
-    .await
-    .context("Failed to add trusted property")?;
+  {
+    htf_client
+      .add_trusted_property(federation_id, property_name.clone(), allowed_values, false, None)
+      .await
+      .context("Failed to add trusted property")?;
+  }
 
   // Get the updated federation and print it
   let federation: Federation = htf_client.get_object_by_id(federation_id).await?;
@@ -50,6 +52,25 @@ async fn main() -> anyhow::Result<()> {
   if let Some(constraint) = federation.governance.trusted_constraints.data.get(&property_name) {
     println!("Trusted Property: {:#?}", constraint)
   }
+
+  // Remove the trusted property from the federation
+  {
+    htf_client
+      .remove_trusted_property(federation_id, property_name.clone(), None)
+      .await
+      .context("Failed to remove trusted property")?;
+  }
+
+  // Get the updated federation and print it
+  let federation: Federation = htf_client.get_object_by_id(federation_id).await?;
+
+  // Check if the trusted property was removed
+  let trusted_properties = federation
+    .governance
+    .trusted_constraints
+    .contains_property(&property_name);
+
+  assert!(!trusted_properties);
 
   Ok(())
 }
