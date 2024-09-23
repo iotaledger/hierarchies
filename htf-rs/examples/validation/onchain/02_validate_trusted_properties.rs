@@ -20,8 +20,8 @@ async fn main() -> anyhow::Result<()> {
   let federation_id = federation.id.object_id();
 
   //   Add trusted property
-  let property_name = TrustedPropertyName::new(vec!["Example LTD".to_string()]);
-  let value = TrustedPropertyValue::Text("Hello".to_owned());
+  let property_name = TrustedPropertyName::from("Example LTD");
+  let value = TrustedPropertyValue::from("Hello");
   let allowed_values = HashSet::from_iter([value.clone()]);
 
   htf_client
@@ -50,13 +50,13 @@ async fn main() -> anyhow::Result<()> {
   // Let us issue a permission to attest to the trusted property
   {
     htf_client
-      .issue_permission_to_attest(*federation_id, receiver, vec![constraints.clone()], None)
+      .create_attestation(*federation_id, receiver, vec![constraints.clone()], None)
       .await
       .context("Failed to issue permission to attest")?;
   }
 
   // Validate trusted properties
-  let trusted_properties = HashMap::from_iter([(property_name, value)]);
+  let trusted_properties = [(property_name, value)];
 
   let validate = htf_client
     .onchain(*federation_id)

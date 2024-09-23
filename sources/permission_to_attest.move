@@ -3,6 +3,7 @@ module htf::permission_to_attest {
 
   use std::string::String;
   use iota::vec_map::VecMap;
+  use iota::object::{Self, ID, UID};
 
   use htf::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
   use htf::trusted_constraint::{TrustedPropertyConstraint};

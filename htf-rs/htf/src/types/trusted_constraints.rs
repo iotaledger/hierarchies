@@ -30,6 +30,36 @@ pub struct TrustedPropertyConstraint {
   pub timespan: Timespan,
 }
 
+impl TrustedPropertyConstraint {
+  pub fn new(property_name: impl Into<TrustedPropertyName>) -> Self {
+    Self {
+      property_name: property_name.into(),
+      allowed_values: HashSet::new(),
+      expression: None,
+      allow_any: false,
+      timespan: Timespan::default(),
+    }
+  }
+
+  pub fn with_allowed_values(
+    mut self,
+    allowed_values: impl IntoIterator<Item = TrustedPropertyValue>,
+  ) -> Self {
+    self.allowed_values = allowed_values.into_iter().collect();
+    self
+  }
+
+  pub fn with_expression(mut self, expression: TrustedPropertyExpression) -> Self {
+    self.expression = Some(expression);
+    self
+  }
+
+  pub fn with_timespan(mut self, timespan: Timespan) -> Self {
+    self.timespan = timespan;
+    self
+  }
+}
+
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 /// Timerange for the constraint
 pub struct Timespan {

@@ -30,7 +30,9 @@ impl OffChainFederation {
   /// This function can be scheduled to run periodically to keep the off-chain
   /// federation in sync with the on-chain federation.
   pub async fn sync(&mut self, client: &HTFClientReadOnly) -> anyhow::Result<()> {
-    self.federation = client.get_object_by_id(*self.federation.id.object_id()).await?;
+    self.federation = client
+      .get_object_by_id(*self.federation.id.object_id())
+      .await?;
 
     Ok(())
   }
@@ -44,10 +46,14 @@ impl OffChainFederation {
   pub fn has_permission_to_attest(&self, user_id: ObjectID) -> bool {
     self.federation.governance.attesters.contains_key(&user_id)
   }
-  pub fn has_permissions_to_accredit(&self, user_id: ObjectID) -> bool {
-    self.federation.governance.accreditors.contains_key(&user_id)
+  pub fn is_accreditor(&self, user_id: ObjectID) -> bool {
+    self
+      .federation
+      .governance
+      .accreditors
+      .contains_key(&user_id)
   }
-  pub fn has_federation_property(&self, property_name: &TrustedPropertyName) -> bool {
+  pub fn is_trusted_property(&self, property_name: &TrustedPropertyName) -> bool {
     let federation = self.federation();
 
     federation
@@ -59,8 +65,9 @@ impl OffChainFederation {
   pub fn validate_trusted_properties(
     &self,
     issuer_id: ObjectID,
-    trusted_properties: HashMap<TrustedPropertyName, TrustedPropertyValue>,
+    trusted_properties: impl IntoIterator<Item = (TrustedPropertyName, TrustedPropertyValue)>,
   ) -> anyhow::Result<bool> {
+    let trusted_properties: HashMap<_, _> = trusted_properties.into_iter().collect();
     let federation = self.federation();
 
     // Has federation property
@@ -87,7 +94,7 @@ impl OffChainFederation {
     Ok(res)
   }
 
-  pub fn get_federation_properties(&self) -> Vec<TrustedPropertyName> {
+  pub fn get_trusted_properties(&self) -> Vec<TrustedPropertyName> {
     self
       .federation
       .governance
@@ -98,11 +105,16 @@ impl OffChainFederation {
       .collect::<Vec<_>>()
   }
 
-  pub fn find_permissions_to_attest(&self, user_id: ObjectID) -> Option<PermissionsToAttest> {
+  pub fn get_attestations(&self, user_id: ObjectID) -> Option<PermissionsToAttest> {
     self.federation.governance.attesters.get(&user_id).cloned()
   }
 
-  pub fn find_permissions_to_accredit(&self, user_id: ObjectID) -> Option<PermissionsToAccredit> {
-    self.federation.governance.accreditors.get(&user_id).cloned()
+  pub fn get_accreditations(&self, user_id: ObjectID) -> Option<PermissionsToAccredit> {
+    self
+      .federation
+      .governance
+      .accreditors
+      .get(&user_id)
+      .cloned()
   }
 }

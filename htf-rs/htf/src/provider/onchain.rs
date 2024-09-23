@@ -20,15 +20,25 @@ pub struct OnChainFederation<'c> {
 
 impl<'c> OnChainFederation<'c> {
   pub fn new(client: &'c HTFClientReadOnly, federation_id: ObjectID) -> Self {
-    Self { federation_id, client }
+    Self {
+      federation_id,
+      client,
+    }
   }
 
-  async fn execute_query<T: Serialize, R: DeserializeOwned>(&self, function_name: &str, arg: T) -> anyhow::Result<R> {
+  async fn execute_query<T: Serialize, R: DeserializeOwned>(
+    &self,
+    function_name: &str,
+    arg: T,
+  ) -> anyhow::Result<R> {
     let mut ptb = ProgrammableTransactionBuilder::new();
 
     let fed_ref = ObjectArg::SharedObject {
       id: self.federation_id,
-      initial_shared_version: self.client.initial_shared_version(&self.federation_id).await?,
+      initial_shared_version: self
+        .client
+        .initial_shared_version(&self.federation_id)
+        .await?,
       mutable: false,
     };
 
@@ -61,7 +71,8 @@ impl<'c> OnChainFederation<'c> {
       .first()
       .ok_or_else(|| anyhow::anyhow!("no return values"))?;
 
-    let res: R = bcs::from_bytes(return_value).map_err(|e| anyhow::anyhow!("Failed to deserialize result: {}", e))?;
+    let res: R = bcs::from_bytes(return_value)
+      .map_err(|e| anyhow::anyhow!("Failed to deserialize result: {}", e))?;
 
     Ok(res)
   }
@@ -72,25 +83,36 @@ impl OnChainFederation<'_> {
     self.federation_id
   }
   pub async fn has_permission_to_attest(&self, user_id: ObjectID) -> anyhow::Result<bool> {
-    self.execute_query("has_permission_to_attest", user_id).await
+    self
+      .execute_query("has_permission_to_attest", user_id)
+      .await
   }
-  pub async fn has_permissions_to_accredit(&self, user_id: ObjectID) -> anyhow::Result<bool> {
-    self.execute_query("has_permissions_to_accredit", user_id).await
+  pub async fn is_accreditor(&self, user_id: ObjectID) -> anyhow::Result<bool> {
+    self.execute_query("is_accreditor", user_id).await
   }
-  pub async fn has_federation_property(&self, property_name: &TrustedPropertyName) -> anyhow::Result<bool> {
-    self.execute_query("has_federation_property", property_name).await
+  pub async fn is_trusted_property(
+    &self,
+    property_name: &TrustedPropertyName,
+  ) -> anyhow::Result<bool> {
+    self
+      .execute_query("is_trusted_property", property_name)
+      .await
   }
 
   pub async fn validate_trusted_properties(
     &self,
     issuer_id: ObjectID,
-    trusted_properties: HashMap<TrustedPropertyName, TrustedPropertyValue>,
+    trusted_properties: impl IntoIterator<Item = (TrustedPropertyName, TrustedPropertyValue)>,
   ) -> anyhow::Result<()> {
+    let trusted_properties: HashMap<_, _> = trusted_properties.into_iter().collect();
     let mut ptb = ProgrammableTransactionBuilder::new();
 
     let fed_ref = ObjectArg::SharedObject {
       id: self.federation_id,
-      initial_shared_version: self.client.initial_shared_version(&self.federation_id).await?,
+      initial_shared_version: self
+        .client
+        .initial_shared_version(&self.federation_id)
+        .await?,
       mutable: false,
     };
 
@@ -151,8 +173,14 @@ impl OnChainFederation<'_> {
       .as_str(),
     )?;
 
-    let property_names = ptb.command(Command::MakeMoveVec(Some(property_name_tag.clone()), property_names));
-    let property_values = ptb.command(Command::MakeMoveVec(Some(property_value_tag.clone()), property_values));
+    let property_names = ptb.command(Command::MakeMoveVec(
+      Some(property_name_tag.clone()),
+      property_names,
+    ));
+    let property_values = ptb.command(Command::MakeMoveVec(
+      Some(property_value_tag.clone()),
+      property_values,
+    ));
 
     let trusted_properties = ptb.programmable_move_call(
       self.client.htf_package_id(),
@@ -189,12 +217,15 @@ impl OnChainFederation<'_> {
     Ok(())
   }
 
-  pub async fn get_federation_properties(&self) -> anyhow::Result<Vec<TrustedPropertyName>> {
+  pub async fn get_trusted_properties(&self) -> anyhow::Result<Vec<TrustedPropertyName>> {
     let mut ptb = ProgrammableTransactionBuilder::new();
 
     let fed_ref = ObjectArg::SharedObject {
       id: self.federation_id,
-      initial_shared_version: self.client.initial_shared_version(&self.federation_id).await?,
+      initial_shared_version: self
+        .client
+        .initial_shared_version(&self.federation_id)
+        .await?,
       mutable: false,
     };
 
@@ -203,7 +234,7 @@ impl OnChainFederation<'_> {
     ptb.programmable_move_call(
       self.client.htf_package_id(),
       ident_str!("main").into(),
-      ident_str!("get_federation_properties").into(),
+      ident_str!("get_trusted_properties").into(),
       vec![],
       vec![fed_ref],
     );
@@ -226,17 +257,20 @@ impl OnChainFederation<'_> {
       .first()
       .ok_or_else(|| anyhow::anyhow!("no return values"))?;
 
-    let res: Vec<TrustedPropertyName> =
-      bcs::from_bytes(return_value).map_err(|e| anyhow::anyhow!("Failed to deserialize result: {}", e))?;
+    let res: Vec<TrustedPropertyName> = bcs::from_bytes(return_value)
+      .map_err(|e| anyhow::anyhow!("Failed to deserialize result: {}", e))?;
 
     Ok(res)
   }
 
-  pub async fn find_permissions_to_attest(&self, user_id: ObjectID) -> anyhow::Result<PermissionsToAttest> {
-    self.execute_query("find_permissions_to_attest", user_id).await
+  pub async fn get_attestations(&self, user_id: ObjectID) -> anyhow::Result<PermissionsToAttest> {
+    self.execute_query("get_attestations", user_id).await
   }
 
-  pub async fn find_permissions_to_accredit(&self, user_id: ObjectID) -> anyhow::Result<PermissionsToAccredit> {
-    self.execute_query("find_permissions_to_accredit", user_id).await
+  pub async fn get_accreditations(
+    &self,
+    user_id: ObjectID,
+  ) -> anyhow::Result<PermissionsToAccredit> {
+    self.execute_query("get_accreditations", user_id).await
   }
 }
