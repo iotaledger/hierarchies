@@ -2,7 +2,6 @@ use anyhow::Context;
 use examples::get_client;
 use htf::types::trusted_constraints::TrustedPropertyConstraint;
 use htf::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
-use htf::types::Federation;
 use iota_sdk::types::base_types::ObjectID;
 
 /// Demonstrate how to issue a permission to attest to a trusted property.
@@ -15,10 +14,6 @@ async fn main() -> anyhow::Result<()> {
   // Get the client instance
   let client = get_client().await?;
 
-  // Create new federation
-  let federation = client.new_federation(None).await?;
-  let federation_id = *federation.id.object_id();
-
   let property_name = TrustedPropertyName::new(["vc", "type"]);
   let value_verifiable_credential = TrustedPropertyValue::from("VerifiableCredential");
   let value_credential_degree = TrustedPropertyValue::from("ExampleDegreeCredential");
@@ -28,9 +23,13 @@ async fn main() -> anyhow::Result<()> {
     value_credential_degree.clone(),
   ];
   let allowed_values_attestation = [value_credential_degree.clone()];
-
   // A receiver is an account that will receive the attestation
   let attestation_receiver = ObjectID::random();
+
+  // Create new federation
+  //
+  let federation = client.new_federation(None).await?;
+  let federation_id = *federation.id.object_id();
 
   // Add the trusted property to the federation
   client
@@ -68,7 +67,8 @@ async fn main() -> anyhow::Result<()> {
     .context("Failed to validate trusted properties")?;
   println!("✅ Validated trusted properties - ON-CHAIN");
 
-  // OFF-chain (zero cost):
+  // Validate trusted properties
+  // Off-chain (zero cost):
   client
     .offchain(federation_id)
     .await?
@@ -93,24 +93,20 @@ async fn main() -> anyhow::Result<()> {
     value_verifiable_credential,
   );
 
-  // now we can revoke the attestation
+  // Revoke the just created attestation
   let attestations = client
     .onchain(federation_id)
     .get_attestations(attestation_receiver)
     .await?;
   let attestation_id = attestations.permissions[0].id.object_id();
 
-  let result = client
+  client
     .revoke_attestation(federation_id, attestation_receiver, *attestation_id, None)
-    .await;
-  if let Err(e) = result {
-    println!("❌ Failed to revoke attestation: {:#?}", e);
-  } else {
-    println!("✅ Revoked attestation");
-  }
+    .await
+    .context("Failed to revoke attestation")?;
+  println!("✅ Revoked attestation");
 
-  // Validate trusted properties
-  // On-chain (low cost):
+  // Validate trusted properties again - it should returned an error
   let expected_error = client
     .onchain(federation_id)
     .validate_trusted_properties(
@@ -118,21 +114,12 @@ async fn main() -> anyhow::Result<()> {
       [(property_name.clone(), value_credential_degree.clone())],
     )
     .await;
-  if let Err(e) = expected_error {
-    println!(
-      "✅ Expected error on validation after revocation for '{:?}'",
-      value_credential_degree
-    );
-  } else {
-    println!(
-      "❌ Unexpected success on validation for '{:?}'",
-      value_credential_degree
-    );
-  }
+  assert!(expected_error.is_err());
+  println!(
+    "✅ Expected error on validation after revocation for '{:?}'",
+    value_credential_degree
+  );
 
   println!("🎉 Done");
-
-  // let federation: Federation = client.get_object_by_id(federation_id).await?;
-  // println!("✅ Federation: {:#?}", federation);
   Ok(())
 }
