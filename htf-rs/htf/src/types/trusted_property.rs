@@ -2,11 +2,21 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct TrustedPropertyName {
-  pub names: Vec<String>,
+  names: Vec<String>,
+}
+
+impl TrustedPropertyName {
+  /// Create a new TrustedPropertyName
+  pub fn new(names: Vec<String>) -> Self {
+    Self { names }
+  }
+
+  pub fn names(&self) -> &Vec<String> {
+    &self.names
+  }
 }
 
 #[derive(Debug, Clone, PartialEq, Hash, Eq, Serialize, Deserialize)]
-#[serde(from = "TrustedPropertyValue")]
 pub(crate) struct TrustedPropertyValueMove {
   pub text: Option<String>,
   pub number: Option<u64>,
@@ -19,21 +29,6 @@ pub enum TrustedPropertyValue {
   Number(u64),
 }
 
-impl From<TrustedPropertyValue> for TrustedPropertyValueMove {
-  fn from(value: TrustedPropertyValue) -> Self {
-    match value {
-      TrustedPropertyValue::Text(text) => TrustedPropertyValueMove {
-        text: Some(text),
-        number: None,
-      },
-      TrustedPropertyValue::Number(number) => TrustedPropertyValueMove {
-        text: None,
-        number: Some(number),
-      },
-    }
-  }
-}
-
 impl TryFrom<TrustedPropertyValueMove> for TrustedPropertyValue {
   type Error = &'static str;
 
@@ -41,9 +36,7 @@ impl TryFrom<TrustedPropertyValueMove> for TrustedPropertyValue {
     match (value.text, value.number) {
       (Some(text), None) => Ok(TrustedPropertyValue::Text(text)),
       (None, Some(number)) => Ok(TrustedPropertyValue::Number(number)),
-      _ => {
-        Err("Invalid TrustedPropertyValue: must have either text or number, not both or neither")
-      }
+      _ => Err("Invalid TrustedPropertyValue: must have either text or number, not both or neither"),
     }
   }
 }
@@ -56,19 +49,14 @@ mod tests {
 
   #[test]
   fn test_trusted_property_name() {
-    let name = TrustedPropertyName {
-      names: vec!["name".to_string(), "name2".to_string()],
-    };
+    let name = TrustedPropertyName::new(vec!["name".to_string(), "name2".to_string()]);
 
     let json = json!({
       "names": ["name", "name2"]
     });
 
     assert_eq!(serde_json::to_value(&name).unwrap(), json);
-    assert_eq!(
-      serde_json::from_value::<TrustedPropertyName>(json).unwrap(),
-      name
-    );
+    assert_eq!(serde_json::from_value::<TrustedPropertyName>(json).unwrap(), name);
   }
 
   #[test]
@@ -85,10 +73,7 @@ mod tests {
     });
 
     assert_eq!(serde_json::to_value(&text).unwrap(), json_text);
-    assert_eq!(
-      serde_json::from_value::<TrustedPropertyValue>(json_text).unwrap(),
-      text
-    );
+    assert_eq!(serde_json::from_value::<TrustedPropertyValue>(json_text).unwrap(), text);
 
     assert_eq!(serde_json::to_value(&number).unwrap(), json_number);
     assert_eq!(

@@ -1,18 +1,20 @@
 use std::collections::{HashMap, HashSet};
+use std::fmt::Debug;
 use std::hash::Hash;
 
 use fastcrypto::ed25519::Ed25519PublicKey;
 use fastcrypto::traits::ToFromBytes;
-use iota_sdk::types::base_types::IotaAddress;
+use iota_sdk::types::base_types::{IotaAddress, STD_OPTION_MODULE_NAME};
 use iota_sdk::types::collection_types::{VecMap, VecSet};
-use serde::{Deserialize, Deserializer};
+use iota_sdk::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
+use iota_sdk::types::transaction::Argument;
+use iota_sdk::types::{TypeTag, MOVE_STDLIB_PACKAGE_ID};
+use move_core_types::ident_str;
+use serde::{Deserialize, Deserializer, Serialize};
 
 pub fn convert_to_address(sender_public_key: &[u8]) -> anyhow::Result<IotaAddress> {
-  let public_key = Ed25519PublicKey::from_bytes(sender_public_key).map_err(|err| {
-    anyhow::anyhow!(format!(
-      "could not parse public key to Ed25519 public key; {err}"
-    ))
-  })?;
+  let public_key = Ed25519PublicKey::from_bytes(sender_public_key)
+    .map_err(|err| anyhow::anyhow!(format!("could not parse public key to Ed25519 public key; {err}")))?;
 
   Ok(IotaAddress::from(&public_key))
 }
@@ -20,8 +22,8 @@ pub fn convert_to_address(sender_public_key: &[u8]) -> anyhow::Result<IotaAddres
 pub fn deserialize_vec_map<'de, D, K, V>(deserializer: D) -> Result<HashMap<K, V>, D::Error>
 where
   D: Deserializer<'de>,
-  K: Deserialize<'de> + Eq + Hash,
-  V: Deserialize<'de>,
+  K: Deserialize<'de> + Eq + Hash + Debug,
+  V: Deserialize<'de> + Debug,
 {
   let vec_map = VecMap::<K, V>::deserialize(deserializer)?;
   Ok(
@@ -42,6 +44,33 @@ where
   Ok(vec_set.contents.into_iter().collect())
 }
 
+pub fn option_to_move<T: Serialize>(
+  option: Option<T>,
+  tag: TypeTag,
+  ptb: &mut ProgrammableTransactionBuilder,
+) -> Result<Argument, anyhow::Error> {
+  let arg = if let Some(t) = option {
+    let t = ptb.pure(t)?;
+    ptb.programmable_move_call(
+      MOVE_STDLIB_PACKAGE_ID,
+      STD_OPTION_MODULE_NAME.into(),
+      ident_str!("some").into(),
+      vec![tag],
+      vec![t],
+    )
+  } else {
+    ptb.programmable_move_call(
+      MOVE_STDLIB_PACKAGE_ID,
+      STD_OPTION_MODULE_NAME.into(),
+      ident_str!("none").into(),
+      vec![tag],
+      vec![],
+    )
+  };
+
+  Ok(arg)
+}
+
 #[cfg(test)]
 mod tests {
   use iota_sdk::types::collection_types::Entry;
@@ -55,9 +84,7 @@ mod tests {
       key: 1,
       value: "value".to_string(),
     };
-    let vec_map = VecMap {
-      contents: vec![entry],
-    };
+    let vec_map = VecMap { contents: vec![entry] };
 
     let json = serde_json::to_value(&vec_map).unwrap();
 

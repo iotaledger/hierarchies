@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use iota_sdk::types::base_types::ObjectID;
 
 use crate::client::HTFClientReadOnly;
+use crate::types::permission::{PermissionsToAccredit, PermissionsToAttest};
 use crate::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
 use crate::types::Federation;
 
@@ -29,9 +30,7 @@ impl OffChainFederation {
   /// This function can be scheduled to run periodically to keep the off-chain
   /// federation in sync with the on-chain federation.
   pub async fn sync(&mut self, client: &HTFClientReadOnly) -> anyhow::Result<()> {
-    self.federation = client
-      .get_object_by_id(*self.federation.id.object_id())
-      .await?;
+    self.federation = client.get_object_by_id(*self.federation.id.object_id()).await?;
 
     Ok(())
   }
@@ -46,11 +45,7 @@ impl OffChainFederation {
     self.federation.governance.attesters.contains_key(&user_id)
   }
   pub fn has_permissions_to_accredit(&self, user_id: ObjectID) -> bool {
-    self
-      .federation
-      .governance
-      .accreditors
-      .contains_key(&user_id)
+    self.federation.governance.accreditors.contains_key(&user_id)
   }
   pub fn has_federation_property(&self, property_name: &TrustedPropertyName) -> bool {
     let federation = self.federation();
@@ -80,7 +75,7 @@ impl OffChainFederation {
       Ok(())
     })?;
 
-    // then check if names and values are permitted for given i
+    // then check if names and values are permitted for given issuer
     let issuer_permissions_to_attest = federation
       .governance
       .attesters
@@ -101,5 +96,13 @@ impl OffChainFederation {
       .keys()
       .cloned()
       .collect::<Vec<_>>()
+  }
+
+  pub fn find_permissions_to_attest(&self, user_id: ObjectID) -> Option<PermissionsToAttest> {
+    self.federation.governance.attesters.get(&user_id).cloned()
+  }
+
+  pub fn find_permissions_to_accredit(&self, user_id: ObjectID) -> Option<PermissionsToAccredit> {
+    self.federation.governance.accreditors.get(&user_id).cloned()
   }
 }

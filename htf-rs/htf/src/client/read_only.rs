@@ -22,10 +22,7 @@ pub struct HTFClientReadOnly {
 impl HTFClientReadOnly {
   /// Creates a new read-only client for the HTF.
   pub fn new(client: IotaClient, htf_package_id: ObjectID) -> Self {
-    Self {
-      client,
-      htf_package_id,
-    }
+    Self { client, htf_package_id }
   }
 
   /// Returns the HTF package ID.
@@ -66,17 +63,12 @@ impl HTFClientReadOnly {
       .content
       .ok_or_else(|| anyhow::anyhow!("missing content"))
       .and_then(|content| content.try_into_move().context("invalid content"))
-      .and_then(|data| {
-        serde_json::from_value(data.fields.to_json_value()).context("invalid data")
-      })?;
+      .and_then(|data| serde_json::from_value(data.fields.to_json_value()).context("invalid data"))?;
 
     Ok(data)
   }
 
-  pub(crate) async fn initial_shared_version(
-    &self,
-    object_id: &ObjectID,
-  ) -> anyhow::Result<SequenceNumber> {
+  pub(crate) async fn initial_shared_version(&self, object_id: &ObjectID) -> anyhow::Result<SequenceNumber> {
     let owner = self
       .read_api()
       .get_object_with_options(*object_id, IotaObjectDataOptions::default().with_owner())
@@ -85,9 +77,7 @@ impl HTFClientReadOnly {
       .context("missing owner information")?;
 
     match owner {
-      Owner::Shared {
-        initial_shared_version,
-      } => Ok(initial_shared_version),
+      Owner::Shared { initial_shared_version } => Ok(initial_shared_version),
       _ => anyhow::bail!(format!("object {object_id} is not a shared object")),
     }
   }

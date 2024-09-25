@@ -3,7 +3,6 @@ module htf::permission_to_attest {
 
   use std::string::String;
   use iota::vec_map::VecMap;
-  use iota::object::{Self, UID, ID};
 
   use htf::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
   use htf::trusted_constraint::{TrustedPropertyConstraint};
@@ -57,7 +56,7 @@ module htf::permission_to_attest {
     self.permissions.push_back(permission_to_attest);
   }
 
-  /// checks if all constraints matches the given in Accredidations
+  /// checks if all constraints matches the given in Accredidations.
   public(package) fun are_values_permitted(self : &PermissionsToAttest, trusted_properties: &VecMap<TrustedPropertyName, TrustedPropertyValue>, current_time_ms : u64) :bool {
     let property_names = trusted_properties.keys() ;
     let mut idx_property_names = 0;
@@ -66,7 +65,7 @@ module htf::permission_to_attest {
       let property_name = property_names[idx_property_names];
       let property_value = trusted_properties.get(&property_name);
 
-      if (! self.is_value_permitted(&property_name, property_value, current_time_ms)  ) {
+      if (!self.is_value_permitted(&property_name, property_value, current_time_ms)  ) {
         return false
       };
 

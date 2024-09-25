@@ -1,14 +1,16 @@
+use std::collections::HashMap;
 use std::str::FromStr;
 
 use iota_sdk::types::base_types::{IotaAddress, ObjectID};
-use iota_sdk::types::collection_types::VecMap;
 use iota_sdk::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use iota_sdk::types::transaction::{CallArg, ObjectArg, TransactionKind};
-use iota_sdk::types::Identifier;
+use iota_sdk::types::transaction::{Argument, CallArg, Command, ObjectArg, TransactionKind};
+use iota_sdk::types::{Identifier, TypeTag};
+use move_core_types::ident_str;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 use crate::client::HTFClientReadOnly;
+use crate::types::permission::{PermissionsToAccredit, PermissionsToAttest};
 use crate::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
 
 pub struct OnChainFederation<'c> {
@@ -18,26 +20,15 @@ pub struct OnChainFederation<'c> {
 
 impl<'c> OnChainFederation<'c> {
   pub fn new(client: &'c HTFClientReadOnly, federation_id: ObjectID) -> Self {
-    Self {
-      federation_id,
-      client,
-    }
+    Self { federation_id, client }
   }
 
-  async fn execute_query<T: Serialize, R: DeserializeOwned>(
-    &self,
-    function_name: &str,
-    arg: T,
-  ) -> anyhow::Result<R> {
+  async fn execute_query<T: Serialize, R: DeserializeOwned>(&self, function_name: &str, arg: T) -> anyhow::Result<R> {
     let mut ptb = ProgrammableTransactionBuilder::new();
-    let arg = ptb.pure(arg)?;
 
     let fed_ref = ObjectArg::SharedObject {
       id: self.federation_id,
-      initial_shared_version: self
-        .client
-        .initial_shared_version(&self.federation_id)
-        .await?,
+      initial_shared_version: self.client.initial_shared_version(&self.federation_id).await?,
       mutable: false,
     };
 
@@ -54,20 +45,23 @@ impl<'c> OnChainFederation<'c> {
 
     let tx = TransactionKind::programmable(ptb.finish());
 
-    let sender = IotaAddress::ZERO; //TODO::fix this
+    let sender = IotaAddress::ZERO;
 
-    let return_values = self
+    let result = self
       .client
       .read_api()
       .dev_inspect_transaction_block(sender, tx, None, None, None)
       .await?
       .results
       .and_then(|res| res.first().cloned())
-      .ok_or_else(|| anyhow::anyhow!("no results"))?
-      .return_values;
+      .ok_or_else(|| anyhow::anyhow!("no results found"))?;
 
-    let (res_bytes, _) = &return_values[0];
-    let res: R = bcs::from_bytes(res_bytes)?;
+    let (return_value, _) = result
+      .return_values
+      .first()
+      .ok_or_else(|| anyhow::anyhow!("no return values"))?;
+
+    let res: R = bcs::from_bytes(return_value).map_err(|e| anyhow::anyhow!("Failed to deserialize result: {}", e))?;
 
     Ok(res)
   }
@@ -78,38 +72,171 @@ impl OnChainFederation<'_> {
     self.federation_id
   }
   pub async fn has_permission_to_attest(&self, user_id: ObjectID) -> anyhow::Result<bool> {
-    self
-      .execute_query("has_permission_to_attest", user_id)
-      .await
+    self.execute_query("has_permission_to_attest", user_id).await
   }
   pub async fn has_permissions_to_accredit(&self, user_id: ObjectID) -> anyhow::Result<bool> {
-    self
-      .execute_query("has_permissions_to_accredit", user_id)
-      .await
+    self.execute_query("has_permissions_to_accredit", user_id).await
   }
-  pub async fn has_federation_property(
-    &self,
-    property_name: &TrustedPropertyName,
-  ) -> anyhow::Result<bool> {
-    self
-      .execute_query("has_federation_property", property_name)
-      .await
+  pub async fn has_federation_property(&self, property_name: &TrustedPropertyName) -> anyhow::Result<bool> {
+    self.execute_query("has_federation_property", property_name).await
   }
 
   pub async fn validate_trusted_properties(
     &self,
     issuer_id: ObjectID,
-    trusted_properties: VecMap<TrustedPropertyName, TrustedPropertyValue>,
+    trusted_properties: HashMap<TrustedPropertyName, TrustedPropertyValue>,
   ) -> anyhow::Result<()> {
-    self
-      .execute_query(
-        "validate_trusted_properties",
-        (issuer_id, trusted_properties),
+    let mut ptb = ProgrammableTransactionBuilder::new();
+
+    let fed_ref = ObjectArg::SharedObject {
+      id: self.federation_id,
+      initial_shared_version: self.client.initial_shared_version(&self.federation_id).await?,
+      mutable: false,
+    };
+
+    let fed_ref = ptb.obj(fed_ref)?;
+
+    let mut property_names: Vec<_> = vec![];
+    let mut property_values: Vec<_> = vec![];
+
+    for (property_name, property_value) in trusted_properties {
+      let names = property_name.names();
+      let name = ptb.pure(names)?;
+      let property_name: Argument = ptb.programmable_move_call(
+        self.client.htf_package_id(),
+        ident_str!("trusted_property").into(),
+        ident_str!("new_property_name_from_vector").into(),
+        vec![],
+        vec![name],
+      );
+      property_names.push(property_name);
+
+      let property_value = match property_value {
+        TrustedPropertyValue::Text(text) => {
+          let v = ptb.pure(text)?;
+          ptb.programmable_move_call(
+            self.client.htf_package_id(),
+            ident_str!("trusted_property").into(),
+            ident_str!("new_property_value_string").into(),
+            vec![],
+            vec![v],
+          )
+        }
+        TrustedPropertyValue::Number(number) => {
+          let v = ptb.pure(number)?;
+          ptb.programmable_move_call(
+            self.client.htf_package_id(),
+            ident_str!("trusted_property").into(),
+            ident_str!("new_property_value_number").into(),
+            vec![],
+            vec![v],
+          )
+        }
+      };
+      property_values.push(property_value);
+    }
+
+    let property_name_tag = TypeTag::from_str(
+      format!(
+        "{}::trusted_property::TrustedPropertyName",
+        self.client.htf_package_id()
       )
-      .await
+      .as_str(),
+    )?;
+    let property_value_tag = TypeTag::from_str(
+      format!(
+        "{}::trusted_property::TrustedPropertyValue",
+        self.client.htf_package_id()
+      )
+      .as_str(),
+    )?;
+
+    let property_names = ptb.command(Command::MakeMoveVec(Some(property_name_tag.clone()), property_names));
+    let property_values = ptb.command(Command::MakeMoveVec(Some(property_value_tag.clone()), property_values));
+
+    let trusted_properties = ptb.programmable_move_call(
+      self.client.htf_package_id(),
+      ident_str!("utils").into(),
+      ident_str!("vec_map_from_keys_values").into(),
+      vec![property_name_tag, property_value_tag],
+      vec![property_names, property_values],
+    );
+
+    let issuer_id = ptb.pure(issuer_id)?;
+
+    ptb.programmable_move_call(
+      self.client.htf_package_id(),
+      ident_str!("main").into(),
+      ident_str!("validate_trusted_properties").into(),
+      vec![],
+      vec![fed_ref, issuer_id, trusted_properties],
+    );
+
+    let tx = TransactionKind::programmable(ptb.finish());
+
+    let sender = IotaAddress::ZERO;
+
+    let result = self
+      .client
+      .read_api()
+      .dev_inspect_transaction_block(sender, tx, None, None, None)
+      .await?;
+
+    if result.error.is_some() {
+      anyhow::bail!("Transaction failed: {}", result.error.unwrap());
+    }
+
+    Ok(())
   }
 
   pub async fn get_federation_properties(&self) -> anyhow::Result<Vec<TrustedPropertyName>> {
-    self.execute_query("get_federation_properties", ()).await
+    let mut ptb = ProgrammableTransactionBuilder::new();
+
+    let fed_ref = ObjectArg::SharedObject {
+      id: self.federation_id,
+      initial_shared_version: self.client.initial_shared_version(&self.federation_id).await?,
+      mutable: false,
+    };
+
+    let fed_ref = ptb.obj(fed_ref)?;
+
+    ptb.programmable_move_call(
+      self.client.htf_package_id(),
+      ident_str!("main").into(),
+      ident_str!("get_federation_properties").into(),
+      vec![],
+      vec![fed_ref],
+    );
+
+    let tx = TransactionKind::programmable(ptb.finish());
+
+    let sender = IotaAddress::ZERO;
+
+    let result = self
+      .client
+      .read_api()
+      .dev_inspect_transaction_block(sender, tx, None, None, None)
+      .await?
+      .results
+      .and_then(|res| res.first().cloned())
+      .ok_or_else(|| anyhow::anyhow!("no results found"))?;
+
+    let (return_value, _) = result
+      .return_values
+      .first()
+      .ok_or_else(|| anyhow::anyhow!("no return values"))?;
+
+    let res: Vec<TrustedPropertyName> =
+      bcs::from_bytes(return_value).map_err(|e| anyhow::anyhow!("Failed to deserialize result: {}", e))?;
+
+    Ok(res)
+  }
+
+  pub async fn find_permissions_to_attest(&self, user_id: ObjectID) -> anyhow::Result<PermissionsToAttest> {
+    self.execute_query("find_permissions_to_attest", user_id).await
+  }
+
+  pub async fn find_permissions_to_accredit(&self, user_id: ObjectID) -> anyhow::Result<PermissionsToAccredit> {
+    self.execute_query("find_permissions_to_accredit", user_id).await
   }
 }

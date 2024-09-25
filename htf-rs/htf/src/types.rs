@@ -32,7 +32,7 @@ pub struct Governance {
   id: UID,
   pub trusted_constraints: TrustedPropertyConstraints,
   #[serde(deserialize_with = "deserialize_vec_map")]
-  pub(crate) accreditors: HashMap<ObjectID, PermissionsToAccredit>,
+  pub accreditors: HashMap<ObjectID, PermissionsToAccredit>,
   #[serde(deserialize_with = "deserialize_vec_map")]
-  pub(crate) attesters: HashMap<ObjectID, PermissionsToAttest>,
+  pub attesters: HashMap<ObjectID, PermissionsToAttest>,
 }

@@ -4,8 +4,8 @@ use std::ops::Deref;
 use fastcrypto::hash::HashFunction;
 use fastcrypto::traits::ToFromBytes;
 use iota_sdk::rpc_types::{
-  IotaExecutionStatus, IotaTransactionBlockEffects, IotaTransactionBlockEffectsAPI,
-  IotaTransactionBlockEffectsV1, IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions,
+  IotaExecutionStatus, IotaTransactionBlockEffects, IotaTransactionBlockEffectsAPI, IotaTransactionBlockEffectsV1,
+  IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions,
 };
 use iota_sdk::types::base_types::{IotaAddress, ObjectID};
 use iota_sdk::types::crypto::{DefaultHash, Signature, SignatureScheme};
@@ -17,7 +17,7 @@ use shared_crypto::intent::{Intent, IntentMessage};
 use super::HTFClientReadOnly;
 use crate::federation;
 use crate::key::{IotaKeySignature, SigningInfo};
-use crate::types::trusted_constraints::TrustedPropertyConstraints;
+use crate::types::trusted_constraints::TrustedPropertyConstraint;
 use crate::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
 use crate::types::Federation;
 use crate::utils::convert_to_address;
@@ -111,11 +111,7 @@ where
     programmable_transaction: ProgrammableTransaction,
     gas_budget: u64,
   ) -> anyhow::Result<TransactionData> {
-    let gas_price = self
-      .read_client
-      .read_api()
-      .get_reference_gas_price()
-      .await?;
+    let gas_price = self.read_client.read_api().get_reference_gas_price().await?;
 
     let sender = self.sender_address();
 
@@ -148,9 +144,7 @@ where
   }
 
   async fn sign_transaction_data(&self, tx_data: &TransactionData) -> anyhow::Result<Signature> {
-    let SigningInfo {
-      sender_public_key, ..
-    } = &self.signing_info;
+    let SigningInfo { sender_public_key, .. } = &self.signing_info;
 
     let intent = Intent::iota_transaction();
     let intent_msg = IntentMessage::new(intent, tx_data);
@@ -169,8 +163,7 @@ where
 
     let signature_bytes: &[u8] = binding.as_slice();
 
-    Signature::from_bytes(signature_bytes)
-      .map_err(|e| anyhow::anyhow!("Failed to create signature: {}", e))
+    Signature::from_bytes(signature_bytes).map_err(|e| anyhow::anyhow!("Failed to create signature: {}", e))
   }
 
   /// Estimates the gas budget for a transaction.
@@ -189,11 +182,7 @@ where
       gas_price,
     );
 
-    let dry_run_gas_result = self
-      .read_api()
-      .dry_run_transaction_block(tx_data)
-      .await?
-      .effects;
+    let dry_run_gas_result = self.read_api().dry_run_transaction_block(tx_data).await?.effects;
     if dry_run_gas_result.status().is_err() {
       let IotaExecutionStatus::Failure { error } = dry_run_gas_result.into_status() else {
         unreachable!();
@@ -258,40 +247,14 @@ where
     .await
   }
 
-  /// Revokes a permission to attest for a user in a federation.
-  pub async fn revoke_permission_to_attest(
+  /// Removes a trusted property from a federation.
+  pub async fn remove_trusted_property(
     &self,
     federation_id: ObjectID,
-    user_id: ObjectID,
-    permission_id: ObjectID,
+    property_name: TrustedPropertyName,
     gas_budget: Option<u64>,
   ) -> anyhow::Result<()> {
-    federation::ops::revoke_permission_to_attest(
-      self,
-      federation_id,
-      user_id,
-      permission_id,
-      gas_budget,
-    )
-    .await
-  }
-
-  /// Issues a permission to accredit to a receiver in a federation.
-  pub async fn issue_permission_to_accredit(
-    &self,
-    federation_id: ObjectID,
-    receiver: ObjectID,
-    want_property_constraints: Vec<TrustedPropertyConstraints>,
-    gas_budget: Option<u64>,
-  ) -> anyhow::Result<()> {
-    federation::ops::issue_permission_to_accredit(
-      self,
-      federation_id,
-      receiver,
-      want_property_constraints,
-      gas_budget,
-    )
-    .await
+    federation::ops::remove_trusted_property(self, federation_id, property_name, gas_budget).await
   }
 
   /// Issues a permission to attest to a receiver in a federation.
@@ -299,17 +262,35 @@ where
     &self,
     federation_id: ObjectID,
     receiver: ObjectID,
-    want_property_constraints: Vec<TrustedPropertyConstraints>,
+    want_property_constraints: Vec<TrustedPropertyConstraint>,
     gas_budget: Option<u64>,
   ) -> anyhow::Result<()> {
-    federation::ops::issue_permission_to_attest(
-      self,
-      federation_id,
-      receiver,
-      want_property_constraints,
-      gas_budget,
-    )
-    .await
+    federation::ops::issue_permission_to_attest(self, federation_id, receiver, want_property_constraints, gas_budget)
+      .await
+  }
+
+  /// Revokes a permission to attest for a user in a federation.
+
+  pub async fn revoke_permission_to_attest(
+    &self,
+    federation_id: ObjectID,
+    user_id: ObjectID,
+    permission_id: ObjectID,
+    gas_budget: Option<u64>,
+  ) -> anyhow::Result<()> {
+    federation::ops::revoke_permission_to_attest(self, federation_id, user_id, permission_id, gas_budget).await
+  }
+
+  /// Issues a permission to accredit to a receiver in a federation.
+  pub async fn issue_permission_to_accredit(
+    &self,
+    federation_id: ObjectID,
+    receiver: ObjectID,
+    want_property_constraints: Vec<TrustedPropertyConstraint>,
+    gas_budget: Option<u64>,
+  ) -> anyhow::Result<()> {
+    federation::ops::issue_permission_to_accredit(self, federation_id, receiver, want_property_constraints, gas_budget)
+      .await
   }
 
   /// Revokes a permission to accredit for a user in a federation.
@@ -320,16 +301,10 @@ where
     permission_id: ObjectID,
     gas_budget: Option<u64>,
   ) -> anyhow::Result<()> {
-    federation::ops::revoke_permission_to_accredit(
-      self,
-      federation_id,
-      user_id,
-      permission_id,
-      gas_budget,
-    )
-    .await
+    federation::ops::revoke_permission_to_accredit(self, federation_id, user_id, permission_id, gas_budget).await
   }
 }
+
 impl<S> Deref for HTFClient<S> {
   type Target = HTFClientReadOnly;
 
