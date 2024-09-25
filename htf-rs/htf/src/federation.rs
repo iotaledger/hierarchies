@@ -74,13 +74,7 @@ pub(crate) mod ops {
   {
     let mut ptb = ProgrammableTransactionBuilder::new();
 
-    let cap = get_cap(
-      client,
-      "main",
-      Capability::RootAuthority,
-      Some(client.sender_address()),
-    )
-    .await?;
+    let cap = get_cap(client, "main", Capability::RootAuthority, None).await?;
 
     let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
 
@@ -140,13 +134,7 @@ pub(crate) mod ops {
   {
     let mut ptb = ProgrammableTransactionBuilder::new();
 
-    let cap = get_cap(
-      client,
-      "main",
-      Capability::RootAuthority,
-      Some(client.sender_address()),
-    )
-    .await?;
+    let cap = get_cap(client, "main", Capability::RootAuthority, None).await?;
 
     let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
     let fed_ref = get_fed_ref(client, federation_id, &mut ptb).await?;
@@ -212,13 +200,7 @@ pub(crate) mod ops {
   where
     S: Signer<IotaKeySignature>,
   {
-    let cap = get_cap(
-      client,
-      "main",
-      Capability::RootAuthority,
-      Some(client.sender_address()),
-    )
-    .await?;
+    let cap = get_cap(client, "main", Capability::RootAuthority, None).await?;
 
     let mut ptb = ProgrammableTransactionBuilder::new();
 

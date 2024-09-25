@@ -19,12 +19,6 @@ pub trait MoveType {
   fn move_type(package: ObjectID) -> TypeTag;
 }
 
-impl<T: MoveType> MoveType for Vec<T> {
-  fn move_type(package: ObjectID) -> TypeTag {
-    TypeTag::Vector(Box::new(T::move_type(package)))
-  }
-}
-
 pub fn convert_to_address(sender_public_key: &[u8]) -> anyhow::Result<IotaAddress> {
   let public_key = Ed25519PublicKey::from_bytes(sender_public_key).map_err(|err| {
     anyhow::anyhow!(format!(
@@ -35,7 +29,7 @@ pub fn convert_to_address(sender_public_key: &[u8]) -> anyhow::Result<IotaAddres
   Ok(IotaAddress::from(&public_key))
 }
 
-pub fn deserialize_vec_map<'de, D, K, V>(deserializer: D) -> Result<HashMap<K, V>, D::Error>
+pub(crate) fn deserialize_vec_map<'de, D, K, V>(deserializer: D) -> Result<HashMap<K, V>, D::Error>
 where
   D: Deserializer<'de>,
   K: Deserialize<'de> + Eq + Hash + Debug,
@@ -51,7 +45,7 @@ where
   )
 }
 
-pub fn deserialize_vec_set<'de, D, T>(deserializer: D) -> Result<HashSet<T>, D::Error>
+pub(crate) fn deserialize_vec_set<'de, D, T>(deserializer: D) -> Result<HashSet<T>, D::Error>
 where
   D: Deserializer<'de>,
   T: Deserialize<'de> + Eq + Hash,
@@ -60,7 +54,7 @@ where
   Ok(vec_set.contents.into_iter().collect())
 }
 
-pub fn option_to_move<T: Serialize>(
+pub(crate) fn option_to_move<T: Serialize>(
   option: Option<T>,
   tag: TypeTag,
   ptb: &mut ProgrammableTransactionBuilder,
@@ -88,7 +82,7 @@ pub fn option_to_move<T: Serialize>(
 }
 
 /// Create a VecSet from a vector of values
-pub fn create_vec_set_from_move_values(
+pub(crate) fn create_vec_set_from_move_values(
   values: Vec<Argument>,
   tag: TypeTag,
   ptb: &mut ProgrammableTransactionBuilder,
@@ -106,7 +100,7 @@ pub fn create_vec_set_from_move_values(
 }
 
 /// Creates a new move string
-pub fn new_move_string(
+pub(crate) fn new_move_string(
   value: String,
   ptb: &mut ProgrammableTransactionBuilder,
 ) -> anyhow::Result<Argument> {
