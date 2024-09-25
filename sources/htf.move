@@ -3,9 +3,7 @@ module htf::main {
   use iota::vec_map::{Self, VecMap};
   use iota::event;
   use iota::vec_set::{VecSet};
-  use iota::object::{Self, UID, ID};
-  use iota::transfer::{Self};
-  use iota::tx_context::{TxContext};
+  
 
   use htf::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
   use htf::trusted_constraint::{Self, TrustedPropertyConstraints, TrustedPropertyConstraint};

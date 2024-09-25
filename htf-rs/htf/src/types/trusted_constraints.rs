@@ -1,9 +1,12 @@
 use std::collections::{HashMap, HashSet};
+use std::str::FromStr;
 
+use iota_sdk::types::base_types::ObjectID;
+use iota_sdk::types::TypeTag;
 use serde::{Deserialize, Serialize};
 
 use super::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
-use crate::utils::{deserialize_vec_map, deserialize_vec_set};
+use crate::utils::{deserialize_vec_map, deserialize_vec_set, MoveType};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TrustedPropertyConstraints {
@@ -58,13 +61,6 @@ impl TrustedPropertyConstraint {
     self.timespan = timespan;
     self
   }
-}
-
-#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
-/// Timerange for the constraint
-pub struct Timespan {
-  pub valid_from_ms: Option<u64>,
-  pub valid_until_ms: Option<u64>,
 }
 
 impl TrustedPropertyConstraint {
@@ -151,6 +147,14 @@ pub enum TrustedPropertyExpression {
   LowerThan(u64),
 }
 
+impl MoveType for TrustedPropertyExpression {
+  fn move_type(package: ObjectID) -> TypeTag {
+    TypeTag::from_str(
+      format!("{}::trusted_constraint::TrustedPropertyExpression", package).as_str(),
+    )
+    .expect("Failed to create type tag")
+  }
+}
 impl TrustedPropertyExpression {
   pub fn as_starts_with(&self) -> Option<String> {
     match self {
@@ -185,7 +189,7 @@ impl TrustedPropertyExpression {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct TrustedPropertyExpressionMove {
+struct TrustedPropertyExpressionMove {
   starts_with: Option<String>,
   ends_with: Option<String>,
   contains: Option<String>,
@@ -206,4 +210,20 @@ impl TryFrom<TrustedPropertyExpressionMove> for TrustedPropertyExpression {
       _ => Err("Invalid TrustedPropertyExpression: must have either starts_with, ends_with, contains, greater_than or lower_than"),
     }
   }
+}
+
+impl MoveType for TrustedPropertyConstraint {
+  fn move_type(package: ObjectID) -> TypeTag {
+    TypeTag::from_str(
+      format!("{}::trusted_constraint::TrustedPropertyConstraint", package).as_str(),
+    )
+    .expect("Failed to create type tag")
+  }
+}
+
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// Time-range for the constraint
+pub struct Timespan {
+  pub valid_from_ms: Option<u64>,
+  pub valid_until_ms: Option<u64>,
 }

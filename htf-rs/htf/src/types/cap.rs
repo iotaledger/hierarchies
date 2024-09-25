@@ -7,3 +7,14 @@ pub struct RootAuthorityCap {
   id: UID,
   federation_id: ObjectID,
 }
+
+/// Capabilities are the different types of capabilities that can be issued
+/// to an account
+#[derive(Debug, strum::Display, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum Capabilities {
+  RootAuthority(RootAuthorityCap),
+  #[strum(serialize = "AttestCap")]
+  Attest,
+  #[strum(serialize = "AccreditCap")]
+  Accredit,
+}

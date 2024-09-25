@@ -20,8 +20,9 @@ pub(crate) mod ops {
   use iota_sdk::types::{TypeTag, MOVE_STDLIB_PACKAGE_ID};
 
   use super::*;
-  use crate::types::trusted_constraints::TrustedPropertyConstraint;
-  use crate::utils;
+  use crate::types::trusted_constraints::{TrustedPropertyConstraint, TrustedPropertyExpression};
+  use crate::types::{self, trusted_property};
+  use crate::utils::{self, MoveType};
 
   pub async fn create_new_federation<S>(
     client: &HTFClient<S>,
@@ -82,66 +83,34 @@ pub(crate) mod ops {
 
     let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
 
-    let fed_ref = ptb.obj(ObjectArg::SharedObject {
-      id: federation_id,
-      initial_shared_version: client.initial_shared_version(&federation_id).await?,
-      mutable: true,
-    })?;
+    let fed_ref = fed_ref(client, federation_id, &mut ptb).await?;
 
     let allow_any = ptb.pure(allow_any)?;
-    let names = ptb.pure(property_name.names())?;
-    let property_names: Argument = ptb.programmable_move_call(
-      client.htf_package_id(),
-      ident_str!("trusted_property").into(),
-      ident_str!("new_property_name_from_vector").into(),
-      vec![],
-      vec![names],
-    );
 
-    let tag = TypeTag::from_str(
-      format!(
-        "{}::trusted_property::TrustedPropertyValue",
-        client.htf_package_id()
-      )
-      .as_str(),
-    )?;
+    let property_names =
+      trusted_property::new_property_name(property_name, &mut ptb, client.htf_package_id())?;
+
+    let value_tag = TrustedPropertyValue::move_type(client.htf_package_id());
 
     let mut values_of_property = vec![];
     for property_value in allowed_values {
       let value = match property_value {
         TrustedPropertyValue::Text(text) => {
-          let v = ptb.pure(text)?;
-          ptb.programmable_move_call(
-            client.htf_package_id(),
-            ident_str!("trusted_property").into(),
-            ident_str!("new_property_value_string").into(),
-            vec![],
-            vec![v],
-          )
+          trusted_property::new_property_value_string(text, &mut ptb, client.htf_package_id())?
         }
         TrustedPropertyValue::Number(number) => {
-          let v = ptb.pure(number)?;
-          ptb.programmable_move_call(
-            client.htf_package_id(),
-            ident_str!("trusted_property").into(),
-            ident_str!("new_property_value_number").into(),
-            vec![],
-            vec![v],
-          )
+          trusted_property::new_property_value_number(number, &mut ptb, client.htf_package_id())?
         }
       };
 
       values_of_property.push(value);
     }
 
-    let tpv_move_vec = ptb.command(Command::MakeMoveVec(Some(tag.clone()), values_of_property));
-
-    let tpv_vec_set = ptb.programmable_move_call(
+    let tpv_vec_set = utils::create_vec_set_from_move_values(
+      values_of_property,
+      value_tag,
+      &mut ptb,
       client.htf_package_id(),
-      ident_str!("utils").into(),
-      ident_str!("create_vec_set").into(),
-      vec![tag],
-      vec![tpv_move_vec],
     );
 
     ptb.programmable_move_call(
@@ -179,20 +148,10 @@ pub(crate) mod ops {
     .await?;
 
     let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
-    let fed_ref = ptb.obj(ObjectArg::SharedObject {
-      id: federation_id,
-      initial_shared_version: client.initial_shared_version(&federation_id).await?,
-      mutable: true,
-    })?;
+    let fed_ref = fed_ref(client, federation_id, &mut ptb).await?;
 
-    let names = ptb.pure(property_name.names())?;
-    let property_name: Argument = ptb.programmable_move_call(
-      client.htf_package_id(),
-      ident_str!("trusted_property").into(),
-      ident_str!("new_property_name_from_vector").into(),
-      vec![],
-      vec![names],
-    );
+    let property_name =
+      trusted_property::new_property_name(property_name, &mut ptb, client.htf_package_id())?;
 
     ptb.programmable_move_call(
       client.htf_package_id(),
@@ -223,11 +182,7 @@ pub(crate) mod ops {
     let mut ptb = ProgrammableTransactionBuilder::new();
 
     let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
-    let fed_ref = ptb.obj(ObjectArg::SharedObject {
-      id: federation_id,
-      initial_shared_version: client.initial_shared_version(&federation_id).await?,
-      mutable: true,
-    })?;
+    let fed_ref = fed_ref(client, federation_id, &mut ptb).await?;
 
     let user_id_arg = ptb.pure(user_id)?;
     let permission_id = ptb.pure(permission_id)?;
@@ -267,11 +222,7 @@ pub(crate) mod ops {
     let mut ptb = ProgrammableTransactionBuilder::new();
 
     let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
-    let fed_ref = ptb.obj(ObjectArg::SharedObject {
-      id: federation_id,
-      initial_shared_version: client.initial_shared_version(&federation_id).await?,
-      mutable: true,
-    })?;
+    let fed_ref = fed_ref(client, federation_id, &mut ptb).await?;
 
     let account_id_arg = ptb.pure(account_id)?;
 
@@ -311,81 +262,48 @@ pub(crate) mod ops {
     let mut ptb = ProgrammableTransactionBuilder::new();
 
     let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
-    let fed_ref = ptb.obj(ObjectArg::SharedObject {
-      id: federation_id,
-      initial_shared_version: client.initial_shared_version(&federation_id).await?,
-      mutable: true,
-    })?;
+    let fed_ref = fed_ref(client, federation_id, &mut ptb).await?;
 
     let receiver_arg = ptb.pure(receiver)?;
 
     let want_property_constraints = {
       let mut constraints = vec![];
       for constraint in want_property_constraints {
-        let property_value_tag = TypeTag::from_str(
-          format!(
-            "{}::trusted_property::TrustedPropertyValue",
-            client.htf_package_id()
-          )
-          .as_str(),
+        let value_tag = TrustedPropertyValue::move_type(client.htf_package_id());
+
+        let property_names = trusted_property::new_property_name(
+          constraint.property_name,
+          &mut ptb,
+          client.htf_package_id(),
         )?;
 
-        let names = ptb.pure(constraint.property_name.names())?;
-        let property_names: Argument = ptb.programmable_move_call(
-          client.htf_package_id(),
-          ident_str!("trusted_property").into(),
-          ident_str!("new_property_name_from_vector").into(),
-          vec![],
-          vec![names],
-        );
-
         let allow_any = ptb.pure(constraint.allow_any)?;
+
         let allowed_values = constraint
           .allowed_values
-          .iter()
+          .into_iter()
           .map(|value| match value {
-            TrustedPropertyValue::Text(text) => {
-              let v = ptb.pure(text).expect("");
-              ptb.programmable_move_call(
-                client.htf_package_id(),
-                ident_str!("trusted_property").into(),
-                ident_str!("new_property_value_string").into(),
-                vec![],
-                vec![v],
-              )
-            }
+            TrustedPropertyValue::Text(text) => trusted_property::new_property_value_string(
+              text.to_string(),
+              &mut ptb,
+              client.htf_package_id(),
+            )
+            .expect("failed to create new property value string"),
             TrustedPropertyValue::Number(number) => {
-              let v = ptb.pure(number).expect("");
-              ptb.programmable_move_call(
-                client.htf_package_id(),
-                ident_str!("trusted_property").into(),
-                ident_str!("new_property_value_number").into(),
-                vec![],
-                vec![v],
-              )
+              trusted_property::new_property_value_number(number, &mut ptb, client.htf_package_id())
+                .expect("failed to create new property value number")
             }
           })
           .collect();
-        let allowed_values = ptb.command(Command::MakeMoveVec(
-          Some(property_value_tag.clone()),
-          allowed_values,
-        ));
 
-        let allowed_values = ptb.programmable_move_call(
+        let allowed_values = utils::create_vec_set_from_move_values(
+          allowed_values,
+          value_tag,
+          &mut ptb,
           client.htf_package_id(),
-          ident_str!("utils").into(),
-          ident_str!("create_vec_set").into(),
-          vec![property_value_tag],
-          vec![allowed_values],
         );
 
-        let property_expression_tag = TypeTag::from_str(
-          format!(
-            "{}::trusted_constraint::TrustedPropertyExpression",
-            client.htf_package_id()
-          )
-          .as_str(),
-        )?;
+        let property_expression_tag = TrustedPropertyExpression::move_type(client.htf_package_id());
 
         let expression = match constraint.expression {
           Some(expression) => {
@@ -393,44 +311,17 @@ pub(crate) mod ops {
               TypeTag::from_str(format!("{}::string::String", MOVE_STDLIB_PACKAGE_ID).as_str())?;
 
             let starts_with = match expression.as_starts_with() {
-              Some(value) => {
-                let v = ptb.pure(value.as_bytes())?;
-                ptb.programmable_move_call(
-                  MOVE_STDLIB_PACKAGE_ID,
-                  STD_UTF8_MODULE_NAME.into(),
-                  ident_str!("utf8").into(),
-                  vec![],
-                  vec![v],
-                )
-              }
+              Some(value) => utils::new_move_string(value, &mut ptb)?,
               None => utils::option_to_move::<String>(None, string_tag.clone(), &mut ptb)?,
             };
 
             let ends_with = match expression.as_ends_with() {
-              Some(value) => {
-                let v = ptb.pure(value.as_bytes())?;
-                ptb.programmable_move_call(
-                  MOVE_STDLIB_PACKAGE_ID,
-                  STD_UTF8_MODULE_NAME.into(),
-                  ident_str!("utf8").into(),
-                  vec![],
-                  vec![v],
-                )
-              }
+              Some(value) => utils::new_move_string(value, &mut ptb)?,
               None => utils::option_to_move::<String>(None, string_tag.clone(), &mut ptb)?,
             };
 
             let contains = match expression.as_contains() {
-              Some(value) => {
-                let v = ptb.pure(value.as_bytes())?;
-                ptb.programmable_move_call(
-                  MOVE_STDLIB_PACKAGE_ID,
-                  STD_UTF8_MODULE_NAME.into(),
-                  ident_str!("utf8").into(),
-                  vec![],
-                  vec![v],
-                )
-              }
+              Some(value) => utils::new_move_string(value, &mut ptb)?,
               None => utils::option_to_move::<String>(None, string_tag.clone(), &mut ptb)?,
             };
 
@@ -474,13 +365,9 @@ pub(crate) mod ops {
       }
 
       ptb.command(Command::MakeMoveVec(
-        Some(TypeTag::from_str(
-          format!(
-            "{}::trusted_constraint::TrustedPropertyConstraint",
-            client.htf_package_id()
-          )
-          .as_str(),
-        )?),
+        Some(TrustedPropertyConstraint::move_type(
+          client.htf_package_id(),
+        )),
         constraints,
       ))
     };
@@ -519,81 +406,47 @@ pub(crate) mod ops {
     let mut ptb = ProgrammableTransactionBuilder::new();
 
     let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
-    let fed_ref = ptb.obj(ObjectArg::SharedObject {
-      id: federation_id,
-      initial_shared_version: client.initial_shared_version(&federation_id).await?,
-      mutable: true,
-    })?;
+    let fed_ref = fed_ref(client, federation_id, &mut ptb).await?;
 
     let receiver_arg = ptb.pure(receiver)?;
 
     let want_property_constraints = {
       let mut constraints = vec![];
       for constraint in want_property_constraints {
-        let property_value_tag = TypeTag::from_str(
-          format!(
-            "{}::trusted_property::TrustedPropertyValue",
-            client.htf_package_id()
-          )
-          .as_str(),
-        )?;
+        let value_tag = TrustedPropertyValue::move_type(client.htf_package_id());
 
-        let names = ptb.pure(constraint.property_name.names())?;
-        let property_names: Argument = ptb.programmable_move_call(
+        let property_names = types::trusted_property::new_property_name(
+          constraint.property_name,
+          &mut ptb,
           client.htf_package_id(),
-          ident_str!("trusted_property").into(),
-          ident_str!("new_property_name_from_vector").into(),
-          vec![],
-          vec![names],
-        );
+        )?;
 
         let allow_any = ptb.pure(constraint.allow_any)?;
         let allowed_values = constraint
           .allowed_values
-          .iter()
+          .into_iter()
           .map(|value| match value {
-            TrustedPropertyValue::Text(text) => {
-              let v = ptb.pure(text).expect("");
-              ptb.programmable_move_call(
-                client.htf_package_id(),
-                ident_str!("trusted_property").into(),
-                ident_str!("new_property_value_string").into(),
-                vec![],
-                vec![v],
-              )
-            }
+            TrustedPropertyValue::Text(text) => trusted_property::new_property_value_string(
+              text.to_string(),
+              &mut ptb,
+              client.htf_package_id(),
+            )
+            .expect("failed to create new property value string"),
             TrustedPropertyValue::Number(number) => {
-              let v = ptb.pure(number).expect("");
-              ptb.programmable_move_call(
-                client.htf_package_id(),
-                ident_str!("trusted_property").into(),
-                ident_str!("new_property_value_number").into(),
-                vec![],
-                vec![v],
-              )
+              trusted_property::new_property_value_number(number, &mut ptb, client.htf_package_id())
+                .expect("failed to create new property value number")
             }
           })
           .collect();
-        let allowed_values = ptb.command(Command::MakeMoveVec(
-          Some(property_value_tag.clone()),
-          allowed_values,
-        ));
 
-        let allowed_values = ptb.programmable_move_call(
+        let allowed_values = utils::create_vec_set_from_move_values(
+          allowed_values,
+          value_tag,
+          &mut ptb,
           client.htf_package_id(),
-          ident_str!("utils").into(),
-          ident_str!("create_vec_set").into(),
-          vec![property_value_tag],
-          vec![allowed_values],
         );
 
-        let property_expression_tag = TypeTag::from_str(
-          format!(
-            "{}::trusted_constraint::TrustedPropertyExpression",
-            client.htf_package_id()
-          )
-          .as_str(),
-        )?;
+        let property_expression_tag = TrustedPropertyExpression::move_type(client.htf_package_id());
 
         let expression = match constraint.expression {
           Some(expression) => {
@@ -601,44 +454,17 @@ pub(crate) mod ops {
               TypeTag::from_str(format!("{}::string::String", MOVE_STDLIB_PACKAGE_ID).as_str())?;
 
             let starts_with = match expression.as_starts_with() {
-              Some(value) => {
-                let v = ptb.pure(value.as_bytes())?;
-                ptb.programmable_move_call(
-                  MOVE_STDLIB_PACKAGE_ID,
-                  STD_UTF8_MODULE_NAME.into(),
-                  ident_str!("utf8").into(),
-                  vec![],
-                  vec![v],
-                )
-              }
+              Some(value) => utils::new_move_string(value, &mut ptb)?,
               None => utils::option_to_move::<String>(None, string_tag.clone(), &mut ptb)?,
             };
 
             let ends_with = match expression.as_ends_with() {
-              Some(value) => {
-                let v = ptb.pure(value.as_bytes())?;
-                ptb.programmable_move_call(
-                  MOVE_STDLIB_PACKAGE_ID,
-                  STD_UTF8_MODULE_NAME.into(),
-                  ident_str!("utf8").into(),
-                  vec![],
-                  vec![v],
-                )
-              }
+              Some(value) => utils::new_move_string(value, &mut ptb)?,
               None => utils::option_to_move::<String>(None, string_tag.clone(), &mut ptb)?,
             };
 
             let contains = match expression.as_contains() {
-              Some(value) => {
-                let v = ptb.pure(value.as_bytes())?;
-                ptb.programmable_move_call(
-                  MOVE_STDLIB_PACKAGE_ID,
-                  STD_UTF8_MODULE_NAME.into(),
-                  ident_str!("utf8").into(),
-                  vec![],
-                  vec![v],
-                )
-              }
+              Some(value) => utils::new_move_string(value, &mut ptb)?,
               None => utils::option_to_move::<String>(None, string_tag.clone(), &mut ptb)?,
             };
 
@@ -682,13 +508,9 @@ pub(crate) mod ops {
       }
 
       ptb.command(Command::MakeMoveVec(
-        Some(TypeTag::from_str(
-          format!(
-            "{}::trusted_constraint::TrustedPropertyConstraint",
-            client.htf_package_id()
-          )
-          .as_str(),
-        )?),
+        Some(TrustedPropertyConstraint::move_type(
+          client.htf_package_id(),
+        )),
         constraints,
       ))
     };
@@ -728,11 +550,7 @@ pub(crate) mod ops {
     let mut ptb = ProgrammableTransactionBuilder::new();
 
     let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
-    let fed_ref = ptb.obj(ObjectArg::SharedObject {
-      id: federation_id,
-      initial_shared_version: client.initial_shared_version(&federation_id).await?,
-      mutable: true,
-    })?;
+    let fed_ref = fed_ref(client, federation_id, &mut ptb).await?;
 
     let user_id_arg = ptb.pure(user_id)?;
     let permission_id = ptb.pure(permission_id)?;
@@ -792,5 +610,25 @@ pub(crate) mod ops {
     }
 
     anyhow::bail!("no cap of type `{cap_type}`",)
+  }
+
+  /// Get the federation reference for the given federation id
+  ///
+  /// Since the federation is shared, we need to get the reference to it
+  /// to be able to pass it to the programmable transaction builder for other
+  /// operations
+  async fn fed_ref<S>(
+    client: &HTFClient<S>,
+    federation_id: ObjectID,
+    ptb: &mut ProgrammableTransactionBuilder,
+  ) -> anyhow::Result<Argument>
+  where
+    S: Signer<IotaKeySignature>,
+  {
+    ptb.obj(ObjectArg::SharedObject {
+      id: federation_id,
+      initial_shared_version: client.initial_shared_version(&federation_id).await?,
+      mutable: true,
+    })
   }
 }

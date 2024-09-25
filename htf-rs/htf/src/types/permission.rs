@@ -46,17 +46,26 @@ pub struct PermissionToAttest {
 }
 
 impl PermissionsToAttest {
-  pub fn are_values_permitted(&self, trusted_properties: &HashMap<TrustedPropertyName, TrustedPropertyValue>) -> bool {
+  pub fn are_values_permitted(
+    &self,
+    trusted_properties: &HashMap<TrustedPropertyName, TrustedPropertyValue>,
+  ) -> bool {
     trusted_properties
       .iter()
       .all(|(property_name, property_value)| self.is_value_permitted(property_name, property_value))
   }
 
-  pub fn is_value_permitted(&self, property_name: &TrustedPropertyName, property_value: &TrustedPropertyValue) -> bool {
+  pub fn is_value_permitted(
+    &self,
+    property_name: &TrustedPropertyName,
+    property_value: &TrustedPropertyValue,
+  ) -> bool {
     self
       .permissions
       .iter()
       .flat_map(|accreditation| accreditation.constraints.get(property_name))
-      .any(|property_constraint| property_constraint.matches_property(property_name, property_value))
+      .any(|property_constraint| {
+        property_constraint.matches_property(property_name, property_value)
+      })
   }
 }

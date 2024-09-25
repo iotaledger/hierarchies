@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use anyhow::Context;
 use examples::get_client;
 use htf::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue};

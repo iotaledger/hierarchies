@@ -43,9 +43,12 @@ impl TestClient {
 
     let address = signer.get_address()?;
 
-    client_commands::request_tokens_from_faucet(deployer_address.to_owned(), GAS_LOCAL_NETWORK.to_owned())
-      .await
-      .context("Failed to request tokens from faucet")?;
+    client_commands::request_tokens_from_faucet(
+      deployer_address.to_owned(),
+      GAS_LOCAL_NETWORK.to_owned(),
+    )
+    .await
+    .context("Failed to request tokens from faucet")?;
 
     client_commands::request_tokens_from_faucet(address.to_owned(), GAS_LOCAL_NETWORK.to_owned())
       .await
@@ -54,12 +57,13 @@ impl TestClient {
     // Sleep 1 second
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 
-    let package_id = if let Ok(id) = std::env::var("HTF_PKG_ID").or(get_cached_id(deployer_address).await) {
-      std::env::set_var("HTF_PKG_ID", id.clone());
-      id.parse()?
-    } else {
-      publish_package(deployer_address).await?
-    };
+    let package_id =
+      if let Ok(id) = std::env::var("HTF_PKG_ID").or(get_cached_id(deployer_address).await) {
+        std::env::set_var("HTF_PKG_ID", id.clone());
+        id.parse()?
+      } else {
+        publish_package(deployer_address).await?
+      };
 
     Ok(TestClient {
       client,
@@ -95,7 +99,9 @@ impl Deref for TestClient {
 
 async fn get_cached_id(active_address: IotaAddress) -> anyhow::Result<String> {
   let cache = tokio::fs::read_to_string(CACHED_PKG_ID).await?;
-  let (cached_id, cached_address) = cache.split_once(';').ok_or(anyhow!("Invalid or empty cached data"))?;
+  let (cached_id, cached_address) = cache
+    .split_once(';')
+    .ok_or(anyhow!("Invalid or empty cached data"))?;
 
   if cached_address == active_address.to_string().as_str() {
     Ok(cached_id.to_owned())
@@ -175,7 +181,10 @@ impl Default for TestMemSigner {
 #[async_trait::async_trait]
 impl SignerTrait<IotaKeySignature> for TestMemSigner {
   type KeyId = ();
-  async fn sign(&self, hash: &[u8]) -> secret_storage::Result<<IotaKeySignature as SignerSignatureScheme>::Signature> {
+  async fn sign(
+    &self,
+    hash: &[u8],
+  ) -> secret_storage::Result<<IotaKeySignature as SignerSignatureScheme>::Signature> {
     let address = self.0.get_address_by_alias(TEST_ALIAS.to_owned()).unwrap();
 
     let signature = self.0.sign_hashed(address, hash).unwrap();

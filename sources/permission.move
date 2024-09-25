@@ -2,8 +2,7 @@
 module htf::permission {
 
   use iota::vec_map::{VecMap, Self};
-  use iota::object::{ID, UID};
-  use iota::tx_context::TxContext;
+  
 
   use htf::permission_to_attest::{PermissionToAttest};
   use htf::permission_to_accredit::{PermissionToAccredit};
@@ -13,7 +12,7 @@ module htf::permission {
     permissions_to_accredit : VecMap<ID, vector<PermissionToAccredit>>,
   }
 
-  public(package) fun empty(_ctx :&mut TxContext) : Permissions {
+  public(package) fun empty() : Permissions {
     Permissions {
       attestations : vec_map::empty(),
       permissions_to_accredit : vec_map::empty(),

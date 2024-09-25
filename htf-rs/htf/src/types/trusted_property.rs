@@ -1,4 +1,13 @@
+use std::str::FromStr;
+
+use iota_sdk::types::base_types::ObjectID;
+use iota_sdk::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
+use iota_sdk::types::transaction::Argument;
+use iota_sdk::types::TypeTag;
+use move_core_types::ident_str;
 use serde::{Deserialize, Serialize};
+
+use crate::utils::MoveType;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct TrustedPropertyName {
@@ -32,6 +41,32 @@ impl TrustedPropertyName {
   }
 }
 
+/// Creates a new move type for a trusted property name
+///
+pub fn new_property_name(
+  name: TrustedPropertyName,
+  ptb: &mut ProgrammableTransactionBuilder,
+  package_id: ObjectID,
+) -> anyhow::Result<Argument> {
+  let names = ptb.pure(name.names())?;
+  let property_names: Argument = ptb.programmable_move_call(
+    package_id,
+    ident_str!("trusted_property").into(),
+    ident_str!("new_property_name_from_vector").into(),
+    vec![],
+    vec![names],
+  );
+
+  Ok(property_names)
+}
+
+impl MoveType for TrustedPropertyName {
+  fn move_type(package: ObjectID) -> TypeTag {
+    TypeTag::from_str(format!("{}::trusted_property::TrustedPropertyName", package).as_str())
+      .expect("Failed to create type tag")
+  }
+}
+
 #[derive(Debug, Clone, PartialEq, Hash, Eq, Serialize, Deserialize)]
 pub(crate) struct TrustedPropertyValueMove {
   pub text: Option<String>,
@@ -43,6 +78,45 @@ pub(crate) struct TrustedPropertyValueMove {
 pub enum TrustedPropertyValue {
   Text(String),
   Number(u64),
+}
+
+/// Creates a new move type for a trusted property value string
+pub fn new_property_value_string(
+  value: String,
+  ptb: &mut ProgrammableTransactionBuilder,
+  package_id: ObjectID,
+) -> anyhow::Result<Argument> {
+  let v = ptb.pure(value)?;
+  Ok(ptb.programmable_move_call(
+    package_id,
+    ident_str!("trusted_property").into(),
+    ident_str!("new_property_value_string").into(),
+    vec![],
+    vec![v],
+  ))
+}
+
+/// Creates a new move type for a trusted property value number
+pub fn new_property_value_number(
+  value: u64,
+  ptb: &mut ProgrammableTransactionBuilder,
+  package_id: ObjectID,
+) -> anyhow::Result<Argument> {
+  let v = ptb.pure(value)?;
+  Ok(ptb.programmable_move_call(
+    package_id,
+    ident_str!("trusted_property").into(),
+    ident_str!("new_property_value_number").into(),
+    vec![],
+    vec![v],
+  ))
+}
+
+impl MoveType for TrustedPropertyValue {
+  fn move_type(package: ObjectID) -> TypeTag {
+    TypeTag::from_str(format!("{}::trusted_property::TrustedPropertyValue", package).as_str())
+      .expect("Failed to create type tag")
+  }
 }
 
 impl From<String> for TrustedPropertyValue {

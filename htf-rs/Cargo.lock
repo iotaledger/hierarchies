@@ -3549,6 +3549,7 @@ dependencies = [
  "serde",
  "serde_json",
  "shared-crypto",
+ "strum",
  "tokio",
 ]
 

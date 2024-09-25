@@ -12,7 +12,6 @@ use iota_sdk::types::crypto::{DefaultHash, Signature, SignatureScheme};
 use iota_sdk::types::quorum_driver_types::ExecuteTransactionRequestType;
 use iota_sdk::types::transaction::{ProgrammableTransaction, Transaction, TransactionData};
 use secret_storage::Signer;
-use serde_json::map::IntoIter;
 use shared_crypto::intent::{Intent, IntentMessage};
 
 use super::HTFClientReadOnly;
