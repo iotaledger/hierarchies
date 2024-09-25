@@ -1,4 +1,4 @@
-mod cap;
+pub mod cap;
 pub mod event;
 pub mod permission;
 pub mod trusted_constraints;

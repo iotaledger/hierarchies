@@ -21,6 +21,8 @@ use crate::types::trusted_property;
 use crate::utils::{self, MoveType};
 
 pub(crate) mod ops {
+  use crate::types::cap::Capability;
+
   use super::*;
 
   pub async fn create_new_federation<S>(
@@ -75,7 +77,7 @@ pub(crate) mod ops {
     let cap = get_cap(
       client,
       "main",
-      "RootAuthorityCap",
+      Capability::RootAuthority,
       Some(client.sender_address()),
     )
     .await?;
@@ -141,7 +143,7 @@ pub(crate) mod ops {
     let cap = get_cap(
       client,
       "main",
-      "RootAuthorityCap",
+      Capability::RootAuthority,
       Some(client.sender_address()),
     )
     .await?;
@@ -176,7 +178,7 @@ pub(crate) mod ops {
   where
     S: Signer<IotaKeySignature>,
   {
-    let cap = get_cap(client, "main", "AttestCap", None).await?;
+    let cap = get_cap(client, "main", Capability::Attest, None).await?;
 
     let mut ptb = ProgrammableTransactionBuilder::new();
 
@@ -213,7 +215,7 @@ pub(crate) mod ops {
     let cap = get_cap(
       client,
       "main",
-      "RootAuthorityCap",
+      Capability::RootAuthority,
       Some(client.sender_address()),
     )
     .await?;
@@ -239,7 +241,7 @@ pub(crate) mod ops {
 
     let address: IotaAddress = account_id.into();
 
-    let Ok(_) = get_cap(client, "main", "RootAuthorityCap", Some(address)).await else {
+    let Ok(_) = get_cap(client, "main", Capability::RootAuthority, Some(address)).await else {
       anyhow::bail!("failed to get new authority");
     };
 
@@ -256,7 +258,7 @@ pub(crate) mod ops {
   where
     S: Signer<IotaKeySignature>,
   {
-    let cap = get_cap(client, "main", "AccreditCap", None).await?;
+    let cap = get_cap(client, "main", Capability::Accredit, None).await?;
 
     let mut ptb = ProgrammableTransactionBuilder::new();
 
@@ -283,7 +285,7 @@ pub(crate) mod ops {
 
     client.execute_transaction(tx, gas_budget).await?;
 
-    let Ok(_) = get_cap(client, "main", "AccreditCap", Some(receiver.into())).await else {
+    let Ok(_) = get_cap(client, "main", Capability::Accredit, Some(receiver.into())).await else {
       anyhow::bail!("failed to get new accredit");
     };
 
@@ -300,7 +302,7 @@ pub(crate) mod ops {
   where
     S: Signer<IotaKeySignature>,
   {
-    let cap = get_cap(client, "main", "AttestCap", None).await?;
+    let cap = get_cap(client, "main", Capability::Attest, None).await?;
 
     let mut ptb = ProgrammableTransactionBuilder::new();
 
@@ -328,7 +330,7 @@ pub(crate) mod ops {
     client.execute_transaction(tx, gas_budget).await?;
 
     // Check if the ID has AttestCap
-    let Ok(_) = get_cap(client, "main", "AttestCap", Some(receiver.into())).await else {
+    let Ok(_) = get_cap(client, "main", Capability::Attest, Some(receiver.into())).await else {
       anyhow::bail!("failed to get new accredit");
     };
 
@@ -345,7 +347,7 @@ pub(crate) mod ops {
   where
     S: Signer<IotaKeySignature>,
   {
-    let cap = get_cap(client, "main", "AccreditCap", None).await?;
+    let cap = get_cap(client, "main", Capability::Accredit, None).await?;
 
     let mut ptb = ProgrammableTransactionBuilder::new();
 
@@ -374,7 +376,7 @@ pub(crate) mod ops {
   async fn get_cap<S>(
     client: &HTFClient<S>,
     module: &str,
-    cap_type: &str,
+    cap_type: Capability,
     address: Option<IotaAddress>,
   ) -> anyhow::Result<ObjectRef>
   where

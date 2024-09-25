@@ -22,6 +22,9 @@ pub struct Permission {
 }
 
 impl Permissions {
+  /// Checks if all the values in the provided `trusted_properties` map are
+  /// permitted
+  /// according to the permissions defined in this `Permissions` instance.
   pub fn are_values_permitted(
     &self,
     trusted_properties: &HashMap<TrustedPropertyName, TrustedPropertyValue>,
@@ -31,6 +34,9 @@ impl Permissions {
       .all(|(property_name, property_value)| self.is_value_permitted(property_name, property_value))
   }
 
+  /// Checks if the given `property_value` is permitted according to the
+  /// constraints
+  /// defined in the `Permissions` instance.
   pub fn is_value_permitted(
     &self,
     property_name: &TrustedPropertyName,
