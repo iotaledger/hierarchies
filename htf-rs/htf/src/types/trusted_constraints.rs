@@ -1,12 +1,15 @@
 use std::collections::{HashMap, HashSet};
 use std::str::FromStr;
 
-use iota_sdk::types::base_types::ObjectID;
-use iota_sdk::types::TypeTag;
+use iota_sdk::types::base_types::{ObjectID, STD_OPTION_MODULE_NAME};
+use iota_sdk::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
+use iota_sdk::types::transaction::{Argument, Command};
+use iota_sdk::types::{TypeTag, MOVE_STDLIB_PACKAGE_ID};
+use move_core_types::ident_str;
 use serde::{Deserialize, Serialize};
 
-use super::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
-use crate::utils::{deserialize_vec_map, deserialize_vec_set, MoveType};
+use super::trusted_property::{self, TrustedPropertyName, TrustedPropertyValue};
+use crate::utils::{self, deserialize_vec_map, deserialize_vec_set, MoveType};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TrustedPropertyConstraints {
@@ -226,4 +229,100 @@ impl MoveType for TrustedPropertyConstraint {
 pub struct Timespan {
   pub valid_from_ms: Option<u64>,
   pub valid_until_ms: Option<u64>,
+}
+
+/// Creates a new move type for a trusted property constraint
+pub(crate) fn create_property_constraints(
+  package_id: ObjectID,
+  ptb: &mut ProgrammableTransactionBuilder,
+  constraints: Vec<TrustedPropertyConstraint>,
+) -> anyhow::Result<Argument> {
+  let mut constraint_args = vec![];
+  for constraint in constraints {
+    let value_tag = TrustedPropertyValue::move_type(package_id);
+
+    let property_names =
+      trusted_property::new_property_name(constraint.property_name, ptb, package_id)?;
+
+    let allow_any = ptb.pure(constraint.allow_any)?;
+
+    let allowed_values = constraint
+      .allowed_values
+      .into_iter()
+      .map(|value| match value {
+        TrustedPropertyValue::Text(text) => {
+          trusted_property::new_property_value_string(text.to_string(), ptb, package_id)
+            .expect("failed to create new property value string")
+        }
+        TrustedPropertyValue::Number(number) => {
+          trusted_property::new_property_value_number(number, ptb, package_id)
+            .expect("failed to create new property value number")
+        }
+      })
+      .collect();
+
+    let allowed_values =
+      utils::create_vec_set_from_move_values(allowed_values, value_tag, ptb, package_id);
+
+    let property_expression_tag = TrustedPropertyExpression::move_type(package_id);
+
+    let expression = match constraint.expression {
+      Some(expression) => {
+        let string_tag =
+          TypeTag::from_str(format!("{}::string::String", MOVE_STDLIB_PACKAGE_ID).as_str())?;
+
+        let starts_with = match expression.as_starts_with() {
+          Some(value) => utils::new_move_string(value, ptb)?,
+          None => utils::option_to_move::<String>(None, string_tag.clone(), ptb)?,
+        };
+
+        let ends_with = match expression.as_ends_with() {
+          Some(value) => utils::new_move_string(value, ptb)?,
+          None => utils::option_to_move::<String>(None, string_tag.clone(), ptb)?,
+        };
+
+        let contains = match expression.as_contains() {
+          Some(value) => utils::new_move_string(value, ptb)?,
+          None => utils::option_to_move::<String>(None, string_tag.clone(), ptb)?,
+        };
+
+        let greater_than = utils::option_to_move(expression.as_greater_than(), TypeTag::U64, ptb)?;
+        let lower_than = utils::option_to_move(expression.as_lower_than(), TypeTag::U64, ptb)?;
+
+        let arg = ptb.programmable_move_call(
+          package_id,
+          ident_str!("trusted_constraint").into(),
+          ident_str!("new_trusted_property_expression").into(),
+          vec![],
+          vec![starts_with, ends_with, contains, greater_than, lower_than],
+        );
+
+        ptb.programmable_move_call(
+          MOVE_STDLIB_PACKAGE_ID,
+          STD_OPTION_MODULE_NAME.into(),
+          ident_str!("some").into(),
+          vec![property_expression_tag],
+          vec![arg],
+        )
+      }
+
+      None => {
+        utils::option_to_move::<TrustedPropertyConstraint>(None, property_expression_tag, ptb)?
+      }
+    };
+
+    let constraint = ptb.programmable_move_call(
+      package_id,
+      ident_str!("trusted_constraint").into(),
+      ident_str!("new_trusted_property_constraint").into(),
+      vec![],
+      vec![property_names, allowed_values, allow_any, expression],
+    );
+    constraint_args.push(constraint);
+  }
+
+  Ok(ptb.command(Command::MakeMoveVec(
+    Some(TrustedPropertyConstraint::move_type(package_id)),
+    constraint_args,
+  )))
 }
