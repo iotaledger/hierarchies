@@ -7,7 +7,7 @@ use htf::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
 use htf::types::Federation;
 use iota_sdk::types::base_types::ObjectID;
 
-/// Demonstrate how to issue a permission to accredit to a trusted property.
+/// Demonstrate how to issue a permission to attest to a trusted property.
 ///
 /// In this example we connect to a locally running private network, but it can
 /// be adapted to run on any IOTA node by setting the network and faucet
@@ -15,26 +15,26 @@ use iota_sdk::types::base_types::ObjectID;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
   // Get the client instance
-  let htf_client = get_client().await?;
+  let client = get_client().await?;
 
   // Create new federation
-  let federation = htf_client.new_federation(None).await?;
+  let federation = client.new_federation(None).await?;
 
   // Federation ID
   let federation_id = *federation.id.object_id();
 
   // Trusted property name
-  let property_name = TrustedPropertyName::new(vec!["Example LTD".to_string()]);
+  let property_name = TrustedPropertyName::from("Example LTD");
 
   // Trusted property value
-  let value = TrustedPropertyValue::Text("Hello".to_owned());
+  let value = TrustedPropertyValue::from("Hello");
 
   let allowed_values = HashSet::from_iter([value]);
 
   println!("Adding trusted property");
 
   // Add the trusted property to the federation
-  htf_client
+  client
     .add_trusted_property(
       federation_id,
       property_name.clone(),
@@ -47,7 +47,7 @@ async fn main() -> anyhow::Result<()> {
 
   println!("Added trusted property");
 
-  // A receiver is an account that will receive the accreditation
+  // A receiver is an account that will receive the attestation
   let receiver = ObjectID::random();
 
   // Property constraints
@@ -59,17 +59,17 @@ async fn main() -> anyhow::Result<()> {
     timespan: Timespan::default(),
   };
 
-  // Let us issue a permission to accredit to the trusted property
-  htf_client
-    .issue_permission_to_accredit(federation_id, receiver, vec![constraints.clone()], None)
+  // Let us issue a permission to attest to the trusted property
+  client
+    .create_attestation(federation_id, receiver, vec![constraints.clone()], None)
     .await
     .context("Failed to issue permission to attest")?;
 
   // Issue permission to the original account
-  htf_client
-    .issue_permission_to_accredit(
+  client
+    .create_attestation(
       federation_id,
-      htf_client.sender_address().into(),
+      client.sender_address().into(),
       vec![constraints],
       None,
     )
@@ -79,35 +79,35 @@ async fn main() -> anyhow::Result<()> {
   println!("Issued permission to attest");
 
   // Check if the permission was issued
-  let federation: Federation = htf_client.get_object_by_id(federation_id).await?;
+  let federation: Federation = client.get_object_by_id(federation_id).await?;
 
-  // Check if the receiver has the permission to accredit
-  let can_accredit = federation.governance.accreditors.contains_key(&receiver);
+  // Check if the receiver has the permission to attest
+  let can_attest = federation.governance.attesters.contains_key(&receiver);
 
-  assert!(can_accredit);
+  assert!(can_attest);
 
   // Revoke the permission
-  let permissions = htf_client
+  let permissions = client
     .onchain(federation_id)
-    .find_permissions_to_accredit(receiver)
+    .get_attestations(receiver)
     .await
-    .context("Failed to find permission to accredit")?;
+    .context("Failed to find permission to attest")?;
 
   let permission_id = permissions.permissions[0].id.object_id();
 
-  htf_client
-    .revoke_permission_to_accredit(federation_id, receiver, *permission_id, None)
+  client
+    .revoke_attestation(federation_id, receiver, *permission_id, None)
     .await
-    .context("Failed to revoke permission to accredit")?;
+    .context("Failed to revoke permission to attest")?;
 
   // Check if the permission was revoked
-  let federation: Federation = htf_client.get_object_by_id(federation_id).await?;
+  let federation: Federation = client.get_object_by_id(federation_id).await?;
 
   println!("Federation: {:#?}", federation);
 
-  // Check if the receiver has the permission to accredit
-  let can_accredit = federation.governance.accreditors.get(&receiver).unwrap();
+  // Check if the receiver has the permission to attest
+  let can_attest = federation.governance.attesters.get(&receiver).unwrap();
 
-  assert!(can_accredit.permissions.is_empty());
+  assert!(can_attest.permissions.is_empty());
   Ok(())
 }

@@ -23,16 +23,16 @@ async fn main() -> anyhow::Result<()> {
 
   let user_id = htf_client.sender_address().into();
 
-  let permissions = htf_client
+  let attestations = htf_client
     .offchain(*federation_id)
     .await?
-    .find_permissions_to_attest(user_id);
+    .get_attestations(user_id);
 
-  println!("Permissions: {:#?}", permissions);
+  println!("Permissions: {:#?}", attestations);
 
   //   Add trusted property
-  let property_name = TrustedPropertyName::new(vec!["Example LTD".to_string()]);
-  let value = TrustedPropertyValue::Text("Hello".to_owned());
+  let property_name = TrustedPropertyName::from("Example LTD");
+  let value = TrustedPropertyValue::from("Hello");
   let allowed_values = HashSet::from_iter([value]);
 
   htf_client
@@ -61,38 +61,38 @@ async fn main() -> anyhow::Result<()> {
   // Let us issue a permission to attest to the trusted property
   {
     htf_client
-      .issue_permission_to_attest(*federation_id, receiver, vec![constraints.clone()], None)
+      .create_attestation(*federation_id, receiver, vec![constraints.clone()], None)
       .await
       .context("Failed to issue permission to attest")?;
   }
 
   // Check if the permission was issued
-  let permissions = htf_client
+  let attestations = htf_client
     .offchain(*federation_id)
     .await?
-    .find_permissions_to_attest(receiver)
+    .get_attestations(receiver)
     .context("Failed to find permission to attest")?;
 
-  assert!(permissions.permissions.len() == 1);
+  assert!(attestations.permissions.len() == 1);
 
-  println!("Permissions: {:#?}", permissions);
+  println!("Permissions: {:#?}", attestations);
 
   // Issue Accredit permission
   {
     htf_client
-      .issue_permission_to_accredit(*federation_id, receiver, vec![constraints], None)
+      .create_accreditation(*federation_id, receiver, vec![constraints], None)
       .await
       .context("Failed to issue permission to accredit")?;
   }
 
   // Check if the permission was issued
-  let permissions = htf_client
+  let accreditations = htf_client
     .offchain(*federation_id)
     .await?
-    .find_permissions_to_accredit(receiver)
+    .get_accreditations(receiver)
     .context("Failed to find permission to accredit")?;
 
-  assert!(permissions.permissions.len() == 1);
+  assert!(accreditations.permissions.len() == 1);
 
   Ok(())
 }

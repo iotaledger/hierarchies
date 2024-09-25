@@ -7,7 +7,7 @@ use htf::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
 use htf::types::Federation;
 use iota_sdk::types::base_types::ObjectID;
 
-/// Demonstrate how to issue a permission to attest to a trusted property.
+/// Demonstrate how to issue a permission to accredit to a trusted property.
 ///
 /// In this example we connect to a locally running private network, but it can
 /// be adapted to run on any IOTA node by setting the network and faucet
@@ -24,10 +24,10 @@ async fn main() -> anyhow::Result<()> {
   let federation_id = *federation.id.object_id();
 
   // Trusted property name
-  let property_name = TrustedPropertyName::new(vec!["Example LTD".to_string()]);
+  let property_name = TrustedPropertyName::from("Example LTD");
 
   // Trusted property value
-  let value = TrustedPropertyValue::Text("Hello".to_owned());
+  let value = TrustedPropertyValue::from("Hello");
 
   let allowed_values = HashSet::from_iter([value]);
 
@@ -47,7 +47,7 @@ async fn main() -> anyhow::Result<()> {
 
   println!("Added trusted property");
 
-  // A receiver is an account that will receive the attestation
+  // A receiver is an account that will receive the accreditation
   let receiver = ObjectID::random();
 
   // Property constraints
@@ -59,9 +59,9 @@ async fn main() -> anyhow::Result<()> {
     timespan: Timespan::default(),
   };
 
-  // Let us issue a permission to attest to the trusted property
+  // Let us issue a permission to accredit to the trusted property
   htf_client
-    .issue_permission_to_attest(federation_id, receiver, vec![constraints], None)
+    .create_accreditation(federation_id, receiver, vec![constraints], None)
     .await
     .context("Failed to issue permission to attest")?;
 
@@ -72,10 +72,10 @@ async fn main() -> anyhow::Result<()> {
 
   println!("Federation: {:#?}", federation);
 
-  // Check if the receiver has the permission to attest
-  let trusted_properties = federation.governance.attesters.contains_key(&receiver);
+  // Check if the receiver has the permission to accredit
+  let can_accredit = federation.governance.accreditors.contains_key(&receiver);
 
-  assert!(trusted_properties);
+  assert!(can_accredit);
 
   Ok(())
 }

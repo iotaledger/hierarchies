@@ -23,7 +23,10 @@ pub(crate) mod ops {
   use crate::types::trusted_constraints::TrustedPropertyConstraint;
   use crate::utils;
 
-  pub async fn create_new_federation<S>(client: &HTFClient<S>, gas_budget: Option<u64>) -> anyhow::Result<ObjectID>
+  pub async fn create_new_federation<S>(
+    client: &HTFClient<S>,
+    gas_budget: Option<u64>,
+  ) -> anyhow::Result<ObjectID>
   where
     S: Signer<IotaKeySignature>,
   {
@@ -69,7 +72,13 @@ pub(crate) mod ops {
   {
     let mut ptb = ProgrammableTransactionBuilder::new();
 
-    let cap = get_cap(client, "main", "RootAuthorityCap", Some(client.sender_address())).await?;
+    let cap = get_cap(
+      client,
+      "main",
+      "RootAuthorityCap",
+      Some(client.sender_address()),
+    )
+    .await?;
 
     let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
 
@@ -89,8 +98,13 @@ pub(crate) mod ops {
       vec![names],
     );
 
-    let tag =
-      TypeTag::from_str(format!("{}::trusted_property::TrustedPropertyValue", client.htf_package_id()).as_str())?;
+    let tag = TypeTag::from_str(
+      format!(
+        "{}::trusted_property::TrustedPropertyValue",
+        client.htf_package_id()
+      )
+      .as_str(),
+    )?;
 
     let mut values_of_property = vec![];
     for property_value in allowed_values {
@@ -156,7 +170,13 @@ pub(crate) mod ops {
   {
     let mut ptb = ProgrammableTransactionBuilder::new();
 
-    let cap = get_cap(client, "main", "RootAuthorityCap", Some(client.sender_address())).await?;
+    let cap = get_cap(
+      client,
+      "main",
+      "RootAuthorityCap",
+      Some(client.sender_address()),
+    )
+    .await?;
 
     let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
     let fed_ref = ptb.obj(ObjectArg::SharedObject {
@@ -188,7 +208,7 @@ pub(crate) mod ops {
 
     Ok(())
   }
-  pub async fn revoke_permission_to_attest<S>(
+  pub async fn revoke_attestation<S>(
     client: &HTFClient<S>,
     federation_id: ObjectID,
     user_id: ObjectID,
@@ -215,7 +235,7 @@ pub(crate) mod ops {
     ptb.programmable_move_call(
       client.htf_package_id(),
       ident_str!("main").into(),
-      ident_str!("revoke_permission_to_attest").into(),
+      ident_str!("revoke_attestation").into(),
       vec![],
       vec![fed_ref, cap, user_id_arg, permission_id],
     );
@@ -236,7 +256,13 @@ pub(crate) mod ops {
   where
     S: Signer<IotaKeySignature>,
   {
-    let cap = get_cap(client, "main", "RootAuthorityCap", Some(client.sender_address())).await?;
+    let cap = get_cap(
+      client,
+      "main",
+      "RootAuthorityCap",
+      Some(client.sender_address()),
+    )
+    .await?;
 
     let mut ptb = ProgrammableTransactionBuilder::new();
 
@@ -270,7 +296,7 @@ pub(crate) mod ops {
     Ok(())
   }
 
-  pub async fn issue_permission_to_accredit<S>(
+  pub async fn create_accreditation<S>(
     client: &HTFClient<S>,
     federation_id: ObjectID,
     receiver: ObjectID,
@@ -296,8 +322,13 @@ pub(crate) mod ops {
     let want_property_constraints = {
       let mut constraints = vec![];
       for constraint in want_property_constraints {
-        let property_value_tag =
-          TypeTag::from_str(format!("{}::trusted_property::TrustedPropertyValue", client.htf_package_id()).as_str())?;
+        let property_value_tag = TypeTag::from_str(
+          format!(
+            "{}::trusted_property::TrustedPropertyValue",
+            client.htf_package_id()
+          )
+          .as_str(),
+        )?;
 
         let names = ptb.pure(constraint.property_name.names())?;
         let property_names: Argument = ptb.programmable_move_call(
@@ -335,7 +366,10 @@ pub(crate) mod ops {
             }
           })
           .collect();
-        let allowed_values = ptb.command(Command::MakeMoveVec(Some(property_value_tag.clone()), allowed_values));
+        let allowed_values = ptb.command(Command::MakeMoveVec(
+          Some(property_value_tag.clone()),
+          allowed_values,
+        ));
 
         let allowed_values = ptb.programmable_move_call(
           client.htf_package_id(),
@@ -355,7 +389,8 @@ pub(crate) mod ops {
 
         let expression = match constraint.expression {
           Some(expression) => {
-            let string_tag = TypeTag::from_str(format!("{}::string::String", MOVE_STDLIB_PACKAGE_ID).as_str())?;
+            let string_tag =
+              TypeTag::from_str(format!("{}::string::String", MOVE_STDLIB_PACKAGE_ID).as_str())?;
 
             let starts_with = match expression.as_starts_with() {
               Some(value) => {
@@ -399,8 +434,10 @@ pub(crate) mod ops {
               None => utils::option_to_move::<String>(None, string_tag.clone(), &mut ptb)?,
             };
 
-            let greater_than = utils::option_to_move(expression.as_greater_than(), TypeTag::U64, &mut ptb)?;
-            let lower_than = utils::option_to_move(expression.as_lower_than(), TypeTag::U64, &mut ptb)?;
+            let greater_than =
+              utils::option_to_move(expression.as_greater_than(), TypeTag::U64, &mut ptb)?;
+            let lower_than =
+              utils::option_to_move(expression.as_lower_than(), TypeTag::U64, &mut ptb)?;
 
             let arg = ptb.programmable_move_call(
               client.htf_package_id(),
@@ -419,7 +456,11 @@ pub(crate) mod ops {
             )
           }
 
-          None => utils::option_to_move::<TrustedPropertyConstraint>(None, property_expression_tag, &mut ptb)?,
+          None => utils::option_to_move::<TrustedPropertyConstraint>(
+            None,
+            property_expression_tag,
+            &mut ptb,
+          )?,
         };
 
         let constraint = ptb.programmable_move_call(
@@ -447,7 +488,7 @@ pub(crate) mod ops {
     ptb.programmable_move_call(
       client.htf_package_id(),
       ident_str!("main").into(),
-      ident_str!("issue_permission_to_accredit").into(),
+      ident_str!("create_accreditation").into(),
       vec![],
       vec![fed_ref, cap, receiver_arg, want_property_constraints],
     );
@@ -463,7 +504,7 @@ pub(crate) mod ops {
     Ok(())
   }
 
-  pub async fn issue_permission_to_attest<S>(
+  pub async fn create_attestation<S>(
     client: &HTFClient<S>,
     federation_id: ObjectID,
     receiver: ObjectID,
@@ -489,8 +530,13 @@ pub(crate) mod ops {
     let want_property_constraints = {
       let mut constraints = vec![];
       for constraint in want_property_constraints {
-        let property_value_tag =
-          TypeTag::from_str(format!("{}::trusted_property::TrustedPropertyValue", client.htf_package_id()).as_str())?;
+        let property_value_tag = TypeTag::from_str(
+          format!(
+            "{}::trusted_property::TrustedPropertyValue",
+            client.htf_package_id()
+          )
+          .as_str(),
+        )?;
 
         let names = ptb.pure(constraint.property_name.names())?;
         let property_names: Argument = ptb.programmable_move_call(
@@ -528,7 +574,10 @@ pub(crate) mod ops {
             }
           })
           .collect();
-        let allowed_values = ptb.command(Command::MakeMoveVec(Some(property_value_tag.clone()), allowed_values));
+        let allowed_values = ptb.command(Command::MakeMoveVec(
+          Some(property_value_tag.clone()),
+          allowed_values,
+        ));
 
         let allowed_values = ptb.programmable_move_call(
           client.htf_package_id(),
@@ -548,7 +597,8 @@ pub(crate) mod ops {
 
         let expression = match constraint.expression {
           Some(expression) => {
-            let string_tag = TypeTag::from_str(format!("{}::string::String", MOVE_STDLIB_PACKAGE_ID).as_str())?;
+            let string_tag =
+              TypeTag::from_str(format!("{}::string::String", MOVE_STDLIB_PACKAGE_ID).as_str())?;
 
             let starts_with = match expression.as_starts_with() {
               Some(value) => {
@@ -592,8 +642,10 @@ pub(crate) mod ops {
               None => utils::option_to_move::<String>(None, string_tag.clone(), &mut ptb)?,
             };
 
-            let greater_than = utils::option_to_move(expression.as_greater_than(), TypeTag::U64, &mut ptb)?;
-            let lower_than = utils::option_to_move(expression.as_lower_than(), TypeTag::U64, &mut ptb)?;
+            let greater_than =
+              utils::option_to_move(expression.as_greater_than(), TypeTag::U64, &mut ptb)?;
+            let lower_than =
+              utils::option_to_move(expression.as_lower_than(), TypeTag::U64, &mut ptb)?;
 
             let arg = ptb.programmable_move_call(
               client.htf_package_id(),
@@ -612,7 +664,11 @@ pub(crate) mod ops {
             )
           }
 
-          None => utils::option_to_move::<TrustedPropertyConstraint>(None, property_expression_tag, &mut ptb)?,
+          None => utils::option_to_move::<TrustedPropertyConstraint>(
+            None,
+            property_expression_tag,
+            &mut ptb,
+          )?,
         };
 
         let constraint = ptb.programmable_move_call(
@@ -640,7 +696,7 @@ pub(crate) mod ops {
     ptb.programmable_move_call(
       client.htf_package_id(),
       ident_str!("main").into(),
-      ident_str!("issue_permission_to_attest").into(),
+      ident_str!("create_attestation").into(),
       vec![],
       vec![fed_ref, cap, receiver_arg, want_property_constraints],
     );
@@ -657,7 +713,7 @@ pub(crate) mod ops {
     Ok(())
   }
 
-  pub async fn revoke_permission_to_accredit<S>(
+  pub async fn revoke_accreditation<S>(
     client: &HTFClient<S>,
     federation_id: ObjectID,
     user_id: ObjectID,
@@ -684,7 +740,7 @@ pub(crate) mod ops {
     ptb.programmable_move_call(
       client.htf_package_id(),
       ident_str!("main").into(),
-      ident_str!("revoke_permission_to_accredit").into(),
+      ident_str!("revoke_accreditation").into(),
       vec![],
       vec![fed_ref, cap, user_id_arg, permission_id],
     );
@@ -706,9 +762,13 @@ pub(crate) mod ops {
   where
     S: Signer<IotaKeySignature>,
   {
-    let cap_tag = StructTag::from_str(&format!("{}::{module}::{cap_type}", client.htf_package_id()))?;
+    let cap_tag = StructTag::from_str(&format!(
+      "{}::{module}::{cap_type}",
+      client.htf_package_id()
+    ))?;
 
-    let filter = IotaObjectResponseQuery::new_with_filter(IotaObjectDataFilter::StructType(cap_tag));
+    let filter =
+      IotaObjectResponseQuery::new_with_filter(IotaObjectDataFilter::StructType(cap_tag));
 
     let mut cursor = None;
     loop {

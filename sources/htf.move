@@ -3,6 +3,9 @@ module htf::main {
   use iota::vec_map::{Self, VecMap};
   use iota::event;
   use iota::vec_set::{VecSet};
+  use iota::object::{Self, UID, ID};
+  use iota::transfer::{Self};
+  use iota::tx_context::{TxContext};
 
   use htf::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
   use htf::trusted_constraint::{Self, TrustedPropertyConstraints, TrustedPropertyConstraint};
@@ -115,29 +118,29 @@ module htf::main {
     self.id.to_inner()
   }
 
-  public fun get_federation_properties(self : &Federation) : vector<TrustedPropertyName> {
+  public fun get_trusted_properties(self : &Federation) : vector<TrustedPropertyName> {
     self.governance.trusted_constraints.data().keys()
   }
 
-  public fun has_federation_property(self : &Federation, property_name : TrustedPropertyName) : bool {
+  public fun is_trusted_property(self : &Federation, property_name : TrustedPropertyName) : bool {
     self.governance.trusted_constraints.data().contains(&property_name)
   }
 
-  public fun find_permissions_to_attest(self: &Federation, user_id : &ID)  :  &PermissionsToAttest {
+  public fun get_attestations(self: &Federation, user_id : &ID)  :  &PermissionsToAttest {
       self.governance.attesters.get(user_id)
   }
 
 
-  public fun has_permissions_to_attest(self : &Federation, user_id : &ID)  : bool {
+  public fun is_attester(self : &Federation, user_id : &ID)  : bool {
     self.governance.attesters.contains(user_id)
   }
 
-  public fun find_permissions_to_accredit(self : &Federation, user_id : &ID) : &PermissionsToAccredit {
+  public fun get_accreditations(self : &Federation, user_id : &ID) : &PermissionsToAccredit {
     self.governance.accreditors.get(user_id)
   }
 
 
-  public fun has_permissions_to_accredit(self : &Federation, user_id :&ID)  : bool {
+  public fun is_accreditor(self : &Federation, user_id :&ID)  : bool {
     self.governance.accreditors.contains(user_id)
   }
 
@@ -232,13 +235,13 @@ module htf::main {
 
 
   /// Issue an accredidation to accredit about given trusted properties
-  public fun issue_permission_to_accredit(self : &mut Federation, cap : &AccreditCap,  receiver : ID, want_property_constraints : vector<TrustedPropertyConstraint>,  ctx : &mut TxContext) {
+  public fun create_accreditation(self : &mut Federation, cap : &AccreditCap,  receiver : ID, want_property_constraints : vector<TrustedPropertyConstraint>,  ctx : &mut TxContext) {
       assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
       let current_time_ms = ctx.epoch_timestamp_ms();
 
       // Check the permissions only if the sender is not a root authority
       if (! self.is_root_authority(&ctx.sender().to_id())) {
-        let permissions_to_accredit = self.find_permissions_to_accredit(&ctx.sender().to_id());
+        let permissions_to_accredit = self.get_accreditations(&ctx.sender().to_id());
         assert!(permissions_to_accredit.are_constraints_permitted(&want_property_constraints, current_time_ms), EUnauthorizedInsufficientAccreditation);
       };
 
@@ -265,14 +268,14 @@ module htf::main {
   }
 
   /// creates a permission  (permission_to_attest) to attest about attributes
-  public fun issue_permission_to_attest(self : &mut Federation, cap : &AttestCap, receiver : ID, wanted_constraints: vector<TrustedPropertyConstraint>, ctx : &mut TxContext) {
+  public fun create_attestation(self : &mut Federation, cap : &AttestCap, receiver : ID, wanted_constraints: vector<TrustedPropertyConstraint>, ctx : &mut TxContext) {
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
 
     let current_time_ms = ctx.epoch_timestamp_ms();
 
     // Check the permissions only if the sender is not a root authority
     if (! self.is_root_authority(&ctx.sender().to_id())) {
-      let permissions_to_accredit = self.find_permissions_to_accredit(&ctx.sender().to_id());
+      let permissions_to_accredit = self.get_accreditations(&ctx.sender().to_id());
       assert!(permissions_to_accredit.are_constraints_permitted(&wanted_constraints, current_time_ms), EUnauthorizedInsufficientAccreditation);
     };
 
@@ -292,20 +295,22 @@ module htf::main {
     };
   }
 
-  public fun revoke_permission_to_attest(self : &mut Federation, cap : &AttestCap, user_id : &ID,  permission_id : &ID, ctx : &mut TxContext) {
+  public fun revoke_attestation(self : &mut Federation, cap : &AttestCap, user_id : &ID,  permission_id : &ID, ctx : &mut TxContext) {
     let current_time_ms = ctx.epoch_timestamp_ms();
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
 
-    let remover_permissions = self.find_permissions_to_attest(&ctx.sender().to_id());
+    let remover_permissions = self.get_attestations(&ctx.sender().to_id());
 
-    let users_attest_permissions = self.find_permissions_to_attest(user_id);
+    let users_attest_permissions = self.get_attestations(user_id);
     let mut permission_to_revoke_idx = users_attest_permissions.find_permission_idx(permission_id);
     assert!(permission_to_revoke_idx.is_some(), EPermissionNotFound);
 
     // Make suere that the sender has the right to revoke the permission
-    let permission_to_revoke = &users_attest_permissions.permisssions()[permission_to_revoke_idx.extract()];
-    let (_, constraints) = (*permission_to_revoke.constraints()).into_keys_values() ;
-    assert!(remover_permissions.are_constraints_permitted(&constraints, current_time_ms), EUnauthorizedInsufficientAttestation);
+    if (! self.is_root_authority(&ctx.sender().to_id())) {
+      let permission_to_revoke = &users_attest_permissions.permisssions()[permission_to_revoke_idx.extract()];
+      let (_, constraints) = (*permission_to_revoke.constraints()).into_keys_values() ;
+      assert!(remover_permissions.are_constraints_permitted(&constraints, current_time_ms), EUnauthorizedInsufficientAttestation);
+    };
 
     // Remove the permission
     let users_attest_permissions =  self.governance.attesters.get_mut(user_id);
@@ -313,19 +318,21 @@ module htf::main {
   }
 
 
-  public fun revoke_permission_to_accredit(self : &mut Federation, cap : &AccreditCap, user_id : &ID,  permission_id : &ID, ctx : &mut TxContext) {
+  public fun revoke_accreditation(self : &mut Federation, cap : &AccreditCap, user_id : &ID,  permission_id : &ID, ctx : &mut TxContext) {
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
-    let remover_permissions = self.find_permissions_to_accredit(&ctx.sender().to_id());
+    let remover_permissions = self.get_accreditations(&ctx.sender().to_id());
 
-    let users_accredit_permissions = self.find_permissions_to_accredit(user_id);
+    let users_accredit_permissions = self.get_accreditations(user_id);
     let mut permission_to_revoke_idx = users_accredit_permissions.find_permission_idx(permission_id);
     assert!(permission_to_revoke_idx.is_some(), EPermissionNotFound);
 
     // make suere that the sender has the right to revoke the permission
-    let permission_to_revoke = &users_accredit_permissions.permisssions()[permission_to_revoke_idx.extract()];
-    let current_time_ms   = ctx.epoch_timestamp_ms();
-    let (_, constraints) = (*permission_to_revoke.constriants()).into_keys_values() ;
-    assert!(remover_permissions.are_constraints_permitted(&constraints, current_time_ms), EUnauthorizedInsufficientAccreditation);
+    if (! self.is_root_authority(&ctx.sender().to_id())) {
+      let permission_to_revoke = &users_accredit_permissions.permisssions()[permission_to_revoke_idx.extract()];
+      let current_time_ms   = ctx.epoch_timestamp_ms();
+      let (_, constraints) = (*permission_to_revoke.constriants()).into_keys_values() ;
+      assert!(remover_permissions.are_constraints_permitted(&constraints, current_time_ms), EUnauthorizedInsufficientAccreditation);
+    };
 
     // Remove the permission
     let users_accredit_permissions =  self.governance.accreditors.get_mut(user_id);
@@ -341,13 +348,13 @@ module htf::main {
     while (idx < property_names.length()) {
       let property_name = property_names[idx];
       assert!(
-        self.has_federation_property(property_name),
+        self.is_trusted_property(property_name),
         EInvalidProperty,
       );
       idx = idx + 1;
     };
     // then check if names and values are permitted for given issuer
-    let issuer_permissions_to_attest = self.find_permissions_to_attest(issuer_id);
+    let issuer_permissions_to_attest = self.get_attestations(issuer_id);
     assert!(
       issuer_permissions_to_attest.are_values_permitted(&trusted_properties, current_time_ms),
       EInvalidIssuerInsufficientAttestation,
@@ -366,8 +373,8 @@ module htf::main_tests {
   use std::string::{utf8};
   use htf::main::{
     new_federation, RootAuthorityCap, Federation, AccreditCap,AttestCap,
-    add_trusted_property, issue_permission_to_accredit, issue_permission_to_attest,
-    revoke_permission_to_attest, revoke_permission_to_accredit,
+    add_trusted_property, create_accreditation, create_attestation,
+    revoke_attestation, revoke_accreditation,
   };
   use iota::test_scenario;
   use iota::vec_set::{Self};
@@ -390,8 +397,8 @@ module htf::main_tests {
     // check the federation
     let fed: Federation = scenario.take_shared();
 
-    assert!(fed.has_permissions_to_accredit(&alice.to_id()), 0);
-    assert!(fed.has_permissions_to_attest(&alice.to_id()), 0);
+    assert!(fed.is_accreditor(&alice.to_id()), 0);
+    assert!(fed.is_attester(&alice.to_id()), 0);
 
     // Return the cap to the alice
     test_scenario::return_to_address(alice, cap);
@@ -458,7 +465,7 @@ module htf::main_tests {
     scenario.next_tx(alice);
 
     // Check if the property was added
-    assert!(fed.has_federation_property(property_name), 0);
+    assert!(fed.is_trusted_property(property_name), 0);
 
     // Return the cap to the alice
     test_scenario::return_to_address(alice, cap);
@@ -468,7 +475,7 @@ module htf::main_tests {
   }
 
   #[test]
-  fun test_issue_permission_to_accredit() {
+  fun test_create_accreditation() {
     let alice = @0x1;
     let mut scenario = test_scenario::begin(alice);
 
@@ -487,11 +494,11 @@ module htf::main_tests {
 
     // Issue permission to accredit
     let constraints = vector::empty();
-    fed.issue_permission_to_accredit(&accredit_cap, bob, constraints, scenario.ctx());
+    fed.create_accreditation(&accredit_cap, bob, constraints, scenario.ctx());
     scenario.next_tx(alice);
 
     // Check if the permission was issued
-    assert!(fed.has_permissions_to_accredit(&bob), 0);
+    assert!(fed.is_accreditor(&bob), 0);
 
     // Return the cap to the alice
     test_scenario::return_to_address(alice, cap);
@@ -504,7 +511,7 @@ module htf::main_tests {
   }
 
   #[test]
-  fun test_issue_permission_to_attest() {
+  fun test_create_attestation() {
     let alice = @0x1;
     let mut scenario = test_scenario::begin(alice);
 
@@ -524,11 +531,11 @@ module htf::main_tests {
 
     // Issue permission to accredit
     let constraints = vector::empty();
-    fed.issue_permission_to_attest(&attest_cap, bob, constraints, scenario.ctx());
+    fed.create_attestation(&attest_cap, bob, constraints, scenario.ctx());
     scenario.next_tx(alice);
 
     // Check if the permission was issued
-    assert!(fed.has_permissions_to_attest(&bob), 0);
+    assert!(fed.is_attester(&bob), 0);
 
     // Return the cap to the alice
     test_scenario::return_to_address(alice, cap);
@@ -541,7 +548,7 @@ module htf::main_tests {
   }
 
   #[test]
-  fun test_revoke_permission_to_attest_and_accredit() {
+  fun test_revoke_attestation_and_accredit() {
     let alice = @0x1;
     let mut scenario = test_scenario::begin(alice);
 
@@ -561,28 +568,28 @@ module htf::main_tests {
 
     // Issue permission to accredit
     let constraints = vector::empty();
-    fed.issue_permission_to_accredit(&accredit_cap, bob, constraints, scenario.ctx());
+    fed.create_accreditation(&accredit_cap, bob, constraints, scenario.ctx());
     scenario.next_tx(alice);
 
     // Issue permission to attest
-    fed.issue_permission_to_attest(&attest_cap, bob, constraints, scenario.ctx());
+    fed.create_attestation(&attest_cap, bob, constraints, scenario.ctx());
     scenario.next_tx(alice);
 
     // Revoke permission to attest
-    let permission_id = fed.find_permissions_to_attest(&bob).permisssions()[0].id().uid_to_inner();
-    fed.revoke_permission_to_attest(&attest_cap, &bob, &permission_id, scenario.ctx());
+    let permission_id = fed.get_attestations(&bob).permisssions()[0].id().uid_to_inner();
+    fed.revoke_attestation(&attest_cap, &bob, &permission_id, scenario.ctx());
     scenario.next_tx(alice);
 
     // Revoke permission to accredit
-    let permission_id = fed.find_permissions_to_accredit(&bob).permisssions()[0].id().uid_to_inner();
-    fed.revoke_permission_to_accredit(&accredit_cap, &bob, &permission_id, scenario.ctx());
+    let permission_id = fed.get_accreditations(&bob).permisssions()[0].id().uid_to_inner();
+    fed.revoke_accreditation(&accredit_cap, &bob, &permission_id, scenario.ctx());
     scenario.next_tx(alice);
 
     // Check if the permission was revoked
     // TODO::@itsyaasir: This should be fixed since the user has no permissions
     // and should not be able to attest/accredit
-    assert!(fed.has_permissions_to_attest(&bob), 0);
-    assert!(fed.has_permissions_to_accredit(&bob), 0);
+    assert!(fed.is_attester(&bob), 0);
+    assert!(fed.is_accreditor(&bob), 0);
 
     // Return the cap to the alice
     test_scenario::return_to_address(alice, cap);

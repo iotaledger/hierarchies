@@ -114,7 +114,7 @@ Trusted property constraints define the rules and allowed values for properties 
 
 4. **Issue Permissions**:
    - Issue permissions to entities within the federation to allow them to accredit and attest trusted properties.
-   - Use the `issue_permission_to_accredit` and `issue_permission_to_attest` functions.
+   - Use the `create_accreditation` and `create_attestation` functions.
 
 5. **Issue Credentials**:
    - Use the issued permissions to create credentials for entities.
@@ -122,7 +122,7 @@ Trusted property constraints define the rules and allowed values for properties 
 
 6. **Manage Credentials**:
    - Revoke or update credentials as needed based on the federation's governance rules.
-   - Use the `revoke_permission_to_attest` and `revoke_permission_to_accredit` functions to manage permissions.
+   - Use the `revoke_attestation` and `revoke_accreditation` functions to manage permissions.
 
 
 
@@ -145,12 +145,12 @@ sequenceDiagram
     User->>+Federation: add_trusted_property(RootAuthorityCap, property_name, allowed_values, allow_any)
     Federation->>Governance: Add TrustedPropertyConstraint
 
-    User->>+Federation: issue_permission_to_accredit(AccreditCap, receiver, want_property_constraints)
+    User->>+Federation: create_accreditation(AccreditCap, receiver, want_property_constraints)
     Federation->>Governance: Check PermissionsToAccredit
     Governance-->>Federation: Permissions validated
     Federation-->>User: PermissionsToAccredit issued
 
-    User->>+Federation: issue_permission_to_attest(AttestCap, receiver, wanted_constraints)
+    User->>+Federation: create_attestation(AttestCap, receiver, wanted_constraints)
     Federation->>Governance: Check PermissionsToAttest
     Governance-->>Federation: Permissions validated
     Federation-->>User: PermissionsToAttest issued
@@ -161,12 +161,12 @@ sequenceDiagram
     Federation->>Credential: Create Credential
     Federation-->>User: Credential issued
 
-    User->>+Federation: revoke_permission_to_attest(AttestCap, user_id, permission_id)
+    User->>+Federation: revoke_attestation(AttestCap, user_id, permission_id)
     Federation->>Governance: Check Permissions
     Governance-->>Federation: Permissions validated
     Federation-->>User: PermissionToAttest revoked
 
-    User->>+Federation: revoke_permission_to_accredit(AccreditCap, user_id, permission_id)
+    User->>+Federation: revoke_accreditation(AccreditCap, user_id, permission_id)
     Federation->>Governance: Check Permissions
     Governance-->>Federation: Permissions validated
     Federation-->>User: PermissionToAccredit revoked
@@ -326,10 +326,10 @@ Adds a trusted property to the federation with specified constraints. Only calla
 Adds a another Root Authority
 
 
-### issue_permission_to_accredit
+### create_accreditation
 
 ```rust
-public fun issue_permission_to_accredit(
+public fun create_accreditation(
   cap: &AccreditCap,
   federation: &mut Federation,
   receiver: ID,
@@ -340,10 +340,10 @@ public fun issue_permission_to_accredit(
 
 Issues a permission to accredit specified trusted properties. Ensures the issuer has the necessary permissions to accredit.
 
-### issue_permission_to_attest
+### create_attestation
 
 ```rust
-public fun issue_permission_to_attest(
+public fun create_attestation(
   cap: &AttestCap,
   federation: &mut Federation,
   receiver: ID,
@@ -354,10 +354,10 @@ public fun issue_permission_to_attest(
 
 Issues a permission to attest specified trusted properties. Ensures the issuer has the necessary permissions to attest.
 
-### revoke_permission_to_attest
+### revoke_attestation
 
 ```rust
-public fun revoke_permission_to_attest(
+public fun revoke_attestation(
   cap: &AttestCap,
   federation: &mut Federation,
   user_id: &ID,
@@ -368,10 +368,10 @@ public fun revoke_permission_to_attest(
 
 Revokes a permission to attest from a specified user. Ensures the issuer has the necessary permissions to revoke.
 
-### revoke_permission_to_accredit
+### revoke_accreditation
 
 ```rust
-public fun revoke_permission_to_accredit(
+public fun revoke_accreditation(
   cap: &AccreditCap,
   federation: &mut Federation,
   user_id: &ID,

@@ -24,10 +24,10 @@ async fn main() -> anyhow::Result<()> {
   let federation_id = *federation.id.object_id();
 
   // Trusted property name
-  let property_name = TrustedPropertyName::new(vec!["Example LTD".to_string()]);
+  let property_name = TrustedPropertyName::from("Example LTD");
 
   // Trusted property value
-  let value = TrustedPropertyValue::Text("Hello".to_owned());
+  let value = TrustedPropertyValue::from("Hello");
 
   let allowed_values = HashSet::from_iter([value]);
 
@@ -61,18 +61,7 @@ async fn main() -> anyhow::Result<()> {
 
   // Let us issue a permission to attest to the trusted property
   htf_client
-    .issue_permission_to_attest(federation_id, receiver, vec![constraints.clone()], None)
-    .await
-    .context("Failed to issue permission to attest")?;
-
-  // Issue permission to the original account
-  htf_client
-    .issue_permission_to_attest(
-      federation_id,
-      htf_client.sender_address().into(),
-      vec![constraints],
-      None,
-    )
+    .create_attestation(federation_id, receiver, vec![constraints], None)
     .await
     .context("Failed to issue permission to attest")?;
 
@@ -81,33 +70,12 @@ async fn main() -> anyhow::Result<()> {
   // Check if the permission was issued
   let federation: Federation = htf_client.get_object_by_id(federation_id).await?;
 
-  // Check if the receiver has the permission to attest
-  let can_attest = federation.governance.attesters.contains_key(&receiver);
-
-  assert!(can_attest);
-
-  // Revoke the permission
-  let permissions = htf_client
-    .onchain(federation_id)
-    .find_permissions_to_attest(receiver)
-    .await
-    .context("Failed to find permission to attest")?;
-
-  let permission_id = permissions.permissions[0].id.object_id();
-
-  htf_client
-    .revoke_permission_to_attest(federation_id, receiver, *permission_id, None)
-    .await
-    .context("Failed to revoke permission to attest")?;
-
-  // Check if the permission was revoked
-  let federation: Federation = htf_client.get_object_by_id(federation_id).await?;
-
   println!("Federation: {:#?}", federation);
 
   // Check if the receiver has the permission to attest
-  let can_attest = federation.governance.attesters.get(&receiver).unwrap();
+  let trusted_properties = federation.governance.attesters.contains_key(&receiver);
 
-  assert!(can_attest.permissions.is_empty());
+  assert!(trusted_properties);
+
   Ok(())
 }

@@ -22,18 +22,23 @@ async fn main() -> anyhow::Result<()> {
   let federation_id = *federation.id.object_id();
 
   // Trusted property name
-  let property_name = TrustedPropertyName::new(vec!["Example LTD".to_string()]);
+  let property_name = TrustedPropertyName::from("Example LTD");
 
   // Trusted property value
-  let value = TrustedPropertyValue::Text("Hello".to_owned());
-  let another_value = TrustedPropertyValue::Text("World".to_owned());
-
-  let allowed_values = HashSet::from_iter([value, another_value]);
+  let value = TrustedPropertyValue::from("Hello");
+  let another_value = TrustedPropertyValue::from("World");
+  let allowed_values = [value, another_value];
 
   // Add the trusted property to the federation
   {
     htf_client
-      .add_trusted_property(federation_id, property_name.clone(), allowed_values, false, None)
+      .add_trusted_property(
+        federation_id,
+        property_name.clone(),
+        allowed_values,
+        false,
+        None,
+      )
       .await
       .context("Failed to add trusted property")?;
   }
@@ -49,7 +54,12 @@ async fn main() -> anyhow::Result<()> {
 
   assert!(trusted_properties);
 
-  if let Some(constraint) = federation.governance.trusted_constraints.data.get(&property_name) {
+  if let Some(constraint) = federation
+    .governance
+    .trusted_constraints
+    .data
+    .get(&property_name)
+  {
     println!("Trusted Property: {:#?}", constraint)
   }
 
