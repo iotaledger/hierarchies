@@ -52,8 +52,8 @@ async fn main() -> anyhow::Result<()> {
   client
     .create_attestation(federation_id, attestation_receiver, [constraints], None)
     .await
-    .context("Failed to issue permission to attest")?;
-  println!("✅ Issued permission to attest");
+    .context("Failed creating attestation")?;
+  println!("✅ Attestation has been created",);
 
   // Validate trusted properties
   // On-chain (low cost):

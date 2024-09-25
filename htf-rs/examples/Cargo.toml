@@ -78,5 +78,5 @@ name = "03_onchain_get_trusted_properties"
 
 # Demo
 [[example]]
-path = "demo/01_add_trust_property_add_attestation.rs"
-name = "01_demo_add_trust_property_add_attestation"
+path = "demo/01_add_and_revoke_attestation.rs"
+name = "01_demo_add_and_revoke_attestation"
