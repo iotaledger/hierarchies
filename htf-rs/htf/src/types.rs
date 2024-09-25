@@ -8,7 +8,7 @@ use std::collections::HashMap;
 
 use iota_sdk::types::base_types::ObjectID;
 use iota_sdk::types::id::UID;
-use permission::{PermissionsToAccredit, PermissionsToAttest};
+use permission::Permissions;
 use serde::{Deserialize, Serialize};
 use trusted_constraints::TrustedPropertyConstraints;
 
@@ -32,7 +32,7 @@ pub struct Governance {
   id: UID,
   pub trusted_constraints: TrustedPropertyConstraints,
   #[serde(deserialize_with = "deserialize_vec_map")]
-  pub accreditors: HashMap<ObjectID, PermissionsToAccredit>,
+  pub accreditors: HashMap<ObjectID, Permissions>,
   #[serde(deserialize_with = "deserialize_vec_map")]
-  pub attesters: HashMap<ObjectID, PermissionsToAttest>,
+  pub attesters: HashMap<ObjectID, Permissions>,
 }

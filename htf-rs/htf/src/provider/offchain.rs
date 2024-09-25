@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use iota_sdk::types::base_types::ObjectID;
 
 use crate::client::HTFClientReadOnly;
-use crate::types::permission::{PermissionsToAccredit, PermissionsToAttest};
+use crate::types::permission::Permissions;
 use crate::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
 use crate::types::Federation;
 
@@ -105,11 +105,11 @@ impl OffChainFederation {
       .collect::<Vec<_>>()
   }
 
-  pub fn get_attestations(&self, user_id: ObjectID) -> Option<PermissionsToAttest> {
+  pub fn get_attestations(&self, user_id: ObjectID) -> Option<Permissions> {
     self.federation.governance.attesters.get(&user_id).cloned()
   }
 
-  pub fn get_accreditations(&self, user_id: ObjectID) -> Option<PermissionsToAccredit> {
+  pub fn get_accreditations(&self, user_id: ObjectID) -> Option<Permissions> {
     self
       .federation
       .governance
