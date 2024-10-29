@@ -10,7 +10,7 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 use crate::client::HTFClientReadOnly;
-use crate::types::permission::{PermissionsToAccredit, PermissionsToAttest};
+use crate::types::permission::Permissions;
 use crate::types::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
 
 pub struct OnChainFederation<'c> {
@@ -263,14 +263,11 @@ impl OnChainFederation<'_> {
     Ok(res)
   }
 
-  pub async fn get_attestations(&self, user_id: ObjectID) -> anyhow::Result<PermissionsToAttest> {
+  pub async fn get_attestations(&self, user_id: ObjectID) -> anyhow::Result<Permissions> {
     self.execute_query("get_attestations", user_id).await
   }
 
-  pub async fn get_accreditations(
-    &self,
-    user_id: ObjectID,
-  ) -> anyhow::Result<PermissionsToAccredit> {
+  pub async fn get_accreditations(&self, user_id: ObjectID) -> anyhow::Result<Permissions> {
     self.execute_query("get_accreditations", user_id).await
   }
 }

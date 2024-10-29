@@ -3,14 +3,10 @@ module htf::main {
   use iota::vec_map::{Self, VecMap};
   use iota::event;
   use iota::vec_set::{VecSet};
-  use iota::object::{Self, UID, ID};
-  use iota::transfer::{Self};
-  use iota::tx_context::{TxContext};
 
   use htf::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
   use htf::trusted_constraint::{Self, TrustedPropertyConstraints, TrustedPropertyConstraint};
-  use htf::permission_to_attest::{Self, PermissionsToAttest};
-  use htf::permission_to_accredit::{Self, PermissionsToAccredit};
+  use htf::permission::{Self, Permissions};
 
   const  EUnauthorizedWrongFederation  : u64  = 1;
   const  EUnauthorizedInsufficientAccreditation : u64 = 2;
@@ -40,9 +36,9 @@ module htf::main {
     // Trusted Properties all are properties that are trusted by the Federation
     trusted_constraints : TrustedPropertyConstraints,
     // user-id => permission_to_accredit
-    accreditors : VecMap<ID, PermissionsToAccredit>,
+    accreditors : VecMap<ID, Permissions>,
     // trusted_delegate_id => attestation
-    attesters : VecMap<ID, PermissionsToAttest>,
+    attesters : VecMap<ID, Permissions>,
   }
 
 
@@ -90,11 +86,11 @@ module htf::main {
     vector::push_back(&mut federation.root_authorities, root_authority);
 
     // Add permission to attest
-    let permission = permission_to_accredit::new_permissions_to_accredit();
+    let permission = permission::new_empty_permission();
     federation.governance.accreditors.insert(ctx.sender().to_id(), permission);
 
     // Add permission to attest
-    let permission = permission_to_attest::new_permissions_to_attest();
+    let permission = permission::new_empty_permission();
     federation.governance.attesters.insert(ctx.sender().to_id(), permission);
 
     // Add permission to attest and accredit to the root authority
@@ -126,7 +122,7 @@ module htf::main {
     self.governance.trusted_constraints.data().contains(&property_name)
   }
 
-  public fun get_attestations(self: &Federation, user_id : &ID)  :  &PermissionsToAttest {
+  public fun get_attestations(self: &Federation, user_id : &ID)  :  &Permissions {
       self.governance.attesters.get(user_id)
   }
 
@@ -135,7 +131,7 @@ module htf::main {
     self.governance.attesters.contains(user_id)
   }
 
-  public fun get_accreditations(self : &Federation, user_id : &ID) : &PermissionsToAccredit {
+  public fun get_accreditations(self : &Federation, user_id : &ID) : &Permissions {
     self.governance.accreditors.get(user_id)
   }
 
@@ -254,11 +250,11 @@ module htf::main {
       };
 
 
-      let permission = permission_to_accredit::new_permission_to_accredit(self.federation_id(), trusted_constraints, ctx);
+      let permission = permission::new_permission(self.federation_id(), trusted_constraints, ctx);
       if ( self.governance.accreditors.contains(&receiver) ) {
           self.governance.accreditors.get_mut(&receiver).add(permission);
         } else {
-          let mut permissions_to_accredit  = permission_to_accredit::new_permissions_to_accredit();
+          let mut permissions_to_accredit  = permission::new_permissions();
           permissions_to_accredit.add(permission);
           self.governance.accreditors.insert(receiver, permissions_to_accredit);
 
@@ -279,14 +275,14 @@ module htf::main {
       assert!(permissions_to_accredit.are_constraints_permitted(&wanted_constraints, current_time_ms), EUnauthorizedInsufficientAccreditation);
     };
 
-    let permission = permission_to_attest::new_permission_to_attest(
+    let permission = permission::new_permission(
       self.federation_id(), trusted_constraint::to_map_of_constraints(wanted_constraints), ctx
     );
 
     if ( self.governance.attesters.contains(&receiver))  {
       self.governance.attesters.get_mut(&receiver).add_permission_to_attest(permission);
     } else {
-        let mut permissions_to_attest = permission_to_attest::new_permissions_to_attest();
+        let mut permissions_to_attest = permission::new_empty_permission();
         permissions_to_attest.add_permission_to_attest(permission);
         self.governance.attesters.insert(receiver, permissions_to_attest);
 
@@ -330,7 +326,7 @@ module htf::main {
     if (! self.is_root_authority(&ctx.sender().to_id())) {
       let permission_to_revoke = &users_accredit_permissions.permisssions()[permission_to_revoke_idx.extract()];
       let current_time_ms   = ctx.epoch_timestamp_ms();
-      let (_, constraints) = (*permission_to_revoke.constriants()).into_keys_values() ;
+      let (_, constraints) = (*permission_to_revoke.constraints()).into_keys_values() ;
       assert!(remover_permissions.are_constraints_permitted(&constraints, current_time_ms), EUnauthorizedInsufficientAccreditation);
     };
 

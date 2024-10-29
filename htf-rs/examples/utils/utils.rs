@@ -31,12 +31,13 @@ pub async fn get_client() -> anyhow::Result<HTFClient<TestMemSigner>> {
   let active_address = active_address().await?;
   faucet(active_address).await?;
 
-  let package_id = if let Ok(id) = std::env::var("HTF_PKG_ID").or(get_cached_id(active_address).await) {
-    std::env::set_var("HTF_PKG_ID", id.clone());
-    id.parse()?
-  } else {
-    publish_package(active_address).await?
-  };
+  let package_id =
+    if let Ok(id) = std::env::var("HTF_PKG_ID").or(get_cached_id(active_address).await) {
+      std::env::set_var("HTF_PKG_ID", id.clone());
+      id.parse()?
+    } else {
+      publish_package(active_address).await?
+    };
 
   let client = IotaClientBuilder::default().build_localnet().await?;
 
@@ -75,7 +76,9 @@ async fn active_address() -> anyhow::Result<IotaAddress> {
 
 async fn get_cached_id(active_address: IotaAddress) -> anyhow::Result<String> {
   let cache = tokio::fs::read_to_string(CACHED_PKG_ID).await?;
-  let (cached_id, cached_address) = cache.split_once(';').ok_or(anyhow!("Invalid or empty cached data"))?;
+  let (cached_id, cached_address) = cache
+    .split_once(';')
+    .ok_or(anyhow!("Invalid or empty cached data"))?;
 
   if cached_address == active_address.to_string().as_str() {
     Ok(cached_id.to_owned())
@@ -166,8 +169,14 @@ impl Default for TestMemSigner {
 #[async_trait::async_trait]
 impl SignerTrait<IotaKeySignature> for TestMemSigner {
   type KeyId = ();
-  async fn sign(&self, hash: &[u8]) -> secret_storage::Result<<IotaKeySignature as SignerSignatureScheme>::Signature> {
-    let address = self.0.get_address_by_alias(EXAMPLE_ALIAS.to_owned()).unwrap();
+  async fn sign(
+    &self,
+    hash: &[u8],
+  ) -> secret_storage::Result<<IotaKeySignature as SignerSignatureScheme>::Signature> {
+    let address = self
+      .0
+      .get_address_by_alias(EXAMPLE_ALIAS.to_owned())
+      .unwrap();
 
     let signature = self.0.sign_hashed(address, hash).unwrap();
 
@@ -177,7 +186,10 @@ impl SignerTrait<IotaKeySignature> for TestMemSigner {
   async fn public_key(
     &self,
   ) -> secret_storage::Result<<IotaKeySignature as secret_storage::SignatureScheme>::PublicKey> {
-    let address = self.0.get_address_by_alias(EXAMPLE_ALIAS.to_owned()).unwrap();
+    let address = self
+      .0
+      .get_address_by_alias(EXAMPLE_ALIAS.to_owned())
+      .unwrap();
     let res = self.0.get_key(address).unwrap();
 
     let public_key = match res {

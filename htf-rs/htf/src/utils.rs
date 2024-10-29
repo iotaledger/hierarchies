@@ -4,22 +4,32 @@ use std::hash::Hash;
 
 use fastcrypto::ed25519::Ed25519PublicKey;
 use fastcrypto::traits::ToFromBytes;
-use iota_sdk::types::base_types::{IotaAddress, STD_OPTION_MODULE_NAME};
+use iota_sdk::types::base_types::{
+  IotaAddress, ObjectID, STD_OPTION_MODULE_NAME, STD_UTF8_MODULE_NAME,
+};
 use iota_sdk::types::collection_types::{VecMap, VecSet};
 use iota_sdk::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use iota_sdk::types::transaction::Argument;
+use iota_sdk::types::transaction::{Argument, Command};
 use iota_sdk::types::{TypeTag, MOVE_STDLIB_PACKAGE_ID};
 use move_core_types::ident_str;
 use serde::{Deserialize, Deserializer, Serialize};
 
+/// Trait to create a MoveType for move objects and types
+pub trait MoveType {
+  fn move_type(package: ObjectID) -> TypeTag;
+}
+
 pub fn convert_to_address(sender_public_key: &[u8]) -> anyhow::Result<IotaAddress> {
-  let public_key = Ed25519PublicKey::from_bytes(sender_public_key)
-    .map_err(|err| anyhow::anyhow!(format!("could not parse public key to Ed25519 public key; {err}")))?;
+  let public_key = Ed25519PublicKey::from_bytes(sender_public_key).map_err(|err| {
+    anyhow::anyhow!(format!(
+      "could not parse public key to Ed25519 public key; {err}"
+    ))
+  })?;
 
   Ok(IotaAddress::from(&public_key))
 }
 
-pub fn deserialize_vec_map<'de, D, K, V>(deserializer: D) -> Result<HashMap<K, V>, D::Error>
+pub(crate) fn deserialize_vec_map<'de, D, K, V>(deserializer: D) -> Result<HashMap<K, V>, D::Error>
 where
   D: Deserializer<'de>,
   K: Deserialize<'de> + Eq + Hash + Debug,
@@ -35,7 +45,7 @@ where
   )
 }
 
-pub fn deserialize_vec_set<'de, D, T>(deserializer: D) -> Result<HashSet<T>, D::Error>
+pub(crate) fn deserialize_vec_set<'de, D, T>(deserializer: D) -> Result<HashSet<T>, D::Error>
 where
   D: Deserializer<'de>,
   T: Deserialize<'de> + Eq + Hash,
@@ -44,7 +54,7 @@ where
   Ok(vec_set.contents.into_iter().collect())
 }
 
-pub fn option_to_move<T: Serialize>(
+pub(crate) fn option_to_move<T: Serialize>(
   option: Option<T>,
   tag: TypeTag,
   ptb: &mut ProgrammableTransactionBuilder,
@@ -71,6 +81,39 @@ pub fn option_to_move<T: Serialize>(
   Ok(arg)
 }
 
+/// Create a VecSet from a vector of values
+pub(crate) fn create_vec_set_from_move_values(
+  values: Vec<Argument>,
+  tag: TypeTag,
+  ptb: &mut ProgrammableTransactionBuilder,
+  package_id: ObjectID,
+) -> Argument {
+  let values = ptb.command(Command::MakeMoveVec(Some(tag.clone()), values));
+
+  ptb.programmable_move_call(
+    package_id,
+    ident_str!("utils").into(),
+    ident_str!("create_vec_set").into(),
+    vec![tag],
+    vec![values],
+  )
+}
+
+/// Creates a new move string
+pub(crate) fn new_move_string(
+  value: String,
+  ptb: &mut ProgrammableTransactionBuilder,
+) -> anyhow::Result<Argument> {
+  let v = ptb.pure(value.as_bytes())?;
+  Ok(ptb.programmable_move_call(
+    MOVE_STDLIB_PACKAGE_ID,
+    STD_UTF8_MODULE_NAME.into(),
+    ident_str!("utf8").into(),
+    vec![],
+    vec![v],
+  ))
+}
+
 #[cfg(test)]
 mod tests {
   use iota_sdk::types::collection_types::Entry;
@@ -84,7 +127,9 @@ mod tests {
       key: 1,
       value: "value".to_string(),
     };
-    let vec_map = VecMap { contents: vec![entry] };
+    let vec_map = VecMap {
+      contents: vec![entry],
+    };
 
     let json = serde_json::to_value(&vec_map).unwrap();
 
