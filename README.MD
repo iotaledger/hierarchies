@@ -15,9 +15,9 @@
     <a href="https://github.com/iotaledger/template">
         <img src="banner.png" alt="Banner">
     </a>
-    <h3 align="center">HTF</h3>
+    <h3 align="center">ITH</h3>
     <p align="center">
-        Hierarchical Trust Framework
+        IOTA Trust Hierarchy
         <br />
         <a href="https://wiki.iota.org"><strong>Explore the docs »</strong></a>
         <br />
@@ -31,7 +31,7 @@
   <summary>Table of Contents</summary>
   <ol>
     <li>
-      <a href="#htf-notary-module">About The Project</a>
+      <a href="#ith-notary-module">About The Project</a>
     </li>
     <li>
       <a href="#overview">Overview</a>
@@ -57,13 +57,13 @@
   </ol>
 </details>
 
-# HTF Notary Module
+ITH Notary Module
 
-The HTF Notary module is designed to manage a hierarchical trust system within a federation. It includes structures and methods for creating federations, issuing credentials, and managing permissions to attest and accredit trusted properties. This module leverages the Move programming language and the Sui blockchain.
+The ITH Notary module is designed to manage a hierarchical trust system within a federation. It includes structures and methods for creating federations, issuing credentials, and managing permissions to attest and accredit trusted properties. This module leverages the Move programming language and the Sui blockchain.
 
 ## Overview
 
-The HTF Notary module provides a framework for establishing and managing trust within a federation of entities. It includes mechanisms for:
+The ITH Notary module provides a framework for establishing and managing trust within a federation of entities. It includes mechanisms for:
 
 1. **Creating Federations**: A federation is the primary structure representing a group of entities with a shared trust framework.
 2. **Issuing Credentials**: Credentials are issued to entities within the federation, attesting to certain trusted properties.
@@ -91,6 +91,7 @@ Credentials are issued to entities within the federation, attesting to specific 
 ### Permissions
 
 Permissions control the ability to attest and accredit trusted properties. There are two main types of permissions:
+
 - **Permissions to Accredit**: Allow entities to delegate the ability to attest to other entities.
 - **Permissions to Attest**: Allow entities to attest to certain trusted properties.
 
@@ -123,8 +124,6 @@ Trusted property constraints define the rules and allowed values for properties 
 6. **Manage Credentials**:
    - Revoke or update credentials as needed based on the federation's governance rules.
    - Use the `revoke_attestation` and `revoke_accreditation` functions to manage permissions.
-
-
 
 ## Sequence Diagram
 
@@ -172,7 +171,6 @@ sequenceDiagram
     Federation-->>User: PermissionToAccredit revoked
 
 ```
-
 
 ### Class diagram
 
@@ -311,6 +309,7 @@ public fun add_trusted_property(
   _ctx: &mut TxContext
 )
 ```
+
 Adds a trusted property to the federation with specified constraints. Only callable by a root authority.
 
 ### add_root_authority
@@ -323,8 +322,8 @@ Adds a trusted property to the federation with specified constraints. Only calla
       ctx : &mut TxContext,
     )
 ```
-Adds a another Root Authority
 
+Adds a another Root Authority
 
 ### create_accreditation
 
@@ -412,7 +411,7 @@ Validates a credential to ensure it adheres to the federation's trusted property
 
 ## Usage
 
-To use the HTF Notary module:
+To use the ITH Notary module:
 
 1. **Create a Federation**: Use the `new_federation` function to create a new federation.
 2. **Add Root Authorities**: Add root authorities to the federation, which will manage the delegation of trust.
@@ -421,4 +420,4 @@ To use the HTF Notary module:
 5. **Issue Credentials**: Use the issued permissions to create and validate credentials for entities within the federation.
 6. **Manage Credentials**: Revoke or update credentials as needed based on the federation's governance rules.
 
-The HTF Notary module provides a robust framework for managing hierarchical trust within a federation, ensuring that only authorized entities can issue and attest to trusted properties.
+The ITH Notary module provides a robust framework for managing hierarchical trust within a federation, ensuring that only authorized entities can issue and attest to trusted properties.

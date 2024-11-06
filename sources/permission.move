@@ -1,12 +1,12 @@
-// HTF Notary module
-module htf::permission {
+// ITH Notary module
+module ith::permission {
 
   use std::string::String;
   use iota::vec_map::VecMap;
 
-  use htf::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
-  use htf::trusted_constraint::{TrustedPropertyConstraint};
-  use htf::utils;
+  use ith::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
+  use ith::trusted_constraint::{TrustedPropertyConstraint};
+  use ith::utils;
 
   public struct Permissions has store {
     permissions : vector<Permission>,
@@ -18,7 +18,7 @@ module htf::permission {
     }
   }
 
-  /// Permission can be created only by the HTF module
+  /// Permission can be created only by the ITH module
   public struct Permission has store, key {
     // TODO fixme when auditit the security model
     id : UID,

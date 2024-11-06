@@ -1,5 +1,5 @@
 
-module htf::trusted_property {
+module ith::trusted_property {
   use std::string::String;
 
 

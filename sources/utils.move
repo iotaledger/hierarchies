@@ -1,4 +1,4 @@
-module htf::utils {
+module ith::utils {
   use iota::vec_set::{Self, VecSet};
   use iota::vec_map::{Self, VecMap};
 

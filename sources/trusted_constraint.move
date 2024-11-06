@@ -1,11 +1,11 @@
-module htf::trusted_constraint {
+module ith::trusted_constraint {
 
   use iota::vec_map::{Self, VecMap};
   use iota::vec_set::VecSet;
   use std::string::String;
 
-  use htf::trusted_property::{TrustedPropertyValue, TrustedPropertyName};
-  use htf::utils;
+  use ith::trusted_property::{TrustedPropertyValue, TrustedPropertyName};
+  use ith::utils;
 
   public struct TrustedPropertyConstraints has store {
     data : VecMap<TrustedPropertyName, TrustedPropertyConstraint>

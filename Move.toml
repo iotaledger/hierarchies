@@ -1,5 +1,5 @@
 [package]
-name = "htf"
+name = "ith"
 license = "MIT"       # e.g., "MIT", "GPL", "Apache 2.0"
 version = "0.1.0"
 edition = "2024.beta"
@@ -27,7 +27,7 @@ Iota = { git = "https://github.com/iotaledger/iota.git", subdir = "crates/iota-f
 # Override = { local = "../conflicting/version", override = true }
 
 [addresses]
-htf = "0x0"
+ith = "0x0"
 alice = "0xA11CE"
 
 # Named addresses will be accessible in Move as `@name`. They're also exported:
