@@ -17,7 +17,7 @@
     </a>
     <h3 align="center">ITH</h3>
     <p align="center">
-        IOTA Trust Hierarchy
+        IOTA Trust Hierarchies
         <br />
         <a href="https://wiki.iota.org"><strong>Explore the docs »</strong></a>
         <br />
@@ -133,16 +133,18 @@ sequenceDiagram
     participant Federation
     participant RootAuthority
     participant Governance
-    participant Credential
 
     User->>+Federation: new_federation()
-    Federation-->>-User: FederationCreatedEvent, RootAuthorityCap
+    Federation-->>-User: FederationCreatedEvent, RootAuthorityCap,AttestCap,AccreditCap
 
-    User->>+RootAuthority: add_root_authority(RootAuthorityCap, Federation, account_id)
+    User->>+RootAuthority: add_root_authority(Federation, RootAuthorityCap, account_id)
     RootAuthority-->>-Federation: RootAuthority added
 
     User->>+Federation: add_trusted_property(RootAuthorityCap, property_name, allowed_values, allow_any)
     Federation->>Governance: Add TrustedPropertyConstraint
+
+    User->>+Federation: revoke_trusted_property(RootAuthorityCap, property_name, valid_to_ms)
+    Federation->>Governance: Remove TrustedPropertyConstraint
 
     User->>+Federation: create_accreditation(AccreditCap, receiver, want_property_constraints)
     Federation->>Governance: Check PermissionsToAccredit
@@ -153,12 +155,6 @@ sequenceDiagram
     Federation->>Governance: Check PermissionsToAttest
     Governance-->>Federation: Permissions validated
     Federation-->>User: PermissionsToAttest issued
-
-    User->>+Federation: issue_credential(AttestCap, receiver, trusted_properties, valid_from_ts_ms, valid_until_ts_ms)
-    Federation->>Governance: Check PermissionsToAttest
-    Governance-->>Federation: Permissions validated
-    Federation->>Credential: Create Credential
-    Federation-->>User: Credential issued
 
     User->>+Federation: revoke_attestation(AttestCap, user_id, permission_id)
     Federation->>Governance: Check Permissions
@@ -191,9 +187,8 @@ classDiagram
     class Governance {
         +UID id
         +TrustedPropertyConstraints trusted_constraints
-        +VecMap~ID, PermissionsToAccredit~ accreditors
-        +VecMap~ID, PermissionsToAttest~ attesters
-        +VecMap~ID, CredentialState~ credentials_state
+        +VecMap~ID, Permissions~ accreditors
+        +VecMap~ID, Permissions~ attesters
     }
 
     class RootAuthorityCap {
@@ -219,39 +214,18 @@ classDiagram
         +address federation_address
     }
 
-    class Credential {
-        +UID id
-        +ID issued_by
-        +u64 valid_from
-        +u64 valid_until
-        +VecMap~TrustedPropertyName, TrustedPropertyValue~ trusted_properties
+
+    class Permissions {
+        +vector~Permission~ permissions
     }
 
-    class CredentialState {
-        +bool is_revoked
+    class Permission {
+      +UID id
+      +ID federation_id
+      +String created_by
+      +VecMap~TrustedPropertyName, TrustedPropertyConstraint~ constraints
     }
 
-    class PermissionsToAccredit {
-        +vector~PermissionToAccredit~ permissions
-    }
-
-    class PermissionToAccredit {
-        +UID id
-        +ID federation_id
-        +String created_by
-        +VecMap~TrustedPropertyName, TrustedPropertyConstraint~ constraints
-    }
-
-    class PermissionsToAttest {
-        +vector~PermissionToAttest~ permissions
-    }
-
-    class PermissionToAttest {
-        +UID id
-        +ID federation_id
-        +String created_by
-        +VecMap~TrustedPropertyName, TrustedPropertyConstraint~ constraints
-    }
 
     class TrustedPropertyConstraints {
         +VecMap~TrustedPropertyName, TrustedPropertyConstraint~ data
@@ -260,30 +234,34 @@ classDiagram
     class TrustedPropertyConstraint {
         +TrustedPropertyName property_name
         +VecSet~TrustedPropertyValue~ allowed_values
+        +Option~TrustedPropertyExpression~ expression
         +bool allow_any
+        +Timespan timespan
     }
 
     class TrustedPropertyName {
-        +String name
+        +vector names
     }
 
     class TrustedPropertyValue {
-        +String value
+        +Option~String text
+        +Option~u64 number
+    }
+
+    class Timespan {
+      +Option~u64 valid_from_ms
+      +Option~u64 valid_until_ms
     }
 
     Federation --> Governance
     Federation --> RootAuthority
     Governance --> TrustedPropertyConstraints
-    Governance --> PermissionsToAccredit
-    Governance --> PermissionsToAttest
-    Governance --> CredentialState
+    Governance --> Permissions
     TrustedPropertyConstraints --> TrustedPropertyConstraint
-    PermissionsToAccredit --> PermissionToAccredit
-    PermissionsToAttest --> PermissionToAttest
+    Permissions --> Permission
     TrustedPropertyConstraint --> TrustedPropertyName
     TrustedPropertyConstraint --> TrustedPropertyValue
-    Credential --> TrustedPropertyName
-    Credential --> TrustedPropertyValue
+    TrustedPropertyConstraint --> Timespan
 
 ```
 
@@ -301,8 +279,8 @@ Creates a new federation with an initial root authority. Emits a `FederationCrea
 
 ```rust
 public fun add_trusted_property(
+  self: &mut Federation,
   cap: &RootAuthorityCap,
-  federation: &mut Federation,
   property_name: TrustedPropertyName,
   allowed_values: VecSet<TrustedPropertyValue>,
   allow_any: bool,
@@ -312,13 +290,26 @@ public fun add_trusted_property(
 
 Adds a trusted property to the federation with specified constraints. Only callable by a root authority.
 
+### revoke_trusted_property
+
+````rust
+public fun revoke_trusted_property(
+  self: &mut Federation,
+  cap: &RootAuthorityCap,
+  property_name: TrustedPropertyName,
+  valid_to_ms: u64,
+  ctx: &mut TxContext
+)
+```
+Revokes a trusted property from the federation. Only callable by a root authority.
+
 ### add_root_authority
 
 ```rust
   public fun add_root_authority(
+      self : &mut Federation,
       cap : &RootAuthorityCap,
-      federation : &mut Federation,
-      account_id : String,
+      account_id : ID,
       ctx : &mut TxContext,
     )
 ```
@@ -329,8 +320,8 @@ Adds a another Root Authority
 
 ```rust
 public fun create_accreditation(
+  self: &mut Federation,
   cap: &AccreditCap,
-  federation: &mut Federation,
   receiver: ID,
   want_property_constraints: vector<TrustedPropertyConstraint>,
   ctx: &mut TxContext
@@ -343,8 +334,8 @@ Issues a permission to accredit specified trusted properties. Ensures the issuer
 
 ```rust
 public fun create_attestation(
+  self: &mut Federation,
   cap: &AttestCap,
-  federation: &mut Federation,
   receiver: ID,
   wanted_constraints: vector<TrustedPropertyConstraint>,
   ctx: &mut TxContext
@@ -357,8 +348,8 @@ Issues a permission to attest specified trusted properties. Ensures the issuer h
 
 ```rust
 public fun revoke_attestation(
+  self: &mut Federation,
   cap: &AttestCap,
-  federation: &mut Federation,
   user_id: &ID,
   permission_id: &ID,
   ctx: &mut TxContext
@@ -371,8 +362,8 @@ Revokes a permission to attest from a specified user. Ensures the issuer has the
 
 ```rust
 public fun revoke_accreditation(
+  self: &mut Federation,
   cap: &AccreditCap,
-  federation: &mut Federation,
   user_id: &ID,
   permission_id: &ID,
   ctx: &mut TxContext
@@ -380,34 +371,6 @@ public fun revoke_accreditation(
 ```
 
 Revokes a permission to accredit from a specified user. Ensures the issuer has the necessary permissions to revoke.
-
-### issue_credential
-
-```rust
-public fun issue_credential(
-  cap: &AttestCap,
-  federation: &mut Federation,
-  receiver: ID,
-  trusted_properties: VecMap<TrustedPropertyName, TrustedPropertyValue>,
-  valid_from_ts_ms: u64,
-  valid_until_ts_ms: u64,
-  ctx: &mut TxContext
-)
-```
-
-Issues a credential to a specified user with defined trusted properties and validity period. Ensures the issuer has the necessary permissions to attest the properties.
-
-### validate_credential
-
-```rust
-public fun validate_credential(
-  self: &Federation,
-  credential: &Credential,
-  ctx: &mut TxContext
-)
-```
-
-Validates a credential to ensure it adheres to the federation's trusted property constraints, has not been revoked, and is within its validity period.
 
 ## Usage
 
