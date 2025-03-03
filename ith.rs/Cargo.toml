@@ -19,7 +19,7 @@ iota-keys = { git = "https://github.com/iotaledger/iota.git", package = "iota-ke
 iota-sdk = { git = "https://github.com/iotaledger/iota.git", package = "iota-sdk", tag = "v0.1.4" }
 jsonpath-rust = "0.7"
 move-core-types = { git = "https://github.com/iotaledger/iota.git", package = "move-core-types", tag = "v0.1.4" }
-secret-storage = { git = "https://github.com/iotaledger/secret-storage", branch = "proposal-for-changes" }
+secret-storage = { git = "https://github.com/iotaledger/secret-storage" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 shared-crypto = { git = "https://github.com/iotaledger/iota.git", package = "shared-crypto", tag = "v0.1.4" }
