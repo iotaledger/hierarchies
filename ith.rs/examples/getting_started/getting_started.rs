@@ -16,6 +16,9 @@ use ith::types::{TrustedPropertyName, TrustedPropertyValue};
 ///
 /// Please note that we use an unsecured private key provider [`TestMemSigner`],
 /// which should NOT be used in production.
+///
+/// *The ID of newly deployed package is cached in the file `ith.rs/target/ith_pkg_id.txt`.
+/// *If you want to re-deploy the package, you need to remove the file.
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
   let client = get_client(urls::testnet::node(), urls::testnet::faucet()).await?;
