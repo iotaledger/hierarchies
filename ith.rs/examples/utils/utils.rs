@@ -10,7 +10,7 @@ use iota::client_commands;
 use iota_keys::keystore::{AccountKeystore, InMemKeystore};
 use iota_sdk::types::base_types::{IotaAddress, ObjectID};
 use iota_sdk::types::crypto::{IotaSignature, SignatureScheme};
-use iota_sdk::IotaClientBuilder;
+use iota_sdk::{IotaClientBuilder, IOTA_LOCAL_NETWORK_GAS_URL};
 use ith::client::{ITHClient, ITHClientReadOnly};
 use ith::key::IotaKeySignature;
 use jsonpath_rust::JsonPathQuery;
@@ -27,13 +27,47 @@ const CACHED_PKG_ID: &str = "target/ith_pkg_id.txt";
 
 pub const TEST_GAS_BUDGET: u64 = 5_000_000_000;
 
+pub mod urls {
+  pub mod localnet {
+    use iota_sdk::{IOTA_LOCAL_NETWORK_GAS_URL, IOTA_LOCAL_NETWORK_URL};
+    pub fn faucet() -> &'static str {
+      IOTA_LOCAL_NETWORK_GAS_URL
+    }
+    pub fn node() -> &'static str {
+      IOTA_LOCAL_NETWORK_URL
+    }
+  }
+  pub mod devnet {
+    use iota_sdk::{IOTA_DEVNET_GAS_URL, IOTA_DEVNET_URL};
+    pub fn faucet() -> &'static str {
+      IOTA_DEVNET_GAS_URL
+    }
+    pub fn node() -> &'static str {
+      IOTA_DEVNET_URL
+    }
+  }
+
+  pub mod testnet {
+    use iota_sdk::{IOTA_TESTNET_GAS_URL, IOTA_TESTNET_URL};
+    pub fn faucet() -> &'static str {
+      IOTA_TESTNET_GAS_URL
+    }
+    pub fn node() -> &'static str {
+      IOTA_TESTNET_URL
+    }
+  }
+}
+
 /// This is a helper function to get an ITH client for testing purposes.
 /// The client assumes the locally running IOTA node is a private network
 /// It will check if the package is already published and if not, it will publish it.
 /// It will also request tokens from the faucet for the active address.
-pub async fn get_client() -> anyhow::Result<ITHClient<TestMemSigner>> {
+pub async fn get_client(
+  node_url: &str,
+  faucet_url: &str,
+) -> anyhow::Result<ITHClient<TestMemSigner>> {
   let active_address = active_address().await?;
-  faucet(active_address).await?;
+  faucet(active_address, faucet_url).await?;
 
   let package_id =
     if let Ok(id) = std::env::var("ITH_PKG_ID").or(get_cached_id(active_address).await) {
@@ -43,12 +77,12 @@ pub async fn get_client() -> anyhow::Result<ITHClient<TestMemSigner>> {
       publish_package(active_address).await?
     };
 
-  let client = IotaClientBuilder::default().build_localnet().await?;
+  let client = IotaClientBuilder::default().build(node_url).await?;
 
   let signer = TestMemSigner::new();
   let user_address = signer.get_address()?;
 
-  faucet(user_address).await?;
+  faucet(user_address, faucet_url).await?;
 
   let read_only_client = ITHClientReadOnly::new(client.clone(), package_id);
 
@@ -57,8 +91,8 @@ pub async fn get_client() -> anyhow::Result<ITHClient<TestMemSigner>> {
   Ok(ith_client)
 }
 
-pub async fn faucet(address: IotaAddress) -> anyhow::Result<()> {
-  client_commands::request_tokens_from_faucet(address.to_owned(), GAS_LOCAL_NETWORK.to_owned())
+pub async fn faucet(address: IotaAddress, faucet_url: impl AsRef<str>) -> anyhow::Result<()> {
+  client_commands::request_tokens_from_faucet(address.to_owned(), faucet_url.as_ref().to_owned())
     .await
     .context("Failed to request tokens from faucet")?;
 
@@ -67,7 +101,7 @@ pub async fn faucet(address: IotaAddress) -> anyhow::Result<()> {
   Ok(())
 }
 
-async fn active_address() -> anyhow::Result<IotaAddress> {
+pub async fn active_address() -> anyhow::Result<IotaAddress> {
   Command::new("iota")
     .arg("client")
     .arg("active-address")
@@ -78,7 +112,7 @@ async fn active_address() -> anyhow::Result<IotaAddress> {
     .and_then(|output| Ok(serde_json::from_slice::<IotaAddress>(&output.stdout)?))
 }
 
-async fn get_cached_id(active_address: IotaAddress) -> anyhow::Result<String> {
+pub async fn get_cached_id(active_address: IotaAddress) -> anyhow::Result<String> {
   let cache = tokio::fs::read_to_string(CACHED_PKG_ID).await?;
   let (cached_id, cached_address) = cache
     .split_once(';')
@@ -91,7 +125,7 @@ async fn get_cached_id(active_address: IotaAddress) -> anyhow::Result<String> {
   }
 }
 
-async fn publish_package(active_address: IotaAddress) -> anyhow::Result<ObjectID> {
+pub async fn publish_package(active_address: IotaAddress) -> anyhow::Result<ObjectID> {
   let output = Command::new("sh")
     .current_dir(SCRIPT_DIR)
     .arg("publish_ith.sh")

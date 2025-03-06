@@ -1,5 +1,5 @@
 use anyhow::Context;
-use examples::get_client;
+use examples::{get_client, urls};
 use iota_sdk::types::base_types::ObjectID;
 use ith::types::Federation;
 
@@ -14,7 +14,7 @@ use ith::types::Federation;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
   // Get the client instance
-  let ith_client = get_client().await?;
+  let ith_client = get_client(urls::localnet::node(), urls::localnet::faucet()).await?;
 
   // Create new federation
   let federation = ith_client.new_federation(None).await?;

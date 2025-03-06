@@ -1,38 +1,24 @@
 use anyhow::Context;
-use examples::TestMemSigner;
+use examples::{get_client, urls};
 use iota_sdk::types::base_types::ObjectID;
-use iota_sdk::IotaClientBuilder;
-use ith::client::ITHClientReadOnly;
 use ith::types::TrustedPropertyConstraint;
 use ith::types::{TrustedPropertyName, TrustedPropertyValue};
 
 /// Getting started
 ///
-/// In this example we connect to the already deployed ITH package on the IOTA test network.
-/// We create a new federation, add a trusted property to it, create an attestation,
-/// validate the trusted properties, revoke the attestation and validate the trusted properties again.
+/// This example automatically installs ITH package in the testnet network.
+/// When the ITH package is published it creates a new federation,
+/// adds trusted properties, creates an attestation, validates them,
+/// revokes the attestation, then validates them again.
 ///
-/// Before you run the example:
-///  - make sure to set the `ITH_PKG_ID` environment variable with the package id of the deployed ITH package.
-///  - the signer's account that will be used for the example should have some tokens to perform the operations.
-/// Please be aware that we use UNSECURE private key provider - [`TestMemSigner`]. It should NOT be used in production.
+/// Before running the example:
+///  - ensure you have the IOTA CLI installed and configured for the testnet network
+///
+/// Please note that we use an unsecured private key provider [`TestMemSigner`],
+/// which should NOT be used in production.
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-  // Get the package id of the deployed ITH package
-  let package_id = std::env::var("ITH_PKG_ID").expect("ITH_PKG_ID is not set");
-
-  // A test signer is used for demonstration purposes only. Please make sure the signer's account has enough tokens.
-  let signer = TestMemSigner::new();
-
-  // We need an IOTA network client to interact as a dependency for the ITH client.
-  let iota_client = IotaClientBuilder::default().build_testnet().await?;
-
-  // Create a read-only client for the ITH. The read-only client is used for
-  // read-only operations and does't require a signer with a private key. It is used for off-chain operations.
-  let read_only_client = ITHClientReadOnly::new(iota_client, package_id.parse()?);
-
-  // Create a new ITH client with the read-only client and the signer.
-  let client = ith::client::ITHClient::new(read_only_client, signer).await?;
+  let client = get_client(urls::testnet::node(), urls::testnet::faucet()).await?;
 
   // Create a trusted property with allowed values
   let property_name = TrustedPropertyName::new(["university", "a", "score", "department"]);
@@ -43,9 +29,12 @@ async fn main() -> anyhow::Result<()> {
   let allowed_values_property = [value_biology.clone(), value_physics.clone()];
 
   // Create new federation
+  println!("creating a new federation");
   let federation = client.new_federation(None).await?;
+  println!("federation crated");
   let federation_id = *federation.id.object_id();
 
+  println!("adding trust properties");
   // Add the trusted property to the federation. The federation owner can add trusted properties.
   client
     .add_trusted_property(

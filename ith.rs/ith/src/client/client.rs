@@ -184,7 +184,7 @@ where
       self.sender_address(),
       vec![gas_coin.object_ref()],
       tx.clone(),
-      50_000_000_000,
+      5_000_000_000,
       gas_price,
     );
 

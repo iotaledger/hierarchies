@@ -1,5 +1,5 @@
 use anyhow::Context;
-use examples::get_client;
+use examples::{get_client, urls};
 use ith::types::{TrustedPropertyName, TrustedPropertyValue};
 
 /// Demonstrates how to use the offchain API to get federation properties.
@@ -11,7 +11,7 @@ use ith::types::{TrustedPropertyName, TrustedPropertyValue};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-  let ith_client = get_client().await?;
+  let ith_client = get_client(urls::localnet::node(), urls::localnet::faucet()).await?;
 
   let federation = ith_client.new_federation(None).await?;
   let federation_id = federation.id.object_id();

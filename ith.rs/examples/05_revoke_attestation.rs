@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use anyhow::Context;
-use examples::get_client;
+use examples::{get_client, urls};
 use iota_sdk::types::base_types::ObjectID;
 use ith::types::Federation;
 use ith::types::{Timespan, TrustedPropertyConstraint};
@@ -19,7 +19,7 @@ use ith::types::{TrustedPropertyName, TrustedPropertyValue};
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
   // Get the client instance
-  let client = get_client().await?;
+  let client = get_client(urls::localnet::node(), urls::localnet::faucet()).await?;
 
   // Create new federation
   let federation = client.new_federation(None).await?;
