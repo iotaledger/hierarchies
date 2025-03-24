@@ -1,0 +1,21 @@
+[package]
+name = "ith"
+license = "Apache-2.0"
+version = "0.1.0"
+edition = "2024.beta"
+
+authors = [
+  "Pawel Ivan (pawel.ivan@iota.org)",
+  "Yasir Shariff (yasir.shariff@iota.org)",
+]
+
+[dependencies]
+MoveStdlib = { git = "https://github.com/iotaledger/iota.git", subdir = "crates/iota-framework/packages/move-stdlib", rev = "v0.1.4" }
+Iota = { git = "https://github.com/iotaledger/iota.git", subdir = "crates/iota-framework/packages/iota-framework", rev = "v0.1.4" }
+
+[addresses]
+ith = "0x0"
+
+[dev-dependencies]
+
+[dev-addresses]
