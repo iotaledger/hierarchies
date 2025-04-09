@@ -183,7 +183,7 @@ impl SignerTrait<IotaKeySignature> for TestMemSigner {
   type KeyId = ();
   async fn sign(
     &self,
-    hash: &[u8],
+    hash: &Vec<u8>,
   ) -> secret_storage::Result<<IotaKeySignature as SignerSignatureScheme>::Signature> {
     let address = self.0.get_address_by_alias(TEST_ALIAS.to_owned()).unwrap();
 
@@ -205,7 +205,7 @@ impl SignerTrait<IotaKeySignature> for TestMemSigner {
 
     Ok(public_key)
   }
-  fn key_id(&self) -> &Self::KeyId {
-    unimplemented!()
+  fn key_id(&self) -> Self::KeyId {
+    ()
   }
 }
