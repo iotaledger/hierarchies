@@ -3,8 +3,8 @@ use std::collections::HashSet;
 use anyhow::Context;
 use examples::{get_client, urls};
 use iota_sdk::types::base_types::ObjectID;
-use ith::types::{Timespan, TrustedPropertyConstraint};
-use ith::types::{TrustedPropertyName, TrustedPropertyValue};
+use ith::types::{Statement, Timespan};
+use ith::types::{StatementName, StatementValue};
 
 /// Demonstrates how to use the offchain API to validate trusted properties.
 /// In this example we connect to a locally running private network, but it can be adapted
@@ -21,14 +21,14 @@ async fn main() -> anyhow::Result<()> {
   let federation_id = federation.id.object_id();
 
   //   Add trusted property
-  let property_name = TrustedPropertyName::from("Example LTD");
-  let value = TrustedPropertyValue::from("Hello");
+  let statement_name = StatementName::from("Example LTD");
+  let value = StatementValue::from("Hello");
   let allowed_values = HashSet::from_iter([value.clone()]);
 
   ith_client
-    .add_trusted_property(
+    .add_trustedstatement(
       *federation_id,
-      property_name.clone(),
+      statement_name.clone(),
       allowed_values.clone(),
       false,
       None,
@@ -40,8 +40,8 @@ async fn main() -> anyhow::Result<()> {
   let receiver = ObjectID::random();
 
   // Property constraints
-  let constraints = TrustedPropertyConstraint {
-    property_name: property_name.clone(),
+  let constraints = Statement {
+    statement_name: statement_name.clone(),
     allowed_values,
     expression: None,
     allow_any: false,
@@ -57,12 +57,12 @@ async fn main() -> anyhow::Result<()> {
   }
 
   // Validate trusted properties
-  let trusted_properties = [(property_name, value)];
+  let trustedstatements = [(statement_name, value)];
 
   let validate = ith_client
     .offchain(*federation_id)
     .await?
-    .validate_trusted_properties((*receiver).into(), trusted_properties)
+    .validatestatements((*receiver).into(), trustedstatements)
     .context("Failed to validate trusted properties")?;
 
   assert!(validate);

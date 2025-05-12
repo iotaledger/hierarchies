@@ -8,20 +8,20 @@ use iota_sdk::types::{TypeTag, MOVE_STDLIB_PACKAGE_ID};
 use move_core_types::ident_str;
 use serde::{Deserialize, Serialize};
 
-use super::trusted_property::{TrustedPropertyName, TrustedPropertyValue};
-use super::{new_property_name, new_property_value_number, new_property_value_string};
+use super::trustedstatement::{StatementName, StatementValue};
+use super::{new_property_value_number, new_property_value_string, newstatement_name};
 use crate::utils::{self, deserialize_vec_map, deserialize_vec_set, MoveType};
 
 /// Trusted property constraints for a federation
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct TrustedPropertyConstraints {
+pub struct Statements {
   #[serde(deserialize_with = "deserialize_vec_map")]
-  pub data: HashMap<TrustedPropertyName, TrustedPropertyConstraint>,
+  pub data: HashMap<StatementName, Statement>,
 }
 
-impl TrustedPropertyConstraints {
-  pub fn contains_property(&self, property_name: &TrustedPropertyName) -> bool {
-    self.data.contains_key(property_name)
+impl Statements {
+  pub fn contains_property(&self, statement_name: &StatementName) -> bool {
+    self.data.contains_key(statement_name)
   }
 }
 
@@ -31,21 +31,21 @@ impl TrustedPropertyConstraints {
 /// The constraint can also have a time range in which the constraint is valid.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 /// The evaluation order: allow_any => expression => allowed_values
-pub struct TrustedPropertyConstraint {
-  pub property_name: TrustedPropertyName,
+pub struct Statement {
+  pub statement_name: StatementName,
   // allow only set of values
   #[serde(deserialize_with = "deserialize_vec_set")]
-  pub allowed_values: HashSet<TrustedPropertyValue>,
-  pub expression: Option<TrustedPropertyExpression>,
+  pub allowed_values: HashSet<StatementValue>,
+  pub expression: Option<StatementValueCondition>,
   // allow_any - takes a precedence over the allowed_values
   pub allow_any: bool,
   pub timespan: Timespan,
 }
 
-impl TrustedPropertyConstraint {
-  pub fn new(property_name: impl Into<TrustedPropertyName>) -> Self {
+impl Statement {
+  pub fn new(statement_name: impl Into<StatementName>) -> Self {
     Self {
-      property_name: property_name.into(),
+      statement_name: statement_name.into(),
       allowed_values: HashSet::new(),
       expression: None,
       allow_any: false,
@@ -55,13 +55,13 @@ impl TrustedPropertyConstraint {
 
   pub fn with_allowed_values(
     mut self,
-    allowed_values: impl IntoIterator<Item = TrustedPropertyValue>,
+    allowed_values: impl IntoIterator<Item = StatementValue>,
   ) -> Self {
     self.allowed_values = allowed_values.into_iter().collect();
     self
   }
 
-  pub fn with_expression(mut self, expression: TrustedPropertyExpression) -> Self {
+  pub fn with_expression(mut self, expression: StatementValueCondition) -> Self {
     self.expression = Some(expression);
     self
   }
@@ -72,13 +72,13 @@ impl TrustedPropertyConstraint {
   }
 }
 
-impl TrustedPropertyConstraint {
-  pub fn matches_property(&self, name: &TrustedPropertyName, value: &TrustedPropertyValue) -> bool {
+impl Statement {
+  pub fn matches_property(&self, name: &StatementName, value: &StatementValue) -> bool {
     self.matches_name(name) && self.matches_value(value)
   }
 
-  pub fn matches_name(&self, name: &TrustedPropertyName) -> bool {
-    let len_constraint = self.property_name.names().len();
+  pub fn matches_name(&self, name: &StatementName) -> bool {
+    let len_constraint = self.statement_name.names().len();
     let len_names = name.names().len();
 
     if len_constraint > len_names {
@@ -86,14 +86,14 @@ impl TrustedPropertyConstraint {
     }
 
     self
-      .property_name
+      .statement_name
       .names()
       .iter()
       .zip(name.names().iter())
       .all(|(a, b)| a == b)
   }
 
-  pub fn matches_value(&self, value: &TrustedPropertyValue) -> bool {
+  pub fn matches_value(&self, value: &StatementValue) -> bool {
     if self.allow_any {
       return true;
     }
@@ -105,38 +105,38 @@ impl TrustedPropertyConstraint {
     self.allowed_values.contains(value)
   }
 
-  pub fn matches_expression(exp: &TrustedPropertyExpression, value: &TrustedPropertyValue) -> bool {
+  pub fn matches_expression(exp: &StatementValueCondition, value: &StatementValue) -> bool {
     match exp {
-      TrustedPropertyExpression::StartsWith(prefix) => {
-        if let TrustedPropertyValue::Text(text) = value {
+      StatementValueCondition::StartsWith(prefix) => {
+        if let StatementValue::Text(text) = value {
           text.starts_with(prefix)
         } else {
           false
         }
       }
-      TrustedPropertyExpression::EndsWith(suffix) => {
-        if let TrustedPropertyValue::Text(text) = value {
+      StatementValueCondition::EndsWith(suffix) => {
+        if let StatementValue::Text(text) = value {
           text.ends_with(suffix)
         } else {
           false
         }
       }
-      TrustedPropertyExpression::Contains(substring) => {
-        if let TrustedPropertyValue::Text(text) = value {
+      StatementValueCondition::Contains(substring) => {
+        if let StatementValue::Text(text) = value {
           text.contains(substring)
         } else {
           false
         }
       }
-      TrustedPropertyExpression::GreaterThan(num) => {
-        if let TrustedPropertyValue::Number(value) = value {
+      StatementValueCondition::GreaterThan(num) => {
+        if let StatementValue::Number(value) = value {
           value > num
         } else {
           false
         }
       }
-      TrustedPropertyExpression::LowerThan(num) => {
-        if let TrustedPropertyValue::Number(value) = value {
+      StatementValueCondition::LowerThan(num) => {
+        if let StatementValue::Number(value) = value {
           value < num
         } else {
           false
@@ -149,8 +149,8 @@ impl TrustedPropertyConstraint {
 /// Trusted property expression is a constraint that can be applied to a trusted property
 /// to restrict the values that can be assigned to the property.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(try_from = "TrustedPropertyExpressionMove")]
-pub enum TrustedPropertyExpression {
+#[serde(try_from = "StatementValueConditionMove")]
+pub enum StatementValueCondition {
   StartsWith(String),
   EndsWith(String),
   Contains(String),
@@ -158,49 +158,47 @@ pub enum TrustedPropertyExpression {
   LowerThan(u64),
 }
 
-impl MoveType for TrustedPropertyExpression {
+impl MoveType for StatementValueCondition {
   fn move_type(package: ObjectID) -> TypeTag {
-    TypeTag::from_str(
-      format!("{}::trusted_constraint::TrustedPropertyExpression", package).as_str(),
-    )
-    .expect("Failed to create type tag")
+    TypeTag::from_str(format!("{}::trusted_constraint::StatementValueCondition", package).as_str())
+      .expect("Failed to create type tag")
   }
 }
-impl TrustedPropertyExpression {
+impl StatementValueCondition {
   pub fn as_starts_with(&self) -> Option<String> {
     match self {
-      TrustedPropertyExpression::StartsWith(value) => Some(value.clone()),
+      StatementValueCondition::StartsWith(value) => Some(value.clone()),
       _ => None,
     }
   }
   pub fn as_ends_with(&self) -> Option<String> {
     match self {
-      TrustedPropertyExpression::EndsWith(value) => Some(value.clone()),
+      StatementValueCondition::EndsWith(value) => Some(value.clone()),
       _ => None,
     }
   }
   pub fn as_contains(&self) -> Option<String> {
     match self {
-      TrustedPropertyExpression::Contains(value) => Some(value.clone()),
+      StatementValueCondition::Contains(value) => Some(value.clone()),
       _ => None,
     }
   }
   pub fn as_greater_than(&self) -> Option<u64> {
     match self {
-      TrustedPropertyExpression::GreaterThan(value) => Some(*value),
+      StatementValueCondition::GreaterThan(value) => Some(*value),
       _ => None,
     }
   }
   pub fn as_lower_than(&self) -> Option<u64> {
     match self {
-      TrustedPropertyExpression::LowerThan(value) => Some(*value),
+      StatementValueCondition::LowerThan(value) => Some(*value),
       _ => None,
     }
   }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-struct TrustedPropertyExpressionMove {
+struct StatementValueConditionMove {
   starts_with: Option<String>,
   ends_with: Option<String>,
   contains: Option<String>,
@@ -208,27 +206,25 @@ struct TrustedPropertyExpressionMove {
   lower_than: Option<u64>,
 }
 
-impl TryFrom<TrustedPropertyExpressionMove> for TrustedPropertyExpression {
+impl TryFrom<StatementValueConditionMove> for StatementValueCondition {
   type Error = &'static str;
 
-  fn try_from(value: TrustedPropertyExpressionMove) -> Result<Self, Self::Error> {
+  fn try_from(value: StatementValueConditionMove) -> Result<Self, Self::Error> {
     match (value.starts_with, value.ends_with, value.contains, value.greater_than, value.lower_than) {
-      (Some(starts_with), None, None, None, None) => Ok(TrustedPropertyExpression::StartsWith(starts_with)),
-      (None, Some(ends_with), None, None, None) => Ok(TrustedPropertyExpression::EndsWith(ends_with)),
-      (None, None, Some(contains), None, None) => Ok(TrustedPropertyExpression::Contains(contains)),
-      (None, None, None, Some(greater_than), None) => Ok(TrustedPropertyExpression::GreaterThan(greater_than)),
-      (None, None, None, None, Some(lower_than)) => Ok(TrustedPropertyExpression::LowerThan(lower_than)),
-      _ => Err("Invalid TrustedPropertyExpression: must have either starts_with, ends_with, contains, greater_than or lower_than"),
+      (Some(starts_with), None, None, None, None) => Ok(StatementValueCondition::StartsWith(starts_with)),
+      (None, Some(ends_with), None, None, None) => Ok(StatementValueCondition::EndsWith(ends_with)),
+      (None, None, Some(contains), None, None) => Ok(StatementValueCondition::Contains(contains)),
+      (None, None, None, Some(greater_than), None) => Ok(StatementValueCondition::GreaterThan(greater_than)),
+      (None, None, None, None, Some(lower_than)) => Ok(StatementValueCondition::LowerThan(lower_than)),
+      _ => Err("Invalid StatementValueCondition: must have either starts_with, ends_with, contains, greater_than or lower_than"),
     }
   }
 }
 
-impl MoveType for TrustedPropertyConstraint {
+impl MoveType for Statement {
   fn move_type(package: ObjectID) -> TypeTag {
-    TypeTag::from_str(
-      format!("{}::trusted_constraint::TrustedPropertyConstraint", package).as_str(),
-    )
-    .expect("Failed to create type tag")
+    TypeTag::from_str(format!("{}::trusted_constraint::Statement", package).as_str())
+      .expect("Failed to create type tag")
   }
 }
 
@@ -243,13 +239,13 @@ pub struct Timespan {
 pub(crate) fn new_property_constraint(
   package_id: ObjectID,
   ptb: &mut ProgrammableTransactionBuilder,
-  constraints: Vec<TrustedPropertyConstraint>,
+  constraints: Vec<Statement>,
 ) -> anyhow::Result<Argument> {
   let mut constraint_args = vec![];
   for constraint in constraints {
-    let value_tag = TrustedPropertyValue::move_type(package_id);
+    let value_tag = StatementValue::move_type(package_id);
 
-    let property_names = new_property_name(constraint.property_name, ptb, package_id)?;
+    let statement_names = newstatement_name(constraint.statement_name, ptb, package_id)?;
 
     let allow_any = ptb.pure(constraint.allow_any)?;
 
@@ -257,11 +253,9 @@ pub(crate) fn new_property_constraint(
       .allowed_values
       .into_iter()
       .map(|value| match value {
-        TrustedPropertyValue::Text(text) => {
-          new_property_value_string(text.to_string(), ptb, package_id)
-            .expect("failed to create new property value string")
-        }
-        TrustedPropertyValue::Number(number) => new_property_value_number(number, ptb, package_id)
+        StatementValue::Text(text) => new_property_value_string(text.to_string(), ptb, package_id)
+          .expect("failed to create new property value string"),
+        StatementValue::Number(number) => new_property_value_number(number, ptb, package_id)
           .expect("failed to create new property value number"),
       })
       .collect();
@@ -269,7 +263,7 @@ pub(crate) fn new_property_constraint(
     let allowed_values =
       utils::create_vec_set_from_move_values(allowed_values, value_tag, ptb, package_id);
 
-    let property_expression_tag = TrustedPropertyExpression::move_type(package_id);
+    let property_expression_tag = StatementValueCondition::move_type(package_id);
 
     let expression = match constraint.expression {
       Some(expression) => {
@@ -297,7 +291,7 @@ pub(crate) fn new_property_constraint(
         let arg = ptb.programmable_move_call(
           package_id,
           ident_str!("trusted_constraint").into(),
-          ident_str!("new_trusted_property_expression").into(),
+          ident_str!("new_trustedstatement_expression").into(),
           vec![],
           vec![starts_with, ends_with, contains, greater_than, lower_than],
         );
@@ -311,23 +305,21 @@ pub(crate) fn new_property_constraint(
         )
       }
 
-      None => {
-        utils::option_to_move::<TrustedPropertyConstraint>(None, property_expression_tag, ptb)?
-      }
+      None => utils::option_to_move::<Statement>(None, property_expression_tag, ptb)?,
     };
 
     let constraint = ptb.programmable_move_call(
       package_id,
       ident_str!("trusted_constraint").into(),
-      ident_str!("new_trusted_property_constraint").into(),
+      ident_str!("new_trustedstatement").into(),
       vec![],
-      vec![property_names, allowed_values, allow_any, expression],
+      vec![statement_names, allowed_values, allow_any, expression],
     );
     constraint_args.push(constraint);
   }
 
   Ok(ptb.command(Command::MakeMoveVec(
-    Some(TrustedPropertyConstraint::move_type(package_id)),
+    Some(Statement::move_type(package_id)),
     constraint_args,
   )))
 }

@@ -1,0 +1,183 @@
+module ith::accreditation {
+  use iota::object::{Self, ID, UID};
+  use iota::tx_context::TxContext;
+  use iota::transfer;
+  use std::string::String;
+  use iota::vec_map::VecMap;
+
+  use ith::statement_name::{StatementName};
+  use ith::statement_value::{StatementValue};
+  use ith::statement::{Self, Statement};
+  use ith::utils;
+
+
+  // The permission should be removed
+  public struct Accreditations has store {
+    statements : vector<Accreditation>,
+  }
+
+  public fun new_empty_accreditations() : Accreditations {
+    Accreditations {
+      statements: vector::empty(),
+    }
+  }
+
+  // but created statements shouldn't be
+  public fun new_accreditations(statements : vector<Accreditation>) : Accreditations {
+    Accreditations {
+      statements: statements,
+    }
+  }
+
+  public(package) fun add_accreditation(self : &mut Accreditations, accredited_statement : Accreditation) {
+    self.statements.push_back(accredited_statement);
+  }
+
+  public(package) fun are_statements_allowed(self : &Accreditations, statements: &VecMap<StatementName, StatementValue>, current_time_ms : u64) :bool {
+    let statement_names = statements.keys() ;
+    let mut idx_statement_names = 0;
+
+    while ( idx_statement_names < statement_names.length() ) {
+      let statement_name = statement_names[idx_statement_names];
+      let statement_value = statements.get(&statement_name);
+
+      if (!self.is_statement_allowed(&statement_name, statement_value, current_time_ms)  ) {
+        return false
+      };
+
+      idx_statement_names = idx_statement_names + 1;
+    };
+
+    return true
+  }
+
+  // This checks if the value is permitted by any of the accredited statements
+  public(package) fun is_statement_allowed(self : &Accreditations, statement_name : &StatementName, statement_value : &StatementValue, current_time_ms : u64) :  bool {
+    let len_statements_to_attest = self.statements.length();
+    let mut idx_statements_to_attest = 0;
+
+    while (idx_statements_to_attest < len_statements_to_attest) {
+      let accreditation = &self.statements[idx_statements_to_attest];
+      let maybe_statement = accreditation.statements.try_get(statement_name) ;
+
+      if ( maybe_statement.is_none()) {
+        continue
+      };
+      if (maybe_statement.borrow().matches_property(statement_name, statement_value, current_time_ms)) {
+        return true
+      };
+      idx_statements_to_attest = idx_statements_to_attest + 1;
+    };
+
+
+    return false
+  }
+
+  public(package) fun are_statements_compliant(self : &Accreditations, statements: &vector<Statement>, current_time_ms : u64 ) :bool {
+    let mut idx = 0;
+    while ( idx < statements.length()  ) {
+        let constraint = statements[idx];
+        if ( ! self.is_statement_compliant(&constraint, current_time_ms)  )  {
+          return false
+        };
+        idx = idx + 1;
+    };
+    return true
+  }
+
+  public(package) fun is_statement_compliant(self : &Accreditations, constraint : &Statement, current_time_ms : u64) :  bool {
+    let len_statements = self.statements.length();
+    let mut idx_statements = 0;
+    let mut want_statements : vector<StatementValue> = utils::copy_vector(constraint.allowed_values().keys());
+
+    while (idx_statements < len_statements) {
+      let accredited_statement = &self.statements[idx_statements];
+
+      let value_condition = accredited_statement.statements.try_get(constraint.statement_name()) ;
+      if ( value_condition.is_none()) {
+        continue
+      };
+
+      let mut len_want_statements = want_statements.length();
+      let mut idx_want_statements = 0;
+      while (idx_want_statements < len_want_statements ) {
+        let constraint_value = want_statements[idx_want_statements];
+        if ( value_condition.borrow().matches_value(&constraint_value, current_time_ms) ) {
+          want_statements.remove(idx_want_statements);
+          len_want_statements = len_want_statements - 1;
+        };
+        idx_want_statements = idx_want_statements + 1;
+      };
+      idx_statements = idx_statements + 1;
+    };
+
+    // alll wanted statements have been found
+    if (want_statements.length() == 0 ) {
+      return true
+    };
+
+    return false
+  }
+
+  public(package) fun add_accredited_statement(self : &mut Accreditations, permission : Accreditation) {
+    self.statements.push_back(permission);
+  }
+
+  public(package) fun accredited_statements(self : &Accreditations) : &vector<Accreditation> {
+    &self.statements
+  }
+
+  public(package) fun remove_accredited_statement(self : &mut Accreditations, id : &ID) {
+    let mut idx = self.find_accredited_statement_id(id);
+    if (idx.is_none()) {
+      return
+    };
+    let Accreditation {
+      id,
+      statements : _,
+      accredited_by : _,
+      } = self.statements.remove(idx.extract());
+    object::delete(id);
+  }
+
+  public(package) fun find_accredited_statement_id(self : &Accreditations, id : &ID) : Option<u64> {
+    let mut idx = 0;
+    while (idx < self.statements.length()) {
+      if (self.statements[idx].id.to_inner() == *id) {
+        return option::some(idx)
+      };
+      idx = idx + 1;
+    };
+    option::none()
+  }
+
+  /// Accreditation can be created only by the ITH module
+  public struct Accreditation has store, key {
+    id : UID,
+    accredited_by : String,
+    statements : VecMap<StatementName, Statement>,
+  }
+
+  public fun new_accreditation(statements: vector<Statement>, ctx : &mut TxContext) : Accreditation {
+    let statements_map = statement::to_map_of_statements(statements);
+
+    Accreditation {
+        id: object::new(ctx),
+        accredited_by : ctx.sender().to_string(),
+        statements: statements_map,
+    }
+  }
+
+  public(package) fun id(self : &Accreditation) : &UID {
+    &self.id
+  }
+
+  public(package) fun accredited_by(self : &Accreditation) : &String {
+    &self.accredited_by
+  }
+
+  public(package) fun statements(self : &Accreditation) : &VecMap<StatementName, Statement> {
+    &self.statements
+  }
+
+}

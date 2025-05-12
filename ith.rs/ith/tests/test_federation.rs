@@ -34,7 +34,7 @@ async fn test_add_root_authority() -> anyhow::Result<()> {
 
 #[tokio::test]
 #[ignore = "This test is not working"]
-async fn test_adding_trusted_properties() -> anyhow::Result<()> {
+async fn test_adding_trustedstatements() -> anyhow::Result<()> {
   let client = TestClient::init().await?;
 
   let ith_client = client.ith_client().await?;
@@ -42,13 +42,13 @@ async fn test_adding_trusted_properties() -> anyhow::Result<()> {
   let _federation = ith_client.new_federation(None).await?;
 
   // ith_client
-  //   .add_trusted_property(
+  //   .add_trustedstatement(
   //     &client,
-  //     TrustedPropertyName {
+  //     StatementName {
   //       name: vec!["Home".to_string()],
   //     },
   //     VecSet {
-  //       contents: vec![TrustedPropertyValue {
+  //       contents: vec![StatementValue {
   //         value: "12345".to_string(),
   //       }],
   //     },

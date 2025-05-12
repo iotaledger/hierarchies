@@ -10,8 +10,8 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 use crate::client::ITHClientReadOnly;
-use crate::types::Permissions;
-use crate::types::{TrustedPropertyName, TrustedPropertyValue};
+use crate::types::Accreditations;
+use crate::types::{StatementName, StatementValue};
 
 pub struct OnChainFederation<'c> {
   federation_id: ObjectID,
@@ -82,29 +82,26 @@ impl OnChainFederation<'_> {
   pub async fn federation_id(&self) -> ObjectID {
     self.federation_id
   }
-  pub async fn has_permission_to_attest(&self, user_id: ObjectID) -> anyhow::Result<bool> {
+  pub async fn has_accreditation_to_attest(&self, user_id: ObjectID) -> anyhow::Result<bool> {
     self
-      .execute_query("has_permission_to_attest", user_id)
+      .execute_query("has_accreditation_to_attest", user_id)
       .await
   }
   pub async fn is_accreditor(&self, user_id: ObjectID) -> anyhow::Result<bool> {
     self.execute_query("is_accreditor", user_id).await
   }
-  pub async fn is_trusted_property(
-    &self,
-    property_name: &TrustedPropertyName,
-  ) -> anyhow::Result<bool> {
+  pub async fn is_trustedstatement(&self, statement_name: &StatementName) -> anyhow::Result<bool> {
     self
-      .execute_query("is_trusted_property", property_name)
+      .execute_query("is_trustedstatement", statement_name)
       .await
   }
 
-  pub async fn validate_trusted_properties(
+  pub async fn validatestatements(
     &self,
     issuer_id: ObjectID,
-    trusted_properties: impl IntoIterator<Item = (TrustedPropertyName, TrustedPropertyValue)>,
+    trustedstatements: impl IntoIterator<Item = (StatementName, StatementValue)>,
   ) -> anyhow::Result<()> {
-    let trusted_properties: HashMap<_, _> = trusted_properties.into_iter().collect();
+    let trustedstatements: HashMap<_, _> = trustedstatements.into_iter().collect();
     let mut ptb = ProgrammableTransactionBuilder::new();
 
     let fed_ref = ObjectArg::SharedObject {
@@ -118,37 +115,37 @@ impl OnChainFederation<'_> {
 
     let fed_ref = ptb.obj(fed_ref)?;
 
-    let mut property_names: Vec<_> = vec![];
+    let mut statement_names: Vec<_> = vec![];
     let mut property_values: Vec<_> = vec![];
 
-    for (property_name, property_value) in trusted_properties {
-      let names = property_name.names();
+    for (statement_name, property_value) in trustedstatements {
+      let names = statement_name.names();
       let name = ptb.pure(names)?;
-      let property_name: Argument = ptb.programmable_move_call(
+      let statement_name: Argument = ptb.programmable_move_call(
         self.client.ith_package_id(),
-        ident_str!("trusted_property").into(),
-        ident_str!("new_property_name_from_vector").into(),
+        ident_str!("trustedstatement").into(),
+        ident_str!("newstatement_name_from_vector").into(),
         vec![],
         vec![name],
       );
-      property_names.push(property_name);
+      statement_names.push(statement_name);
 
       let property_value = match property_value {
-        TrustedPropertyValue::Text(text) => {
+        StatementValue::Text(text) => {
           let v = ptb.pure(text)?;
           ptb.programmable_move_call(
             self.client.ith_package_id(),
-            ident_str!("trusted_property").into(),
+            ident_str!("trustedstatement").into(),
             ident_str!("new_property_value_string").into(),
             vec![],
             vec![v],
           )
         }
-        TrustedPropertyValue::Number(number) => {
+        StatementValue::Number(number) => {
           let v = ptb.pure(number)?;
           ptb.programmable_move_call(
             self.client.ith_package_id(),
-            ident_str!("trusted_property").into(),
+            ident_str!("trustedstatement").into(),
             ident_str!("new_property_value_number").into(),
             vec![],
             vec![v],
@@ -158,36 +155,36 @@ impl OnChainFederation<'_> {
       property_values.push(property_value);
     }
 
-    let property_name_tag = TypeTag::from_str(
+    let statement_name_tag = TypeTag::from_str(
       format!(
-        "{}::trusted_property::TrustedPropertyName",
+        "{}::trustedstatement::StatementName",
         self.client.ith_package_id()
       )
       .as_str(),
     )?;
     let property_value_tag = TypeTag::from_str(
       format!(
-        "{}::trusted_property::TrustedPropertyValue",
+        "{}::trustedstatement::StatementValue",
         self.client.ith_package_id()
       )
       .as_str(),
     )?;
 
-    let property_names = ptb.command(Command::MakeMoveVec(
-      Some(property_name_tag.clone()),
-      property_names,
+    let statement_names = ptb.command(Command::MakeMoveVec(
+      Some(statement_name_tag.clone()),
+      statement_names,
     ));
     let property_values = ptb.command(Command::MakeMoveVec(
       Some(property_value_tag.clone()),
       property_values,
     ));
 
-    let trusted_properties = ptb.programmable_move_call(
+    let trustedstatements = ptb.programmable_move_call(
       self.client.ith_package_id(),
       ident_str!("utils").into(),
       ident_str!("vec_map_from_keys_values").into(),
-      vec![property_name_tag, property_value_tag],
-      vec![property_names, property_values],
+      vec![statement_name_tag, property_value_tag],
+      vec![statement_names, property_values],
     );
 
     let issuer_id = ptb.pure(issuer_id)?;
@@ -195,9 +192,9 @@ impl OnChainFederation<'_> {
     ptb.programmable_move_call(
       self.client.ith_package_id(),
       ident_str!("main").into(),
-      ident_str!("validate_trusted_properties").into(),
+      ident_str!("validatestatements").into(),
       vec![],
-      vec![fed_ref, issuer_id, trusted_properties],
+      vec![fed_ref, issuer_id, trustedstatements],
     );
 
     let tx = TransactionKind::programmable(ptb.finish());
@@ -217,7 +214,7 @@ impl OnChainFederation<'_> {
     Ok(())
   }
 
-  pub async fn get_trusted_properties(&self) -> anyhow::Result<Vec<TrustedPropertyName>> {
+  pub async fn get_trustedstatements(&self) -> anyhow::Result<Vec<StatementName>> {
     let mut ptb = ProgrammableTransactionBuilder::new();
 
     let fed_ref = ObjectArg::SharedObject {
@@ -234,7 +231,7 @@ impl OnChainFederation<'_> {
     ptb.programmable_move_call(
       self.client.ith_package_id(),
       ident_str!("main").into(),
-      ident_str!("get_trusted_properties").into(),
+      ident_str!("get_trustedstatements").into(),
       vec![],
       vec![fed_ref],
     );
@@ -257,17 +254,27 @@ impl OnChainFederation<'_> {
       .first()
       .ok_or_else(|| anyhow::anyhow!("no return values"))?;
 
-    let res: Vec<TrustedPropertyName> = bcs::from_bytes(return_value)
+    let res: Vec<StatementName> = bcs::from_bytes(return_value)
       .map_err(|e| anyhow::anyhow!("Failed to deserialize result: {}", e))?;
 
     Ok(res)
   }
 
-  pub async fn get_attestations(&self, user_id: ObjectID) -> anyhow::Result<Permissions> {
-    self.execute_query("get_attestations", user_id).await
+  pub async fn get_accreditations_to_attest(
+    &self,
+    user_id: ObjectID,
+  ) -> anyhow::Result<Accreditations> {
+    self
+      .execute_query("get_accreditations_to_attest", user_id)
+      .await
   }
 
-  pub async fn get_accreditations(&self, user_id: ObjectID) -> anyhow::Result<Permissions> {
-    self.execute_query("get_accreditations", user_id).await
+  pub async fn get_accreditations_to_accredit(
+    &self,
+    user_id: ObjectID,
+  ) -> anyhow::Result<Accreditations> {
+    self
+      .execute_query("get_accreditations_to_accredit", user_id)
+      .await
   }
 }

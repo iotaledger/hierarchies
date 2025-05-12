@@ -3,8 +3,8 @@ use std::collections::HashSet;
 use anyhow::Context;
 use examples::{get_client, urls};
 use iota_sdk::types::base_types::ObjectID;
-use ith::types::{Timespan, TrustedPropertyConstraint};
-use ith::types::{TrustedPropertyName, TrustedPropertyValue};
+use ith::types::{Statement, Timespan};
+use ith::types::{StatementName, StatementValue};
 
 /// Demonstrates how to use the offchain API to check if a user has a permission to attest and accredit.
 ///
@@ -26,19 +26,19 @@ async fn main() -> anyhow::Result<()> {
   let attestations = ith_client
     .offchain(*federation_id)
     .await?
-    .get_attestations(user_id);
+    .get_accreditations_to_attest(user_id);
 
-  println!("Permissions: {:#?}", attestations);
+  println!("Accreditations: {:#?}", attestations);
 
   //   Add trusted property
-  let property_name = TrustedPropertyName::from("Example LTD");
-  let value = TrustedPropertyValue::from("Hello");
+  let statement_name = StatementName::from("Example LTD");
+  let value = StatementValue::from("Hello");
   let allowed_values = HashSet::from_iter([value]);
 
   ith_client
-    .add_trusted_property(
+    .add_trustedstatement(
       *federation_id,
-      property_name.clone(),
+      statement_name.clone(),
       allowed_values.clone(),
       false,
       None,
@@ -50,8 +50,8 @@ async fn main() -> anyhow::Result<()> {
   let receiver = ObjectID::random();
 
   // Property constraints
-  let constraints = TrustedPropertyConstraint {
-    property_name,
+  let constraints = Statement {
+    statement_name,
     allowed_values,
     expression: None,
     allow_any: false,
@@ -70,12 +70,12 @@ async fn main() -> anyhow::Result<()> {
   let attestations = ith_client
     .offchain(*federation_id)
     .await?
-    .get_attestations(receiver)
+    .get_accreditations_to_attest(receiver)
     .context("Failed to find permission to attest")?;
 
   assert!(attestations.permissions.len() == 1);
 
-  println!("Permissions: {:#?}", attestations);
+  println!("Accreditations: {:#?}", attestations);
 
   // Issue Accredit permission
   {
@@ -89,7 +89,7 @@ async fn main() -> anyhow::Result<()> {
   let accreditations = ith_client
     .offchain(*federation_id)
     .await?
-    .get_accreditations(receiver)
+    .get_accreditations_to_accredit(receiver)
     .context("Failed to find permission to accredit")?;
 
   assert!(accreditations.permissions.len() == 1);

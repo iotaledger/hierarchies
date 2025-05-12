@@ -1,6 +1,6 @@
 use anyhow::Context;
 use examples::{get_client, urls};
-use ith::types::{TrustedPropertyName, TrustedPropertyValue};
+use ith::types::{StatementName, StatementValue};
 
 /// Demonstrates how to use the offchain API to get federation properties.
 /// In this example we connect to a locally running private network, but it can be adapted
@@ -18,15 +18,15 @@ async fn main() -> anyhow::Result<()> {
 
   //   Add trusted property
   {
-    let property_name = TrustedPropertyName::from("Example LTD");
-    let value = TrustedPropertyValue::from("Hello");
+    let statement_name = StatementName::from("Example LTD");
+    let value = StatementValue::from("Hello");
     let allowed_values = [value];
 
     // Add the trusted property to the federation
     ith_client
-      .add_trusted_property(
+      .add_trustedstatement(
         *federation_id,
-        property_name.clone(),
+        statement_name.clone(),
         allowed_values.clone(),
         false,
         None,
@@ -37,15 +37,15 @@ async fn main() -> anyhow::Result<()> {
 
   // Add second trusted property
   {
-    let property_name = TrustedPropertyName::new(["Example LTD 2", "Example LTD 3"]);
-    let value = TrustedPropertyValue::from("Hello 2");
+    let statement_name = StatementName::new(["Example LTD 2", "Example LTD 3"]);
+    let value = StatementValue::from("Hello 2");
     let allowed_values = [value.clone()];
 
     // Add the trusted property to the federation
     ith_client
-      .add_trusted_property(
+      .add_trustedstatement(
         *federation_id,
-        property_name.clone(),
+        statement_name.clone(),
         allowed_values.clone(),
         false,
         None,
@@ -57,7 +57,7 @@ async fn main() -> anyhow::Result<()> {
   let federation_properties = ith_client
     .offchain(*federation_id)
     .await?
-    .get_trusted_properties();
+    .get_trustedstatements();
 
   assert!(federation_properties.len() == 2);
 

@@ -118,7 +118,9 @@ We recommend that you update the Rust compiler to the latest stable version firs
 ```shell
 rustup update stable
 ```
+
 <!-- TODO change to the published link -->
+
 The ITH Smart Contract requires the IOTA network client binaries. You can find installation instruction in the [IOTA Documentation](https://github.com/iotaledger/iota/blob/develop/docs/content/developer/getting-started/connect.mdx)
 
 ## Getting Started
@@ -188,15 +190,15 @@ cargo run --example
 
 - **Trusted Property Constraint**: Defines conditions or rules on trusted properties. It defines the possible values for Trusted Property's value. The Trusted Property Constraint support the basic expressions:
 
-    | Expression   | Number | String | Example                          |
-    |--------------|--------|--------|----------------------------------|
-    | startsWith   | No     | Yes    | `startsWith("university.")`        |
-    | endsWith     | No     | Yes    | `endsWith(".proposal")`            |
-    | contains     | No     | Yes    | `contains("score")`                |
-    | greaterThan  | Yes    | No     | `greaterThan(85)`                  |
-    | lowerThan    | Yes    | No     | `lowerThan(50)`                    |
-    | equals       | Yes    | Yes    | `university.scores`               |
-    | setOf        | Yes    | Yes    | `["engineering", "philosophy"]`   |
+  | Expression  | Number | String | Example                         |
+  | ----------- | ------ | ------ | ------------------------------- |
+  | startsWith  | No     | Yes    | `startsWith("university.")`     |
+  | endsWith    | No     | Yes    | `endsWith(".proposal")`         |
+  | contains    | No     | Yes    | `contains("score")`             |
+  | greaterThan | Yes    | No     | `greaterThan(85)`               |
+  | lowerThan   | Yes    | No     | `lowerThan(50)`                 |
+  | equals      | Yes    | Yes    | `university.scores`             |
+  | setOf       | Yes    | Yes    | `["engineering", "philosophy"]` |
 
 ### ITH Components
 
@@ -220,7 +222,7 @@ ITH supports both on-chain and off-chain validation, allowing applications to ch
       participant ITHRustClient as ITH Rust Client
       participant ITHMovePackage as ITH Move Package
 
-      User ->> ITHRustClient: validate_trusted_properties()
+      User ->> ITHRustClient: validatestatements()
       ITHRustClient ->> ITHRustClient: Create transaction
       ITHRustClient ->> ITHMovePackage: validate_trust_properties()
       ITHMovePackage -->> ITHRustClient: Result
@@ -235,7 +237,7 @@ sequenceDiagram
     participant ITHRustClient as ITH Rust Client
     participant Indexer as Indexer API (IOTA Node)
 
-    User ->> ITHRustClient: validate_trusted_properties()
+    User ->> ITHRustClient: validatestatements()
     ITHRustClient ->> Indexer: fetch_object(federation_id)
     Indexer -->> ITHRustClient: Content of object
     ITHRustClient ->> ITHRustClient: Perform validation (validate_trust_properties)
@@ -268,7 +270,7 @@ sequenceDiagram
     FederationOwner->>+Federation: add_root_authority(cap, account_id, ctx)
     Federation-->>-FederationOwner: Root authority added
 
-    FederationOwner->>+Federation: add_trusted_property(cap, "university.scores.engineering", allowed_values, allow_any, ctx)
+    FederationOwner->>+Federation: add_trustedstatement(cap, "university.scores.engineering", allowed_values, allow_any, ctx)
     Federation-->>-FederationOwner: Trusted property added
 
     FederationOwner->>+Federation: create_accreditation(cap, Accreditor, want_property_constraints, ctx)
@@ -277,16 +279,16 @@ sequenceDiagram
     Accreditor->>+Federation: create_attestation(cap, Attester, wanted_constraints, ctx)
     Federation-->>-Accreditor: Attestation created
 
-    Verifier->>+Federation: validate_trusted_properties(issuer_id, trusted_properties, ctx)
+    Verifier->>+Federation: validatestatements(issuer_id, trustedstatements, ctx)
     Federation-->>-Verifier: Validation result (true/false)
 
-    Accreditor->>+Federation: revoke_accreditation(cap, user_id, permission_id, ctx)
+    Accreditor->>+Federation: revoke_accreditation_to_accredit(cap, user_id, permission_id, ctx)
     Federation-->>-Accreditor: Accreditation revoked
 
-    FederationOwner->>+Federation: revoke_trusted_property(cap, "university.scores.engineering", valid_to_ms)
+    FederationOwner->>+Federation: revoke_trustedstatement(cap, "university.scores.engineering", valid_to_ms)
     Federation-->>-FederationOwner: Trusted property revoked
 
-    Attester->>+Federation: revoke_attestation(cap, user_id, permission_id, ctx)
+    Attester->>+Federation: revoke_accreditation_to_attest(cap, user_id, permission_id, ctx)
     Federation-->>-Attester: Attestation revoked
 ```
 
@@ -294,13 +296,13 @@ sequenceDiagram
 
 1. **Federation Creation**: The Federation Owner creates a federation with the `new_federation` method.
 2. **Assign Root Authority**: The root authority is assigned to manage the federation using `add_root_authority`.
-3. **Add Trusted Property**: The root authority defines a trusted property with `add_trusted_property`.
+3. **Add Trusted Property**: The root authority defines a trusted property with `add_trustedstatement`.
 4. **Create Accreditation**: The root authority creates an accreditation for an accreditor to attest to specific properties.
 5. **Create Attestation**: The accreditor creates an attestation for an attester to confirm scores.
-6. **Validation by External Verifier**: An external verifier validates the attester’s authority via `validate_trusted_properties`.
-7. **Revoke Accreditation**: The accreditor revokes an accreditation with `revoke_accreditation`.
-8. **Revoke Trusted Property**: The root authority revokes a property with `revoke_trusted_property`.
-9. **Revoke Attestation**: An attester revokes an attestation using `revoke_attestation`.
+6. **Validation by External Verifier**: An external verifier validates the attester’s authority via `validatestatements`.
+7. **Revoke Accreditation**: The accreditor revokes an accreditation with `revoke_accreditation_to_accredit`.
+8. **Revoke Trusted Property**: The root authority revokes a property with `revoke_trustedstatement`.
+9. **Revoke Attestation**: An attester revokes an attestation using `revoke_accreditation_to_attest`.
 
 ## Contribute
 

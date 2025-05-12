@@ -1,8 +1,8 @@
 use anyhow::Context;
 use examples::{get_client, urls};
 use iota_sdk::types::base_types::ObjectID;
-use ith::types::TrustedPropertyConstraint;
-use ith::types::{TrustedPropertyName, TrustedPropertyValue};
+use ith::types::Statement;
+use ith::types::{StatementName, StatementValue};
 
 /// Getting started
 ///
@@ -24,9 +24,9 @@ async fn main() -> anyhow::Result<()> {
   let client = get_client(urls::testnet::node(), urls::testnet::faucet()).await?;
 
   // Create a trusted property with allowed values
-  let property_name = TrustedPropertyName::new(["university", "a", "score", "department"]);
-  let value_biology = TrustedPropertyValue::from("biology");
-  let value_physics = TrustedPropertyValue::from("physics");
+  let statement_name = StatementName::new(["university", "a", "score", "department"]);
+  let value_biology = StatementValue::from("biology");
+  let value_physics = StatementValue::from("physics");
 
   // Allowed values for the property in whole federation
   let allowed_values_property = [value_biology.clone(), value_physics.clone()];
@@ -40,9 +40,9 @@ async fn main() -> anyhow::Result<()> {
   println!("adding trust properties");
   // Add the trusted property to the federation. The federation owner can add trusted properties.
   client
-    .add_trusted_property(
+    .add_trustedstatement(
       federation_id,
-      property_name.clone(),
+      statement_name.clone(),
       allowed_values_property,
       false,
       None,
@@ -61,8 +61,8 @@ async fn main() -> anyhow::Result<()> {
   let allowed_values_attestation = [value_physics.clone()];
 
   // Property constraints
-  let constraints = TrustedPropertyConstraint::new(property_name.clone())
-    .with_allowed_values(allowed_values_attestation);
+  let constraints =
+    Statement::new(statement_name.clone()).with_allowed_values(allowed_values_attestation);
 
   // Create an attestation
   client
@@ -83,9 +83,9 @@ async fn main() -> anyhow::Result<()> {
   // On-chain validation (low cost):
   client
     .onchain(federation_id)
-    .validate_trusted_properties(
+    .validatestatements(
       attestation_receiver,
-      [(property_name.clone(), value_physics.clone())],
+      [(statement_name.clone(), value_physics.clone())],
     )
     .await
     .context("Failed to validate trusted properties")?;
@@ -95,9 +95,9 @@ async fn main() -> anyhow::Result<()> {
   client
     .offchain(federation_id)
     .await?
-    .validate_trusted_properties(
+    .validatestatements(
       attestation_receiver,
-      [(property_name.clone(), value_physics.clone())],
+      [(statement_name.clone(), value_physics.clone())],
     )
     .context("Failed to validate trusted properties")?;
   println!("✅ Validated trusted properties - OFF-CHAIN");
@@ -105,12 +105,12 @@ async fn main() -> anyhow::Result<()> {
   // Revoke just created attestation
   let attestations = client
     .onchain(federation_id)
-    .get_attestations(attestation_receiver)
+    .get_accreditations_to_attest(attestation_receiver)
     .await?;
   let attestation_id = attestations.permissions[0].id.object_id();
 
   client
-    .revoke_attestation(federation_id, attestation_receiver, *attestation_id, None)
+    .revoke_accreditation_to_attest(federation_id, attestation_receiver, *attestation_id, None)
     .await
     .context("Failed to revoke attestation")?;
   println!("✅ Revoked attestation");
@@ -118,9 +118,9 @@ async fn main() -> anyhow::Result<()> {
   // Validate trusted properties again - it should returned an error
   let expected_error = client
     .onchain(federation_id)
-    .validate_trusted_properties(
+    .validatestatements(
       attestation_receiver,
-      [(property_name.clone(), value_physics.clone())],
+      [(statement_name.clone(), value_physics.clone())],
     )
     .await;
   assert!(expected_error.is_err());

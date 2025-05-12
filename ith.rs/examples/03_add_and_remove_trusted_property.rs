@@ -1,7 +1,7 @@
 use anyhow::Context;
 use examples::{get_client, urls};
 use ith::types::Federation;
-use ith::types::{TrustedPropertyName, TrustedPropertyValue};
+use ith::types::{StatementName, StatementValue};
 
 /// Demonstrate how to add a trusted property to a federation.
 ///
@@ -24,19 +24,19 @@ async fn main() -> anyhow::Result<()> {
   let federation_id = *federation.id.object_id();
 
   // Trusted property name
-  let property_name = TrustedPropertyName::from("Example LTD");
+  let statement_name = StatementName::from("Example LTD");
 
   // Trusted property value
-  let value = TrustedPropertyValue::from("Hello");
-  let another_value = TrustedPropertyValue::from("World");
+  let value = StatementValue::from("Hello");
+  let another_value = StatementValue::from("World");
   let allowed_values = [value, another_value];
 
   // Add the trusted property to the federation
   {
     ith_client
-      .add_trusted_property(
+      .add_trustedstatement(
         federation_id,
-        property_name.clone(),
+        statement_name.clone(),
         allowed_values,
         false,
         None,
@@ -49,18 +49,18 @@ async fn main() -> anyhow::Result<()> {
   let federation: Federation = ith_client.get_object_by_id(federation_id).await?;
 
   // Check if the trusted property was added
-  let trusted_properties = federation
+  let trustedstatements = federation
     .governance
     .trusted_constraints
-    .contains_property(&property_name);
+    .contains_property(&statement_name);
 
-  assert!(trusted_properties);
+  assert!(trustedstatements);
 
   if let Some(constraint) = federation
     .governance
     .trusted_constraints
     .data
-    .get(&property_name)
+    .get(&statement_name)
   {
     println!("Trusted Property: {:#?}", constraint)
   }
@@ -68,7 +68,7 @@ async fn main() -> anyhow::Result<()> {
   // Remove the trusted property from the federation
   {
     ith_client
-      .remove_trusted_property(federation_id, property_name.clone(), None)
+      .remove_trustedstatement(federation_id, statement_name.clone(), None)
       .await
       .context("Failed to remove trusted property")?;
   }
@@ -77,12 +77,12 @@ async fn main() -> anyhow::Result<()> {
   let federation: Federation = ith_client.get_object_by_id(federation_id).await?;
 
   // Check if the trusted property was removed
-  let trusted_properties = federation
+  let trustedstatements = federation
     .governance
     .trusted_constraints
-    .contains_property(&property_name);
+    .contains_property(&statement_name);
 
-  assert!(!trusted_properties);
+  assert!(!trustedstatements);
 
   Ok(())
 }

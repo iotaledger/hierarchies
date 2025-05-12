@@ -4,8 +4,8 @@ use anyhow::Context;
 use examples::{get_client, urls};
 use iota_sdk::types::base_types::ObjectID;
 use ith::types::Federation;
-use ith::types::{Timespan, TrustedPropertyConstraint};
-use ith::types::{TrustedPropertyName, TrustedPropertyValue};
+use ith::types::{Statement, Timespan};
+use ith::types::{StatementName, StatementValue};
 
 /// Demonstrate how to issue a permission to accredit to a trusted property.
 ///
@@ -28,10 +28,10 @@ async fn main() -> anyhow::Result<()> {
   let federation_id = *federation.id.object_id();
 
   // Trusted property name
-  let property_name = TrustedPropertyName::from("Example LTD");
+  let statement_name = StatementName::from("Example LTD");
 
   // Trusted property value
-  let value = TrustedPropertyValue::from("Hello");
+  let value = StatementValue::from("Hello");
 
   let allowed_values = HashSet::from_iter([value]);
 
@@ -39,9 +39,9 @@ async fn main() -> anyhow::Result<()> {
 
   // Add the trusted property to the federation
   ith_client
-    .add_trusted_property(
+    .add_trustedstatement(
       federation_id,
-      property_name.clone(),
+      statement_name.clone(),
       allowed_values.clone(),
       false,
       None,
@@ -55,8 +55,8 @@ async fn main() -> anyhow::Result<()> {
   let receiver = ObjectID::random();
 
   // Property constraints
-  let constraints = TrustedPropertyConstraint {
-    property_name,
+  let constraints = Statement {
+    statement_name,
     allowed_values,
     expression: None,
     allow_any: false,
@@ -93,14 +93,14 @@ async fn main() -> anyhow::Result<()> {
   // Revoke the permission
   let permissions = ith_client
     .onchain(federation_id)
-    .get_accreditations(receiver)
+    .get_accreditations_to_accredit(receiver)
     .await
     .context("Failed to find permission to accredit")?;
 
   let permission_id = permissions.permissions[0].id.object_id();
 
   ith_client
-    .revoke_accreditation(federation_id, receiver, *permission_id, None)
+    .revoke_accreditation_to_accredit(federation_id, receiver, *permission_id, None)
     .await
     .context("Failed to revoke permission to accredit")?;
 

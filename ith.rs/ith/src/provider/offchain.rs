@@ -3,9 +3,9 @@ use std::collections::HashMap;
 use iota_sdk::types::base_types::ObjectID;
 
 use crate::client::ITHClientReadOnly;
+use crate::types::Accreditations;
 use crate::types::Federation;
-use crate::types::Permissions;
-use crate::types::{TrustedPropertyName, TrustedPropertyValue};
+use crate::types::{StatementName, StatementValue};
 
 pub struct OffChainFederation {
   federation: Federation,
@@ -43,7 +43,7 @@ impl OffChainFederation {
     *self.federation.id.object_id()
   }
 
-  pub fn has_permission_to_attest(&self, user_id: ObjectID) -> bool {
+  pub fn has_accreditation_to_attest(&self, user_id: ObjectID) -> bool {
     self.federation.governance.attesters.contains_key(&user_id)
   }
   pub fn is_accreditor(&self, user_id: ObjectID) -> bool {
@@ -53,29 +53,29 @@ impl OffChainFederation {
       .accreditors
       .contains_key(&user_id)
   }
-  pub fn is_trusted_property(&self, property_name: &TrustedPropertyName) -> bool {
+  pub fn is_trustedstatement(&self, statement_name: &StatementName) -> bool {
     let federation = self.federation();
 
     federation
       .governance
       .trusted_constraints
-      .contains_property(property_name)
+      .contains_property(statement_name)
   }
 
-  pub fn validate_trusted_properties(
+  pub fn validatestatements(
     &self,
     issuer_id: ObjectID,
-    trusted_properties: impl IntoIterator<Item = (TrustedPropertyName, TrustedPropertyValue)>,
+    trustedstatements: impl IntoIterator<Item = (StatementName, StatementValue)>,
   ) -> anyhow::Result<bool> {
-    let trusted_properties: HashMap<_, _> = trusted_properties.into_iter().collect();
+    let trustedstatements: HashMap<_, _> = trustedstatements.into_iter().collect();
     let federation = self.federation();
 
     // Has federation property
-    trusted_properties.keys().try_for_each(|property_name| {
+    trustedstatements.keys().try_for_each(|statement_name| {
       if !federation
         .governance
         .trusted_constraints
-        .contains_property(property_name)
+        .contains_property(statement_name)
       {
         return Err(anyhow::anyhow!("property not found"));
       }
@@ -89,12 +89,12 @@ impl OffChainFederation {
       .get(&issuer_id)
       .ok_or_else(|| anyhow::anyhow!("issuer not found"))?;
 
-    let res = issuer_permissions_to_attest.are_values_permitted(&trusted_properties);
+    let res = issuer_permissions_to_attest.are_statements_allowed(&trustedstatements);
 
     Ok(res)
   }
 
-  pub fn get_trusted_properties(&self) -> Vec<TrustedPropertyName> {
+  pub fn get_trustedstatements(&self) -> Vec<StatementName> {
     self
       .federation
       .governance
@@ -105,11 +105,11 @@ impl OffChainFederation {
       .collect::<Vec<_>>()
   }
 
-  pub fn get_attestations(&self, user_id: ObjectID) -> Option<Permissions> {
+  pub fn get_accreditations_to_attest(&self, user_id: ObjectID) -> Option<Accreditations> {
     self.federation.governance.attesters.get(&user_id).cloned()
   }
 
-  pub fn get_accreditations(&self, user_id: ObjectID) -> Option<Permissions> {
+  pub fn get_accreditations_to_accredit(&self, user_id: ObjectID) -> Option<Accreditations> {
     self
       .federation
       .governance

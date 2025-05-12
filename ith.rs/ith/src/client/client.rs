@@ -18,8 +18,8 @@ use super::ITHClientReadOnly;
 use crate::federation;
 use crate::key::{IotaKeySignature, SigningInfo};
 use crate::types::Federation;
-use crate::types::TrustedPropertyConstraint;
-use crate::types::{TrustedPropertyName, TrustedPropertyValue};
+use crate::types::Statement;
+use crate::types::{StatementName, StatementValue};
 use crate::utils::convert_to_address;
 
 /// The `ITHClient` struct is responsible for managing the connection to the
@@ -237,19 +237,19 @@ where
   }
 
   /// Adds a trusted property to a federation.
-  pub async fn add_trusted_property(
+  pub async fn add_trustedstatement(
     &self,
     federation_id: ObjectID,
-    property_name: impl Into<TrustedPropertyName>,
-    allowed_values: impl IntoIterator<Item = TrustedPropertyValue>,
+    statement_name: impl Into<StatementName>,
+    allowed_values: impl IntoIterator<Item = StatementValue>,
     allow_any: bool,
     gas_budget: Option<u64>,
   ) -> anyhow::Result<()> {
     let allowed_values = HashSet::from_iter(allowed_values);
-    federation::ops::add_trusted_property(
+    federation::ops::add_trustedstatement(
       self,
       federation_id,
-      property_name.into(),
+      statement_name.into(),
       allowed_values,
       allow_any,
       gas_budget,
@@ -258,13 +258,13 @@ where
   }
 
   /// Removes a trusted property from a federation.
-  pub async fn remove_trusted_property(
+  pub async fn remove_trustedstatement(
     &self,
     federation_id: ObjectID,
-    property_name: TrustedPropertyName,
+    statement_name: StatementName,
     gas_budget: Option<u64>,
   ) -> anyhow::Result<()> {
-    federation::ops::remove_trusted_property(self, federation_id, property_name, gas_budget).await
+    federation::ops::remove_trustedstatement(self, federation_id, statement_name, gas_budget).await
   }
 
   /// Issues a permission to attest to a receiver in a federation.
@@ -272,7 +272,7 @@ where
     &self,
     federation_id: ObjectID,
     receiver: ObjectID,
-    want_property_constraints: impl IntoIterator<Item = TrustedPropertyConstraint>,
+    want_property_constraints: impl IntoIterator<Item = Statement>,
     gas_budget: Option<u64>,
   ) -> anyhow::Result<()> {
     let want_property_constraints = want_property_constraints.into_iter().collect();
@@ -287,15 +287,21 @@ where
   }
 
   /// Revokes a permission to attest for a user in a federation.
-  pub async fn revoke_attestation(
+  pub async fn revoke_accreditation_to_attest(
     &self,
     federation_id: ObjectID,
     user_id: ObjectID,
     permission_id: ObjectID,
     gas_budget: Option<u64>,
   ) -> anyhow::Result<()> {
-    federation::ops::revoke_attestation(self, federation_id, user_id, permission_id, gas_budget)
-      .await
+    federation::ops::revoke_accreditation_to_attest(
+      self,
+      federation_id,
+      user_id,
+      permission_id,
+      gas_budget,
+    )
+    .await
   }
 
   /// Issues a permission to accredit to a receiver in a federation.
@@ -303,7 +309,7 @@ where
     &self,
     federation_id: ObjectID,
     receiver: ObjectID,
-    want_property_constraints: Vec<TrustedPropertyConstraint>,
+    want_property_constraints: Vec<Statement>,
     gas_budget: Option<u64>,
   ) -> anyhow::Result<()> {
     federation::ops::create_accreditation(
@@ -317,15 +323,21 @@ where
   }
 
   /// Revokes a permission to accredit for a user in a federation.
-  pub async fn revoke_accreditation(
+  pub async fn revoke_accreditation_to_accredit(
     &self,
     federation_id: ObjectID,
     user_id: ObjectID,
     permission_id: ObjectID,
     gas_budget: Option<u64>,
   ) -> anyhow::Result<()> {
-    federation::ops::revoke_accreditation(self, federation_id, user_id, permission_id, gas_budget)
-      .await
+    federation::ops::revoke_accreditation_to_accredit(
+      self,
+      federation_id,
+      user_id,
+      permission_id,
+      gas_budget,
+    )
+    .await
   }
 }
 

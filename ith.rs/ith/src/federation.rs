@@ -12,17 +12,17 @@ use secret_storage::Signer;
 use crate::client::ITHClient;
 use crate::key::IotaKeySignature;
 use crate::types::{Event, FederationCreatedEvent};
-use crate::types::{TrustedPropertyName, TrustedPropertyValue};
+use crate::types::{StatementName, StatementValue};
 
 use iota_sdk::types::transaction::Argument;
 
-use crate::types::{self, TrustedPropertyConstraint};
+use crate::types::{self, Statement};
 use crate::utils::{self, MoveType};
 
 pub(crate) mod ops {
   use types::{
-    new_property_constraint, new_property_name, new_property_value_number,
-    new_property_value_string,
+    new_property_constraint, new_property_value_number, new_property_value_string,
+    newstatement_name,
   };
 
   use crate::types::Capability;
@@ -65,11 +65,11 @@ pub(crate) mod ops {
     Ok(ObjectID::from(fed_address))
   }
 
-  pub async fn add_trusted_property<S>(
+  pub async fn add_trustedstatement<S>(
     client: &ITHClient<S>,
     federation_id: ObjectID,
-    property_name: TrustedPropertyName,
-    allowed_values: HashSet<TrustedPropertyValue>,
+    statement_name: StatementName,
+    allowed_values: HashSet<StatementValue>,
     allow_any: bool,
     gas_budget: Option<u64>,
   ) -> anyhow::Result<()>
@@ -86,17 +86,17 @@ pub(crate) mod ops {
 
     let allow_any = ptb.pure(allow_any)?;
 
-    let property_names = new_property_name(property_name, &mut ptb, client.ith_package_id())?;
+    let statement_names = newstatement_name(statement_name, &mut ptb, client.ith_package_id())?;
 
-    let value_tag = TrustedPropertyValue::move_type(client.ith_package_id());
+    let value_tag = StatementValue::move_type(client.ith_package_id());
 
     let mut values_of_property = vec![];
     for property_value in allowed_values {
       let value = match property_value {
-        TrustedPropertyValue::Text(text) => {
+        StatementValue::Text(text) => {
           new_property_value_string(text, &mut ptb, client.ith_package_id())?
         }
-        TrustedPropertyValue::Number(number) => {
+        StatementValue::Number(number) => {
           new_property_value_number(number, &mut ptb, client.ith_package_id())?
         }
       };
@@ -114,9 +114,9 @@ pub(crate) mod ops {
     ptb.programmable_move_call(
       client.ith_package_id(),
       ident_str!("main").into(),
-      ident_str!("add_trusted_property").into(),
+      ident_str!("add_trustedstatement").into(),
       vec![],
-      vec![fed_ref, cap, property_names, tpv_vec_set, allow_any],
+      vec![fed_ref, cap, statement_names, tpv_vec_set, allow_any],
     );
 
     let tx = ptb.finish();
@@ -126,10 +126,10 @@ pub(crate) mod ops {
     Ok(())
   }
 
-  pub async fn remove_trusted_property<S>(
+  pub async fn remove_trustedstatement<S>(
     client: &ITHClient<S>,
     federation_id: ObjectID,
-    property_name: TrustedPropertyName,
+    statement_name: StatementName,
     gas_budget: Option<u64>,
   ) -> anyhow::Result<()>
   where
@@ -142,14 +142,14 @@ pub(crate) mod ops {
     let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
     let fed_ref = get_fed_ref(client, federation_id, &mut ptb).await?;
 
-    let property_name = new_property_name(property_name, &mut ptb, client.ith_package_id())?;
+    let statement_name = newstatement_name(statement_name, &mut ptb, client.ith_package_id())?;
 
     ptb.programmable_move_call(
       client.ith_package_id(),
       ident_str!("main").into(),
-      ident_str!("remove_trusted_property").into(),
+      ident_str!("remove_trustedstatement").into(),
       vec![],
-      vec![fed_ref, cap, property_name],
+      vec![fed_ref, cap, statement_name],
     );
 
     let tx = ptb.finish();
@@ -158,7 +158,7 @@ pub(crate) mod ops {
 
     Ok(())
   }
-  pub async fn revoke_attestation<S>(
+  pub async fn revoke_accreditation_to_attest<S>(
     client: &ITHClient<S>,
     federation_id: ObjectID,
     user_id: ObjectID,
@@ -181,7 +181,7 @@ pub(crate) mod ops {
     ptb.programmable_move_call(
       client.ith_package_id(),
       ident_str!("main").into(),
-      ident_str!("revoke_attestation").into(),
+      ident_str!("revoke_accreditation_to_attest").into(),
       vec![],
       vec![fed_ref, cap, user_id_arg, permission_id],
     );
@@ -236,7 +236,7 @@ pub(crate) mod ops {
     client: &ITHClient<S>,
     federation_id: ObjectID,
     receiver: ObjectID,
-    want_property_constraints: Vec<TrustedPropertyConstraint>,
+    want_property_constraints: Vec<Statement>,
     gas_budget: Option<u64>,
   ) -> anyhow::Result<()>
   where
@@ -277,7 +277,7 @@ pub(crate) mod ops {
     client: &ITHClient<S>,
     federation_id: ObjectID,
     receiver: ObjectID,
-    want_property_constraints: Vec<TrustedPropertyConstraint>,
+    want_property_constraints: Vec<Statement>,
     gas_budget: Option<u64>,
   ) -> anyhow::Result<()>
   where
@@ -315,7 +315,7 @@ pub(crate) mod ops {
     Ok(())
   }
 
-  pub async fn revoke_accreditation<S>(
+  pub async fn revoke_accreditation_to_accredit<S>(
     client: &ITHClient<S>,
     federation_id: ObjectID,
     user_id: ObjectID,
@@ -338,7 +338,7 @@ pub(crate) mod ops {
     ptb.programmable_move_call(
       client.ith_package_id(),
       ident_str!("main").into(),
-      ident_str!("revoke_accreditation").into(),
+      ident_str!("revoke_accreditation_to_accredit").into(),
       vec![],
       vec![fed_ref, cap, user_id_arg, permission_id],
     );
