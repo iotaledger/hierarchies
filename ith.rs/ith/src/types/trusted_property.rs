@@ -44,7 +44,7 @@ impl StatementName {
 
 impl MoveType for StatementName {
   fn move_type(package: ObjectID) -> TypeTag {
-    TypeTag::from_str(format!("{}::trustedstatement::StatementName", package).as_str())
+    TypeTag::from_str(format!("{}::trusted_statement::StatementName", package).as_str())
       .expect("Failed to create type tag")
   }
 }
@@ -58,7 +58,7 @@ pub(crate) fn newstatement_name(
   let names = ptb.pure(name.names())?;
   let statement_names: Argument = ptb.programmable_move_call(
     package_id,
-    ident_str!("trustedstatement").into(),
+    ident_str!("trusted_statement").into(),
     ident_str!("newstatement_name_from_vector").into(),
     vec![],
     vec![names],
@@ -91,7 +91,7 @@ pub(crate) fn new_property_value_string(
   let v = ptb.pure(value)?;
   Ok(ptb.programmable_move_call(
     package_id,
-    ident_str!("trustedstatement").into(),
+    ident_str!("trusted_statement").into(),
     ident_str!("new_property_value_string").into(),
     vec![],
     vec![v],
@@ -107,7 +107,7 @@ pub(crate) fn new_property_value_number(
   let v = ptb.pure(value)?;
   Ok(ptb.programmable_move_call(
     package_id,
-    ident_str!("trustedstatement").into(),
+    ident_str!("trusted_statement").into(),
     ident_str!("new_property_value_number").into(),
     vec![],
     vec![v],
@@ -116,7 +116,7 @@ pub(crate) fn new_property_value_number(
 
 impl MoveType for StatementValue {
   fn move_type(package: ObjectID) -> TypeTag {
-    TypeTag::from_str(format!("{}::trustedstatement::StatementValue", package).as_str())
+    TypeTag::from_str(format!("{}::trusted_statement::StatementValue", package).as_str())
       .expect("Failed to create type tag")
   }
 }
@@ -158,7 +158,7 @@ mod tests {
   use super::*;
 
   #[test]
-  fn test_trustedstatement_name() {
+  fn test_trusted_statement_name() {
     let name = StatementName::new(["name", "name2"]);
 
     let json = json!({
@@ -170,7 +170,7 @@ mod tests {
   }
 
   #[test]
-  fn test_trustedstatement_value() {
+  fn test_trusted_statement_value() {
     let text = StatementValue::from("text");
     let number = StatementValue::Number(42);
 

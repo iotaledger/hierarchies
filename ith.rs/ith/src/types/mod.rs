@@ -4,13 +4,13 @@ mod cap;
 mod event;
 mod permission;
 mod trusted_constraints;
-mod trustedstatement;
+mod trusted_statement;
 
 pub use accreditation::*;
 pub use cap::*;
 pub use event::*;
 pub use trusted_constraints::*;
-pub use trustedstatement::*;
+pub use trusted_statement::*;
 
 use std::collections::HashMap;
 

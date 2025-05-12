@@ -237,7 +237,7 @@ where
   }
 
   /// Adds a trusted property to a federation.
-  pub async fn add_trustedstatement(
+  pub async fn add_trusted_statement(
     &self,
     federation_id: ObjectID,
     statement_name: impl Into<StatementName>,
@@ -246,7 +246,7 @@ where
     gas_budget: Option<u64>,
   ) -> anyhow::Result<()> {
     let allowed_values = HashSet::from_iter(allowed_values);
-    federation::ops::add_trustedstatement(
+    federation::ops::add_trusted_statement(
       self,
       federation_id,
       statement_name.into(),
@@ -258,13 +258,13 @@ where
   }
 
   /// Removes a trusted property from a federation.
-  pub async fn remove_trustedstatement(
+  pub async fn remove_trusted_statement(
     &self,
     federation_id: ObjectID,
     statement_name: StatementName,
     gas_budget: Option<u64>,
   ) -> anyhow::Result<()> {
-    federation::ops::remove_trustedstatement(self, federation_id, statement_name, gas_budget).await
+    federation::ops::remove_trusted_statement(self, federation_id, statement_name, gas_budget).await
   }
 
   /// Issues a permission to attest to a receiver in a federation.

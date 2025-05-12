@@ -26,7 +26,7 @@ async fn main() -> anyhow::Result<()> {
   let allowed_values = HashSet::from_iter([value.clone()]);
 
   ith_client
-    .add_trustedstatement(
+    .add_trusted_statement(
       *federation_id,
       statement_name.clone(),
       allowed_values.clone(),
@@ -57,11 +57,11 @@ async fn main() -> anyhow::Result<()> {
   }
 
   // Validate trusted properties
-  let trustedstatements = [(statement_name, value)];
+  let trusted_statements = [(statement_name, value)];
 
   let validate = ith_client
     .onchain(*federation_id)
-    .validatestatements((*receiver).into(), trustedstatements)
+    .validatestatements((*receiver).into(), trusted_statements)
     .await;
 
   assert!(validate.is_ok());

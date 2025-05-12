@@ -29,8 +29,8 @@ name = "02_add_root_authority"
 
 
 [[example]]
-path = "03_add_and_remove_trustedstatement.rs"
-name = "03_add_and_remove_trustedstatement"
+path = "03_add_and_remove_trusted_statement.rs"
+name = "03_add_and_remove_trusted_statement"
 
 
 [[example]]
@@ -60,8 +60,8 @@ path = "validation/offchain/02_validatestatements.rs"
 name = "02_offchain_validatestatements"
 
 [[example]]
-path = "validation/offchain/03_get_trustedstatements.rs"
-name = "03_offchain_get_trustedstatements"
+path = "validation/offchain/03_get_trusted_statements.rs"
+name = "03_offchain_get_trusted_statements"
 
 [[example]]
 path = "validation/onchain/01_get_accreditations_to_attest_and_accreditations.rs"
@@ -72,8 +72,8 @@ path = "validation/onchain/02_validatestatements.rs"
 name = "02_onchain_validatestatements"
 
 [[example]]
-path = "validation/onchain/03_get_trustedstatements.rs"
-name = "03_onchain_get_trustedstatements"
+path = "validation/onchain/03_get_trusted_statements.rs"
+name = "03_onchain_get_trusted_statements"
 
 
 # Demo

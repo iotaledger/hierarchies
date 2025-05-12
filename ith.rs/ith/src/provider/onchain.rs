@@ -90,18 +90,18 @@ impl OnChainFederation<'_> {
   pub async fn is_accreditor(&self, user_id: ObjectID) -> anyhow::Result<bool> {
     self.execute_query("is_accreditor", user_id).await
   }
-  pub async fn is_trustedstatement(&self, statement_name: &StatementName) -> anyhow::Result<bool> {
+  pub async fn is_trusted_statement(&self, statement_name: &StatementName) -> anyhow::Result<bool> {
     self
-      .execute_query("is_trustedstatement", statement_name)
+      .execute_query("is_trusted_statement", statement_name)
       .await
   }
 
   pub async fn validatestatements(
     &self,
     issuer_id: ObjectID,
-    trustedstatements: impl IntoIterator<Item = (StatementName, StatementValue)>,
+    trusted_statements: impl IntoIterator<Item = (StatementName, StatementValue)>,
   ) -> anyhow::Result<()> {
-    let trustedstatements: HashMap<_, _> = trustedstatements.into_iter().collect();
+    let trusted_statements: HashMap<_, _> = trusted_statements.into_iter().collect();
     let mut ptb = ProgrammableTransactionBuilder::new();
 
     let fed_ref = ObjectArg::SharedObject {
@@ -118,12 +118,12 @@ impl OnChainFederation<'_> {
     let mut statement_names: Vec<_> = vec![];
     let mut property_values: Vec<_> = vec![];
 
-    for (statement_name, property_value) in trustedstatements {
+    for (statement_name, property_value) in trusted_statements {
       let names = statement_name.names();
       let name = ptb.pure(names)?;
       let statement_name: Argument = ptb.programmable_move_call(
         self.client.ith_package_id(),
-        ident_str!("trustedstatement").into(),
+        ident_str!("trusted_statement").into(),
         ident_str!("newstatement_name_from_vector").into(),
         vec![],
         vec![name],
@@ -135,7 +135,7 @@ impl OnChainFederation<'_> {
           let v = ptb.pure(text)?;
           ptb.programmable_move_call(
             self.client.ith_package_id(),
-            ident_str!("trustedstatement").into(),
+            ident_str!("trusted_statement").into(),
             ident_str!("new_property_value_string").into(),
             vec![],
             vec![v],
@@ -145,7 +145,7 @@ impl OnChainFederation<'_> {
           let v = ptb.pure(number)?;
           ptb.programmable_move_call(
             self.client.ith_package_id(),
-            ident_str!("trustedstatement").into(),
+            ident_str!("trusted_statement").into(),
             ident_str!("new_property_value_number").into(),
             vec![],
             vec![v],
@@ -157,14 +157,14 @@ impl OnChainFederation<'_> {
 
     let statement_name_tag = TypeTag::from_str(
       format!(
-        "{}::trustedstatement::StatementName",
+        "{}::trusted_statement::StatementName",
         self.client.ith_package_id()
       )
       .as_str(),
     )?;
     let property_value_tag = TypeTag::from_str(
       format!(
-        "{}::trustedstatement::StatementValue",
+        "{}::trusted_statement::StatementValue",
         self.client.ith_package_id()
       )
       .as_str(),
@@ -179,7 +179,7 @@ impl OnChainFederation<'_> {
       property_values,
     ));
 
-    let trustedstatements = ptb.programmable_move_call(
+    let trusted_statements = ptb.programmable_move_call(
       self.client.ith_package_id(),
       ident_str!("utils").into(),
       ident_str!("vec_map_from_keys_values").into(),
@@ -194,7 +194,7 @@ impl OnChainFederation<'_> {
       ident_str!("main").into(),
       ident_str!("validatestatements").into(),
       vec![],
-      vec![fed_ref, issuer_id, trustedstatements],
+      vec![fed_ref, issuer_id, trusted_statements],
     );
 
     let tx = TransactionKind::programmable(ptb.finish());
@@ -214,7 +214,7 @@ impl OnChainFederation<'_> {
     Ok(())
   }
 
-  pub async fn get_trustedstatements(&self) -> anyhow::Result<Vec<StatementName>> {
+  pub async fn get_trusted_statements(&self) -> anyhow::Result<Vec<StatementName>> {
     let mut ptb = ProgrammableTransactionBuilder::new();
 
     let fed_ref = ObjectArg::SharedObject {
@@ -231,7 +231,7 @@ impl OnChainFederation<'_> {
     ptb.programmable_move_call(
       self.client.ith_package_id(),
       ident_str!("main").into(),
-      ident_str!("get_trustedstatements").into(),
+      ident_str!("get_trusted_statements").into(),
       vec![],
       vec![fed_ref],
     );

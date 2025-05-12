@@ -8,7 +8,7 @@ use iota_sdk::types::{TypeTag, MOVE_STDLIB_PACKAGE_ID};
 use move_core_types::ident_str;
 use serde::{Deserialize, Serialize};
 
-use super::trustedstatement::{StatementName, StatementValue};
+use super::trusted_statement::{StatementName, StatementValue};
 use super::{new_property_value_number, new_property_value_string, newstatement_name};
 use crate::utils::{self, deserialize_vec_map, deserialize_vec_set, MoveType};
 
@@ -73,7 +73,7 @@ impl Statement {
 }
 
 impl Statement {
-  pub fn matches_property(&self, name: &StatementName, value: &StatementValue) -> bool {
+  pub fn matches_name_value(&self, name: &StatementName, value: &StatementValue) -> bool {
     self.matches_name(name) && self.matches_value(value)
   }
 
@@ -291,7 +291,7 @@ pub(crate) fn new_property_constraint(
         let arg = ptb.programmable_move_call(
           package_id,
           ident_str!("trusted_constraint").into(),
-          ident_str!("new_trustedstatement_expression").into(),
+          ident_str!("new_trusted_statement_expression").into(),
           vec![],
           vec![starts_with, ends_with, contains, greater_than, lower_than],
         );
@@ -311,7 +311,7 @@ pub(crate) fn new_property_constraint(
     let constraint = ptb.programmable_move_call(
       package_id,
       ident_str!("trusted_constraint").into(),
-      ident_str!("new_trustedstatement").into(),
+      ident_str!("new_trusted_statement").into(),
       vec![],
       vec![statement_names, allowed_values, allow_any, expression],
     );

@@ -53,7 +53,7 @@ impl OffChainFederation {
       .accreditors
       .contains_key(&user_id)
   }
-  pub fn is_trustedstatement(&self, statement_name: &StatementName) -> bool {
+  pub fn is_trusted_statement(&self, statement_name: &StatementName) -> bool {
     let federation = self.federation();
 
     federation
@@ -65,13 +65,13 @@ impl OffChainFederation {
   pub fn validatestatements(
     &self,
     issuer_id: ObjectID,
-    trustedstatements: impl IntoIterator<Item = (StatementName, StatementValue)>,
+    trusted_statements: impl IntoIterator<Item = (StatementName, StatementValue)>,
   ) -> anyhow::Result<bool> {
-    let trustedstatements: HashMap<_, _> = trustedstatements.into_iter().collect();
+    let trusted_statements: HashMap<_, _> = trusted_statements.into_iter().collect();
     let federation = self.federation();
 
     // Has federation property
-    trustedstatements.keys().try_for_each(|statement_name| {
+    trusted_statements.keys().try_for_each(|statement_name| {
       if !federation
         .governance
         .trusted_constraints
@@ -89,12 +89,12 @@ impl OffChainFederation {
       .get(&issuer_id)
       .ok_or_else(|| anyhow::anyhow!("issuer not found"))?;
 
-    let res = issuer_permissions_to_attest.are_statements_allowed(&trustedstatements);
+    let res = issuer_permissions_to_attest.are_statements_allowed(&trusted_statements);
 
     Ok(res)
   }
 
-  pub fn get_trustedstatements(&self) -> Vec<StatementName> {
+  pub fn get_trusted_statements(&self) -> Vec<StatementName> {
     self
       .federation
       .governance

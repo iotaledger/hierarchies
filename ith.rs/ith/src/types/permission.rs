@@ -25,14 +25,14 @@ pub struct Accreditation {
 }
 
 impl Accreditations {
-  /// Checks if all the values in the provided `trustedstatements` map are
+  /// Checks if all the values in the provided `trusted_statements` map are
   /// permitted
   /// according to the permissions defined in this `Accreditations` instance.
   pub fn are_statements_allowed(
     &self,
-    trustedstatements: &HashMap<StatementName, StatementValue>,
+    trusted_statements: &HashMap<StatementName, StatementValue>,
   ) -> bool {
-    trustedstatements
+    trusted_statements
       .iter()
       .all(|(statement_name, property_value)| {
         self.is_statement_allowed(statement_name, property_value)
@@ -52,7 +52,7 @@ impl Accreditations {
       .iter()
       .flat_map(|accreditation| accreditation.constraints.get(statement_name))
       .any(|property_constraint| {
-        property_constraint.matches_property(statement_name, property_value)
+        property_constraint.matches_name_value(statement_name, property_value)
       })
   }
 }

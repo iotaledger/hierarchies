@@ -36,7 +36,7 @@ async fn main() -> anyhow::Result<()> {
   let allowed_values = HashSet::from_iter([value]);
 
   ith_client
-    .add_trustedstatement(
+    .add_trusted_statement(
       *federation_id,
       statement_name.clone(),
       allowed_values.clone(),

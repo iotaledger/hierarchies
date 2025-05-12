@@ -1,8 +1,5 @@
 // HTF Notary module
 module ith::main {
-  use iota::bcs::{Self, BCS};
-  use iota::object::{Self, ID, UID};
-  use iota::tx_context::TxContext;
   use iota::vec_map::{Self, VecMap};
   use iota::event;
   use iota::vec_set::{VecSet};
@@ -37,13 +34,15 @@ module ith::main {
   // Governance is the object that contains the trusted properties and the permissions to attest and accredit
   public struct Governance has store, key {
     id : UID,
-    // Trusted Properties all are properties that are trusted by the Federation
+    /// Statements that are trusted by the given Federation
     statements : Statements,
 
-    // user-id => accreditation_to_accredit
+    /// Accreditation rights to delegate accreditation permissions.
+    /// These accreditations allow a user to grant other users the ability to further delegate accreditation permissions.
     accreditations_to_accredit : VecMap<ID, Accreditations>,
 
-    // trusted_delegate_id => attestation
+    /// Accreditation rights for attestation.
+    /// These accreditations empower a user to create attestations related to trusted statements.
     accreditations_to_attest : VecMap<ID, Accreditations>,
   }
 
@@ -156,7 +155,7 @@ module ith::main {
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
     assert!(!(allow_any && allowed_values.keys().length() > 0), EInvalidConstraint);
 
-    let constraint = statement::new_trusted_statement(
+    let constraint = statement::new_statement(
       statement_name,
       allowed_values,
       allow_any,

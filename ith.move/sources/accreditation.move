@@ -1,7 +1,4 @@
 module ith::accreditation {
-  use iota::object::{Self, ID, UID};
-  use iota::tx_context::TxContext;
-  use iota::transfer;
   use std::string::String;
   use iota::vec_map::VecMap;
 
@@ -63,7 +60,7 @@ module ith::accreditation {
       if ( maybe_statement.is_none()) {
         continue
       };
-      if (maybe_statement.borrow().matches_property(statement_name, statement_value, current_time_ms)) {
+      if (maybe_statement.borrow().matches_name_value(statement_name, statement_value, current_time_ms)) {
         return true
       };
       idx_statements_to_attest = idx_statements_to_attest + 1;

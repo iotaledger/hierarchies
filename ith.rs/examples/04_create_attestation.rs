@@ -39,7 +39,7 @@ async fn main() -> anyhow::Result<()> {
 
   // Add the trusted property to the federation
   ith_client
-    .add_trustedstatement(
+    .add_trusted_statement(
       federation_id,
       statement_name.clone(),
       allowed_values.clone(),
@@ -77,9 +77,9 @@ async fn main() -> anyhow::Result<()> {
   println!("Federation: {:#?}", federation);
 
   // Check if the receiver has the permission to attest
-  let trustedstatements = federation.governance.attesters.contains_key(&receiver);
+  let trusted_statements = federation.governance.attesters.contains_key(&receiver);
 
-  assert!(trustedstatements);
+  assert!(trusted_statements);
 
   Ok(())
 }

@@ -40,7 +40,7 @@ async fn main() -> anyhow::Result<()> {
   println!("adding trust properties");
   // Add the trusted property to the federation. The federation owner can add trusted properties.
   client
-    .add_trustedstatement(
+    .add_trusted_statement(
       federation_id,
       statement_name.clone(),
       allowed_values_property,

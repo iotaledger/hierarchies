@@ -65,7 +65,7 @@ pub(crate) mod ops {
     Ok(ObjectID::from(fed_address))
   }
 
-  pub async fn add_trustedstatement<S>(
+  pub async fn add_trusted_statement<S>(
     client: &ITHClient<S>,
     federation_id: ObjectID,
     statement_name: StatementName,
@@ -114,7 +114,7 @@ pub(crate) mod ops {
     ptb.programmable_move_call(
       client.ith_package_id(),
       ident_str!("main").into(),
-      ident_str!("add_trustedstatement").into(),
+      ident_str!("add_trusted_statement").into(),
       vec![],
       vec![fed_ref, cap, statement_names, tpv_vec_set, allow_any],
     );
@@ -126,7 +126,7 @@ pub(crate) mod ops {
     Ok(())
   }
 
-  pub async fn remove_trustedstatement<S>(
+  pub async fn remove_trusted_statement<S>(
     client: &ITHClient<S>,
     federation_id: ObjectID,
     statement_name: StatementName,
@@ -147,7 +147,7 @@ pub(crate) mod ops {
     ptb.programmable_move_call(
       client.ith_package_id(),
       ident_str!("main").into(),
-      ident_str!("remove_trustedstatement").into(),
+      ident_str!("remove_trusted_statement").into(),
       vec![],
       vec![fed_ref, cap, statement_name],
     );
