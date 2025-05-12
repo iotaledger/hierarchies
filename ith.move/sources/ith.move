@@ -323,7 +323,7 @@ module ith::main {
     users_accredit_permissions.remove_accredited_statement(permission_id);
   }
 
-  public fun validate_statement(self :&Federation, attester_id : &ID, statement_name : StatementName, statement_value : StatementValue, ctx : &mut TxContext) {
+  public fun validate_statement(self : &Federation, attester_id : &ID, statement_name : StatementName, statement_value : StatementValue, ctx : &mut TxContext) {
     let current_time_ms = ctx.epoch_timestamp_ms();
     assert!(self.is_statement_in_federation(statement_name), EInvalidProperty);
 
