@@ -12,7 +12,7 @@ use super::trusted_statement::{StatementName, StatementValue};
 use super::{new_property_value_number, new_property_value_string, newstatement_name};
 use crate::utils::{self, deserialize_vec_map, deserialize_vec_set, MoveType};
 
-/// Trusted property constraints for a federation
+/// Trusted property statements for a federation
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Statements {
   #[serde(deserialize_with = "deserialize_vec_map")]
@@ -25,10 +25,10 @@ impl Statements {
   }
 }
 
-/// Trusted property constraint is a constraint that can be applied to a trusted property
+/// Trusted property statement is a statement that can be applied to a trusted property
 /// to restrict the values that can be assigned to the property.
-/// The constraint can be based on the property name, allowed values, or an expression.
-/// The constraint can also have a time range in which the constraint is valid.
+/// The statement can be based on the property name, allowed values, or an expression.
+/// The statement can also have a time range in which the statement is valid.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 /// The evaluation order: allow_any => expression => allowed_values
 pub struct Statement {
@@ -78,10 +78,10 @@ impl Statement {
   }
 
   pub fn matches_name(&self, name: &StatementName) -> bool {
-    let len_constraint = self.statement_name.names().len();
+    let len_statement = self.statement_name.names().len();
     let len_names = name.names().len();
 
-    if len_constraint > len_names {
+    if len_statement > len_names {
       return false;
     }
 
@@ -146,7 +146,7 @@ impl Statement {
   }
 }
 
-/// Trusted property expression is a constraint that can be applied to a trusted property
+/// Trusted property expression is a statement that can be applied to a trusted property
 /// to restrict the values that can be assigned to the property.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(try_from = "StatementValueConditionMove")]
@@ -160,7 +160,7 @@ pub enum StatementValueCondition {
 
 impl MoveType for StatementValueCondition {
   fn move_type(package: ObjectID) -> TypeTag {
-    TypeTag::from_str(format!("{}::trusted_constraint::StatementValueCondition", package).as_str())
+    TypeTag::from_str(format!("{}::trusted_statement::StatementValueCondition", package).as_str())
       .expect("Failed to create type tag")
   }
 }
@@ -223,33 +223,33 @@ impl TryFrom<StatementValueConditionMove> for StatementValueCondition {
 
 impl MoveType for Statement {
   fn move_type(package: ObjectID) -> TypeTag {
-    TypeTag::from_str(format!("{}::trusted_constraint::Statement", package).as_str())
+    TypeTag::from_str(format!("{}::trusted_statement::Statement", package).as_str())
       .expect("Failed to create type tag")
   }
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
-/// Time-range for the constraint
+/// Time-range for the statement
 pub struct Timespan {
   pub valid_from_ms: Option<u64>,
   pub valid_until_ms: Option<u64>,
 }
 
-/// Creates a new move type for a trusted property constraint
-pub(crate) fn new_property_constraint(
+/// Creates a new move type for a trusted property statement
+pub(crate) fn new_property_statement(
   package_id: ObjectID,
   ptb: &mut ProgrammableTransactionBuilder,
-  constraints: Vec<Statement>,
+  statements: Vec<Statement>,
 ) -> anyhow::Result<Argument> {
-  let mut constraint_args = vec![];
-  for constraint in constraints {
+  let mut statement_args = vec![];
+  for statement in statements {
     let value_tag = StatementValue::move_type(package_id);
 
-    let statement_names = newstatement_name(constraint.statement_name, ptb, package_id)?;
+    let statement_names = newstatement_name(statement.statement_name, ptb, package_id)?;
 
-    let allow_any = ptb.pure(constraint.allow_any)?;
+    let allow_any = ptb.pure(statement.allow_any)?;
 
-    let allowed_values = constraint
+    let allowed_values = statement
       .allowed_values
       .into_iter()
       .map(|value| match value {
@@ -265,7 +265,7 @@ pub(crate) fn new_property_constraint(
 
     let property_expression_tag = StatementValueCondition::move_type(package_id);
 
-    let expression = match constraint.expression {
+    let expression = match statement.expression {
       Some(expression) => {
         let string_tag =
           TypeTag::from_str(format!("{}::string::String", MOVE_STDLIB_PACKAGE_ID).as_str())?;
@@ -290,7 +290,7 @@ pub(crate) fn new_property_constraint(
 
         let arg = ptb.programmable_move_call(
           package_id,
-          ident_str!("trusted_constraint").into(),
+          ident_str!("trusted_statement").into(),
           ident_str!("new_trusted_statement_expression").into(),
           vec![],
           vec![starts_with, ends_with, contains, greater_than, lower_than],
@@ -308,18 +308,18 @@ pub(crate) fn new_property_constraint(
       None => utils::option_to_move::<Statement>(None, property_expression_tag, ptb)?,
     };
 
-    let constraint = ptb.programmable_move_call(
+    let statement = ptb.programmable_move_call(
       package_id,
-      ident_str!("trusted_constraint").into(),
+      ident_str!("trusted_statement").into(),
       ident_str!("new_trusted_statement").into(),
       vec![],
       vec![statement_names, allowed_values, allow_any, expression],
     );
-    constraint_args.push(constraint);
+    statement_args.push(statement);
   }
 
   Ok(ptb.command(Command::MakeMoveVec(
     Some(Statement::move_type(package_id)),
-    constraint_args,
+    statement_args,
   )))
 }

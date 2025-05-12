@@ -7,8 +7,6 @@ module ith::accreditation {
   use ith::statement::{Self, Statement};
   use ith::utils;
 
-
-  // The permission should be removed
   public struct Accreditations has store {
     statements : vector<Accreditation>,
   }
@@ -19,7 +17,6 @@ module ith::accreditation {
     }
   }
 
-  // but created statements shouldn't be
   public fun new_accreditations(statements : vector<Accreditation>) : Accreditations {
     Accreditations {
       statements: statements,
@@ -30,6 +27,8 @@ module ith::accreditation {
     self.statements.push_back(accredited_statement);
   }
 
+  /// Check if the statements are allowed by any of the accredited statements.
+  /// The statements are allowed if the accredited statement is not expired and the statement value matches the condition.
   public(package) fun are_statements_allowed(self : &Accreditations, statements: &VecMap<StatementName, StatementValue>, current_time_ms : u64) :bool {
     let statement_names = statements.keys() ;
     let mut idx_statement_names = 0;
@@ -41,14 +40,13 @@ module ith::accreditation {
       if (!self.is_statement_allowed(&statement_name, statement_value, current_time_ms)  ) {
         return false
       };
-
       idx_statement_names = idx_statement_names + 1;
     };
 
     return true
   }
 
-  // This checks if the value is permitted by any of the accredited statements
+  /// Check if the statement is allowed by any of the accredited statements.
   public(package) fun is_statement_allowed(self : &Accreditations, statement_name : &StatementName, statement_value : &StatementValue, current_time_ms : u64) :  bool {
     let len_statements_to_attest = self.statements.length();
     let mut idx_statements_to_attest = 0;
@@ -70,11 +68,12 @@ module ith::accreditation {
     return false
   }
 
+  /// Check the compliance of the statements. The compliance is met if all set of statements names and values is at most the set of accredited statements.
   public(package) fun are_statements_compliant(self : &Accreditations, statements: &vector<Statement>, current_time_ms : u64 ) :bool {
     let mut idx = 0;
     while ( idx < statements.length()  ) {
-        let constraint = statements[idx];
-        if ( ! self.is_statement_compliant(&constraint, current_time_ms)  )  {
+        let statement = statements[idx];
+        if ( ! self.is_statement_compliant(&statement, current_time_ms)  )  {
           return false
         };
         idx = idx + 1;
@@ -82,15 +81,16 @@ module ith::accreditation {
     return true
   }
 
-  public(package) fun is_statement_compliant(self : &Accreditations, constraint : &Statement, current_time_ms : u64) :  bool {
+  /// Check the compliance of the statement. The compliance is met if all set of statement names and values is at most the set of accredited statements.
+  public(package) fun is_statement_compliant(self : &Accreditations, statement : &Statement, current_time_ms : u64) :  bool {
     let len_statements = self.statements.length();
     let mut idx_statements = 0;
-    let mut want_statements : vector<StatementValue> = utils::copy_vector(constraint.allowed_values().keys());
+    let mut want_statements : vector<StatementValue> = utils::copy_vector(statement.allowed_values().keys());
 
     while (idx_statements < len_statements) {
       let accredited_statement = &self.statements[idx_statements];
 
-      let value_condition = accredited_statement.statements.try_get(constraint.statement_name()) ;
+      let value_condition = accredited_statement.statements.try_get(statement.statement_name()) ;
       if ( value_condition.is_none()) {
         continue
       };
@@ -98,8 +98,8 @@ module ith::accreditation {
       let mut len_want_statements = want_statements.length();
       let mut idx_want_statements = 0;
       while (idx_want_statements < len_want_statements ) {
-        let constraint_value = want_statements[idx_want_statements];
-        if ( value_condition.borrow().matches_value(&constraint_value, current_time_ms) ) {
+        let statement_value = want_statements[idx_want_statements];
+        if ( value_condition.borrow().matches_value(&statement_value, current_time_ms) ) {
           want_statements.remove(idx_want_statements);
           len_want_statements = len_want_statements - 1;
         };
@@ -108,7 +108,7 @@ module ith::accreditation {
       idx_statements = idx_statements + 1;
     };
 
-    // alll wanted statements have been found
+    // All wanted statements have been found
     if (want_statements.length() == 0 ) {
       return true
     };
@@ -148,7 +148,7 @@ module ith::accreditation {
     option::none()
   }
 
-  /// Accreditation can be created only by the ITH module
+  /// Accreditation represents statements that are accredited by a third party.
   public struct Accreditation has store, key {
     id : UID,
     accredited_by : String,

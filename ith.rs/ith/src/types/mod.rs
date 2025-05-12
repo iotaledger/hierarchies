@@ -3,14 +3,14 @@
 mod cap;
 mod event;
 mod permission;
-mod trusted_constraints;
 mod trusted_statement;
+mod trusted_statements;
 
 pub use accreditation::*;
 pub use cap::*;
 pub use event::*;
-pub use trusted_constraints::*;
 pub use trusted_statement::*;
+pub use trusted_statements::*;
 
 use std::collections::HashMap;
 
@@ -39,7 +39,7 @@ pub struct RootAuthority {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Governance {
   id: UID,
-  pub trusted_constraints: Statements,
+  pub trusted_statements: Statements,
   #[serde(deserialize_with = "deserialize_vec_map")]
   pub accreditors: HashMap<ObjectID, Accreditations>,
   #[serde(deserialize_with = "deserialize_vec_map")]

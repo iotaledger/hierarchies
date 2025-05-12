@@ -36,11 +36,9 @@ module ith::main {
     id : UID,
     /// Statements that are trusted by the given Federation
     statements : Statements,
-
     /// Accreditation rights to delegate accreditation permissions.
     /// These accreditations allow a user to grant other users the ability to further delegate accreditation permissions.
     accreditations_to_accredit : VecMap<ID, Accreditations>,
-
     /// Accreditation rights for attestation.
     /// These accreditations empower a user to create attestations related to trusted statements.
     accreditations_to_attest : VecMap<ID, Accreditations>,
@@ -143,8 +141,7 @@ module ith::main {
     self.governance.accreditations_to_accredit.contains(user_id)
   }
 
-  /// adds the trusted property to the federation, optionally a specifc type can be given
-  public fun add_trusted_statement(
+  public fun add_statement(
     self : &mut Federation,
     cap : &RootAuthorityCap,
     statement_name : StatementName,
@@ -155,20 +152,20 @@ module ith::main {
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
     assert!(!(allow_any && allowed_values.keys().length() > 0), EInvalidConstraint);
 
-    let constraint = statement::new_statement(
+    let statement = statement::new_statement(
       statement_name,
       allowed_values,
       allow_any,
       option::none(),
     );
 
-    self.governance.statements.add_statement(statement_name, constraint) ;
+    self.governance.statements.add_statement(statement) ;
   }
 
 
   // TODO should be removed
   // This has left due to of compatilibity with the rust abstraction
-  public fun remove_trusted_statement(
+  public fun remove_statement(
     self : &mut Federation,
     cap : &RootAuthorityCap,
     statement_name : StatementName,
@@ -189,8 +186,8 @@ module ith::main {
   // Revoke trusted property by setting the validity to a specific time
   public fun revoke_trusted_statement(federation : &mut Federation, cap : &RootAuthorityCap, statement_name : StatementName, valid_to_ms : u64) {
     assert!(cap.federation_id == federation.federation_id(), EUnauthorizedWrongFederation);
-    let property_constraint = federation.governance.statements.data_mut().get_mut(&statement_name);
-    property_constraint.revoke(valid_to_ms);
+    let property_statement = federation.governance.statements.data_mut().get_mut(&statement_name);
+    property_statement.revoke(valid_to_ms);
   }
 
   /// Creates a new attest capability
@@ -232,7 +229,7 @@ module ith::main {
   }
 
 
-  // Creates a accreditation to accredit about given statements. Accreditor is an entity that can accredit others to attest about statements.
+  // Accredit is a process of transferring trust to another entity. It allows the entity to accredit other entities.
   public fun accredit(self : &mut Federation, cap : &AccreditCap,  receiver : ID, want_statements : vector<Statement>,  ctx : &mut TxContext) {
       assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
       let current_time_ms = ctx.epoch_timestamp_ms();
@@ -256,7 +253,7 @@ module ith::main {
         }
   }
 
-  /// Creates a accreditation to attest about given statements
+  /// Accredit to attest is a a process when trusted entity can make make another entity the Attester. Attester can make statements that are trusted by the federation.
   public fun accredit_to_attest(self : &mut Federation, cap : &AttestCap, receiver : ID, wanted_statements: vector<Statement>, ctx : &mut TxContext) {
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
 
@@ -282,7 +279,6 @@ module ith::main {
     };
   }
 
-  // TODO: this does not make sense, because the permission ID shouldn't be a structure that cen be revoked, The asset that can be revoked is a Statement
   public fun revoke_accreditation_to_attest(self : &mut Federation, cap : &AttestCap, user_id : &ID,  permission_id : &ID, ctx : &mut TxContext) {
     let current_time_ms = ctx.epoch_timestamp_ms();
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
@@ -293,11 +289,11 @@ module ith::main {
     let mut accreditation_to_revoke_idx = users_attest_permissions.find_accredited_statement_id(permission_id);
     assert!(accreditation_to_revoke_idx.is_some(), EAccreditationNotFound);
 
-    // Make suere that the sender has the right to revoke the permission
+    // Make sure that the sender has the right to revoke the permission
     if (! self.is_root_authority(&ctx.sender().to_id())) {
       let accreditation_to_revoke = &users_attest_permissions.accredited_statements()[accreditation_to_revoke_idx.extract()];
-      let (_, constraints) = (*accreditation_to_revoke.statements()).into_keys_values() ;
-      assert!(remover_accreditations.are_statements_compliant(&constraints, current_time_ms), EUnauthorizedInsufficientAttestation);
+      let (_, statements) = (*accreditation_to_revoke.statements()).into_keys_values() ;
+      assert!(remover_accreditations.are_statements_compliant(&statements, current_time_ms), EUnauthorizedInsufficientAttestation);
     };
 
     // Remove the permission
@@ -314,12 +310,12 @@ module ith::main {
     let mut accreditation_to_revoke_idx = users_accredit_permissions.find_accredited_statement_id(permission_id);
     assert!(accreditation_to_revoke_idx.is_some(), EAccreditationNotFound);
 
-    // make sure that the sender has the right to revoke the permission
+    // Make sure that the sender has the right to revoke the permission
     if (! self.is_root_authority(&ctx.sender().to_id())) {
       let accreditation_to_revoke = &users_accredit_permissions.accredited_statements()[accreditation_to_revoke_idx.extract()];
       let current_time_ms   = ctx.epoch_timestamp_ms();
-      let (_, constraints) = (*accreditation_to_revoke.statements()).into_keys_values() ;
-      assert!(remover_permissions.are_statements_compliant(&constraints, current_time_ms), EUnauthorizedInsufficientAccreditation);
+      let (_, statements) = (*accreditation_to_revoke.statements()).into_keys_values() ;
+      assert!(remover_permissions.are_statements_compliant(&statements, current_time_ms), EUnauthorizedInsufficientAccreditation);
     };
 
     // Remove the permission
@@ -370,7 +366,7 @@ module ith::main_tests {
   use std::string::{utf8};
   use ith::main::{
     new_federation, RootAuthorityCap, Federation, AccreditCap,AttestCap,
-    add_trusted_statement, accredit_to_attest, accredit,
+    add_statement, accredit_to_attest, accredit,
     revoke_accreditation_to_attest, revoke_accreditation_to_accredit,
   };
   use iota::test_scenario;
@@ -459,7 +455,7 @@ module ith::main_tests {
     let mut allowed_values = vec_set::empty();
     allowed_values.insert(property_value);
 
-    fed.add_trusted_statement(&cap,statement_name, allowed_values, false, scenario.ctx());
+    fed.add_statement(&cap,statement_name, allowed_values, false, scenario.ctx());
     scenario.next_tx(alice);
 
     // Check if the property was added
@@ -491,8 +487,8 @@ module ith::main_tests {
     let bob = new_id.uid_to_inner();
 
     // Issue permission to accredit
-    let constraints = vector::empty();
-    fed.accredit(&accredit_cap, bob, constraints, scenario.ctx());
+    let statements = vector::empty();
+    fed.accredit(&accredit_cap, bob, statements, scenario.ctx());
     scenario.next_tx(alice);
 
     // Check if the permission was issued
@@ -528,8 +524,8 @@ module ith::main_tests {
     let bob = new_id.uid_to_inner();
 
     // Issue permission to accredit
-    let constraints = vector::empty();
-    fed.accredit_to_attest(&attest_cap, bob, constraints, scenario.ctx());
+    let statements = vector::empty();
+    fed.accredit_to_attest(&attest_cap, bob, statements, scenario.ctx());
     scenario.next_tx(alice);
 
     // Check if the permission was issued
@@ -565,12 +561,12 @@ module ith::main_tests {
     let bob = new_id.uid_to_inner();
 
     // Issue permission to accredit
-    let constraints = vector::empty();
-    fed.accredit(&accredit_cap, bob, constraints, scenario.ctx());
+    let statements = vector::empty();
+    fed.accredit(&accredit_cap, bob, statements, scenario.ctx());
     scenario.next_tx(alice);
 
     // Issue permission to attest
-    fed.accredit_to_attest(&attest_cap, bob, constraints, scenario.ctx());
+    fed.accredit_to_attest(&attest_cap, bob, statements, scenario.ctx());
     scenario.next_tx(alice);
 
     // Revoke permission to attest

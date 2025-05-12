@@ -40,7 +40,7 @@ async fn main() -> anyhow::Result<()> {
   println!("adding trust properties");
   // Add the trusted property to the federation. The federation owner can add trusted properties.
   client
-    .add_trusted_statement(
+    .add_statement(
       federation_id,
       statement_name.clone(),
       allowed_values_property,
@@ -60,13 +60,13 @@ async fn main() -> anyhow::Result<()> {
   // Allowed values for the attestation
   let allowed_values_attestation = [value_physics.clone()];
 
-  // Property constraints
-  let constraints =
+  // Property statements
+  let statements =
     Statement::new(statement_name.clone()).with_allowed_values(allowed_values_attestation);
 
   // Create an attestation
   client
-    .create_attestation(federation_id, attestation_receiver, [constraints], None)
+    .create_attestation(federation_id, attestation_receiver, [statements], None)
     .await
     .context("Failed creating attestation")?;
   println!(

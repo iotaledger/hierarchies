@@ -237,7 +237,7 @@ where
   }
 
   /// Adds a trusted property to a federation.
-  pub async fn add_trusted_statement(
+  pub async fn add_statement(
     &self,
     federation_id: ObjectID,
     statement_name: impl Into<StatementName>,
@@ -246,7 +246,7 @@ where
     gas_budget: Option<u64>,
   ) -> anyhow::Result<()> {
     let allowed_values = HashSet::from_iter(allowed_values);
-    federation::ops::add_trusted_statement(
+    federation::ops::add_statement(
       self,
       federation_id,
       statement_name.into(),
@@ -258,13 +258,13 @@ where
   }
 
   /// Removes a trusted property from a federation.
-  pub async fn remove_trusted_statement(
+  pub async fn remove_statement(
     &self,
     federation_id: ObjectID,
     statement_name: StatementName,
     gas_budget: Option<u64>,
   ) -> anyhow::Result<()> {
-    federation::ops::remove_trusted_statement(self, federation_id, statement_name, gas_budget).await
+    federation::ops::remove_statement(self, federation_id, statement_name, gas_budget).await
   }
 
   /// Issues a permission to attest to a receiver in a federation.
@@ -272,15 +272,15 @@ where
     &self,
     federation_id: ObjectID,
     receiver: ObjectID,
-    want_property_constraints: impl IntoIterator<Item = Statement>,
+    want_property_statements: impl IntoIterator<Item = Statement>,
     gas_budget: Option<u64>,
   ) -> anyhow::Result<()> {
-    let want_property_constraints = want_property_constraints.into_iter().collect();
+    let want_property_statements = want_property_statements.into_iter().collect();
     federation::ops::create_attestation(
       self,
       federation_id,
       receiver,
-      want_property_constraints,
+      want_property_statements,
       gas_budget,
     )
     .await
@@ -309,14 +309,14 @@ where
     &self,
     federation_id: ObjectID,
     receiver: ObjectID,
-    want_property_constraints: Vec<Statement>,
+    want_property_statements: Vec<Statement>,
     gas_budget: Option<u64>,
   ) -> anyhow::Result<()> {
     federation::ops::create_accreditation(
       self,
       federation_id,
       receiver,
-      want_property_constraints,
+      want_property_statements,
       gas_budget,
     )
     .await

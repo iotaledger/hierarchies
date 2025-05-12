@@ -39,7 +39,7 @@ async fn main() -> anyhow::Result<()> {
 
   // Add the trusted property to the federation
   client
-    .add_trusted_statement(
+    .add_statement(
       federation_id,
       statement_name.clone(),
       allowed_values.clone(),
@@ -54,8 +54,8 @@ async fn main() -> anyhow::Result<()> {
   // A receiver is an account that will receive the attestation
   let receiver = ObjectID::random();
 
-  // Property constraints
-  let constraints = Statement {
+  // Property statements
+  let statements = Statement {
     statement_name,
     allowed_values,
     expression: None,
@@ -65,7 +65,7 @@ async fn main() -> anyhow::Result<()> {
 
   // Let us issue a permission to attest to the trusted property
   client
-    .create_attestation(federation_id, receiver, vec![constraints.clone()], None)
+    .create_attestation(federation_id, receiver, vec![statements.clone()], None)
     .await
     .context("Failed to issue permission to attest")?;
 
@@ -74,7 +74,7 @@ async fn main() -> anyhow::Result<()> {
     .create_attestation(
       federation_id,
       client.sender_address().into(),
-      vec![constraints],
+      vec![statements],
       None,
     )
     .await

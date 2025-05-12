@@ -58,7 +58,7 @@ impl OffChainFederation {
 
     federation
       .governance
-      .trusted_constraints
+      .trusted_statements
       .contains_property(statement_name)
   }
 
@@ -74,7 +74,7 @@ impl OffChainFederation {
     trusted_statements.keys().try_for_each(|statement_name| {
       if !federation
         .governance
-        .trusted_constraints
+        .trusted_statements
         .contains_property(statement_name)
       {
         return Err(anyhow::anyhow!("property not found"));
@@ -98,7 +98,7 @@ impl OffChainFederation {
     self
       .federation
       .governance
-      .trusted_constraints
+      .trusted_statements
       .data
       .keys()
       .cloned()

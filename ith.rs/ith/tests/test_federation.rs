@@ -42,7 +42,7 @@ async fn test_adding_trusted_statements() -> anyhow::Result<()> {
   let _federation = ith_client.new_federation(None).await?;
 
   // ith_client
-  //   .add_trusted_statement(
+  //   .add_statement(
   //     &client,
   //     StatementName {
   //       name: vec!["Home".to_string()],

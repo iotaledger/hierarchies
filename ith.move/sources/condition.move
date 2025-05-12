@@ -81,7 +81,7 @@ module ith::statement_condition {
     self.lower_than.is_some()
   }
 
-  public fun matches_condition(self : &StatementValueCondition,  value : &StatementValue) : bool {
+  public fun condition_matches(self : &StatementValueCondition,  value : &StatementValue) : bool {
     if (self.is_starts_with()) {
       let mut maybe_value_string = value.as_string();
       if (maybe_value_string.is_none()) {

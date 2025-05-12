@@ -29,8 +29,8 @@ name = "02_add_root_authority"
 
 
 [[example]]
-path = "03_add_and_remove_trusted_statement.rs"
-name = "03_add_and_remove_trusted_statement"
+path = "03_add_and_remove_statement.rs"
+name = "03_add_and_remove_statement"
 
 
 [[example]]

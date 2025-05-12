@@ -24,7 +24,7 @@ async fn main() -> anyhow::Result<()> {
 
     // Add the trusted property to the federation
     ith_client
-      .add_trusted_statement(
+      .add_statement(
         *federation_id,
         statement_name.clone(),
         allowed_values.clone(),
@@ -43,7 +43,7 @@ async fn main() -> anyhow::Result<()> {
 
     // Add the trusted property to the federation
     ith_client
-      .add_trusted_statement(
+      .add_statement(
         *federation_id,
         statement_name.clone(),
         allowed_values.clone(),

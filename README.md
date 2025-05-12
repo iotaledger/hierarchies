@@ -270,13 +270,13 @@ sequenceDiagram
     FederationOwner->>+Federation: add_root_authority(cap, account_id, ctx)
     Federation-->>-FederationOwner: Root authority added
 
-    FederationOwner->>+Federation: add_trusted_statement(cap, "university.scores.engineering", allowed_values, allow_any, ctx)
+    FederationOwner->>+Federation: add_statement(cap, "university.scores.engineering", allowed_values, allow_any, ctx)
     Federation-->>-FederationOwner: Trusted property added
 
-    FederationOwner->>+Federation: create_accreditation(cap, Accreditor, want_property_constraints, ctx)
+    FederationOwner->>+Federation: create_accreditation(cap, Accreditor, want_property_statements, ctx)
     Federation-->>-FederationOwner: Accreditation granted
 
-    Accreditor->>+Federation: create_attestation(cap, Attester, wanted_constraints, ctx)
+    Accreditor->>+Federation: create_attestation(cap, Attester, wanted_statements, ctx)
     Federation-->>-Accreditor: Attestation created
 
     Verifier->>+Federation: validatestatements(issuer_id, trusted_statements, ctx)
@@ -296,7 +296,7 @@ sequenceDiagram
 
 1. **Federation Creation**: The Federation Owner creates a federation with the `new_federation` method.
 2. **Assign Root Authority**: The root authority is assigned to manage the federation using `add_root_authority`.
-3. **Add Trusted Property**: The root authority defines a trusted property with `add_trusted_statement`.
+3. **Add Trusted Property**: The root authority defines a trusted property with `add_statement`.
 4. **Create Accreditation**: The root authority creates an accreditation for an accreditor to attest to specific properties.
 5. **Create Attestation**: The accreditor creates an attestation for an attester to confirm scores.
 6. **Validation by External Verifier**: An external verifier validates the attester’s authority via `validatestatements`.

@@ -26,7 +26,7 @@ async fn main() -> anyhow::Result<()> {
   let allowed_values = HashSet::from_iter([value.clone()]);
 
   ith_client
-    .add_trusted_statement(
+    .add_statement(
       *federation_id,
       statement_name.clone(),
       allowed_values.clone(),
@@ -39,8 +39,8 @@ async fn main() -> anyhow::Result<()> {
   // Add new receiver
   let receiver = ObjectID::random();
 
-  // Property constraints
-  let constraints = Statement {
+  // Property statements
+  let statements = Statement {
     statement_name: statement_name.clone(),
     allowed_values,
     expression: None,
@@ -51,7 +51,7 @@ async fn main() -> anyhow::Result<()> {
   // Let us issue a permission to attest to the trusted property
   {
     ith_client
-      .create_attestation(*federation_id, receiver, vec![constraints.clone()], None)
+      .create_attestation(*federation_id, receiver, vec![statements.clone()], None)
       .await
       .context("Failed to issue permission to attest")?;
   }

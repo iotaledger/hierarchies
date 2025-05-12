@@ -21,8 +21,7 @@ use crate::utils::{self, MoveType};
 
 pub(crate) mod ops {
   use types::{
-    new_property_constraint, new_property_value_number, new_property_value_string,
-    newstatement_name,
+    new_property_statement, new_property_value_number, new_property_value_string, newstatement_name,
   };
 
   use crate::types::Capability;
@@ -65,7 +64,7 @@ pub(crate) mod ops {
     Ok(ObjectID::from(fed_address))
   }
 
-  pub async fn add_trusted_statement<S>(
+  pub async fn add_statement<S>(
     client: &ITHClient<S>,
     federation_id: ObjectID,
     statement_name: StatementName,
@@ -114,7 +113,7 @@ pub(crate) mod ops {
     ptb.programmable_move_call(
       client.ith_package_id(),
       ident_str!("main").into(),
-      ident_str!("add_trusted_statement").into(),
+      ident_str!("add_statement").into(),
       vec![],
       vec![fed_ref, cap, statement_names, tpv_vec_set, allow_any],
     );
@@ -126,7 +125,7 @@ pub(crate) mod ops {
     Ok(())
   }
 
-  pub async fn remove_trusted_statement<S>(
+  pub async fn remove_statement<S>(
     client: &ITHClient<S>,
     federation_id: ObjectID,
     statement_name: StatementName,
@@ -147,7 +146,7 @@ pub(crate) mod ops {
     ptb.programmable_move_call(
       client.ith_package_id(),
       ident_str!("main").into(),
-      ident_str!("remove_trusted_statement").into(),
+      ident_str!("remove_statement").into(),
       vec![],
       vec![fed_ref, cap, statement_name],
     );
@@ -236,7 +235,7 @@ pub(crate) mod ops {
     client: &ITHClient<S>,
     federation_id: ObjectID,
     receiver: ObjectID,
-    want_property_constraints: Vec<Statement>,
+    want_property_statements: Vec<Statement>,
     gas_budget: Option<u64>,
   ) -> anyhow::Result<()>
   where
@@ -251,15 +250,15 @@ pub(crate) mod ops {
 
     let receiver_arg = ptb.pure(receiver)?;
 
-    let want_property_constraints =
-      new_property_constraint(client.ith_package_id(), &mut ptb, want_property_constraints)?;
+    let want_property_statements =
+      new_property_statement(client.ith_package_id(), &mut ptb, want_property_statements)?;
 
     ptb.programmable_move_call(
       client.ith_package_id(),
       ident_str!("main").into(),
       ident_str!("create_accreditation").into(),
       vec![],
-      vec![fed_ref, cap, receiver_arg, want_property_constraints],
+      vec![fed_ref, cap, receiver_arg, want_property_statements],
     );
 
     let tx = ptb.finish();
@@ -277,7 +276,7 @@ pub(crate) mod ops {
     client: &ITHClient<S>,
     federation_id: ObjectID,
     receiver: ObjectID,
-    want_property_constraints: Vec<Statement>,
+    want_property_statements: Vec<Statement>,
     gas_budget: Option<u64>,
   ) -> anyhow::Result<()>
   where
@@ -292,15 +291,15 @@ pub(crate) mod ops {
 
     let receiver_arg = ptb.pure(receiver)?;
 
-    let property_constraints =
-      new_property_constraint(client.ith_package_id(), &mut ptb, want_property_constraints)?;
+    let property_statements =
+      new_property_statement(client.ith_package_id(), &mut ptb, want_property_statements)?;
 
     ptb.programmable_move_call(
       client.ith_package_id(),
       ident_str!("main").into(),
       ident_str!("create_attestation").into(),
       vec![],
-      vec![fed_ref, cap, receiver_arg, property_constraints],
+      vec![fed_ref, cap, receiver_arg, property_statements],
     );
 
     let tx = ptb.finish();

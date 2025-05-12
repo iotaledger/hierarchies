@@ -4,7 +4,7 @@ use iota_sdk::types::id::{ID, UID};
 use serde::{Deserialize, Serialize};
 
 use super::statement::{StatementName, StatementValue};
-use super::trusted_constraints::Statement;
+use super::trusted_statements::Statement;
 use crate::utils::deserialize_vec_map;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -13,7 +13,7 @@ pub struct Accreditations {
 }
 
 /// Represents a permission that can be granted to an account. A permission
-/// consists of a set of constraints that must be satisfied by the accountaccreditedstatement in
+/// consists of a set of statements that must be satisfied by the accountaccreditedstatement in
 /// order to be granted the permission.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Accreditation {
@@ -21,7 +21,7 @@ pub struct Accreditation {
   pub federation_id: ID,
   pub accredited_by: String,
   #[serde(deserialize_with = "deserialize_vec_map")]
-  pub constraints: HashMap<StatementName, Statement>,
+  pub statements: HashMap<StatementName, Statement>,
 }
 
 impl Accreditations {
@@ -40,7 +40,7 @@ impl Accreditations {
   }
 
   /// Checks if the given `property_value` is permitted according to the
-  /// constraints
+  /// statements
   /// defined in the `Accreditations` instance.
   pub fn is_statement_allowed(
     &self,
@@ -50,9 +50,9 @@ impl Accreditations {
     self
       .permissions
       .iter()
-      .flat_map(|accreditation| accreditation.constraints.get(statement_name))
-      .any(|property_constraint| {
-        property_constraint.matches_name_value(statement_name, property_value)
+      .flat_map(|accreditation| accreditation.statements.get(statement_name))
+      .any(|property_statement| {
+        property_statement.matches_name_value(statement_name, property_value)
       })
   }
 }
