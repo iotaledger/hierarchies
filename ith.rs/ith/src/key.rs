@@ -7,6 +7,7 @@ pub struct IotaKeySignature {
 }
 
 impl SignatureScheme for IotaKeySignature {
+  type Input = Vec<u8>;
   type PublicKey = Vec<u8>;
 
   type Signature = Vec<u8>;

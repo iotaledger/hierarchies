@@ -56,7 +56,7 @@ pub(crate) mod ops {
       .ok_or_else(|| anyhow::anyhow!("missing events"))?
       .data
       .first()
-      .map(|data| bcs::from_bytes(data.bcs.as_slice()))
+      .map(|data| bcs::from_bytes(data.bcs.bytes()))
       .transpose()?
       .ok_or_else(|| anyhow::anyhow!("missing federation event"))?;
 

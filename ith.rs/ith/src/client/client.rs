@@ -157,7 +157,7 @@ where
     hasher.update(bcs::to_bytes(&intent_msg)?);
     let digest = hasher.finalize().digest;
 
-    let raw_signature = self.signer.sign(&digest).await?;
+    let raw_signature = self.signer.sign(&digest.to_vec()).await?;
 
     let binding = [
       [SignatureScheme::ED25519.flag()].as_slice(),
