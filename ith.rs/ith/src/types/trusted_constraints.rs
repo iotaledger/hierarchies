@@ -12,7 +12,7 @@ use super::trusted_statement::{StatementName, StatementValue};
 use super::{new_property_value_number, new_property_value_string, newstatement_name};
 use crate::utils::{self, deserialize_vec_map, deserialize_vec_set, MoveType};
 
-/// Trusted property statements for a federation
+/// Statements for a federation
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Statements {
   #[serde(deserialize_with = "deserialize_vec_map")]
@@ -25,7 +25,7 @@ impl Statements {
   }
 }
 
-/// Trusted property statement is a statement that can be applied to a Statement
+/// Statement is a statement that can be applied to a Statement
 /// to restrict the values that can be assigned to the property.
 /// The statement can be based on the property name, allowed values, or an expression.
 /// The statement can also have a time range in which the statement is valid.

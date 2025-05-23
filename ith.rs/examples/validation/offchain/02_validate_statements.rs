@@ -39,7 +39,7 @@ async fn main() -> anyhow::Result<()> {
   // Add new receiver
   let receiver = ObjectID::random();
 
-  // Property statements
+  // Statements
   let statements = Statement {
     statement_name: statement_name.clone(),
     allowed_values,

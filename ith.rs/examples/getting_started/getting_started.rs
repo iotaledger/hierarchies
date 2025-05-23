@@ -60,7 +60,7 @@ async fn main() -> anyhow::Result<()> {
   // Allowed values for the attestation
   let allowed_values_attestation = [value_physics.clone()];
 
-  // Property statements
+  // Statements
   let statements =
     Statement::new(statement_name.clone()).with_allowed_values(allowed_values_attestation);
 

@@ -54,7 +54,7 @@ async fn main() -> anyhow::Result<()> {
   // A receiver is an account that will receive the accreditation
   let receiver = ObjectID::random();
 
-  // Property statements
+  // Statements
   let statements = Statement {
     statement_name,
     allowed_values,
