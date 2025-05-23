@@ -215,7 +215,7 @@ impl<S> ITHClient<S>
 where
   S: Signer<IotaKeySignature>,
 {
-  /// Creates a new federation.
+  /// Creates a new Federation.
   pub async fn new_federation(&self, gas_budget: Option<u64>) -> anyhow::Result<Federation> {
     let federation = federation::ops::create_new_federation(self, gas_budget).await?;
 
@@ -224,7 +224,7 @@ where
     Ok(federation)
   }
 
-  /// Adds a root authority to a federation.
+  /// Adds a root authority to the Federation.
   /// The root authority is an account that has the ability to add other
   /// authorities to the federation.
   pub async fn add_root_authority(
@@ -236,7 +236,7 @@ where
     federation::ops::add_root_authority(self, federation_id, account_id, gas_budget).await
   }
 
-  /// Adds a trusted property to a federation.
+  /// Adds a Statement to the Federation.
   pub async fn add_statement(
     &self,
     federation_id: ObjectID,
@@ -257,7 +257,7 @@ where
     .await
   }
 
-  /// Removes a trusted property from a federation.
+  /// Removes a Statement from the Federation.
   pub async fn remove_statement(
     &self,
     federation_id: ObjectID,
@@ -267,8 +267,8 @@ where
     federation::ops::remove_statement(self, federation_id, statement_name, gas_budget).await
   }
 
-  /// Issues a permission to attest to a receiver in a federation.
-  pub async fn create_attestation(
+  /// Issues an ability to attest to a receiver in the Federation.
+  pub async fn create_accreditation_to_attest(
     &self,
     federation_id: ObjectID,
     receiver: ObjectID,
@@ -276,7 +276,7 @@ where
     gas_budget: Option<u64>,
   ) -> anyhow::Result<()> {
     let want_property_statements = want_property_statements.into_iter().collect();
-    federation::ops::create_attestation(
+    federation::ops::create_accreditation_to_attest(
       self,
       federation_id,
       receiver,
@@ -286,7 +286,7 @@ where
     .await
   }
 
-  /// Revokes a permission to attest for a user in a federation.
+  /// Revokes a permission to attest for a user in the Federation.
   pub async fn revoke_accreditation_to_attest(
     &self,
     federation_id: ObjectID,
@@ -304,25 +304,25 @@ where
     .await
   }
 
-  /// Issues a permission to accredit to a receiver in a federation.
-  pub async fn create_accreditation(
+  /// Issues a permission to accredit to a receiver in the Federation.
+  pub async fn create_accreditation_to_accredit(
     &self,
     federation_id: ObjectID,
     receiver: ObjectID,
-    want_property_statements: Vec<Statement>,
+    want_statements: Vec<Statement>,
     gas_budget: Option<u64>,
   ) -> anyhow::Result<()> {
-    federation::ops::create_accreditation(
+    federation::ops::create_accreditation_to_accredit(
       self,
       federation_id,
       receiver,
-      want_property_statements,
+      want_statements,
       gas_budget,
     )
     .await
   }
 
-  /// Revokes a permission to accredit for a user in a federation.
+  /// Revokes a permission to accredit for a user in the Federation.
   pub async fn revoke_accreditation_to_accredit(
     &self,
     federation_id: ObjectID,

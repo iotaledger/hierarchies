@@ -16,7 +16,7 @@ async fn test_add_root_authority() -> anyhow::Result<()> {
   ith_client
     .add_root_authority(*federation.id.object_id(), id, None)
     .await
-    .context("Failed to add trusted property")?;
+    .context("Failed to add Statement")?;
 
   println!("added_authority: {:?}", ());
 
@@ -55,7 +55,7 @@ async fn test_adding_trusted_statements() -> anyhow::Result<()> {
   //     true,
   //   )
   //   .await
-  //   .context("Failed to add trusted property")?;
+  //   .context("Failed to add Statement")?;
 
   Ok(())
 }

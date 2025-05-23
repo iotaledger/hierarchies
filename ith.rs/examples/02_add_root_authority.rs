@@ -30,7 +30,7 @@ async fn main() -> anyhow::Result<()> {
   ith_client
     .add_root_authority(federation_id, new_root_authority, None)
     .await
-    .context("Failed to add trusted property")?;
+    .context("Failed to add Statement")?;
 
   // Get the updated federation and print it
   let federation: Federation = ith_client.get_object_by_id(federation_id).await?;

@@ -25,7 +25,7 @@ impl Statements {
   }
 }
 
-/// Trusted property statement is a statement that can be applied to a trusted property
+/// Trusted property statement is a statement that can be applied to a Statement
 /// to restrict the values that can be assigned to the property.
 /// The statement can be based on the property name, allowed values, or an expression.
 /// The statement can also have a time range in which the statement is valid.
@@ -146,7 +146,7 @@ impl Statement {
   }
 }
 
-/// Trusted property expression is a statement that can be applied to a trusted property
+/// Trusted property expression is a statement that can be applied to a Statement
 /// to restrict the values that can be assigned to the property.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(try_from = "StatementValueConditionMove")]
@@ -235,7 +235,7 @@ pub struct Timespan {
   pub valid_until_ms: Option<u64>,
 }
 
-/// Creates a new move type for a trusted property statement
+/// Creates a new move type for a Statement statement
 pub(crate) fn new_property_statement(
   package_id: ObjectID,
   ptb: &mut ProgrammableTransactionBuilder,

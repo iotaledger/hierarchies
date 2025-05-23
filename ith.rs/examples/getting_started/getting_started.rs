@@ -8,8 +8,8 @@ use ith::types::{StatementName, StatementValue};
 ///
 /// This example automatically installs ITH package in the testnet network.
 /// When the ITH package is published it creates a new federation,
-/// adds trusted properties, creates an attestation, validates them,
-/// revokes the attestation, then validates them again.
+/// adds Statements, creates an attestation, validates them,
+/// revokes the accreditation to attest, then validates them again.
 ///
 /// Before running the example:
 ///  - ensure you have the IOTA CLI installed and configured for the testnet network
@@ -23,7 +23,7 @@ use ith::types::{StatementName, StatementValue};
 async fn main() -> anyhow::Result<()> {
   let client = get_client(urls::testnet::node(), urls::testnet::faucet()).await?;
 
-  // Create a trusted property with allowed values
+  // Create a Statement with allowed values
   let statement_name = StatementName::new(["university", "a", "score", "department"]);
   let value_biology = StatementValue::from("biology");
   let value_physics = StatementValue::from("physics");
@@ -38,7 +38,7 @@ async fn main() -> anyhow::Result<()> {
   let federation_id = *federation.id.object_id();
 
   println!("adding trust properties");
-  // Add the trusted property to the federation. The federation owner can add trusted properties.
+  // Add the Statement to the federation. The federation owner can add Statements by default.
   client
     .add_statement(
       federation_id,
@@ -48,14 +48,14 @@ async fn main() -> anyhow::Result<()> {
       None,
     )
     .await
-    .context("Failed to add trusted property")?;
-  println!("✅ Added trusted property");
+    .context("Failed to add Statement")?;
+  println!("✅ Added Statement");
 
-  // Lets delegate the trust to another account and create an attestation for the property
-  // The receiver account will be able to attest to the property `university.a.score.department`
-  // and value `physics` on behalf of the federation
+  // Lets delegate the trust to another account and create an accreditation withe the Statement
+  // The receiver account will be able to attest to the Statement `university.a.score.department`
+  // and value `physics` on behalf of the Federation
 
-  // A receiver is an account that will receive the attestation
+  // A receiver is an account that will receive the accreditation
   let attestation_receiver = ObjectID::random();
   // Allowed values for the attestation
   let allowed_values_attestation = [value_physics.clone()];
@@ -64,18 +64,18 @@ async fn main() -> anyhow::Result<()> {
   let statements =
     Statement::new(statement_name.clone()).with_allowed_values(allowed_values_attestation);
 
-  // Create an attestation
+  // Create an accreditation to attest to the Statement
   client
-    .create_attestation(federation_id, attestation_receiver, [statements], None)
+    .create_accreditation_to_attest(federation_id, attestation_receiver, [statements], None)
     .await
     .context("Failed creating attestation")?;
   println!(
-    "✅ Attestation has been created for user {}",
+    "✅ Accreditation to attest has been created for the user {}",
     attestation_receiver
   );
 
-  // Let's validate the trusted properties. Validation is a process of checking if the attestation
-  // receiver has the right to attest to the property with the given value.
+  // Let's validate the Statements. Validation is a process of checking if the accreditation
+  // receiver is accredited to attest to the Statement with the given Statement Value
   //
   // The validation can be done on-chain or off-chain.
   // The off-chain validation is a zero cost operation, while the on-chain validation is a low cost operation.
@@ -83,26 +83,26 @@ async fn main() -> anyhow::Result<()> {
   // On-chain validation (low cost):
   client
     .onchain(federation_id)
-    .validatestatements(
+    .validate_statements(
       attestation_receiver,
       [(statement_name.clone(), value_physics.clone())],
     )
     .await
-    .context("Failed to validate trusted properties")?;
-  println!("✅ Validated trusted properties - ON-CHAIN");
+    .context("Failed to validate Statements")?;
+  println!("✅ Validated Statements - ON-CHAIN");
 
   // Off-chain validation (zero cost):
   client
     .offchain(federation_id)
     .await?
-    .validatestatements(
+    .validate_statements(
       attestation_receiver,
       [(statement_name.clone(), value_physics.clone())],
     )
-    .context("Failed to validate trusted properties")?;
-  println!("✅ Validated trusted properties - OFF-CHAIN");
+    .context("Failed to validate Statements")?;
+  println!("✅ Validated Statements - OFF-CHAIN");
 
-  // Revoke just created attestation
+  // Revoke just created accreditation to attest
   let attestations = client
     .onchain(federation_id)
     .get_accreditations_to_attest(attestation_receiver)
@@ -115,10 +115,10 @@ async fn main() -> anyhow::Result<()> {
     .context("Failed to revoke attestation")?;
   println!("✅ Revoked attestation");
 
-  // Validate trusted properties again - it should returned an error
+  // Validate Statements again - it should returned an error
   let expected_error = client
     .onchain(federation_id)
-    .validatestatements(
+    .validate_statements(
       attestation_receiver,
       [(statement_name.clone(), value_physics.clone())],
     )

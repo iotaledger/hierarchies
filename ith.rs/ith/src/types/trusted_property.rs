@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::utils::MoveType;
 
-/// StatementName represents the name of a trusted property
+/// StatementName represents the name of a Statement
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct StatementName {
   names: Vec<String>,
@@ -49,7 +49,7 @@ impl MoveType for StatementName {
   }
 }
 
-/// Creates a new move type for a trusted property name
+/// Creates a new move type for a Statement name
 pub(crate) fn newstatement_name(
   name: StatementName,
   ptb: &mut ProgrammableTransactionBuilder,
@@ -73,7 +73,7 @@ pub(crate) struct StatementValueMove {
   pub number: Option<u64>,
 }
 
-/// StatementValue represents the value of a trusted property
+/// StatementValue represents the value of a Statement
 /// It can be either a text or a number
 #[derive(Debug, Clone, PartialEq, Hash, Eq, Serialize, Deserialize)]
 #[serde(try_from = "StatementValueMove")]
@@ -82,7 +82,7 @@ pub enum StatementValue {
   Number(u64),
 }
 
-/// Creates a new move type for a trusted property value string
+/// Creates a new move type for a Statement value string
 pub(crate) fn new_property_value_string(
   value: String,
   ptb: &mut ProgrammableTransactionBuilder,
@@ -98,7 +98,7 @@ pub(crate) fn new_property_value_string(
   ))
 }
 
-/// Creates a new move type for a trusted property value number
+/// Creates a new move type for a Statement value number
 pub(crate) fn new_property_value_number(
   value: u64,
   ptb: &mut ProgrammableTransactionBuilder,

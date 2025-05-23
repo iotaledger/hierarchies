@@ -31,7 +31,7 @@ module ith::main {
   }
 
 
-  // Governance is the object that contains the trusted properties and the permissions to attest and accredit
+  // Governance is the object that contains the Statements and tracks the abilities of entities to attest and accredit
   public struct Governance has store, key {
     id : UID,
     /// Statements that are trusted by the given Federation
@@ -40,7 +40,7 @@ module ith::main {
     /// These accreditations allow a user to grant other users the ability to further delegate accreditation permissions.
     accreditations_to_accredit : VecMap<ID, Accreditations>,
     /// Accreditation rights for attestation.
-    /// These accreditations empower a user to create attestations related to trusted statements.
+    /// These accreditations empower a user to create Attestations.
     accreditations_to_attest : VecMap<ID, Accreditations>,
   }
 
@@ -183,7 +183,7 @@ module ith::main {
     }
   }
 
-  // Revoke trusted property by setting the validity to a specific time
+  // Revoke Statement by setting the validity to a specific time
   public fun revoke_trusted_statement(federation : &mut Federation, cap : &RootAuthorityCap, statement_name : StatementName, valid_to_ms : u64) {
     assert!(cap.federation_id == federation.federation_id(), EUnauthorizedWrongFederation);
     let property_statement = federation.governance.statements.data_mut().get_mut(&statement_name);
@@ -449,7 +449,7 @@ module ith::main_tests {
     let mut fed: Federation = scenario.take_shared();
     let cap: RootAuthorityCap = scenario.take_from_address(alice);
 
-    // Add a trusted property
+    // Add a Statement
     let statement_name = new_statement_name(utf8(b"statement_name"));
     let property_value = new_property_value_number(10);
     let mut allowed_values = vec_set::empty();
@@ -516,7 +516,7 @@ module ith::main_tests {
     let mut fed: Federation = scenario.take_shared();
     let cap: RootAuthorityCap = scenario.take_from_address(alice);
     let attest_cap: AttestCap = scenario.take_from_address(alice);
-    // Add a trusted property
+    // Add a Statement
 
     scenario.next_tx(alice);
 

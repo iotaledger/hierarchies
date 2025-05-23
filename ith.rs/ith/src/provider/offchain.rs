@@ -62,7 +62,7 @@ impl OffChainFederation {
       .contains_property(statement_name)
   }
 
-  pub fn validatestatements(
+  pub fn validate_statements(
     &self,
     issuer_id: ObjectID,
     trusted_statements: impl IntoIterator<Item = (StatementName, StatementValue)>,

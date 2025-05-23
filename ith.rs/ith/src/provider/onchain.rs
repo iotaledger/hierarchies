@@ -96,7 +96,7 @@ impl OnChainFederation<'_> {
       .await
   }
 
-  pub async fn validatestatements(
+  pub async fn validate_statements(
     &self,
     issuer_id: ObjectID,
     trusted_statements: impl IntoIterator<Item = (StatementName, StatementValue)>,
@@ -192,7 +192,7 @@ impl OnChainFederation<'_> {
     ptb.programmable_move_call(
       self.client.ith_package_id(),
       ident_str!("main").into(),
-      ident_str!("validatestatements").into(),
+      ident_str!("validate_statements").into(),
       vec![],
       vec![fed_ref, issuer_id, trusted_statements],
     );

@@ -231,7 +231,7 @@ pub(crate) mod ops {
     Ok(())
   }
 
-  pub async fn create_accreditation<S>(
+  pub async fn create_accreditation_to_accredit<S>(
     client: &ITHClient<S>,
     federation_id: ObjectID,
     receiver: ObjectID,
@@ -272,7 +272,7 @@ pub(crate) mod ops {
     Ok(())
   }
 
-  pub async fn create_attestation<S>(
+  pub async fn create_accreditation_to_attest<S>(
     client: &ITHClient<S>,
     federation_id: ObjectID,
     receiver: ObjectID,

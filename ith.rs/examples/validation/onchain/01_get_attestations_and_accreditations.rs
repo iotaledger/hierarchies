@@ -30,7 +30,7 @@ async fn main() -> anyhow::Result<()> {
 
   println!("Accreditations: {:#?}", permissions);
 
-  //   Add trusted property
+  //   Add Statement
   let statement_name = StatementName::from("Example LTD");
   let value = StatementValue::from("Hello");
   let allowed_values = HashSet::from_iter([value]);
@@ -44,7 +44,7 @@ async fn main() -> anyhow::Result<()> {
       None,
     )
     .await
-    .context("Failed to add trusted property")?;
+    .context("Failed to add Statement")?;
 
   // Add new receiver
   let receiver = ObjectID::random();
@@ -58,7 +58,7 @@ async fn main() -> anyhow::Result<()> {
     timespan: Timespan::default(),
   };
 
-  // Let us issue a permission to attest to the trusted property
+  // Let us issue a permission to attest to the Statement
   {
     ith_client
       .create_attestation(*federation_id, receiver, vec![statements.clone()], None)
