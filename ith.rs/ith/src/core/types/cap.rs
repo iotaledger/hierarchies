@@ -4,10 +4,10 @@ use serde::{Deserialize, Serialize};
 /// to an account
 #[derive(Debug, strum::Display, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Capability {
-  #[strum(serialize = "RootAuthorityCap")]
-  RootAuthority,
-  #[strum(serialize = "AttestCap")]
-  Attest,
-  #[strum(serialize = "AccreditCap")]
-  Accredit,
+    #[strum(serialize = "RootAuthorityCap")]
+    RootAuthority,
+    #[strum(serialize = "AttestCap")]
+    Attest,
+    #[strum(serialize = "AccreditCap")]
+    Accredit,
 }

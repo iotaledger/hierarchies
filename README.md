@@ -133,8 +133,8 @@ ITH comprises two main components:
 ### Installation of the ITH smart contract
 
 ```shell
- cd iota.move
- iota client publish
+cd iota.move
+iota client publish
 ```
 
 ### Installation of ITH rust library

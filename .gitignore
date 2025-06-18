@@ -3,3 +3,8 @@ node_modules
 package.json
 package-lock.json
 .log
+
+.idea
+
+.vscode
+.DS_Store

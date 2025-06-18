@@ -1,7 +1,9 @@
+use std::collections::HashSet;
+
 use anyhow::Context;
-use examples::{get_client, urls};
-use ith::types::Federation;
-use ith::types::{StatementName, StatementValue};
+use examples::get_funded_client;
+use ith::core::types::{Federation, StatementName, StatementValue};
+use product_common::core_client::CoreClientReadOnly;
 
 /// Demonstrate how to add a Statement to a federation.
 ///
@@ -14,75 +16,63 @@ use ith::types::{StatementName, StatementValue};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-  // Get the client instance
-  let ith_client = get_client(urls::localnet::node(), urls::localnet::faucet()).await?;
+    // Get the client instance
+    let ith_client = get_funded_client().await?;
 
-  // Create new federation
-  let federation = ith_client.new_federation(None).await?;
+    // Create new federation
+    let federation = ith_client
+        .create_new_federation()
+        .build_and_execute(&ith_client)
+        .await?;
 
-  // Federation ID
-  let federation_id = *federation.id.object_id();
+    // Federation ID
+    let federation_id = *federation.output.id.object_id();
 
-  // Trusted property name
-  let statement_name = StatementName::from("Example LTD");
+    // Trusted property name
+    let statement_name = StatementName::from("Example LTD");
 
-  // Trusted property value
-  let value = StatementValue::from("Hello");
-  let another_value = StatementValue::from("World");
-  let allowed_values = [value, another_value];
+    // Trusted property value
+    let value = StatementValue::from("Hello");
+    let another_value = StatementValue::from("World");
+    let allowed_values = HashSet::from([value, another_value]);
 
-  // Add the Statement to the federation
-  {
-    ith_client
-      .add_statement(
-        federation_id,
-        statement_name.clone(),
-        allowed_values,
-        false,
-        None,
-      )
-      .await
-      .context("Failed to add Statement")?;
-  }
+    // Add the Statement to the federation
+    {
+        ith_client
+            .add_statement(federation_id, statement_name.clone(), allowed_values, false)
+            .build_and_execute(&ith_client)
+            .await
+            .context("Failed to add Statement")?;
+    }
 
-  // Get the updated federation and print it
-  let federation: Federation = ith_client.get_object_by_id(federation_id).await?;
+    // Get the updated federation and print it
+    let federation: Federation = ith_client.get_object_by_id(federation_id).await?;
 
-  // Check if the Statement was added
-  let trusted_statements = federation
-    .governance
-    .trusted_statements
-    .contains_property(&statement_name);
+    // Check if the Statement was added
+    let trusted_statements = federation.governance.statements.contains_property(&statement_name);
 
-  assert!(trusted_statements);
+    assert!(trusted_statements);
 
-  if let Some(statement) = federation
-    .governance
-    .trusted_statements
-    .data
-    .get(&statement_name)
-  {
-    println!("Trusted Property: {:#?}", statement)
-  }
+    if let Some(statement) = federation.governance.statements.data.get(&statement_name) {
+        println!("Trusted Property: {:#?}", statement)
+    }
 
-  // Remove the Statement from the federation
-  {
-    ith_client
-      .remove_statement(federation_id, statement_name.clone(), None)
-      .await
-      .context("Failed to remove Statement")?;
-  }
+    // Remove the Statement from the federation
+    {
+        ith_client
+            .remove_statement(federation_id, statement_name.clone())
+            .build_and_execute(&ith_client)
+            .await
+            .context("Failed to remove Statement")?;
+    }
 
-  // Get the updated federation and print it
-  let federation: Federation = ith_client.get_object_by_id(federation_id).await?;
+    // Get the updated federation and print it
+    let federation: Federation = ith_client.get_object_by_id(federation_id).await?;
 
-  // Check if the Statement was removed
-  let trusted_statements = federation
-    .governance
-    .trusted_statements
-    .contains_property(&statement_name);
+    // Check if the Statement was removed
+    let trusted_statements = federation.governance.statements.contains_property(&statement_name);
 
-  assert!(!trusted_statements);
+    assert!(!trusted_statements);
 
-  Ok(())
+    Ok(())
 }

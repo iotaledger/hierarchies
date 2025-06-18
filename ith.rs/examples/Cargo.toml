@@ -7,14 +7,15 @@ edition.workspace = true
 anyhow.workspace = true
 async-trait.workspace = true
 fastcrypto.workspace = true
-ith = { path = "../ith" }
 iota.workspace = true
 iota-keys.workspace = true
 iota-sdk.workspace = true
+ith = { path = "../ith" }
 jsonpath-rust.workspace = true
 secret-storage.workspace = true
 serde_json.workspace = true
 tokio.workspace = true
+product_common = { workspace = true, features = ["test-utils"] }
 
 [lib]
 path = "utils/utils.rs"
@@ -27,11 +28,9 @@ name = "01_create_federation"
 path = "02_add_root_authority.rs"
 name = "02_add_root_authority"
 
-
 [[example]]
 path = "03_add_and_remove_statement.rs"
 name = "03_add_and_remove_statement"
-
 
 [[example]]
 path = "04_create_accreditation_to_attest.rs"
@@ -40,7 +39,6 @@ name = "04_create_accreditation_to_attest"
 [[example]]
 path = "05_revoke_accreditation_to_attest.rs"
 name = "05_revoke_accreditation_to_attest"
-
 
 [[example]]
 path = "06_create_accreditation_to_accredit.rs"
@@ -52,28 +50,16 @@ name = "07_revoke_accreditation_to_accredit"
 
 # Validation
 [[example]]
-path = "validation/offchain/01_get_accreditations_to_attest_and_accreditations.rs"
-name = "01_offchain_get_accreditations_to_attest_and_accreditations"
+path = "validation/01_get_attestations_and_accreditations.rs"
+name = "01_validation_get_attestations_and_accreditations"
 
 [[example]]
-path = "validation/offchain/02_validate_statements.rs"
-name = "02_offchain_validate_statements"
+path = "validation/02_validate_statements.rs"
+name = "02_validation_validate_statements"
 
 [[example]]
-path = "validation/offchain/03_get_statements.rs"
-name = "03_offchain_get_statements"
-
-[[example]]
-path = "validation/onchain/01_get_accreditations_to_attest_and_accreditations.rs"
-name = "01_onchain_get_accreditations_to_attest_and_accreditations"
-
-[[example]]
-path = "validation/onchain/02_validate_statements.rs"
-name = "02_onchain_validate_statements"
-
-[[example]]
-path = "validation/onchain/03_get_trusted_statements.rs"
-name = "03_onchain_get_trusted_statements"
+path = "validation/03_get_statements.rs"
+name = "03_validation_get_statements"
 
 
 # Demo

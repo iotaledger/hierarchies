@@ -1,11 +1,21 @@
-#!/bin/bash -x
-
 # Copyright 2020-2024 IOTA Stiftung
 # SPDX-License-Identifier: Apache-2.0
 
-script_dir=$(dirname $0)
+#!/bin/bash
+
+# Copyright 2020-2025 IOTA Stiftung
+# SPDX-License-Identifier: Apache-2.0
+
+script_dir=$(cd "$(dirname $0)" && pwd)
 package_dir=$script_dir/../ith.move
 
-echo "publishing package from $package_dir"
-cd $package_dir
-iota client publish --with-unpublished-dependencies --skip-dependency-verification --json --gas-budget 5000000000 .
+# echo "publishing package from $package_dir"
+RESPONSE=$(iota client publish --with-unpublished-dependencies --silence-warnings --json --gas-budget 500000000 $package_dir)
+{ # try
+    PACKAGE_ID=$(echo $RESPONSE | jq --raw-output '.objectChanges[] | select(.type | contains("published")) | .packageId')
+} || { # catch
+    echo $RESPONSE
+}
+
+export PRODUCT_IOTA_PKG_ID=$PACKAGE_ID
+echo "${PRODUCT_IOTA_PKG_ID}"
