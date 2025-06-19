@@ -58,20 +58,20 @@ async fn main() -> anyhow::Result<()> {
   let statements = Statement {
     statement_name,
     allowed_values,
-    expression: None,
+    condition: None,
     allow_any: false,
     timespan: Timespan::default(),
   };
 
   // Let us issue a permission to accredit to the Statement
   ith_client
-    .create_accreditation(federation_id, receiver, vec![statements.clone()], None)
+    .create_accreditation_to_attest(federation_id, receiver, vec![statements.clone()], None)
     .await
     .context("Failed to issue permission to attest")?;
 
   // Issue permission to the original account
   ith_client
-    .create_accreditation(
+    .create_accreditation_to_attest(
       federation_id,
       ith_client.sender_address().into(),
       vec![statements],
@@ -86,7 +86,10 @@ async fn main() -> anyhow::Result<()> {
   let federation: Federation = ith_client.get_object_by_id(federation_id).await?;
 
   // Check if the receiver has the permission to accredit
-  let can_accredit = federation.governance.accreditors.contains_key(&receiver);
+  let can_accredit = federation
+    .governance
+    .accreditations_to_accredit
+    .contains_key(&receiver);
 
   assert!(can_accredit);
 
@@ -97,7 +100,7 @@ async fn main() -> anyhow::Result<()> {
     .await
     .context("Failed to find permission to accredit")?;
 
-  let permission_id = permissions.permissions[0].id.object_id();
+  let permission_id = permissions.statements[0].id.object_id();
 
   ith_client
     .revoke_accreditation_to_accredit(federation_id, receiver, *permission_id, None)
@@ -110,8 +113,12 @@ async fn main() -> anyhow::Result<()> {
   println!("Federation: {:#?}", federation);
 
   // Check if the receiver has the permission to accredit
-  let can_accredit = federation.governance.accreditors.get(&receiver).unwrap();
+  let can_accredit = federation
+    .governance
+    .accreditations_to_accredit
+    .get(&receiver)
+    .unwrap();
 
-  assert!(can_accredit.permissions.is_empty());
+  assert!(can_accredit.statements.is_empty());
   Ok(())
 }

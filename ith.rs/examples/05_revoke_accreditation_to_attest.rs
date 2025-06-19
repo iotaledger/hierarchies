@@ -58,20 +58,20 @@ async fn main() -> anyhow::Result<()> {
   let statements = Statement {
     statement_name,
     allowed_values,
-    expression: None,
+    condition: None,
     allow_any: false,
     timespan: Timespan::default(),
   };
 
   // Let us issue a permission to attest to the Statement
   client
-    .create_attestation(federation_id, receiver, vec![statements.clone()], None)
+    .create_accreditation_to_attest(federation_id, receiver, vec![statements.clone()], None)
     .await
     .context("Failed to issue permission to attest")?;
 
   // Issue permission to the original account
   client
-    .create_attestation(
+    .create_accreditation_to_attest(
       federation_id,
       client.sender_address().into(),
       vec![statements],
@@ -86,7 +86,10 @@ async fn main() -> anyhow::Result<()> {
   let federation: Federation = client.get_object_by_id(federation_id).await?;
 
   // Check if the receiver has the permission to attest
-  let can_attest = federation.governance.attesters.contains_key(&receiver);
+  let can_attest = federation
+    .governance
+    .accreditations_to_attest
+    .contains_key(&receiver);
 
   assert!(can_attest);
 
@@ -97,7 +100,7 @@ async fn main() -> anyhow::Result<()> {
     .await
     .context("Failed to find permission to attest")?;
 
-  let permission_id = permissions.permissions[0].id.object_id();
+  let permission_id = permissions.statements[0].id.object_id();
 
   client
     .revoke_accreditation_to_attest(federation_id, receiver, *permission_id, None)
@@ -110,8 +113,12 @@ async fn main() -> anyhow::Result<()> {
   println!("Federation: {:#?}", federation);
 
   // Check if the receiver has the permission to attest
-  let can_attest = federation.governance.attesters.get(&receiver).unwrap();
+  let can_attest = federation
+    .governance
+    .accreditations_to_attest
+    .get(&receiver)
+    .unwrap();
 
-  assert!(can_attest.permissions.is_empty());
+  assert!(can_attest.statements.is_empty());
   Ok(())
 }

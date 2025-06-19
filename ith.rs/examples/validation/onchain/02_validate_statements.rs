@@ -43,7 +43,7 @@ async fn main() -> anyhow::Result<()> {
   let statements = Statement {
     statement_name: statement_name.clone(),
     allowed_values,
-    expression: None,
+    condition: None,
     allow_any: false,
     timespan: Timespan::default(),
   };
@@ -51,17 +51,17 @@ async fn main() -> anyhow::Result<()> {
   // Let us issue a permission to attest to the Statement
   {
     ith_client
-      .create_attestation(*federation_id, receiver, vec![statements.clone()], None)
+      .create_accreditation_to_attest(*federation_id, receiver, vec![statements.clone()], None)
       .await
       .context("Failed to issue permission to attest")?;
   }
 
   // Validate trusted properties
-  let trusted_statements = [(statement_name, value)];
+  let statements = [(statement_name, value)];
 
   let validate = ith_client
     .onchain(*federation_id)
-    .validate_statements((*receiver).into(), trusted_statements)
+    .validate_statements((*receiver).into(), statements)
     .await;
 
   assert!(validate.is_ok());

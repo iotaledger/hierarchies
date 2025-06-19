@@ -1,16 +1,14 @@
 //! Types for the ITH protocol.
 
+mod accreditation;
 mod cap;
 mod event;
-mod permission;
-mod trusted_statement;
-mod trusted_statements;
+mod statement;
 
 pub use accreditation::*;
 pub use cap::*;
 pub use event::*;
-pub use trusted_statement::*;
-pub use trusted_statements::*;
+pub use statement::*;
 
 use std::collections::HashMap;
 
@@ -39,9 +37,9 @@ pub struct RootAuthority {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Governance {
   id: UID,
-  pub trusted_statements: Statements,
+  pub statements: Statements,
   #[serde(deserialize_with = "deserialize_vec_map")]
-  pub accreditors: HashMap<ObjectID, Accreditations>,
+  pub accreditations_to_accredit: HashMap<ObjectID, Accreditations>,
   #[serde(deserialize_with = "deserialize_vec_map")]
-  pub attesters: HashMap<ObjectID, Accreditations>,
+  pub accreditations_to_attest: HashMap<ObjectID, Accreditations>,
 }

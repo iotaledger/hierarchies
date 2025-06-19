@@ -2,8 +2,7 @@
 module ith::statement_name {
   use std::string::String;
 
-
-  /// StatementName represents a name of a Statement. It can be a single name or a vector of names.
+  /// StatementName is a vector of names that can be used to identify the Statement.
   public struct StatementName  has copy, drop, store {
     names : vector<String>,
   }
@@ -21,6 +20,7 @@ module ith::statement_name {
       names : v,
     }
   }
+
   public fun names(self : &StatementName) : &vector<String> {
     &self.names
   }

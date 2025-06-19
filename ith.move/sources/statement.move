@@ -6,7 +6,6 @@ module ith::statement {
   use ith::statement_value::{StatementValue};
   use ith::statement_condition::{StatementValueCondition};
 
-
   // Statements is a struct that contains a map of StatementName to Statement
   public struct Statements has store {
     data : VecMap<StatementName, Statement>

@@ -21,7 +21,8 @@ use crate::utils::{self, MoveType};
 
 pub(crate) mod ops {
   use types::{
-    new_property_statement, new_property_value_number, new_property_value_string, newstatement_name,
+    new_property_statement, new_statement_name, new_statement_value_number,
+    new_statement_value_string,
   };
 
   use crate::types::Capability;
@@ -85,7 +86,7 @@ pub(crate) mod ops {
 
     let allow_any = ptb.pure(allow_any)?;
 
-    let statement_names = newstatement_name(statement_name, &mut ptb, client.ith_package_id())?;
+    let statement_names = new_statement_name(statement_name, &mut ptb, client.ith_package_id())?;
 
     let value_tag = StatementValue::move_type(client.ith_package_id());
 
@@ -93,10 +94,10 @@ pub(crate) mod ops {
     for property_value in allowed_values {
       let value = match property_value {
         StatementValue::Text(text) => {
-          new_property_value_string(text, &mut ptb, client.ith_package_id())?
+          new_statement_value_string(text, &mut ptb, client.ith_package_id())?
         }
         StatementValue::Number(number) => {
-          new_property_value_number(number, &mut ptb, client.ith_package_id())?
+          new_statement_value_number(number, &mut ptb, client.ith_package_id())?
         }
       };
 
@@ -119,6 +120,8 @@ pub(crate) mod ops {
     );
 
     let tx = ptb.finish();
+    // print the commands
+    println!("Transaction commands: {:#?}", tx.commands);
 
     client.execute_transaction(tx, gas_budget).await?;
 
@@ -141,7 +144,7 @@ pub(crate) mod ops {
     let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
     let fed_ref = get_fed_ref(client, federation_id, &mut ptb).await?;
 
-    let statement_name = newstatement_name(statement_name, &mut ptb, client.ith_package_id())?;
+    let statement_name = new_statement_name(statement_name, &mut ptb, client.ith_package_id())?;
 
     ptb.programmable_move_call(
       client.ith_package_id(),
@@ -256,7 +259,7 @@ pub(crate) mod ops {
     ptb.programmable_move_call(
       client.ith_package_id(),
       ident_str!("main").into(),
-      ident_str!("create_accreditation").into(),
+      ident_str!("accredit").into(),
       vec![],
       vec![fed_ref, cap, receiver_arg, want_property_statements],
     );
@@ -297,7 +300,7 @@ pub(crate) mod ops {
     ptb.programmable_move_call(
       client.ith_package_id(),
       ident_str!("main").into(),
-      ident_str!("create_attestation").into(),
+      ident_str!("accredit_to_attest").into(),
       vec![],
       vec![fed_ref, cap, receiver_arg, property_statements],
     );

@@ -14,13 +14,13 @@ anyhow = "1.0.97"
 async-trait = "0.1"
 bcs = "0.1"
 fastcrypto = { git = "https://github.com/MystenLabs/fastcrypto", rev = "2f502fd8570fe4e9cff36eea5bbd6fef22002898", package = "fastcrypto" }
-iota = { git = "https://github.com/iotaledger/iota.git", package = "iota", tag = "v0.11.6-rc" }
-iota-keys = { git = "https://github.com/iotaledger/iota.git", package = "iota-keys", tag = "v0.11.6-rc" }
-iota-sdk = { git = "https://github.com/iotaledger/iota.git", package = "iota-sdk", tag = "v0.11.6-rc" }
+iota = { git = "https://github.com/iotaledger/iota.git", package = "iota", tag = "v1.2.3" }
+iota-keys = { git = "https://github.com/iotaledger/iota.git", package = "iota-keys", tag = "v1.2.3" }
+iota-sdk = { git = "https://github.com/iotaledger/iota.git", package = "iota-sdk", tag = "v1.2.3" }
 jsonpath-rust = "0.7"
-move-core-types = { git = "https://github.com/iotaledger/iota.git", package = "move-core-types", tag = "v0.11.6-rc" }
+move-core-types = { git = "https://github.com/iotaledger/iota.git", package = "move-core-types", tag = "v1.2.3" }
 secret-storage = { git = "https://github.com/iotaledger/secret-storage", tag = "v0.3.0" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-shared-crypto = { git = "https://github.com/iotaledger/iota.git", package = "shared-crypto", tag = "v0.11.6-rc" }
-tokio = { version = "1.43.0", features = ["full"] }
+shared-crypto = { git = "https://github.com/iotaledger/iota.git", package = "shared-crypto", tag = "v1.2.3" }
+tokio = { version = "1.44.2", features = ["full"] }

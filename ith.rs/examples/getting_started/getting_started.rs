@@ -107,7 +107,7 @@ async fn main() -> anyhow::Result<()> {
     .onchain(federation_id)
     .get_accreditations_to_attest(attestation_receiver)
     .await?;
-  let attestation_id = attestations.permissions[0].id.object_id();
+  let attestation_id = attestations.statements[0].id.object_id();
 
   client
     .revoke_accreditation_to_attest(federation_id, attestation_receiver, *attestation_id, None)

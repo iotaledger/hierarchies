@@ -73,6 +73,29 @@ impl ITHClientReadOnly {
     Ok(data)
   }
 
+  pub(crate) async fn get_object_ref_by_id_with_bcs<R: serde::de::DeserializeOwned>(
+    &self,
+    object_id: &ObjectID,
+  ) -> anyhow::Result<R> {
+    let object = self
+      .read_api()
+      .get_object_with_options(*object_id, IotaObjectDataOptions::bcs_lossless())
+      .await?
+      .data
+      .context("missing data in response")?
+      .bcs
+      .context("missing BCS data in response")?
+      .try_into_move()
+      .context(format!(
+        "failed to deserialize object with ID {}",
+        object_id
+      ))?
+      .deserialize()
+      .context("failed to deserialize BCS data")?;
+
+    Ok(object)
+  }
+
   pub(crate) async fn initial_shared_version(
     &self,
     object_id: &ObjectID,

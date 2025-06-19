@@ -1,58 +1,33 @@
-
 module ith::statement_value {
   use std::string::String;
 
-  // Is the enum actually supported
-  // Use the enum
-  // How can we determine the type of the value. Deserialization
-  public enum StatementValueEnum has copy, drop, store {
+  /// StatementValue can be a String or a Number.
+  public enum StatementValue has copy, drop, store {
     String(String),
     Number(u64),
   }
 
-
-  public struct StatementValue has copy, drop, store {
-    text : Option<String>,
-    number : Option<u64>,
+  /// Creates a new StatementValue from a String.
+  public fun new_statement_value_string(v : String)  : StatementValue {
+    StatementValue::String(v)
   }
 
-  public fun as_string(self : &StatementValue) : Option<String> {
-    self.text
+  /// Creates a new StatementValue from a u64 number.
+  public fun new_statement_value_number(v : u64)  : StatementValue {
+    StatementValue::Number(v)
   }
 
-  public fun as_number(self : &StatementValue) : Option<u64> {
-    self.number
-  }
-
-  public fun is_string(self : &StatementValue) : bool {
-    self.text.is_some()
-  }
-
-  public fun is_number(self : &StatementValue) : bool {
-    self.number.is_some()
-  }
-
-  // length return optional value as the Value in the future could be a number or more complex structure
-  public fun length(self : &StatementValue) :  Option<u64> {
-    if (self.is_string()) {
-      let text = self.as_string();
-      option::some(text.borrow().length())
-    } else {
-      option::none()
+  public(package) fun as_string(self : &StatementValue) : Option<String> {
+    match (self) {
+      StatementValue::String(text) => option::some(*text),
+      StatementValue::Number(_) => option::none(),
     }
   }
 
-  public fun new_property_value_string(v : String)  : StatementValue {
-        StatementValue{
-          text: option::some(v),
-          number : option::none(),
-        }
-  }
-
-  public fun new_property_value_number(v : u64)  : StatementValue {
-    StatementValue {
-      text: option::none(),
-      number: option::some(v),
+  public(package) fun as_number(self : &StatementValue) : Option<u64> {
+    match (self) {
+      StatementValue::String(_) => option::none(),
+      StatementValue::Number(number) => option::some(*number),
     }
   }
 }

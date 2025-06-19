@@ -34,7 +34,7 @@ async fn test_add_root_authority() -> anyhow::Result<()> {
 
 #[tokio::test]
 #[ignore = "This test is not working"]
-async fn test_adding_trusted_statements() -> anyhow::Result<()> {
+async fn test_adding_statements() -> anyhow::Result<()> {
   let client = TestClient::init().await?;
 
   let ith_client = client.ith_client().await?;

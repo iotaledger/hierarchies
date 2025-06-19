@@ -58,7 +58,7 @@ async fn main() -> anyhow::Result<()> {
   let statements = Statement {
     statement_name,
     allowed_values,
-    expression: None,
+    condition: None,
     allow_any: false,
     timespan: Timespan::default(),
   };
@@ -77,7 +77,10 @@ async fn main() -> anyhow::Result<()> {
   println!("Federation: {:#?}", federation);
 
   // Check if the receiver has the permission to accredit
-  let can_accredit = federation.governance.accreditors.contains_key(&receiver);
+  let can_accredit = federation
+    .governance
+    .accreditations_to_accredit
+    .contains_key(&receiver);
 
   assert!(can_accredit);
 

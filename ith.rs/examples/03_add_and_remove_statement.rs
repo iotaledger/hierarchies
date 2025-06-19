@@ -49,19 +49,14 @@ async fn main() -> anyhow::Result<()> {
   let federation: Federation = ith_client.get_object_by_id(federation_id).await?;
 
   // Check if the Statement was added
-  let trusted_statements = federation
+  let statements = federation
     .governance
-    .trusted_statements
+    .statements
     .contains_property(&statement_name);
 
-  assert!(trusted_statements);
+  assert!(statements);
 
-  if let Some(statement) = federation
-    .governance
-    .trusted_statements
-    .data
-    .get(&statement_name)
-  {
+  if let Some(statement) = federation.governance.statements.data.get(&statement_name) {
     println!("Trusted Property: {:#?}", statement)
   }
 
@@ -77,12 +72,12 @@ async fn main() -> anyhow::Result<()> {
   let federation: Federation = ith_client.get_object_by_id(federation_id).await?;
 
   // Check if the Statement was removed
-  let trusted_statements = federation
+  let statements = federation
     .governance
-    .trusted_statements
+    .statements
     .contains_property(&statement_name);
 
-  assert!(!trusted_statements);
+  assert!(!statements);
 
   Ok(())
 }

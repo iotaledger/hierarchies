@@ -72,8 +72,8 @@ path = "validation/onchain/02_validate_statements.rs"
 name = "02_onchain_validate_statements"
 
 [[example]]
-path = "validation/onchain/03_get_trusted_statements.rs"
-name = "03_onchain_get_trusted_statements"
+path = "validation/onchain/03_get_statements.rs"
+name = "03_onchain_get_statements"
 
 
 # Demo

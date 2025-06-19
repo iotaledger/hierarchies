@@ -10,7 +10,7 @@ use iota::client_commands;
 use iota_keys::keystore::{AccountKeystore, InMemKeystore};
 use iota_sdk::types::base_types::{IotaAddress, ObjectID};
 use iota_sdk::types::crypto::{IotaSignature, SignatureScheme};
-use iota_sdk::{IotaClientBuilder, IOTA_LOCAL_NETWORK_GAS_URL};
+use iota_sdk::IotaClientBuilder;
 use ith::client::{ITHClient, ITHClientReadOnly};
 use ith::key::IotaKeySignature;
 use jsonpath_rust::JsonPathQuery;
@@ -209,7 +209,7 @@ impl SignerTrait<IotaKeySignature> for TestMemSigner {
   type KeyId = ();
   async fn sign(
     &self,
-    hash: &[u8],
+    hash: &Vec<u8>,
   ) -> secret_storage::Result<<IotaKeySignature as SignerSignatureScheme>::Signature> {
     let address = self
       .0
@@ -237,7 +237,7 @@ impl SignerTrait<IotaKeySignature> for TestMemSigner {
 
     Ok(public_key)
   }
-  fn key_id(&self) -> &Self::KeyId {
+  fn key_id(&self) -> Self::KeyId {
     unimplemented!()
   }
 }

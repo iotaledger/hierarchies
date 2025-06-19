@@ -11,18 +11,21 @@ module ith::accreditation {
     statements : vector<Accreditation>,
   }
 
+  /// Creates a new empty list of Accreditations.
   public fun new_empty_accreditations() : Accreditations {
     Accreditations {
       statements: vector::empty(),
     }
   }
 
+  /// Creates a collection of Accreditations.
   public fun new_accreditations(statements : vector<Accreditation>) : Accreditations {
     Accreditations {
       statements: statements,
     }
   }
 
+  /// Adds an accredited Statement to the list of accreditations.
   public(package) fun add_accreditation(self : &mut Accreditations, accredited_statement : Accreditation) {
     self.statements.push_back(accredited_statement);
   }
@@ -63,8 +66,6 @@ module ith::accreditation {
       };
       idx_statements_to_attest = idx_statements_to_attest + 1;
     };
-
-
     return false
   }
 
@@ -148,6 +149,7 @@ module ith::accreditation {
     option::none()
   }
 
+
   /// Accreditation represents statements that are accredited by a third party.
   public struct Accreditation has store, key {
     id : UID,
@@ -155,6 +157,7 @@ module ith::accreditation {
     statements : VecMap<StatementName, Statement>,
   }
 
+  /// Creates a new Accreditation with the given Statements.
   public fun new_accreditation(statements: vector<Statement>, ctx : &mut TxContext) : Accreditation {
     let statements_map = statement::to_map_of_statements(statements);
 
@@ -176,5 +179,4 @@ module ith::accreditation {
   public(package) fun statements(self : &Accreditation) : &VecMap<StatementName, Statement> {
     &self.statements
   }
-
 }

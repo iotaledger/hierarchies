@@ -13,7 +13,7 @@ pub struct OffChainFederation {
 
 impl OffChainFederation {
   pub async fn new(client: &ITHClientReadOnly, federation: ObjectID) -> anyhow::Result<Self> {
-    let federation = client.get_object_by_id(federation).await?;
+    let federation = client.get_object_ref_by_id_with_bcs(&federation).await?;
     Ok(Self { federation })
   }
 
@@ -44,37 +44,41 @@ impl OffChainFederation {
   }
 
   pub fn has_accreditation_to_attest(&self, user_id: ObjectID) -> bool {
-    self.federation.governance.attesters.contains_key(&user_id)
+    self
+      .federation
+      .governance
+      .accreditations_to_attest
+      .contains_key(&user_id)
   }
   pub fn is_accreditor(&self, user_id: ObjectID) -> bool {
     self
       .federation
       .governance
-      .accreditors
+      .accreditations_to_accredit
       .contains_key(&user_id)
   }
-  pub fn is_trusted_statement(&self, statement_name: &StatementName) -> bool {
+  pub fn is_statement(&self, statement_name: &StatementName) -> bool {
     let federation = self.federation();
 
     federation
       .governance
-      .trusted_statements
+      .statements
       .contains_property(statement_name)
   }
 
   pub fn validate_statements(
     &self,
     issuer_id: ObjectID,
-    trusted_statements: impl IntoIterator<Item = (StatementName, StatementValue)>,
+    statements: impl IntoIterator<Item = (StatementName, StatementValue)>,
   ) -> anyhow::Result<bool> {
-    let trusted_statements: HashMap<_, _> = trusted_statements.into_iter().collect();
+    let statements: HashMap<_, _> = statements.into_iter().collect();
     let federation = self.federation();
 
     // Has federation property
-    trusted_statements.keys().try_for_each(|statement_name| {
+    statements.keys().try_for_each(|statement_name| {
       if !federation
         .governance
-        .trusted_statements
+        .statements
         .contains_property(statement_name)
       {
         return Err(anyhow::anyhow!("property not found"));
@@ -85,20 +89,20 @@ impl OffChainFederation {
     // then check if names and values are permitted for given issuer
     let issuer_permissions_to_attest = federation
       .governance
-      .attesters
+      .accreditations_to_attest
       .get(&issuer_id)
       .ok_or_else(|| anyhow::anyhow!("issuer not found"))?;
 
-    let res = issuer_permissions_to_attest.are_statements_allowed(&trusted_statements);
+    let res = issuer_permissions_to_attest.are_statements_allowed(&statements);
 
     Ok(res)
   }
 
-  pub fn get_trusted_statements(&self) -> Vec<StatementName> {
+  pub fn get_statements(&self) -> Vec<StatementName> {
     self
       .federation
       .governance
-      .trusted_statements
+      .statements
       .data
       .keys()
       .cloned()
@@ -106,14 +110,19 @@ impl OffChainFederation {
   }
 
   pub fn get_accreditations_to_attest(&self, user_id: ObjectID) -> Option<Accreditations> {
-    self.federation.governance.attesters.get(&user_id).cloned()
+    self
+      .federation
+      .governance
+      .accreditations_to_attest
+      .get(&user_id)
+      .cloned()
   }
 
   pub fn get_accreditations_to_accredit(&self, user_id: ObjectID) -> Option<Accreditations> {
     self
       .federation
       .governance
-      .accreditors
+      .accreditations_to_accredit
       .get(&user_id)
       .cloned()
   }

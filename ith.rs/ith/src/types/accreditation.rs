@@ -1,15 +1,15 @@
 use std::collections::HashMap;
 
-use iota_sdk::types::id::{ID, UID};
+use iota_sdk::types::id::UID;
 use serde::{Deserialize, Serialize};
 
+use super::statement::Statement;
 use super::statement::{StatementName, StatementValue};
-use super::trusted_statements::Statement;
 use crate::utils::deserialize_vec_map;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Accreditations {
-  pub permissions: Vec<Accreditation>,
+  pub statements: Vec<Accreditation>,
 }
 
 /// Represents a permission that can be granted to an account. A permission
@@ -18,25 +18,22 @@ pub struct Accreditations {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Accreditation {
   pub id: UID,
-  pub federation_id: ID,
   pub accredited_by: String,
   #[serde(deserialize_with = "deserialize_vec_map")]
   pub statements: HashMap<StatementName, Statement>,
 }
 
 impl Accreditations {
-  /// Checks if all the values in the provided `trusted_statements` map are
+  /// Checks if all the values in the provided `statements` map are
   /// permitted
   /// according to the permissions defined in this `Accreditations` instance.
   pub fn are_statements_allowed(
     &self,
-    trusted_statements: &HashMap<StatementName, StatementValue>,
+    statements: &HashMap<StatementName, StatementValue>,
   ) -> bool {
-    trusted_statements
-      .iter()
-      .all(|(statement_name, property_value)| {
-        self.is_statement_allowed(statement_name, property_value)
-      })
+    statements.iter().all(|(statement_name, property_value)| {
+      self.is_statement_allowed(statement_name, property_value)
+    })
   }
 
   /// Checks if the given `property_value` is permitted according to the
@@ -48,7 +45,7 @@ impl Accreditations {
     property_value: &StatementValue,
   ) -> bool {
     self
-      .permissions
+      .statements
       .iter()
       .flat_map(|accreditation| accreditation.statements.get(statement_name))
       .any(|property_statement| {

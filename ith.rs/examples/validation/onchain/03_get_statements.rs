@@ -54,10 +54,7 @@ async fn main() -> anyhow::Result<()> {
       .context("Failed to add Statement")?;
   }
 
-  let federation_properties = ith_client
-    .onchain(*federation_id)
-    .get_trusted_statements()
-    .await?;
+  let federation_properties = ith_client.onchain(*federation_id).get_statements().await?;
 
   assert!(federation_properties.len() == 2);
 

@@ -285,7 +285,7 @@ sequenceDiagram
     Accreditor->>+Federation: revoke_accreditation_to_accredit(cap, user_id, permission_id, ctx)
     Federation-->>-Accreditor: Accreditation revoked
 
-    FederationOwner->>+Federation: revoke_trusted_statement(cap, "university.scores.engineering", valid_to_ms)
+    FederationOwner->>+Federation: revoke_statement(cap, "university.scores.engineering", valid_to_ms)
     Federation-->>-FederationOwner: Trusted property revoked
 
     Attester->>+Federation: revoke_accreditation_to_attest(cap, user_id, permission_id, ctx)
@@ -301,7 +301,7 @@ sequenceDiagram
 5. **Create Attestation**: The accreditor creates an attestation for an attester to confirm scores.
 6. **Validation by External Verifier**: An external verifier validates the attester’s authority via `validate_statements`.
 7. **Revoke Accreditation**: The accreditor revokes an accreditation with `revoke_accreditation_to_accredit`.
-8. **Revoke Trusted Property**: The root authority revokes a property with `revoke_trusted_statement`.
+8. **Revoke Trusted Property**: The root authority revokes a property with `revoke_statement`.
 9. **Revoke Attestation**: An attester revokes an attestation using `revoke_accreditation_to_attest`.
 
 ## Contribute
