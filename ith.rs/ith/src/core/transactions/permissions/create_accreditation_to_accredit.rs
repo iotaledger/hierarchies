@@ -20,34 +20,34 @@ use product_common::transaction::transaction_builder::Transaction;
 use tokio::sync::OnceCell;
 
 use crate::core::operations::{ITHImpl, ITHOperations};
-use crate::core::types::Statement;
+use crate::core::types::statements::Statement;
 use crate::error::Error;
 
 /// Transaction for creating accreditation to accredit permissions.
 ///
 /// This transaction allows a user with sufficient permissions to grant another user
 /// the ability to delegate accreditation rights for specific statements.
-pub struct CreateAccreditationToAccredit {
+pub struct CreateAccreditation {
     /// The ID of the federation where the accreditation will be granted
     federation_id: ObjectID,
     /// The ID of the user who will receive the accreditation permissions
     receiver: ObjectID,
     /// The statements for which accreditation permissions are being granted
-    want_property_statements: Vec<Statement>,
+    wanted_statements: Vec<Statement>,
     /// The address of the signer (used for capability verification)
     signer_address: IotaAddress,
     /// Cached programmable transaction
     cached_ptb: OnceCell<ProgrammableTransaction>,
 }
 
-impl CreateAccreditationToAccredit {
+impl CreateAccreditation {
     /// Creates a new [`CreateAccreditationToAccredit`] instance.
     ///
     /// ## Arguments
     ///
     /// * `federation_id` - The ID of the federation where the accreditation will be granted
     /// * `receiver` - The ID of the user who will receive the accreditation permissions
-    /// * `want_property_statements` - The statements for which permissions are being granted
+    /// * `wanted_statements` - The statements for which permissions are being granted
     /// * `signer_address` - The address of the signer (must have AccreditCap)
     ///
     /// ## Returns
@@ -56,13 +56,13 @@ impl CreateAccreditationToAccredit {
     pub fn new(
         federation_id: ObjectID,
         receiver: ObjectID,
-        want_property_statements: Vec<Statement>,
+        wanted_statements: Vec<Statement>,
         signer_address: IotaAddress,
     ) -> Self {
         Self {
             federation_id,
             receiver,
-            want_property_statements,
+            wanted_statements,
             signer_address,
             cached_ptb: OnceCell::new(),
         }
@@ -73,10 +73,10 @@ impl CreateAccreditationToAccredit {
     where
         C: CoreClientReadOnly + OptionalSync,
     {
-        let ptb = ITHImpl::create_accreditation_to_accredit(
+        let ptb = ITHImpl::accredit(
             self.federation_id,
             self.receiver,
-            self.want_property_statements.clone(),
+            self.wanted_statements.clone(),
             self.signer_address,
             client,
         )
@@ -88,7 +88,7 @@ impl CreateAccreditationToAccredit {
 
 #[cfg_attr(not(feature = "send-sync"), async_trait(?Send))]
 #[cfg_attr(feature = "send-sync", async_trait)]
-impl Transaction for CreateAccreditationToAccredit {
+impl Transaction for CreateAccreditation {
     type Error = Error;
     type Output = ();
 

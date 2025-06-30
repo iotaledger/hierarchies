@@ -15,6 +15,15 @@ pub enum StatementValue {
     Number(u64),
 }
 
+impl StatementValue {
+    pub fn to_ptb(&self, ptb: &mut ProgrammableTransactionBuilder, package_id: ObjectID) -> anyhow::Result<Argument> {
+        match self.clone() {
+            StatementValue::Text(text) => new_statement_value_string(text, ptb, package_id),
+            StatementValue::Number(number) => new_statement_value_number(number, ptb, package_id),
+        }
+    }
+}
+
 /// Creates a new move type for a Statement value string
 pub(crate) fn new_statement_value_string(
     value: String,

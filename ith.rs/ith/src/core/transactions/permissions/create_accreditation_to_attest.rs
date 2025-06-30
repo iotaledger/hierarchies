@@ -20,7 +20,7 @@ use product_common::transaction::transaction_builder::Transaction;
 use tokio::sync::OnceCell;
 
 use crate::core::operations::{ITHImpl, ITHOperations};
-use crate::core::types::Statement;
+use crate::core::types::statements::Statement;
 use crate::error::Error;
 
 /// Transaction for creating accreditation to attest permissions.
@@ -33,7 +33,7 @@ pub struct CreateAccreditationToAttest {
     /// The ID of the user who will receive the attestation permissions
     receiver: ObjectID,
     /// The statements for which attestation permissions are being granted
-    want_property_statements: Vec<Statement>,
+    wanted_statements: Vec<Statement>,
     /// The address of the signer (used for capability verification)
     signer_address: IotaAddress,
     /// Cached programmable transaction
@@ -47,7 +47,7 @@ impl CreateAccreditationToAttest {
     ///
     /// * `federation_id` - The ID of the federation where the accreditation will be granted
     /// * `receiver` - The ID of the user who will receive the attestation permissions
-    /// * `want_property_statements` - The statements for which permissions are being granted
+    /// * `wanted_statements` - The statements for which permissions are being granted
     /// * `signer_address` - The address of the signer (must have AttestCap)
     ///
     /// ## Returns
@@ -56,13 +56,13 @@ impl CreateAccreditationToAttest {
     pub fn new(
         federation_id: ObjectID,
         receiver: ObjectID,
-        want_property_statements: impl IntoIterator<Item = Statement>,
+        wanted_statements: impl IntoIterator<Item = Statement>,
         signer_address: IotaAddress,
     ) -> Self {
         Self {
             federation_id,
             receiver,
-            want_property_statements: want_property_statements.into_iter().collect(),
+            wanted_statements: wanted_statements.into_iter().collect(),
             signer_address,
             cached_ptb: OnceCell::new(),
         }
@@ -73,10 +73,10 @@ impl CreateAccreditationToAttest {
     where
         C: CoreClientReadOnly + OptionalSync,
     {
-        let ptb = ITHImpl::create_accreditation_to_attest(
+        let ptb = ITHImpl::accredit_to_attest(
             self.federation_id,
             self.receiver,
-            self.want_property_statements.clone(),
+            self.wanted_statements.clone(),
             self.signer_address,
             client,
         )

@@ -80,8 +80,6 @@ impl Transaction for CreateFederation {
         let event: Event<FederationCreatedEvent> = serde_json::from_value(events)
             .map_err(|e| Error::TransactionUnexpectedResponse(format!("failed to parse event: {}", e)))?;
 
-        println!("event: {:?}", event);
-
         let federation_id = event.data.federation_address;
 
         let federation = client

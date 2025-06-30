@@ -18,7 +18,10 @@ use serde::de::DeserializeOwned;
 
 use crate::client::network_id;
 use crate::core::operations::{ITHImpl, ITHOperations};
-use crate::core::types::{Accreditations, StatementName, StatementValue};
+use crate::core::types::{
+    statements::{name::StatementName, value::StatementValue},
+    Accreditations,
+};
 use crate::error::Error;
 use crate::iota_interaction_adapter::IotaClientAdapter;
 use crate::package;

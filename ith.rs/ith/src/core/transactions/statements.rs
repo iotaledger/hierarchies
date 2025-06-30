@@ -13,7 +13,7 @@ use product_common::transaction::transaction_builder::Transaction;
 use tokio::sync::OnceCell;
 
 use crate::core::operations::{ITHImpl, ITHOperations};
-use crate::core::types::{StatementName, StatementValue};
+use crate::core::types::statements::{name::StatementName, value::StatementValue};
 use crate::error::Error;
 
 pub mod add_statement {
@@ -97,59 +97,6 @@ pub mod add_statement {
     }
 }
 
-pub mod remove_statement {
-    use super::*;
-
-    pub struct RemoveStatement {
-        federation_id: ObjectID,
-        statement_name: StatementName,
-        owner: IotaAddress,
-        cached_ptb: OnceCell<ProgrammableTransaction>,
-    }
-
-    impl RemoveStatement {
-        pub fn new(federation_id: ObjectID, statement_name: StatementName, owner: IotaAddress) -> Self {
-            Self {
-                federation_id,
-                statement_name,
-                owner,
-                cached_ptb: OnceCell::new(),
-            }
-        }
-
-        async fn make_ptb<C>(&self, client: &C) -> Result<ProgrammableTransaction, Error>
-        where
-            C: CoreClientReadOnly + OptionalSync,
-        {
-            let ptb =
-                ITHImpl::remove_statement(self.federation_id, self.statement_name.clone(), self.owner, client).await?;
-            Ok(ptb)
-        }
-    }
-
-    #[cfg_attr(not(feature = "send-sync"), async_trait(?Send))]
-    #[cfg_attr(feature = "send-sync", async_trait)]
-    impl Transaction for RemoveStatement {
-        type Error = Error;
-
-        type Output = ();
-
-        async fn build_programmable_transaction<C>(&self, client: &C) -> Result<ProgrammableTransaction, Self::Error>
-        where
-            C: CoreClientReadOnly + OptionalSync,
-        {
-            self.cached_ptb.get_or_try_init(|| self.make_ptb(client)).await.cloned()
-        }
-
-        async fn apply<C>(mut self, _: &mut IotaTransactionBlockEffects, _: &C) -> Result<Self::Output, Self::Error>
-        where
-            C: CoreClientReadOnly + OptionalSync,
-        {
-            Ok(())
-        }
-    }
-}
-
 pub mod revoke_statement {
     use super::*;
 
@@ -182,7 +129,7 @@ pub mod revoke_statement {
         where
             C: CoreClientReadOnly + OptionalSync,
         {
-            let ptb = ITHImpl::revoke_trusted_statement(
+            let ptb = ITHImpl::revoke_statement(
                 self.federation_id,
                 self.statement_name.clone(),
                 self.valid_to_ms,

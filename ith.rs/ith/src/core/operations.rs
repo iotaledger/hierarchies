@@ -18,7 +18,7 @@ use product_common::core_client::CoreClientReadOnly;
 
 use crate::core::types::statements::name::{new_statement_name, StatementName};
 use crate::core::types::statements::value::{new_statement_value_number, new_statement_value_string, StatementValue};
-use crate::core::types::statements::Statement;
+use crate::core::types::statements::{new_property_statement, Statement};
 use crate::core::types::Capability;
 use crate::error::Error;
 use crate::utils::{self};
@@ -175,11 +175,7 @@ pub(crate) trait ITHOperations {
 
         let mut values_of_property = vec![];
         for property_value in allowed_values {
-            let value = match property_value {
-                StatementValue::Text(text) => new_statement_value_string(text, &mut ptb, client.package_id())?,
-                StatementValue::Number(number) => new_statement_value_number(number, &mut ptb, client.package_id())?,
-            };
-
+            let value = property_value.to_ptb(&mut ptb, client.package_id())?;
             values_of_property.push(value);
         }
 
@@ -199,13 +195,84 @@ pub(crate) trait ITHOperations {
         Ok(tx)
     }
 
-    /// Removes a statement from the federation.
-    ///
-    /// Requires `RootAuthorityCap`. Note: This function exists for compatibility
-    /// but should be avoided in favor of revoking statements with a validity period.
-    async fn remove_statement<C>(
+    async fn accredit_to_attest<C>(
+        federation_id: ObjectID,
+        receiver: ObjectID,
+        wanted_statements: Vec<Statement>,
+        owner: IotaAddress,
+        client: &C,
+    ) -> Result<ProgrammableTransaction, Error>
+    where
+        C: CoreClientReadOnly + OptionalSync,
+    {
+        let mut ptb = ProgrammableTransactionBuilder::new();
+
+        let cap = ITHImpl::get_cap(client, Capability::Attest, owner).await?;
+
+        let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
+
+        let fed_ref = ITHImpl::get_fed_ref(client, federation_id).await?;
+        let fed_ref = ptb.obj(fed_ref)?;
+
+        let receiver = ptb.pure(receiver)?;
+
+        let statements = new_property_statement(client.package_id(), &mut ptb, wanted_statements)?;
+
+        ptb.programmable_move_call(
+            client.package_id(),
+            ident_str!(MAIN_ITH_MODULE).into(),
+            ident_str!("accredit_to_attest").into(),
+            vec![],
+            vec![fed_ref, cap, receiver, statements],
+        );
+
+        let tx = ptb.finish();
+
+        Ok(tx)
+    }
+
+    async fn accredit<C>(
+        federation_id: ObjectID,
+        receiver: ObjectID,
+        wanted_statements: Vec<Statement>,
+        owner: IotaAddress,
+        client: &C,
+    ) -> Result<ProgrammableTransaction, Error>
+    where
+        C: CoreClientReadOnly + OptionalSync,
+    {
+        let mut ptb = ProgrammableTransactionBuilder::new();
+
+        let cap = ITHImpl::get_cap(client, Capability::Accredit, owner).await?;
+
+        let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
+
+        let fed_ref = ITHImpl::get_fed_ref(client, federation_id).await?;
+        let fed_ref = ptb.obj(fed_ref)?;
+
+        let receiver = ptb.pure(receiver)?;
+
+        let statements = new_property_statement(client.package_id(), &mut ptb, wanted_statements)?;
+
+        ptb.programmable_move_call(
+            client.package_id(),
+            ident_str!(MAIN_ITH_MODULE).into(),
+            ident_str!("accredit").into(),
+            vec![],
+            vec![fed_ref, cap, receiver, statements],
+        );
+
+        let tx = ptb.finish();
+
+        Ok(tx)
+    }
+
+    // Revokes Statement by setting the validity to a specific time
+
+    async fn revoke_statement<C>(
         federation_id: ObjectID,
         statement_name: StatementName,
+        valid_to_ms: u64,
         owner: IotaAddress,
         client: &C,
     ) -> Result<ProgrammableTransaction, Error>
@@ -223,12 +290,14 @@ pub(crate) trait ITHOperations {
 
         let statement_names = new_statement_name(statement_name, &mut ptb, client.package_id())?;
 
+        let valid_to_ms = ptb.pure(valid_to_ms)?;
+
         ptb.programmable_move_call(
             client.package_id(),
             ident_str!(MAIN_ITH_MODULE).into(),
-            ident_str!("remove_statement").into(),
+            ident_str!("revoke_statement").into(),
             vec![],
-            vec![fed_ref, cap, statement_names],
+            vec![fed_ref, cap, statement_names, valid_to_ms],
         );
 
         let tx = ptb.finish();
@@ -312,91 +381,9 @@ pub(crate) trait ITHOperations {
         Ok(tx)
     }
 
-    /// Grants accreditation permissions to another user.
-    ///
-    /// Allows the receiver to further delegate accreditation rights for the specified statements.
-    /// The granter must have sufficient permissions for all statements being delegated.
-    async fn create_accreditation_to_accredit<C>(
-        federation_id: ObjectID,
-        receiver: ObjectID,
-        want_property_statements: Vec<Statement>,
-        owner: IotaAddress,
-        client: &C,
-    ) -> Result<ProgrammableTransaction, Error>
-    where
-        C: CoreClientReadOnly + OptionalSync,
-    {
-        let mut ptb = ProgrammableTransactionBuilder::new();
-
-        let cap = ITHImpl::get_cap(client, Capability::Accredit, owner).await?;
-
-        let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
-
-        let fed_ref = ITHImpl::get_fed_ref(client, federation_id).await?;
-        let fed_ref = ptb.obj(fed_ref)?;
-
-        let receiver_arg = ptb.pure(receiver)?;
-
-        let want_property_statements =
-            new_statement_statement(client.package_id(), &mut ptb, want_property_statements)?;
-
-        ptb.programmable_move_call(
-            client.package_id(),
-            ident_str!("ith").into(),
-            ident_str!("create_accreditation_to_accredit").into(),
-            vec![],
-            vec![fed_ref, cap, receiver_arg, want_property_statements],
-        );
-
-        let tx = ptb.finish();
-
-        Ok(tx)
-    }
-
-    /// Grants attestation permissions to another user.
-    ///
-    /// Allows the receiver to create attestations for the specified statements.
-    /// The granter must have sufficient permissions for all statements being delegated.
-    async fn create_accreditation_to_attest<C>(
-        federation_id: ObjectID,
-        receiver: ObjectID,
-        want_property_statements: Vec<Statement>,
-        owner: IotaAddress,
-        client: &C,
-    ) -> Result<ProgrammableTransaction, Error>
-    where
-        C: CoreClientReadOnly + OptionalSync,
-    {
-        let mut ptb = ProgrammableTransactionBuilder::new();
-
-        let cap = ITHImpl::get_cap(client, Capability::Attest, owner).await?;
-
-        let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
-
-        let fed_ref = ITHImpl::get_fed_ref(client, federation_id).await?;
-        let fed_ref = ptb.obj(fed_ref)?;
-
-        let receiver_arg = ptb.pure(receiver)?;
-
-        let want_property_statements = new_statement_name(client.package_id(), &mut ptb, want_property_statements)?;
-
-        ptb.programmable_move_call(
-            client.package_id(),
-            ident_str!("ith").into(),
-            ident_str!("create_accreditation_to_attest").into(),
-            vec![],
-            vec![fed_ref, cap, receiver_arg, want_property_statements],
-        );
-
-        let tx = ptb.finish();
-
-        Ok(tx)
-    }
-
-    /// Revokes a user's accreditation permissions.
-    ///
-    /// Removes specific accreditation rights from a user. The revoker must have
-    /// sufficient permissions to revoke the target accreditation.
+    // Revokes a user's accreditation permissions.
+    // Removes specific accreditation rights from a user. The revoker must have
+    // sufficient permissions to revoke the target accreditation.
     async fn revoke_accreditation_to_accredit<C>(
         federation_id: ObjectID,
         user_id: ObjectID,
@@ -610,50 +597,9 @@ pub(crate) trait ITHOperations {
         Ok(tx)
     }
 
-    /// Revokes a statement by setting its validity expiration time.
-    ///
-    /// Sets a time limit on when a statement is considered valid. After the specified
-    /// time, the statement can no longer be attested. Requires `RootAuthorityCap`.
-    async fn revoke_trusted_statement<C>(
-        federation_id: ObjectID,
-        statement_name: StatementName,
-        valid_to_ms: u64,
-        owner: IotaAddress,
-        client: &C,
-    ) -> Result<ProgrammableTransaction, Error>
-    where
-        C: CoreClientReadOnly + OptionalSync,
-    {
-        let mut ptb = ProgrammableTransactionBuilder::new();
-
-        let cap = ITHImpl::get_cap(client, Capability::RootAuthority, owner).await?;
-
-        let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
-
-        let fed_ref = ITHImpl::get_fed_ref(client, federation_id).await?;
-        let fed_ref = ptb.obj(fed_ref)?;
-
-        let statement_name = new_statement_name(statement_name, &mut ptb, client.package_id())?;
-
-        let valid_to_ms = ptb.pure(valid_to_ms)?;
-
-        ptb.programmable_move_call(
-            client.package_id(),
-            ident_str!(MAIN_ITH_MODULE).into(),
-            ident_str!("revoke_trusted_statement").into(),
-            vec![],
-            vec![fed_ref, cap, statement_name, valid_to_ms],
-        );
-
-        let tx = ptb.finish();
-
-        Ok(tx)
-    }
-
-    /// Validates a single statement against federation rules.
-    ///
-    /// Checks if the specified attester has permission to attest the given
-    /// statement name and value combination according to their accreditations.
+    // Validates a single statement against federation rules.
+    // Checks if the specified attester has permission to attest the given
+    // statement name and value combination according to their accreditations.
     async fn validate_statement<C>(
         federation_id: ObjectID,
         attester_id: ObjectID,

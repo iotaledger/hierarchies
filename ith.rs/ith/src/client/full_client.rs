@@ -84,12 +84,12 @@ use secret_storage::Signer;
 use super::ITHClientReadOnly;
 use crate::core::transactions::add_root_authority::AddRootAuthority;
 use crate::core::transactions::statements::add_statement::AddStatement;
-use crate::core::transactions::statements::remove_statement::RemoveStatement;
+use crate::core::transactions::statements::revoke_statement::RevokeStatement;
 use crate::core::transactions::{
-    CreateAccreditationToAccredit, CreateAccreditationToAttest, CreateFederation, RevokeAccreditationToAccredit,
+    CreateAccreditation, CreateAccreditationToAttest, CreateFederation, RevokeAccreditationToAccredit,
     RevokeAccreditationToAttest,
 };
-use crate::core::types::{Statement, StatementName, StatementValue};
+use crate::core::types::statements::{name::StatementName, value::StatementValue, Statement};
 use crate::error::Error;
 
 /// The `ITHClient` struct is responsible for managing the connection to the
@@ -203,14 +203,16 @@ where
         ))
     }
 
-    pub fn remove_statement(
+    pub fn revoke_statement(
         &self,
         federation_id: ObjectID,
         statement_name: StatementName,
-    ) -> TransactionBuilder<RemoveStatement> {
-        TransactionBuilder::new(RemoveStatement::new(
+        valid_to_ms: u64,
+    ) -> TransactionBuilder<RevokeStatement> {
+        TransactionBuilder::new(RevokeStatement::new(
             federation_id,
             statement_name,
+            valid_to_ms,
             self.sender_address(),
         ))
     }
@@ -248,8 +250,8 @@ where
         federation_id: ObjectID,
         receiver: ObjectID,
         want_statements: impl IntoIterator<Item = Statement>,
-    ) -> TransactionBuilder<CreateAccreditationToAccredit> {
-        TransactionBuilder::new(CreateAccreditationToAccredit::new(
+    ) -> TransactionBuilder<CreateAccreditation> {
+        TransactionBuilder::new(CreateAccreditation::new(
             federation_id,
             receiver,
             want_statements.into_iter().collect(),

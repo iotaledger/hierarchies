@@ -1,11 +1,10 @@
 module ith::statement;
 
-use iota::{vec_map::{Self, VecMap}, vec_set::VecSet};
-use ith::{
-    statement_condition::StatementValueCondition,
-    statement_name::StatementName,
-    statement_value::StatementValue
-};
+use iota::vec_map::{Self, VecMap};
+use iota::vec_set::VecSet;
+use ith::statement_condition::StatementValueCondition;
+use ith::statement_name::StatementName;
+use ith::statement_value::StatementValue;
 
 // Statements is a struct that contains a map of StatementName to Statement
 public struct Statements has store {
