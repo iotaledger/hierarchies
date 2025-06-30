@@ -3,8 +3,8 @@
 mod accreditation;
 mod cap;
 mod event;
-mod statement_name;
-mod statements;
+pub mod statements;
+pub mod timespan;
 
 use std::collections::HashMap;
 
@@ -14,9 +14,8 @@ pub use event::*;
 use iota_sdk::types::base_types::ObjectID;
 use iota_sdk::types::id::UID;
 use serde::{Deserialize, Serialize};
-pub use statement_name::*;
-pub use statements::*;
 
+use crate::core::types::statements::Statements;
 use crate::utils::deserialize_vec_map;
 
 /// Represents a federation. A federation is a group of entities that have agreed to work together

@@ -16,10 +16,10 @@ use iota_sdk::types::transaction::Command;
 use iota_sdk::types::TypeTag;
 use product_common::core_client::CoreClientReadOnly;
 
-use crate::core::types::{
-    new_property_statement, new_property_value_number, new_property_value_string, newstatement_name, Capability,
-    Statement, StatementName, StatementValue,
-};
+use crate::core::types::statements::name::{new_statement_name, StatementName};
+use crate::core::types::statements::value::{new_statement_value_number, new_statement_value_string, StatementValue};
+use crate::core::types::statements::Statement;
+use crate::core::types::Capability;
 use crate::error::Error;
 use crate::utils::{self};
 
@@ -169,15 +169,15 @@ pub(crate) trait ITHOperations {
 
         let allow_any = ptb.pure(allow_any)?;
 
-        let statement_names = newstatement_name(statement_name, &mut ptb, client.package_id())?;
+        let statement_names = new_statement_name(statement_name, &mut ptb, client.package_id())?;
 
         let value_tag = StatementValue::move_type(client.package_id());
 
         let mut values_of_property = vec![];
         for property_value in allowed_values {
             let value = match property_value {
-                StatementValue::Text(text) => new_property_value_string(text, &mut ptb, client.package_id())?,
-                StatementValue::Number(number) => new_property_value_number(number, &mut ptb, client.package_id())?,
+                StatementValue::Text(text) => new_statement_value_string(text, &mut ptb, client.package_id())?,
+                StatementValue::Number(number) => new_statement_value_number(number, &mut ptb, client.package_id())?,
             };
 
             values_of_property.push(value);
@@ -221,7 +221,7 @@ pub(crate) trait ITHOperations {
         let fed_ref = ITHImpl::get_fed_ref(client, federation_id).await?;
         let fed_ref = ptb.obj(fed_ref)?;
 
-        let statement_names = newstatement_name(statement_name, &mut ptb, client.package_id())?;
+        let statement_names = new_statement_name(statement_name, &mut ptb, client.package_id())?;
 
         ptb.programmable_move_call(
             client.package_id(),
@@ -337,7 +337,8 @@ pub(crate) trait ITHOperations {
 
         let receiver_arg = ptb.pure(receiver)?;
 
-        let want_property_statements = new_property_statement(client.package_id(), &mut ptb, want_property_statements)?;
+        let want_property_statements =
+            new_statement_statement(client.package_id(), &mut ptb, want_property_statements)?;
 
         ptb.programmable_move_call(
             client.package_id(),
@@ -377,7 +378,7 @@ pub(crate) trait ITHOperations {
 
         let receiver_arg = ptb.pure(receiver)?;
 
-        let want_property_statements = new_property_statement(client.package_id(), &mut ptb, want_property_statements)?;
+        let want_property_statements = new_statement_name(client.package_id(), &mut ptb, want_property_statements)?;
 
         ptb.programmable_move_call(
             client.package_id(),
@@ -632,7 +633,7 @@ pub(crate) trait ITHOperations {
         let fed_ref = ITHImpl::get_fed_ref(client, federation_id).await?;
         let fed_ref = ptb.obj(fed_ref)?;
 
-        let statement_name = newstatement_name(statement_name, &mut ptb, client.package_id())?;
+        let statement_name = new_statement_name(statement_name, &mut ptb, client.package_id())?;
 
         let valid_to_ms = ptb.pure(valid_to_ms)?;
 
@@ -670,11 +671,11 @@ pub(crate) trait ITHOperations {
 
         let attester_id_arg = ptb.pure(attester_id)?;
 
-        let statement_name_arg = newstatement_name(statement_name, &mut ptb, client.package_id())?;
+        let statement_name_arg = new_statement_name(statement_name, &mut ptb, client.package_id())?;
 
         let statement_value_arg = match statement_value {
-            StatementValue::Text(text) => new_property_value_string(text, &mut ptb, client.package_id())?,
-            StatementValue::Number(number) => new_property_value_number(number, &mut ptb, client.package_id())?,
+            StatementValue::Text(text) => new_statement_value_string(text, &mut ptb, client.package_id())?,
+            StatementValue::Number(number) => new_statement_value_number(number, &mut ptb, client.package_id())?,
         };
 
         ptb.programmable_move_call(

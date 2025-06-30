@@ -1,13 +1,13 @@
 /// This module implements a hierarchical trust system where entities can delegate
 /// trust and attestation rights to other entities within a federation.
 module ith::main {
-    use iota::event;
-    use iota::vec_map::{Self, VecMap};
-    use iota::vec_set::VecSet;
-    use ith::accreditation::{Self, Accreditations};
-    use ith::statement::{Self, Statements, Statement};
-    use ith::statement_name::StatementName;
-    use ith::statement_value::StatementValue;
+    use iota::{event, vec_map::{Self, VecMap}, vec_set::VecSet};
+    use ith::{
+        accreditation::{Self, Accreditations},
+        statement::{Self, Statements, Statement},
+        statement_name::StatementName,
+        statement_value::StatementValue
+    };
 
     // ===== Errors =====
     /// Error when operation is performed with wrong federation
@@ -247,7 +247,7 @@ module ith::main {
     }
 
     /// Revokes a trusted statement by setting its validity period
-    public fun revoke_trusted_statement(
+    public fun revoke_statement(
         federation: &mut Federation,
         cap: &RootAuthorityCap,
         statement_name: StatementName,
@@ -508,22 +508,23 @@ module ith::main {
 
 #[test_only]
 module ith::main_tests {
-    use iota::test_scenario;
-    use iota::vec_set;
-    use ith::main::{
-        new_federation,
-        RootAuthorityCap,
-        Federation,
-        AccreditCap,
-        AttestCap,
-        add_statement,
-        accredit_to_attest,
-        accredit,
-        revoke_accreditation_to_attest,
-        revoke_accreditation_to_accredit
+    use iota::{test_scenario, vec_set};
+    use ith::{
+        main::{
+            new_federation,
+            RootAuthorityCap,
+            Federation,
+            AccreditCap,
+            AttestCap,
+            add_statement,
+            accredit_to_attest,
+            accredit,
+            revoke_accreditation_to_attest,
+            revoke_accreditation_to_accredit
+        },
+        statement_name::new_statement_name,
+        statement_value::new_statement_value_number
     };
-    use ith::statement_name::new_statement_name;
-    use ith::statement_value::new_property_value_number;
     use std::string::utf8;
 
     #[test]
@@ -590,7 +591,7 @@ module ith::main_tests {
 
         // Add statement
         let statement_name = new_statement_name(utf8(b"statement_name"));
-        let property_value = new_property_value_number(10);
+        let property_value = new_statement_value_number(10);
         let mut allowed_values = vec_set::empty();
         allowed_values.insert(property_value);
 
