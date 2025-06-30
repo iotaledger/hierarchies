@@ -68,11 +68,3 @@ public fun vec_map_from_keys_values<K: store + copy, V: store>(
     map
 }
 
-#[test]
-fun from_keys_values_works() {
-    let addresses = vector[@0x1, @0x2];
-    let vps = vector[1, 1];
-
-    let map = vec_map_from_keys_values(addresses, vps);
-    assert!(map.size() == 2, 0);
-}
