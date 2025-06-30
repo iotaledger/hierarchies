@@ -1,4 +1,4 @@
-use examples::{get_client, urls};
+use examples::get_funded_client;
 
 /// Demonstrates how to create a Federation and publish it on chain.
 ///
@@ -10,12 +10,18 @@ use examples::{get_client, urls};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-  let ith_client = get_client(urls::localnet::node(), urls::localnet::faucet()).await?;
+    let ith_client = get_funded_client()
+        .await
+        .map_err(|err| anyhow::anyhow!(format!("failed to create ITH client; {}", err)))?;
 
-  println!("Creating new federation");
-  let federation = ith_client.new_federation(None).await?;
+    println!("Creating new federation");
 
-  println!("Federation created: {:#?}", federation);
+    let federation = ith_client
+        .create_new_federation()
+        .build_and_execute(&ith_client)
+        .await?;
 
-  Ok(())
+    println!("Federation created: {:#?}", federation);
+
+    Ok(())
 }

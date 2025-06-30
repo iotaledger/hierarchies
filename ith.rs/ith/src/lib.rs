@@ -1,9 +1,5 @@
 //! # IOTA ITH (IOTA Trust Hierarchies)
 //!
-//!
-//!
-//!
-//!
 
 //! The **ITH (IOTA Trust Hierarchies)** is a non-opinionated solution designed
 //! to facilitate the hierarchical distribution of trust across entities in the
@@ -17,8 +13,8 @@
 //! This creates a structured, decentralized system of trust.
 
 pub mod client;
-pub(crate) mod federation;
-pub mod key;
-mod provider;
-pub mod types;
+pub mod core;
+pub mod error;
+mod iota_interaction_adapter;
+pub mod package;
 mod utils;

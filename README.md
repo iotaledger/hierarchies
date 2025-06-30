@@ -118,7 +118,9 @@ We recommend that you update the Rust compiler to the latest stable version firs
 ```shell
 rustup update stable
 ```
+
 <!-- TODO change to the published link -->
+
 The ITH Smart Contract requires the IOTA network client binaries. You can find installation instruction in the [IOTA Documentation](https://github.com/iotaledger/iota/blob/develop/docs/content/developer/getting-started/connect.mdx)
 
 ## Getting Started
@@ -131,8 +133,8 @@ ITH comprises two main components:
 ### Installation of the ITH smart contract
 
 ```shell
- cd iota.move
- iota client publish
+cd iota.move
+iota client publish
 ```
 
 ### Installation of ITH rust library
@@ -174,29 +176,29 @@ cargo run --example
 
 ### Domain Components
 
-- **Federation**: A structured trust network within the ITH system representing a group of trusted entities. A federation defines the root authority and manages relationships among entities, trusted properties, and permissions. For example, a university could act as a federation, where departments and professors are accredited to manage and attest to specific properties like `university.scores.engineering`
+- **Federation**: A structured trust network within the ITH system representing a group of trusted entities. A federation defines the root authority and manages relationships among trusted entities and Statements. For example, a university could act as a federation, where departments and professors are accredited to manage and attest to specific properties like `university.scores.engineering`
 
 - **Root Authority**: The highest authority within a federation, responsible for establishing and delegating trust. The root authority can accredit other entities to create attestations within the federation, extending the trust hierarchy.
 
-- **Trusted Property**: An attribute or characteristic within the federation, such as `university.a.department`. Trusted properties are the elements within a federation that entities can attest to.
+- **Statement**: An attribute or characteristic within the federation, such as `university.a.department`. Trusted properties are the elements within a federation that entities can attest to.
 
-- **Attestation**: A statement or proof provided by an entity within the federation certifying the validity of a trusted property. For example, a professor’s attestation may confirm a student’s score in a particular course.
+- **Attestation**: A statement or proof provided by an entity within the federation certifying the validity of a Statement. For example, a professor’s attestation may confirm a student’s score in a particular course.
 
-- **Accreditation**: A delegation mechanism where the root authority or accredited entity grants another entity the right to create attestations for a specific trusted property. This enables hierarchical trust distribution within the federation.
+- **Accreditation**: A delegation mechanism where the root authority or accredited entity grants another entity the right to create attestations for a specific Statement. This enables hierarchical trust distribution within the federation.
 
-- **Trusted Property Value**: The assigned value for a trusted property (e.g., a score in a class), which can be a string or number and can be validated within the ITH structure.
+- **Statement Value**: The assigned value for a Statement (e.g., a score in a class), which can be a string or number and can be validated within the ITH structure.
 
-- **Trusted Property Constraint**: Defines conditions or rules on trusted properties. It defines the possible values for Trusted Property's value. The Trusted Property Constraint support the basic expressions:
+- **Statement Value Condition**: It defines the possible values for Statement Value. The Statement Value Condition supports the basic expressions:
 
-    | Expression   | Number | String | Example                          |
-    |--------------|--------|--------|----------------------------------|
-    | startsWith   | No     | Yes    | `startsWith("university.")`        |
-    | endsWith     | No     | Yes    | `endsWith(".proposal")`            |
-    | contains     | No     | Yes    | `contains("score")`                |
-    | greaterThan  | Yes    | No     | `greaterThan(85)`                  |
-    | lowerThan    | Yes    | No     | `lowerThan(50)`                    |
-    | equals       | Yes    | Yes    | `university.scores`               |
-    | setOf        | Yes    | Yes    | `["engineering", "philosophy"]`   |
+  | Expression  | Number | String | Example                         |
+  | ----------- | ------ | ------ | ------------------------------- |
+  | startsWith  | No     | Yes    | `startsWith("university.")`     |
+  | endsWith    | No     | Yes    | `endsWith(".proposal")`         |
+  | contains    | No     | Yes    | `contains("score")`             |
+  | greaterThan | Yes    | No     | `greaterThan(85)`               |
+  | lowerThan   | Yes    | No     | `lowerThan(50)`                 |
+  | equals      | Yes    | Yes    | `university.scores`             |
+  | setOf       | Yes    | Yes    | `["engineering", "philosophy"]` |
 
 ### ITH Components
 
@@ -220,7 +222,7 @@ ITH supports both on-chain and off-chain validation, allowing applications to ch
       participant ITHRustClient as ITH Rust Client
       participant ITHMovePackage as ITH Move Package
 
-      User ->> ITHRustClient: validate_trusted_properties()
+      User ->> ITHRustClient: validate_statements()
       ITHRustClient ->> ITHRustClient: Create transaction
       ITHRustClient ->> ITHMovePackage: validate_trust_properties()
       ITHMovePackage -->> ITHRustClient: Result
@@ -235,7 +237,7 @@ sequenceDiagram
     participant ITHRustClient as ITH Rust Client
     participant Indexer as Indexer API (IOTA Node)
 
-    User ->> ITHRustClient: validate_trusted_properties()
+    User ->> ITHRustClient: validate_statements()
     ITHRustClient ->> Indexer: fetch_object(federation_id)
     Indexer -->> ITHRustClient: Content of object
     ITHRustClient ->> ITHRustClient: Perform validation (validate_trust_properties)
@@ -268,25 +270,25 @@ sequenceDiagram
     FederationOwner->>+Federation: add_root_authority(cap, account_id, ctx)
     Federation-->>-FederationOwner: Root authority added
 
-    FederationOwner->>+Federation: add_trusted_property(cap, "university.scores.engineering", allowed_values, allow_any, ctx)
+    FederationOwner->>+Federation: add_statement(cap, "university.scores.engineering", allowed_values, allow_any, ctx)
     Federation-->>-FederationOwner: Trusted property added
 
-    FederationOwner->>+Federation: create_accreditation(cap, Accreditor, want_property_constraints, ctx)
+    FederationOwner->>+Federation: create_accreditation(cap, Accreditor, want_property_statements, ctx)
     Federation-->>-FederationOwner: Accreditation granted
 
-    Accreditor->>+Federation: create_attestation(cap, Attester, wanted_constraints, ctx)
+    Accreditor->>+Federation: create_attestation(cap, Attester, wanted_statements, ctx)
     Federation-->>-Accreditor: Attestation created
 
-    Verifier->>+Federation: validate_trusted_properties(issuer_id, trusted_properties, ctx)
+    Verifier->>+Federation: validate_statements(issuer_id, trusted_statements, ctx)
     Federation-->>-Verifier: Validation result (true/false)
 
-    Accreditor->>+Federation: revoke_accreditation(cap, user_id, permission_id, ctx)
+    Accreditor->>+Federation: revoke_accreditation_to_accredit(cap, user_id, permission_id, ctx)
     Federation-->>-Accreditor: Accreditation revoked
 
-    FederationOwner->>+Federation: revoke_trusted_property(cap, "university.scores.engineering", valid_to_ms)
+    FederationOwner->>+Federation: revoke_trusted_statement(cap, "university.scores.engineering", valid_to_ms)
     Federation-->>-FederationOwner: Trusted property revoked
 
-    Attester->>+Federation: revoke_attestation(cap, user_id, permission_id, ctx)
+    Attester->>+Federation: revoke_accreditation_to_attest(cap, user_id, permission_id, ctx)
     Federation-->>-Attester: Attestation revoked
 ```
 
@@ -294,13 +296,13 @@ sequenceDiagram
 
 1. **Federation Creation**: The Federation Owner creates a federation with the `new_federation` method.
 2. **Assign Root Authority**: The root authority is assigned to manage the federation using `add_root_authority`.
-3. **Add Trusted Property**: The root authority defines a trusted property with `add_trusted_property`.
+3. **Add Trusted Property**: The root authority defines a Statement with `add_statement`.
 4. **Create Accreditation**: The root authority creates an accreditation for an accreditor to attest to specific properties.
 5. **Create Attestation**: The accreditor creates an attestation for an attester to confirm scores.
-6. **Validation by External Verifier**: An external verifier validates the attester’s authority via `validate_trusted_properties`.
-7. **Revoke Accreditation**: The accreditor revokes an accreditation with `revoke_accreditation`.
-8. **Revoke Trusted Property**: The root authority revokes a property with `revoke_trusted_property`.
-9. **Revoke Attestation**: An attester revokes an attestation using `revoke_attestation`.
+6. **Validation by External Verifier**: An external verifier validates the attester’s authority via `validate_statements`.
+7. **Revoke Accreditation**: The accreditor revokes an accreditation with `revoke_accreditation_to_accredit`.
+8. **Revoke Trusted Property**: The root authority revokes a property with `revoke_trusted_statement`.
+9. **Revoke Attestation**: An attester revokes an attestation using `revoke_accreditation_to_attest`.
 
 ## Contribute
 
