@@ -271,7 +271,7 @@ impl ITHClientReadOnly {
     /// # Arguments
     ///
     /// * `federation_id`: The [`ObjectID`] of the federation.
-    /// * `user_id`: The [`ObjectID`] of the user.
+    /// * `attester_id`: The [`ObjectID`] of the attester.
     /// * `statement_name`: The name of the statement to validate.
     /// * `statement_value`: The value of the statement to validate.
     ///
@@ -280,11 +280,11 @@ impl ITHClientReadOnly {
     pub async fn validate_statement(
         &self,
         federation_id: ObjectID,
-        user_id: ObjectID,
+        attester_id: ObjectID,
         statement_name: StatementName,
         statement_value: StatementValue,
     ) -> Result<bool, Error> {
-        let tx = ITHImpl::validate_statement(federation_id, user_id, statement_name, statement_value, self).await?;
+        let tx = ITHImpl::validate_statement(federation_id, attester_id, statement_name, statement_value, self).await?;
         let result = self.execute_read_only_transaction(tx).await?;
         Ok(result)
     }
@@ -336,6 +336,8 @@ impl ITHClientReadOnly {
             .dev_inspect_transaction_block(IotaAddress::ZERO, TransactionKind::programmable(tx), None, None, None)
             .await
             .map_err(|err| Error::UnexpectedApiResponse(format!("Failed to inspect transaction block: {err}")))?;
+
+        println!("inspection_result: {:?}", inspection_result);
 
         let execution_results = inspection_result
             .results

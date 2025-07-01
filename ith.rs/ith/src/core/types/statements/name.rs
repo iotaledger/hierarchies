@@ -39,6 +39,10 @@ impl StatementName {
     pub fn names(&self) -> &Vec<String> {
         &self.names
     }
+
+    pub fn to_ptb(&self, ptb: &mut ProgrammableTransactionBuilder, package_id: ObjectID) -> anyhow::Result<Argument> {
+        new_statement_name(self, ptb, package_id)
+    }
 }
 
 impl MoveType for StatementName {
@@ -50,7 +54,7 @@ impl MoveType for StatementName {
 
 /// Creates a new move type for a Statement name
 pub(crate) fn new_statement_name(
-    name: StatementName,
+    name: &StatementName,
     ptb: &mut ProgrammableTransactionBuilder,
     package_id: ObjectID,
 ) -> anyhow::Result<Argument> {

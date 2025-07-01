@@ -1,10 +1,11 @@
 use std::collections::HashSet;
 
 use crate::client::{get_funded_test_client, TestClient};
+use ith::client::get_object_ref_by_id_with_bcs;
 use ith::core::types::statements::name::StatementName;
 use ith::core::types::statements::value::StatementValue;
 use ith::core::types::Federation;
-use product_common::core_client::CoreClient;
+use product_common::core_client::{CoreClient, CoreClientReadOnly};
 
 /// Helper function to create a federation for testing purposes.
 /// Returns the federation object and transaction response.
@@ -20,35 +21,84 @@ async fn create_test_federation() -> anyhow::Result<(Federation, TestClient)> {
 
 #[tokio::test]
 async fn test_add_statement() -> anyhow::Result<()> {
-    let (federation, client) = create_test_federation().await?;
+    let client = get_funded_test_client().await?;
 
-    let statement_name = StatementName::new(vec!["test_statement"]);
+    // Create a new federation first
+    let federation_id = client
+        .create_new_federation()
+        .build_and_execute(&client)
+        .await?
+        .output
+        .id;
 
-    let statement_values = HashSet::from_iter([StatementValue::Text("test_value".to_string())]);
+    // Create a statement name and allowed values
+    let statement_name = StatementName::from("test.credential.type");
+    let mut allowed_values = HashSet::new();
+    allowed_values.insert(StatementValue::Text("verified".to_string()));
+    allowed_values.insert(StatementValue::Text("pending".to_string()));
 
-    let tx = client
-        .add_statement(*federation.id.object_id(), statement_name, statement_values, false)
+    // Add the statement to the federation
+    let result = client
+        .add_statement(
+            *federation_id.object_id(),
+            statement_name.clone(),
+            allowed_values.clone(),
+            false,
+        )
         .build_and_execute(&client)
         .await;
 
-    assert!(tx.is_ok());
+    assert!(result.is_ok(), "Failed to add statement: {:?}", result.err());
+
+    // Verify the statement was added by fetching the federation
+    let federation: Federation = get_object_ref_by_id_with_bcs(&client, &federation_id.object_id()).await?;
+    let statements = &federation.governance.statements.data;
+
+    assert!(
+        statements.contains_key(&statement_name),
+        "Statement not found in federation"
+    );
+    let added_statement = statements.get(&statement_name).unwrap();
+    assert_eq!(added_statement.allowed_values, allowed_values);
 
     Ok(())
 }
 
 #[tokio::test]
-#[ignore = "revoke statement is not implemented"]
 async fn test_revoke_statement() -> anyhow::Result<()> {
-    let (federation, client) = create_test_federation().await?;
+    let client = get_funded_test_client().await?;
 
-    let statement_name = StatementName::new(vec!["test_statement"]);
+    // Create a new federation and add a statement
+    let federation_id = client
+        .create_new_federation()
+        .build_and_execute(&client)
+        .await?
+        .output
+        .id;
 
-    let statement_values = HashSet::from_iter([StatementValue::Text("test_value".to_string())]);
+    let statement_name = StatementName::from("test.temporary.credential");
+    let mut allowed_values = HashSet::new();
+    allowed_values.insert(StatementValue::Text("active".to_string()));
 
-    let tx = client
-        .add_statement(*federation.id.object_id(), statement_name, statement_values, false)
+    // Add the statement
+    client
+        .add_statement(
+            *federation_id.object_id(),
+            statement_name.clone(),
+            allowed_values,
+            false,
+        )
         .build_and_execute(&client)
         .await?;
+
+    // Revoke the statement with a specific timestamp
+    let revoke_time = 1234567890u64;
+    let result = client
+        .revoke_statement(*federation_id.object_id(), statement_name.clone(), revoke_time)
+        .build_and_execute(&client)
+        .await;
+
+    assert!(result.is_ok(), "Failed to revoke statement: {:?}", result.err());
 
     Ok(())
 }
@@ -110,6 +160,40 @@ async fn test_create_and_validate_statement() -> anyhow::Result<()> {
         )
         .await?;
     assert!(statement, "Statement should be valid");
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_add_statement_with_allow_any() -> anyhow::Result<()> {
+    let client = get_funded_test_client().await?;
+
+    // Create a new federation
+    let federation_id = client
+        .create_new_federation()
+        .build_and_execute(&client)
+        .await?
+        .output
+        .id;
+
+    // Create a statement that allows any value
+    let statement_name = StatementName::from("test.open.field");
+    let allowed_values = HashSet::new(); // Empty set when allow_any is true
+
+    let result = client
+        .add_statement(*federation_id.object_id(), statement_name.clone(), allowed_values, true)
+        .build_and_execute(&client)
+        .await;
+
+    assert!(result.is_ok(), "Failed to add allow-any statement: {:?}", result.err());
+
+    // Verify the statement was added
+    let federation: Federation = client.get_object_by_id(*federation_id.object_id()).await?;
+    let statements = &federation.governance.statements.data;
+
+    assert!(statements.contains_key(&statement_name));
+    let added_statement = statements.get(&statement_name).unwrap();
+    assert!(added_statement.allow_any, "Statement should allow any value");
 
     Ok(())
 }

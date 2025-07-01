@@ -16,7 +16,12 @@ pub enum StatementValue {
 }
 
 impl StatementValue {
-    pub fn to_ptb(&self, ptb: &mut ProgrammableTransactionBuilder, package_id: ObjectID) -> anyhow::Result<Argument> {
+    /// Converts the StatementValue to a ProgrammableTransactionBuilder argument
+    pub(crate) fn to_ptb(
+        &self,
+        ptb: &mut ProgrammableTransactionBuilder,
+        package_id: ObjectID,
+    ) -> anyhow::Result<Argument> {
         match self.clone() {
             StatementValue::Text(text) => new_statement_value_string(text, ptb, package_id),
             StatementValue::Number(number) => new_statement_value_number(number, ptb, package_id),

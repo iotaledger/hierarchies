@@ -23,7 +23,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Statements {
     #[serde(deserialize_with = "deserialize_vec_map")]
-    data: HashMap<StatementName, Statement>,
+    pub data: HashMap<StatementName, Statement>,
 }
 
 // The evaluation order: allow_any => condition => allowed_values
@@ -31,16 +31,16 @@ pub struct Statements {
 // that match the condition.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Statement {
-    statement_name: StatementName,
+    pub statement_name: StatementName,
     // allow only values that are in the set
     #[serde(deserialize_with = "deserialize_vec_set")]
-    allowed_values: HashSet<StatementValue>,
+    pub allowed_values: HashSet<StatementValue>,
     // Allow only values that match the condition.
-    condition: Option<StatementValueCondition>,
+    pub condition: Option<StatementValueCondition>,
     // If true, the statement is not applied, any value is allowed
-    allow_any: bool,
+    pub allow_any: bool,
     // The time span of the statement
-    timespan: Timespan,
+    pub timespan: Timespan,
 }
 
 impl Statement {
@@ -86,18 +86,17 @@ pub(crate) fn new_property_statement(
     for statement in statements {
         let value_tag = StatementValue::move_type(package_id);
 
-        let statement_names = new_statement_name(statement.statement_name, ptb, package_id)?;
+        let statement_names = statement.statement_name.to_ptb(ptb, package_id)?;
 
         let allow_any = ptb.pure(statement.allow_any)?;
 
         let allowed_values = statement
             .allowed_values
             .into_iter()
-            .map(|value| match value {
-                StatementValue::Text(text) => new_statement_value_string(text.to_string(), ptb, package_id)
-                    .expect("failed to create new property value string"),
-                StatementValue::Number(number) => new_statement_value_number(number, ptb, package_id)
-                    .expect("failed to create new property value number"),
+            .map(|value| {
+                value
+                    .to_ptb(ptb, package_id)
+                    .expect("failed to create new property value")
             })
             .collect();
 

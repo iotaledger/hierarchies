@@ -1,7 +1,7 @@
 // HTF Notary module
 module ith::main;
 
-use iota::{event, vec_map::{Self, VecMap}, vec_set::VecSet};
+use iota::{clock::Clock, event, vec_map::{Self, VecMap}, vec_set::VecSet};
 use ith::{
     accreditation::{Self, Accreditations},
     statement::{Self, Statements, Statement},
@@ -153,9 +153,9 @@ public fun validate_statement(
     attester_id: &ID,
     statement_name: StatementName,
     statement_value: StatementValue,
-    ctx: &mut TxContext,
+    clock: &Clock,
 ) {
-    let current_time_ms = ctx.epoch_timestamp_ms();
+    let current_time_ms = clock.timestamp_ms();
     assert!(self.is_statement_in_federation(statement_name), EInvalidStatement);
 
     let accreditations = self.get_accreditations_to_attest(attester_id);
@@ -170,9 +170,9 @@ public fun validate_statements(
     self: &Federation,
     entity_id: &ID,
     statements: VecMap<StatementName, StatementValue>,
-    ctx: &mut TxContext,
+    clock: &Clock,
 ) {
-    let current_time_ms = ctx.epoch_timestamp_ms();
+    let current_time_ms = clock.timestamp_ms();
     let statement_names = statements.keys();
 
     let mut idx = 0;

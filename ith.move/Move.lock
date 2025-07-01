@@ -2,7 +2,7 @@
 
 [move]
 version = 3
-manifest_digest = "A5F7874CAE62DDD821783DFE21B158E84E801AF769CDCDCF39C0A8D6A735096A"
+manifest_digest = "36EA1D46FFF2B84CFFCEB267FB12CB5DD34CEB45AFD3E260A66F204CCBA7F683"
 deps_digest = "3C4103934B1E040BB6B23F1D610B4EF9F2F1166A50A104EADCF77467C004C600"
 dependencies = [
   { id = "Iota", name = "Iota" },
@@ -41,7 +41,7 @@ latest-published-id = "0x34dacc912fad15279da01bd18677ff83f329c13592c0972eaa30fcf
 published-version = "1"
 
 [env.localnet]
-chain-id = "f9c6c2b9"
-original-published-id = "0x55d5c305b91300db6c09b7bc3d270bdf9aeaa8f2f93d2c71afa18933641f515a"
-latest-published-id = "0x55d5c305b91300db6c09b7bc3d270bdf9aeaa8f2f93d2c71afa18933641f515a"
+chain-id = "50122712"
+original-published-id = "0x2c9c13fb632b0764e3a6032fcffeb43bc6f51e17cb6d7d2421d0cb978d9e668b"
+latest-published-id = "0x2c9c13fb632b0764e3a6032fcffeb43bc6f51e17cb6d7d2421d0cb978d9e668b"
 published-version = "1"
