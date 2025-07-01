@@ -78,18 +78,6 @@ pub(crate) fn create_vec_set_from_move_values(
     )
 }
 
-/// Creates a new move string
-pub(crate) fn new_move_string(value: String, ptb: &mut ProgrammableTransactionBuilder) -> anyhow::Result<Argument> {
-    let v = ptb.pure(value.as_bytes())?;
-    Ok(ptb.programmable_move_call(
-        MOVE_STDLIB_PACKAGE_ID,
-        STD_UTF8_MODULE_NAME.into(),
-        ident_str!("utf8").into(),
-        vec![],
-        vec![v],
-    ))
-}
-
 #[cfg(test)]
 mod tests {
     use iota_sdk::types::collection_types::Entry;

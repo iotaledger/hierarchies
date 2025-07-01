@@ -2,6 +2,7 @@ module ith::utils;
 
 use iota::{vec_map::{Self, VecMap}, vec_set::{Self, VecSet}};
 
+// ======= Error Codes =======
 const ELengthMismatch: u64 = 0;
 
 public(package) fun contains_one_of<D: copy + drop>(source: &vector<D>, one_of: &vector<D>): bool {
@@ -67,4 +68,3 @@ public fun vec_map_from_keys_values<K: store + copy, V: store>(
 
     map
 }
-

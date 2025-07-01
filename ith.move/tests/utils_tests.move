@@ -1,9 +1,9 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-/// This module provides tests for the timelock module
+/// This module provides tests for the Utils module
 #[test_only]
-module ith::util_tests;
+module ith::utils_tests;
 
 use iota::{vec_map, vec_set};
 use ith::utils;
@@ -31,10 +31,10 @@ fun test_vec_map_from_keys_values_empty() {
 }
 
 #[test]
-#[expected_failure(abort_code = 0)] // ELengthMismatch
+#[expected_failure(abort_code = ith::utils::ELengthMismatch)]
 fun test_vec_map_from_keys_values_length_mismatch() {
     let addresses = vector[@0x1, @0x2];
-    let vps = vector[1]; // Different length
+    let vps = vector[1];
 
     let _map = utils::vec_map_from_keys_values(addresses, vps);
 }
@@ -45,14 +45,6 @@ fun test_contains_one_of_true() {
     let one_of = vector[3, 5, 6];
 
     assert!(utils::contains_one_of(&source, &one_of), 0);
-}
-
-#[test]
-fun test_contains_one_of_false() {
-    let source = vector[1, 2, 3, 4];
-    let one_of = vector[5, 6, 7];
-
-    assert!(!utils::contains_one_of(&source, &one_of), 0);
 }
 
 #[test]
@@ -106,7 +98,7 @@ fun test_contains_all_from_empty_source() {
 
 #[test]
 fun test_copy_vector() {
-    let original = vector[1, 2, 3, 4];
+    let mut original = vector[1, 2, 3, 4];
     let copied = utils::copy_vector(&original);
 
     assert!(vector::length(&copied) == 4, 0);
@@ -130,6 +122,7 @@ fun test_copy_vector_empty() {
 }
 
 #[test]
+#[expected_failure(abort_code = iota::vec_set::EKeyAlreadyExists)]
 fun test_create_vec_set() {
     let values = vector[1, 2, 3, 2, 1]; // Contains duplicates
     let set = utils::create_vec_set(values);

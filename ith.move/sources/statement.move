@@ -43,40 +43,6 @@ public fun new_statement(
     }
 }
 
-/// Represents a time statement. The valid_from_ms and valid_until_ms are
-/// optional, if they are not set, the statement is valid for all time.
-public struct Timespan has copy, drop, store {
-    valid_from_ms: Option<u64>,
-    valid_until_ms: Option<u64>,
-}
-
-public(package) fun new_timespan(
-    valid_from_ms: Option<u64>,
-    valid_until_ms: Option<u64>,
-): Timespan {
-    Timespan {
-        valid_from_ms,
-        valid_until_ms,
-    }
-}
-
-public(package) fun new_empty_timespan(): Timespan {
-    Timespan {
-        valid_from_ms: option::none(),
-        valid_until_ms: option::none(),
-    }
-}
-
-public(package) fun timestamp_matches(self: &Timespan, now_ms: u64): bool {
-    if (self.valid_from_ms.is_some() && *self.valid_from_ms.borrow() > now_ms) {
-        return false
-    };
-    if (self.valid_until_ms.is_some() && *self.valid_until_ms.borrow() < now_ms) {
-        return false
-    };
-    true
-}
-
 public(package) fun new_statements(): Statements {
     Statements {
         data: vec_map::empty(),
@@ -89,45 +55,6 @@ public(package) fun data(self: &Statements): &VecMap<StatementName, Statement> {
 
 public(package) fun data_mut(self: &mut Statements): &mut VecMap<StatementName, Statement> {
     &mut self.data
-}
-
-public(package) fun statements_match_many(
-    self: &Statements,
-    properties: &VecMap<StatementName, StatementValue>,
-    current_time_ms: u64,
-): bool {
-    let statement_names = properties.keys();
-    let mut idx = 0;
-
-    while (idx < statement_names.length()) {
-        if (
-            !self.statements_match(
-                &statement_names[idx],
-                properties.get(&statement_names[idx]),
-                current_time_ms,
-            )
-        ) {
-            return false
-        };
-        idx = idx +1;
-    };
-
-    true
-}
-
-public(package) fun statements_match(
-    self: &Statements,
-    statement_name: &StatementName,
-    statement_value: &StatementValue,
-    current_time_ms: u64,
-): bool {
-    if (!self.data.contains(statement_name)) {
-        return false
-    };
-    self
-        .data
-        .get(statement_name)
-        .matches_name_value(statement_name, statement_value, current_time_ms)
 }
 
 public(package) fun add_statement(self: &mut Statements, statement: Statement) {
@@ -210,4 +137,46 @@ public(package) fun to_map_of_statements(
         idx = idx + 1;
     };
     return map
+}
+
+// ===== Timespan ========
+
+/// Represents a time statement. The valid_from_ms and valid_until_ms are
+/// optional, if they are not set, the statement is valid for all time.
+public struct Timespan has copy, drop, store {
+    valid_from_ms: Option<u64>,
+    valid_until_ms: Option<u64>,
+}
+
+public(package) fun new_timespan(
+    valid_from_ms: Option<u64>,
+    valid_until_ms: Option<u64>,
+): Timespan {
+    Timespan {
+        valid_from_ms,
+        valid_until_ms,
+    }
+}
+
+public(package) fun new_empty_timespan(): Timespan {
+    Timespan {
+        valid_from_ms: option::none(),
+        valid_until_ms: option::none(),
+    }
+}
+
+public(package) fun timestamp_matches(self: &Timespan, now_ms: u64): bool {
+    if (self.valid_from_ms.is_some() && *self.valid_from_ms.borrow() > now_ms) {
+        return false
+    };
+    if (self.valid_until_ms.is_some() && *self.valid_until_ms.borrow() < now_ms) {
+        return false
+    };
+    true
+}
+
+// ===== Test-only Functions =====
+#[test_only]
+public(package) fun destroy_statements(statements: Statements) {
+    let Statements { data: _ } = statements;
 }

@@ -203,3 +203,25 @@ public(package) fun accredited_by(self: &Accreditation): &String {
 public(package) fun statements(self: &Accreditation): &VecMap<StatementName, Statement> {
     &self.statements
 }
+
+// ===== Test-only Functions =====
+
+#[test_only]
+public(package) fun destroy_accreditation(self: Accreditation) {
+    let Accreditation {
+        id: id,
+        accredited_by: _,
+        statements: _,
+    } = self;
+
+    object::delete(id);
+}
+
+#[test_only]
+public(package) fun destroy_accreditations(self: Accreditations) {
+    let Accreditations { statements } = self;
+
+    statements.destroy!(|accreditation| {
+        destroy_accreditation(accreditation);
+    });
+}

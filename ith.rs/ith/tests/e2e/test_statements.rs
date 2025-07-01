@@ -1,11 +1,9 @@
 use std::collections::HashSet;
 
 use crate::client::{get_funded_test_client, TestClient};
-use iota_interaction::rpc_types::IotaTransactionBlockResponse;
 use ith::core::types::statements::name::StatementName;
 use ith::core::types::statements::value::StatementValue;
-use ith::core::types::statements::Statement;
-use ith::core::types::{Event, Federation, FederationCreatedEvent};
+use ith::core::types::Federation;
 use product_common::core_client::CoreClient;
 
 /// Helper function to create a federation for testing purposes.
@@ -93,7 +91,7 @@ async fn test_create_and_validate_statement() -> anyhow::Result<()> {
     let statement_value = StatementValue::Text("test_value".to_string());
 
     let statement_values = HashSet::from_iter([statement_value.clone()]);
- client
+    client
         .add_statement(
             *federation.id.object_id(),
             statement_name.clone(),
