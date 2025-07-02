@@ -52,7 +52,7 @@ async fn main() -> anyhow::Result<()> {
     // Check if the Statement was added
     let trusted_statements = federation.governance.statements.data.contains_key(&statement_name);
 
-    assert!(trusted_statements);
+    assert!(statements);
 
     if let Some(statement) = federation.governance.statements.data.get(&statement_name) {
         println!("Trusted Property: {statement:#?}")

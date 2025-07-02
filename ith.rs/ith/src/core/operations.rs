@@ -19,10 +19,23 @@ use crate::core::types::statements::name::StatementName;
 use crate::core::types::statements::value::StatementValue;
 use crate::core::types::statements::{new_property_statement, Statement};
 use crate::core::types::Capability;
+use crate::core::types::{
+    new_statement, new_statement_name, new_statement_value_number, new_statement_value_string, Capability, Statement,
+    StatementName, StatementValue,
+};
 use crate::error::Error;
 use crate::utils::{self};
 
-const MAIN_ITH_MODULE: &str = "main";
+const MAIN_ITH_MODULE: &str = move_names::MODULE_MAIN;
+pub mod move_names {
+    pub const PACKAGE_NAME: &str = "ith";
+    pub const MODULE_MAIN: &str = "main";
+    pub const MODULE_STATEMENT: &str = "statement";
+    pub const MODULE_VALUE: &str = "statement_value";
+    pub const MODULE_NAME: &str = "statement_name";
+    pub const MODULE_CONDITION: &str = "statement_condition";
+    pub const MODULE_UTILS: &str = "utils";
+}
 
 /// Internal implementation of ITH operations.
 ///
@@ -131,7 +144,7 @@ pub(crate) trait ITHOperations {
 
         ptb.move_call(
             package_id,
-            ident_str!(MAIN_ITH_MODULE).into(),
+            ident_str!(move_names::MODULE_MAIN).into(),
             ident_str!("new_federation").into(),
             vec![],
             vec![],
@@ -168,13 +181,19 @@ pub(crate) trait ITHOperations {
 
         let allow_any = ptb.pure(allow_any)?;
 
-        let statement_names = statement_name.to_ptb(&mut ptb, client.package_id())?;
+        let statement_names = new_statement_name(statement_name, &mut ptb, client.package_id())?;
 
         let value_tag = StatementValue::move_type(client.package_id());
 
         let mut values_of_property = vec![];
         for property_value in allowed_values {
             let value = property_value.to_ptb(&mut ptb, client.package_id())?;
+        for statement_value in allowed_values {
+            let value = match statement_value {
+                StatementValue::Text(text) => new_statement_value_string(text, &mut ptb, client.package_id())?,
+                StatementValue::Number(number) => new_statement_value_number(number, &mut ptb, client.package_id())?,
+            };
+
             values_of_property.push(value);
         }
 
@@ -183,7 +202,7 @@ pub(crate) trait ITHOperations {
 
         ptb.programmable_move_call(
             client.package_id(),
-            ident_str!(MAIN_ITH_MODULE).into(),
+            ident_str!(move_names::MODULE_MAIN).into(),
             ident_str!("add_statement").into(),
             vec![],
             vec![fed_ref, cap, statement_names, tpv_vec_set, allow_any],
@@ -290,11 +309,12 @@ pub(crate) trait ITHOperations {
         let statement_names = statement_name.to_ptb(&mut ptb, client.package_id())?;
 
         let valid_to_ms = ptb.pure(valid_to_ms)?;
+        let statement_names = new_statement_name(statement_name, &mut ptb, client.package_id())?;
 
         ptb.programmable_move_call(
             client.package_id(),
-            ident_str!(MAIN_ITH_MODULE).into(),
-            ident_str!("revoke_statement").into(),
+            ident_str!(move_names::MODULE_MAIN).into(),
+            ident_str!("remove_statement").into(),
             vec![],
             vec![fed_ref, cap, statement_names, valid_to_ms],
         );
@@ -333,6 +353,7 @@ pub(crate) trait ITHOperations {
         ptb.programmable_move_call(
             client.package_id(),
             ident_str!(MAIN_ITH_MODULE).into(),
+            ident_str!(move_names::PACKAGE_NAME).into(),
             ident_str!("revoke_accreditation_to_attest").into(),
             vec![],
             vec![fed_ref, cap, entity_id, permission_id],
@@ -369,7 +390,7 @@ pub(crate) trait ITHOperations {
 
         ptb.programmable_move_call(
             client.package_id(),
-            ident_str!(MAIN_ITH_MODULE).into(),
+            ident_str!(move_names::PACKAGE_NAME).into(),
             ident_str!("add_root_authority").into(),
             vec![],
             vec![fed_ref, cap, account_id_arg],
@@ -380,9 +401,90 @@ pub(crate) trait ITHOperations {
         Ok(tx)
     }
 
-    // Revokes a user's accreditation permissions.
-    // Removes specific accreditation rights from a user. The revoker must have
-    // sufficient permissions to revoke the target accreditation.
+    /// Grants accreditation permissions to another user.
+    ///
+    /// Allows the receiver to further delegate accreditation rights for the specified statements.
+    /// The granter must have sufficient permissions for all statements being delegated.
+    async fn create_accreditation_to_accredit<C>(
+        federation_id: ObjectID,
+        receiver: ObjectID,
+        want_statements: Vec<Statement>,
+        owner: IotaAddress,
+        client: &C,
+    ) -> Result<ProgrammableTransaction, Error>
+    where
+        C: CoreClientReadOnly + OptionalSync,
+    {
+        let mut ptb = ProgrammableTransactionBuilder::new();
+
+        let cap = ITHImpl::get_cap(client, Capability::Accredit, owner).await?;
+
+        let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
+
+        let fed_ref = ITHImpl::get_fed_ref(client, federation_id).await?;
+        let fed_ref = ptb.obj(fed_ref)?;
+
+        let receiver_arg = ptb.pure(receiver)?;
+
+        let want_statements = new_statement(client.package_id(), &mut ptb, want_statements)?;
+
+        ptb.programmable_move_call(
+            client.package_id(),
+            ident_str!(move_names::PACKAGE_NAME).into(),
+            ident_str!("create_accreditation_to_accredit").into(),
+            vec![],
+            vec![fed_ref, cap, receiver_arg, want_statements],
+        );
+
+        let tx = ptb.finish();
+
+        Ok(tx)
+    }
+
+    /// Grants attestation permissions to another user.
+    ///
+    /// Allows the receiver to create attestations for the specified statements.
+    /// The granter must have sufficient permissions for all statements being delegated.
+    async fn create_accreditation_to_attest<C>(
+        federation_id: ObjectID,
+        receiver: ObjectID,
+        want_statements: Vec<Statement>,
+        owner: IotaAddress,
+        client: &C,
+    ) -> Result<ProgrammableTransaction, Error>
+    where
+        C: CoreClientReadOnly + OptionalSync,
+    {
+        let mut ptb = ProgrammableTransactionBuilder::new();
+
+        let cap = ITHImpl::get_cap(client, Capability::Attest, owner).await?;
+
+        let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
+
+        let fed_ref = ITHImpl::get_fed_ref(client, federation_id).await?;
+        let fed_ref = ptb.obj(fed_ref)?;
+
+        let receiver_arg = ptb.pure(receiver)?;
+
+        let want_statements = new_statement(client.package_id(), &mut ptb, want_statements)?;
+
+        ptb.programmable_move_call(
+            client.package_id(),
+            ident_str!(move_names::MODULE_MAIN).into(),
+            ident_str!("create_accreditation_to_attest").into(),
+            vec![],
+            vec![fed_ref, cap, receiver_arg, want_statements],
+        );
+
+        let tx = ptb.finish();
+
+        Ok(tx)
+    }
+
+    /// Revokes a user's accreditation permissions.
+    ///
+    /// Removes specific accreditation rights from a user. The revoker must have
+    /// sufficient permissions to revoke the target accreditation.
     async fn revoke_accreditation_to_accredit<C>(
         federation_id: ObjectID,
         entity_id: ObjectID,
@@ -407,7 +509,7 @@ pub(crate) trait ITHOperations {
 
         ptb.programmable_move_call(
             client.package_id(),
-            ident_str!(MAIN_ITH_MODULE).into(),
+            ident_str!(move_names::PACKAGE_NAME).into(),
             ident_str!("revoke_accreditation_to_accredit").into(),
             vec![],
             vec![fed_ref, cap, entity_id, permission_id],
@@ -432,7 +534,7 @@ pub(crate) trait ITHOperations {
 
         ptb.move_call(
             client.package_id(),
-            ident_str!(MAIN_ITH_MODULE).into(),
+            ident_str!(move_names::MODULE_MAIN).into(),
             ident_str!("get_statements").into(),
             vec![],
             vec![fed_ref],
@@ -463,7 +565,7 @@ pub(crate) trait ITHOperations {
 
         ptb.move_call(
             client.package_id(),
-            ident_str!(MAIN_ITH_MODULE).into(),
+            ident_str!(move_names::MODULE_MAIN).into(),
             ident_str!("is_statement_in_federation").into(),
             vec![],
             vec![fed_ref, statement_name],
@@ -596,9 +698,50 @@ pub(crate) trait ITHOperations {
         Ok(tx)
     }
 
-    // Validates a single statement against federation rules.
-    // Checks if the specified attester has permission to attest the given
-    // statement name and value combination according to their accreditations.
+    /// Revokes a statement by setting its validity expiration time.
+    ///
+    /// Sets a time limit on when a statement is considered valid. After the specified
+    /// time, the statement can no longer be attested. Requires `RootAuthorityCap`.
+    async fn revoke_statement<C>(
+        federation_id: ObjectID,
+        statement_name: StatementName,
+        valid_to_ms: u64,
+        owner: IotaAddress,
+        client: &C,
+    ) -> Result<ProgrammableTransaction, Error>
+    where
+        C: CoreClientReadOnly + OptionalSync,
+    {
+        let mut ptb = ProgrammableTransactionBuilder::new();
+
+        let cap = ITHImpl::get_cap(client, Capability::RootAuthority, owner).await?;
+
+        let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
+
+        let fed_ref = ITHImpl::get_fed_ref(client, federation_id).await?;
+        let fed_ref = ptb.obj(fed_ref)?;
+
+        let statement_name = new_statement_name(statement_name, &mut ptb, client.package_id())?;
+
+        let valid_to_ms = ptb.pure(valid_to_ms)?;
+
+        ptb.programmable_move_call(
+            client.package_id(),
+            ident_str!(MAIN_ITH_MODULE).into(),
+            ident_str!("revoke_statement").into(),
+            vec![],
+            vec![fed_ref, cap, statement_name, valid_to_ms],
+        );
+
+        let tx = ptb.finish();
+
+        Ok(tx)
+    }
+
+    /// Validates a single statement against federation rules.
+    ///
+    /// Checks if the specified attester has permission to attest the given
+    /// statement name and value combination according to their accreditations.
     async fn validate_statement<C>(
         federation_id: ObjectID,
         attester_id: ObjectID,
@@ -618,9 +761,12 @@ pub(crate) trait ITHOperations {
 
         let statement_name = statement_name.to_ptb(&mut ptb, client.package_id())?;
 
-        let statement_value = statement_value.to_ptb(&mut ptb, client.package_id())?;
+        let statement_name_arg = new_statement_name(statement_name, &mut ptb, client.package_id())?;
 
-        let clock = super::get_clock_ref(&mut ptb);
+        let statement_value_arg = match statement_value {
+            StatementValue::Text(text) => new_statement_value_string(text, &mut ptb, client.package_id())?,
+            StatementValue::Number(number) => new_statement_value_number(number, &mut ptb, client.package_id())?,
+        };
 
         ptb.programmable_move_call(
             client.package_id(),
@@ -657,15 +803,47 @@ pub(crate) trait ITHOperations {
         let mut statement_values = vec![];
 
         for (statement_name, statement_value) in statements.iter() {
-            let statement_name = statement_name.to_ptb(&mut ptb, client.package_id())?;
+            let names = statement_name.names();
+            let name = ptb.pure(names)?;
+            let statement_name: Argument = ptb.programmable_move_call(
+                client.package_id(),
+                ident_str!(move_names::MODULE_NAME).into(),
+                ident_str!("new_statement_name_from_vector").into(),
+                vec![],
+                vec![name],
+            );
             statement_names.push(statement_name);
 
-            let statement_value = statement_value.to_ptb(&mut ptb, client.package_id())?;
+            let statement_value = match statement_value {
+                StatementValue::Text(text) => {
+                    let v = ptb.pure(text)?;
+                    ptb.programmable_move_call(
+                        client.package_id(),
+                        ident_str!(move_names::MODULE_VALUE).into(),
+                        ident_str!("new_statement_value_string").into(),
+                        vec![],
+                        vec![v],
+                    )
+                }
+                StatementValue::Number(number) => {
+                    let v = ptb.pure(number)?;
+                    ptb.programmable_move_call(
+                        client.package_id(),
+                        ident_str!(move_names::MODULE_VALUE).into(),
+                        ident_str!("new_statement_value_number").into(),
+                        vec![],
+                        vec![v],
+                    )
+                }
+            };
             statement_values.push(statement_value);
         }
 
-        let statement_name_tag = StatementName::move_type(client.package_id());
-        let statement_value_tag = StatementValue::move_type(client.package_id());
+        let statement_name_tag =
+            TypeTag::from_str(format!("{}::{}::StatementName", client.package_id(), move_names::MODULE_NAME).as_str())?;
+        let statement_value_tag = TypeTag::from_str(
+            format!("{}::{}::StatementValue", client.package_id(), move_names::MODULE_VALUE).as_str(),
+        )?;
 
         let statement_names = ptb.command(Command::MakeMoveVec(Some(statement_name_tag.clone()), statement_names));
         let statement_values = ptb.command(Command::MakeMoveVec(
@@ -675,7 +853,7 @@ pub(crate) trait ITHOperations {
 
         let statements = ptb.programmable_move_call(
             client.package_id(),
-            ident_str!("utils").into(),
+            ident_str!(move_names::MODULE_UTILS).into(),
             ident_str!("vec_map_from_keys_values").into(),
             vec![statement_name_tag, statement_value_tag],
             vec![statement_names, statement_values],
@@ -686,7 +864,7 @@ pub(crate) trait ITHOperations {
 
         ptb.programmable_move_call(
             client.package_id(),
-            ident_str!("main").into(),
+            ident_str!(move_names::MODULE_MAIN).into(),
             ident_str!("validate_statements").into(),
             vec![],
             vec![fed_ref, entity_id, statements, clock],

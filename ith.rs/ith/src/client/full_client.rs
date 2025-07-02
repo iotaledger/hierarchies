@@ -223,12 +223,12 @@ where
         &self,
         federation_id: ObjectID,
         receiver: ObjectID,
-        want_property_statements: impl IntoIterator<Item = Statement>,
+        want_statements: impl IntoIterator<Item = Statement>,
     ) -> TransactionBuilder<CreateAccreditationToAttest> {
         TransactionBuilder::new(CreateAccreditationToAttest::new(
             federation_id,
             receiver,
-            want_property_statements,
+            want_statements,
             self.sender_address(),
         ))
     }
