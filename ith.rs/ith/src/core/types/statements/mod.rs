@@ -115,8 +115,8 @@ pub(crate) fn new_property_statement(
 
         let statement = ptb.programmable_move_call(
             package_id,
-            ident_str!("trusted_statement").into(),
-            ident_str!("new_trusted_statement").into(),
+            ident_str!("statement").into(),
+            ident_str!("new_statement").into(),
             vec![],
             vec![statement_names, allowed_values, allow_any, expression],
         );

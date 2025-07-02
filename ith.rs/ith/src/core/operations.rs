@@ -311,7 +311,7 @@ pub(crate) trait ITHOperations {
     /// sufficient permissions to revoke the target accreditation.
     async fn revoke_accreditation_to_attest<C>(
         federation_id: ObjectID,
-        user_id: ObjectID,
+        entity_id: ObjectID,
         permission_id: ObjectID,
         owner: IotaAddress,
         client: &C,
@@ -328,15 +328,15 @@ pub(crate) trait ITHOperations {
         let fed_ref = ITHImpl::get_fed_ref(client, federation_id).await?;
         let fed_ref = ptb.obj(fed_ref)?;
 
-        let user_id_arg = ptb.pure(user_id)?;
+        let entity_id = ptb.pure(entity_id)?;
         let permission_id = ptb.pure(permission_id)?;
 
         ptb.programmable_move_call(
             client.package_id(),
-            ident_str!("ith").into(),
+            ident_str!(MAIN_ITH_MODULE).into(),
             ident_str!("revoke_accreditation_to_attest").into(),
             vec![],
-            vec![fed_ref, cap, user_id_arg, permission_id],
+            vec![fed_ref, cap, entity_id, permission_id],
         );
 
         let tx = ptb.finish();
@@ -370,7 +370,7 @@ pub(crate) trait ITHOperations {
 
         ptb.programmable_move_call(
             client.package_id(),
-            ident_str!("ith").into(),
+            ident_str!(MAIN_ITH_MODULE).into(),
             ident_str!("add_root_authority").into(),
             vec![],
             vec![fed_ref, cap, account_id_arg],
@@ -386,7 +386,7 @@ pub(crate) trait ITHOperations {
     // sufficient permissions to revoke the target accreditation.
     async fn revoke_accreditation_to_accredit<C>(
         federation_id: ObjectID,
-        user_id: ObjectID,
+        entity_id: ObjectID,
         permission_id: ObjectID,
         owner: IotaAddress,
         client: &C,
@@ -403,15 +403,15 @@ pub(crate) trait ITHOperations {
         let fed_ref = ITHImpl::get_fed_ref(client, federation_id).await?;
         let fed_ref = ptb.obj(fed_ref)?;
 
-        let user_id_arg = ptb.pure(user_id)?;
+        let entity_id = ptb.pure(entity_id)?;
         let permission_id = ptb.pure(permission_id)?;
 
         ptb.programmable_move_call(
             client.package_id(),
-            ident_str!("ith").into(),
+            ident_str!(MAIN_ITH_MODULE).into(),
             ident_str!("revoke_accreditation_to_accredit").into(),
             vec![],
-            vec![fed_ref, cap, user_id_arg, permission_id],
+            vec![fed_ref, cap, entity_id, permission_id],
         );
 
         let tx = ptb.finish();

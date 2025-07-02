@@ -30,7 +30,7 @@ pub struct RevokeAccreditationToAttest {
     /// The ID of the federation where the accreditation will be revoked
     federation_id: ObjectID,
     /// The ID of the user whose attestation permissions will be revoked
-    user_id: ObjectID,
+    entity_id: ObjectID,
     /// The ID of the specific permission/accreditation to revoke
     permission_id: ObjectID,
     /// The address of the signer (used for capability verification)
@@ -54,13 +54,13 @@ impl RevokeAccreditationToAttest {
     /// A new instance of [`RevokeAccreditationToAttest`]
     pub fn new(
         federation_id: ObjectID,
-        user_id: ObjectID,
+        entity_id: ObjectID,
         permission_id: ObjectID,
         signer_address: IotaAddress,
     ) -> Self {
         Self {
             federation_id,
-            user_id,
+            entity_id,
             permission_id,
             signer_address,
             cached_ptb: OnceCell::new(),
@@ -74,7 +74,7 @@ impl RevokeAccreditationToAttest {
     {
         let ptb = ITHImpl::revoke_accreditation_to_attest(
             self.federation_id,
-            self.user_id,
+            self.entity_id,
             self.permission_id,
             self.signer_address,
             client,

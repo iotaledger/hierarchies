@@ -53,7 +53,7 @@ async fn test_create_accreditation_to_attest() -> anyhow::Result<()> {
     );
 
     // Verify the accreditation was created by checking the federation
-    let federation: Federation = client.get_object_by_id(*federation_id.object_id()).await?;
+    let federation: Federation = client.get_federation_by_id(*federation_id.object_id()).await?;
     assert!(!federation.governance.accreditations_to_attest.is_empty());
 
     Ok(())
@@ -102,7 +102,7 @@ async fn test_create_accreditation_to_accredit() -> anyhow::Result<()> {
     );
 
     // Verify the accreditation was created
-    let federation: Federation = client.get_object_by_id(*federation_id.object_id()).await?;
+    let federation: Federation = client.get_federation_by_id(*federation_id.object_id()).await?;
     assert!(!federation.governance.accreditations_to_accredit.is_empty());
 
     Ok(())
@@ -152,22 +152,21 @@ async fn test_multiple_statements_in_federation() -> anyhow::Result<()> {
     }
 
     // Verify all statements were added
-    let federation: Federation = client.get_object_by_id(*federation_id.object_id()).await?;
+    let federation: Federation = client.get_federation_by_id(*federation_id.object_id()).await?;
     let statements = &federation.governance.statements.data;
 
-    assert_eq!(statements.len(), statements_to_add.len() + 1); // +1 for the default statement added during federation creation
+    assert_eq!(statements.len(), statements_to_add.len());
 
     for (name, values, allow_any) in statements_to_add {
-        assert!(statements.contains_key(&name), "Statement {:?} not found", name);
+        assert!(statements.contains_key(&name), "Statement {name:?} not found");
         let statement = statements.get(&name).unwrap();
-        assert_eq!(statement.allow_any, allow_any, "Allow any mismatch for {:?}", name);
+        assert_eq!(statement.allow_any, allow_any, "Allow any mismatch for {name:?}");
 
         if !allow_any {
             let expected_values: HashSet<StatementValue> = values.iter().cloned().collect();
             assert_eq!(
                 statement.allowed_values, expected_values,
-                "Values mismatch for {:?}",
-                name
+                "Values mismatch for {name:?}"
             );
         }
     }
@@ -211,7 +210,7 @@ async fn test_revoke_accreditation_to_attest() -> anyhow::Result<()> {
         .await?;
 
     // Get the federation to find the permission ID
-    let federation: Federation = client.get_object_by_id(*federation_id.object_id()).await?;
+    let federation: Federation = client.get_federation_by_id(*federation_id.object_id()).await?;
     let accreditations = &federation.governance.accreditations_to_attest;
 
     // Find the accreditation we just created
@@ -271,7 +270,7 @@ async fn test_revoke_accreditation_to_accredit() -> anyhow::Result<()> {
         .await?;
 
     // Get the federation to find the permission ID
-    let federation: Federation = client.get_object_by_id(*federation_id.object_id()).await?;
+    let federation: Federation = client.get_federation_by_id(*federation_id.object_id()).await?;
     let accreditations = &federation.governance.accreditations_to_accredit;
 
     // Find the accreditation we just created
@@ -363,7 +362,7 @@ async fn test_complex_accreditation_workflow() -> anyhow::Result<()> {
         .await?;
 
     // Verify final federation state
-    let federation: Federation = client.get_object_by_id(*federation_id.object_id()).await?;
+    let federation: Federation = client.get_federation_by_id(*federation_id.object_id()).await?;
 
     // Check that both users have their respective accreditations
     assert!(federation
@@ -376,7 +375,7 @@ async fn test_complex_accreditation_workflow() -> anyhow::Result<()> {
         .contains_key(&accreditor_id));
 
     // Check that statements were properly added
-    assert_eq!(federation.governance.statements.data.len(), 3); // 2 added + 1 default
+    assert_eq!(federation.governance.statements.data.len(), 2);
 
     Ok(())
 }
@@ -426,7 +425,7 @@ async fn test_statement_with_numeric_values() -> anyhow::Result<()> {
     );
 
     // Verify the accreditation was created
-    let federation: Federation = client.get_object_by_id(*federation_id.object_id()).await?;
+    let federation: Federation = client.get_federation_by_id(*federation_id.object_id()).await?;
     assert!(federation
         .governance
         .accreditations_to_attest

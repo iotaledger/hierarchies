@@ -16,8 +16,9 @@ use product_common::network_name::NetworkName;
 use product_common::package_registry::{Env, Metadata};
 use serde::de::DeserializeOwned;
 
-use crate::client::network_id;
+use crate::client::{get_object_ref_by_id_with_bcs, network_id};
 use crate::core::operations::{ITHImpl, ITHOperations};
+use crate::core::types::Federation;
 use crate::core::types::{
     statements::{name::StatementName, value::StatementValue},
     Accreditations,
@@ -163,6 +164,12 @@ impl ITHClientReadOnly {
         }
 
         Self::new_internal(client, network).await
+    }
+
+    pub async fn get_federation_by_id(&self, federation_id: ObjectID) -> Result<Federation, Error> {
+        let fed = get_object_ref_by_id_with_bcs(self, &federation_id).await?;
+
+        Ok(fed)
     }
 
     /// Retrieves all statement names registered in the federation.
