@@ -75,18 +75,6 @@ impl From<u64> for StatementValue {
     }
 }
 
-// impl TryFrom<StatementValueMove> for StatementValue {
-//     type Error = &'static str;
-
-//     fn try_from(value: StatementValueMove) -> Result<Self, Self::Error> {
-//         match (value.text, value.number) {
-//             (Some(text), None) => Ok(StatementValue::Text(text)),
-//             (None, Some(number)) => Ok(StatementValue::Number(number)),
-//             _ => Err("Invalid StatementValue: must have either text or number, not both or neither"),
-//         }
-//     }
-// }
-
 #[cfg(test)]
 mod tests {
     use serde_json::json;

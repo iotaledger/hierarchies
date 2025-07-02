@@ -180,7 +180,7 @@ cargo run --example
 
 - **Root Authority**: The highest authority within a federation, responsible for establishing and delegating trust. The root authority can accredit other entities to create attestations within the federation, extending the trust hierarchy.
 
-- **Statement**: An attribute or characteristic within the federation, such as `university.a.department`. Trusted properties are the elements within a federation that entities can attest to.
+- **Statement**: An attribute or characteristic within the federation, such as `university.a.department`. Statements are the elements within a federation that entities can attest to.
 
 - **Attestation**: A statement or proof provided by an entity within the federation certifying the validity of a Statement. For example, a professor’s attestation may confirm a student’s score in a particular course.
 
