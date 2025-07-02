@@ -648,7 +648,6 @@ pub(crate) trait ITHOperations {
     where
         C: CoreClientReadOnly + OptionalSync,
     {
-        println!("validate_statements");
         let mut ptb = ProgrammableTransactionBuilder::new();
 
         let fed_ref = ITHImpl::get_fed_ref(client, federation_id).await?;
