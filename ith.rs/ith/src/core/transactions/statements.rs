@@ -182,7 +182,7 @@ pub mod revoke_statement {
         where
             C: CoreClientReadOnly + OptionalSync,
         {
-            let ptb = ITHImpl::revoke_trusted_statement(
+            let ptb = ITHImpl::revoke_statement(
                 self.federation_id,
                 self.statement_name.clone(),
                 self.valid_to_ms,

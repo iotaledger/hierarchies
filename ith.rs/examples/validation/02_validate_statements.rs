@@ -40,7 +40,7 @@ async fn main() -> anyhow::Result<()> {
     let statements = Statement {
         statement_name: statement_name.clone(),
         allowed_values,
-        expression: None,
+        condition: None,
         allow_any: false,
         timespan: Timespan::default(),
     };
@@ -55,10 +55,10 @@ async fn main() -> anyhow::Result<()> {
     }
 
     // Validate trusted properties
-    let trusted_statements = [(statement_name, value)];
+    let statements = [(statement_name, value)];
 
     let validate = ith_client
-        .validate_statements(*federation_id, (*receiver).into(), trusted_statements)
+        .validate_statements(*federation_id, (*receiver).into(), statements)
         .await;
 
     assert!(validate.is_ok());
