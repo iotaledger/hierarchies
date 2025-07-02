@@ -1,6 +1,4 @@
-
 use serde::{Deserialize, Serialize};
-
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Default, Deserialize)]
 pub struct Timespan {

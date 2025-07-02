@@ -10,8 +10,6 @@ use ith::{
         AccreditCap,
         AttestCap,
         add_statement,
-        accredit_to_attest,
-        accredit,
         revoke_accreditation_to_attest,
         revoke_accreditation_to_accredit
     },
@@ -134,7 +132,7 @@ fun test_create_accreditation() {
 
     // Issue permission to accredit
     let statements = vector::empty();
-    fed.accredit(&accredit_cap, bob, statements, scenario.ctx());
+    fed.create_accreditation_to_accredit(&accredit_cap, bob, statements, scenario.ctx());
     scenario.next_tx(alice);
 
     // Check if the permission was issued
@@ -171,7 +169,7 @@ fun test_create_attestation() {
 
     // Issue permission to accredit
     let statements = vector::empty();
-    fed.accredit_to_attest(&attest_cap, bob, statements, scenario.ctx());
+    fed.create_accreditation_to_attest(&attest_cap, bob, statements, scenario.ctx());
     scenario.next_tx(alice);
 
     // Check if the permission was issued
@@ -208,11 +206,11 @@ fun test_revoke_accreditation_to_attest_and_accredit() {
 
     // Issue permission to accredit
     let statements = vector::empty();
-    fed.accredit(&accredit_cap, bob, statements, scenario.ctx());
+    fed.create_accreditation_to_accredit(&accredit_cap, bob, statements, scenario.ctx());
     scenario.next_tx(alice);
 
     // Issue permission to attest
-    fed.accredit_to_attest(&attest_cap, bob, statements, scenario.ctx());
+    fed.create_accreditation_to_attest(&attest_cap, bob, statements, scenario.ctx());
     scenario.next_tx(alice);
 
     // Revoke permission to attest

@@ -289,7 +289,7 @@ impl ITHClientReadOnly {
         statement_name: StatementName,
         statement_value: StatementValue,
     ) -> Result<bool, Error> {
-        let tx = ITHImpl::validate_statement(federation_id, user_id, statement_name, statement_value, self).await?;
+        let tx = ITHImpl::validate_statement(federation_id, attester_id, statement_name, statement_value, self).await?;
         // The [`execute_read_only_transaction`] returns a vector of strings [`StatementName`],
         // which are the arguments of the `validate_statements` function. So we can ignore the result here.
         let _: Vec<String> = self.execute_read_only_transaction(tx).await?;
@@ -345,6 +345,7 @@ impl ITHClientReadOnly {
             .dev_inspect_transaction_block(IotaAddress::ZERO, TransactionKind::programmable(tx), None, None, None)
             .await
             .map_err(|err| Error::UnexpectedApiResponse(format!("Failed to inspect transaction block: {err}")))?;
+        println!("inspection_result: {inspection_result:?}");
 
         let execution_results = inspection_result
             .results

@@ -3,7 +3,8 @@ use std::collections::HashMap;
 use iota_sdk::types::id::UID;
 use serde::{Deserialize, Serialize};
 
-use crate::core::types::{Statement, StatementName, StatementValue};
+use crate::core::types::statements::name::StatementName;
+use crate::core::types::statements::Statement;
 use crate::utils::deserialize_vec_map;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

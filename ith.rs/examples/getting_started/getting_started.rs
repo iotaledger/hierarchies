@@ -18,7 +18,6 @@ use ith::core::types::statements::Statement;
 ///
 /// Please note that we use an unsecured private key provider [`TestMemSigner`],
 /// which should NOT be used in production.
-///
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let client = get_funded_client().await?;
@@ -64,9 +63,7 @@ async fn main() -> anyhow::Result<()> {
         .build_and_execute(&client)
         .await
         .context("Failed creating attestation")?;
-    println!(
-        "✅ Accreditation to attest has been created for the user {attestation_receiver}"
-    );
+    println!("✅ Accreditation to attest has been created for the user {attester}");
 
     // Let's validate the Statements. Validation is a process of checking if the accreditation
     // receiver is accredited to attest to the Statement with the given Statement Value
@@ -80,28 +77,26 @@ async fn main() -> anyhow::Result<()> {
         .context("Failed to validate Statements")?;
     println!("✅ Validated Statements");
 
-    // TODO replace with revoke_accreditation_to_attest
-    client
-        .remove_statement(federation_id, statement_name.clone())
-        .build_and_execute(&client)
-        .await
-        .context("Failed to revoke attestation")?;
+    // // TODO replace with revoke_accreditation_to_attest
+    // client
+    //     .revoke_accreditation_to_attest(federation_id, attester, 0)
+    //     .build_and_execute(&client)
+    //     .await
+    //     .context("Failed to revoke attestation")?;
 
-    println!("✅ Revoked attestation");
+    // println!("✅ Revoked attestation");
 
-    // Validate Statements again - it should returned an error
-    let expected_error = client
-        .validate_statements(
-            federation_id,
-            attester,
-            [(statement_name.clone(), value_physics.clone())],
-        )
-        .await;
-    assert!(expected_error.is_err());
-    println!(
-        "✅ Expected error on validation after revocation for '{value_physics:?}'"
-    );
+    // // Validate Statements again - it should returned an error
+    // let expected_error = client
+    //     .validate_statements(
+    //         federation_id,
+    //         attester,
+    //         [(statement_name.clone(), value_physics.clone())],
+    //     )
+    //     .await;
+    // assert!(expected_error.is_err());
+    // println!("✅ Expected error on validation after revocation for '{value_physics:?}'");
 
-    println!("🎉 Done");
+    // println!("🎉 Done");
     Ok(())
 }

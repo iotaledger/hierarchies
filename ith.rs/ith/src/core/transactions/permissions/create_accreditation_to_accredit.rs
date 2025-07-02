@@ -73,7 +73,7 @@ impl CreateAccreditation {
     where
         C: CoreClientReadOnly + OptionalSync,
     {
-        let ptb = ITHImpl::accredit(
+        let ptb = ITHImpl::create_accreditation_to_accredit(
             self.federation_id,
             self.receiver,
             self.want_statements.clone(),

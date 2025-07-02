@@ -4,7 +4,7 @@
 #!/bin/bash
 
 script_dir=$(cd "$(dirname $0)" && pwd)
-package_dir=$script_dir/../ith.move
+package_dir=$script_dir/..
 
 # echo "publishing package from $package_dir"
 RESPONSE=$(iota client publish --with-unpublished-dependencies --silence-warnings --json --gas-budget 500000000 $package_dir)
