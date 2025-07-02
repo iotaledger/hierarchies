@@ -282,10 +282,9 @@ impl ITHClientReadOnly {
         statement_value: StatementValue,
     ) -> Result<bool, Error> {
         let tx = ITHImpl::validate_statement(federation_id, user_id, statement_name, statement_value, self).await?;
-        // The [`execute_read_only_transaction`] returns a vector of strings [`StatementName`],
-        // which are the arguments of the `validate_statements` function. So we can ignore the result here.
-        let _: Vec<String> = self.execute_read_only_transaction(tx).await?;
-        Ok(true)
+
+        let response = self.execute_read_only_transaction(tx).await?;
+        Ok(response)
     }
 
     /// Validates multiple statements for a specific user.
@@ -305,10 +304,9 @@ impl ITHClientReadOnly {
         statements: impl IntoIterator<Item = (StatementName, StatementValue)>,
     ) -> Result<bool, Error> {
         let tx = ITHImpl::validate_statements(federation_id, entity_id, statements.into_iter().collect(), self).await?;
-        // The [`execute_read_only_transaction`] returns a vector of strings [`StatementName`],
-        // which are the arguments of the `validate_statements` function. So we can ignore the result here.
-        let _: Vec<String> = self.execute_read_only_transaction(tx).await?;
-        Ok(true)
+
+        let response = self.execute_read_only_transaction(tx).await?;
+        Ok(response)
     }
 }
 
