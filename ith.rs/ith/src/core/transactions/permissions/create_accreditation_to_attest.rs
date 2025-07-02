@@ -33,7 +33,7 @@ pub struct CreateAccreditationToAttest {
     /// The ID of the user who will receive the attestation permissions
     receiver: ObjectID,
     /// The statements for which attestation permissions are being granted
-    want_property_statements: Vec<Statement>,
+    want_statements: Vec<Statement>,
     /// The address of the signer (used for capability verification)
     signer_address: IotaAddress,
     /// Cached programmable transaction
@@ -47,7 +47,7 @@ impl CreateAccreditationToAttest {
     ///
     /// * `federation_id` - The ID of the federation where the accreditation will be granted
     /// * `receiver` - The ID of the user who will receive the attestation permissions
-    /// * `want_property_statements` - The statements for which permissions are being granted
+    /// * `want_statements` - The statements for which permissions are being granted
     /// * `signer_address` - The address of the signer (must have AttestCap)
     ///
     /// ## Returns
@@ -56,13 +56,13 @@ impl CreateAccreditationToAttest {
     pub fn new(
         federation_id: ObjectID,
         receiver: ObjectID,
-        want_property_statements: impl IntoIterator<Item = Statement>,
+        want_statements: impl IntoIterator<Item = Statement>,
         signer_address: IotaAddress,
     ) -> Self {
         Self {
             federation_id,
             receiver,
-            want_property_statements: want_property_statements.into_iter().collect(),
+            want_statements: want_statements.into_iter().collect(),
             signer_address,
             cached_ptb: OnceCell::new(),
         }
@@ -76,12 +76,11 @@ impl CreateAccreditationToAttest {
         let ptb = ITHImpl::create_accreditation_to_attest(
             self.federation_id,
             self.receiver,
-            self.want_property_statements.clone(),
+            self.want_statements.clone(),
             self.signer_address,
             client,
         )
         .await?;
-
         Ok(ptb)
     }
 }

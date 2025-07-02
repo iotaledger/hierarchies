@@ -33,7 +33,7 @@ pub struct CreateAccreditationToAccredit {
     /// The ID of the user who will receive the accreditation permissions
     receiver: ObjectID,
     /// The statements for which accreditation permissions are being granted
-    want_property_statements: Vec<Statement>,
+    want_statements: Vec<Statement>,
     /// The address of the signer (used for capability verification)
     signer_address: IotaAddress,
     /// Cached programmable transaction
@@ -47,7 +47,7 @@ impl CreateAccreditationToAccredit {
     ///
     /// * `federation_id` - The ID of the federation where the accreditation will be granted
     /// * `receiver` - The ID of the user who will receive the accreditation permissions
-    /// * `want_property_statements` - The statements for which permissions are being granted
+    /// * `want_statements` - The statements for which permissions are being granted
     /// * `signer_address` - The address of the signer (must have AccreditCap)
     ///
     /// ## Returns
@@ -56,13 +56,13 @@ impl CreateAccreditationToAccredit {
     pub fn new(
         federation_id: ObjectID,
         receiver: ObjectID,
-        want_property_statements: Vec<Statement>,
+        want_statements: Vec<Statement>,
         signer_address: IotaAddress,
     ) -> Self {
         Self {
             federation_id,
             receiver,
-            want_property_statements,
+            want_statements,
             signer_address,
             cached_ptb: OnceCell::new(),
         }
@@ -76,7 +76,7 @@ impl CreateAccreditationToAccredit {
         let ptb = ITHImpl::create_accreditation_to_accredit(
             self.federation_id,
             self.receiver,
-            self.want_property_statements.clone(),
+            self.want_statements.clone(),
             self.signer_address,
             client,
         )

@@ -13,15 +13,15 @@ module ith::main {
     /// Error when operation is performed with wrong federation
     const EUnauthorizedWrongFederation: u64 = 1;
     /// Error when entity lacks sufficient accreditation permissions
-    const EUnauthorizedInsufficientAccreditation: u64 = 2;
+    const EUnauthorizedInsufficientAccreditationToAccredit: u64 = 2;
     /// Error when entity lacks sufficient attestation permissions
-    const EUnauthorizedInsufficientAttestation: u64 = 3;
+    const EUnauthorizedInsufficientAccreditationToAttest: u64 = 3;
     /// Error when property/statement is invalid
-    const EInvalidProperty: u64 = 4;
-    /// Error when issuer has insufficient accreditation for the statement
-    const EInvalidIssuerInsufficientAccreditation: u64 = 5;
-    /// Error when constraint is invalid (e.g., allow_any=true with specific values)
-    const EInvalidConstraint: u64 = 6;
+    const EInvalidStatement: u64 = 4;
+    /// Error when attester has insufficient accreditation for the statement
+    const EAttesterInsufficientAccreditation: u64 = 5;
+    /// Error when Value Condition for Statement is invalid (e.g., allow_any=true with specific values)
+    const EInvalidStatementValueCondition: u64 = 6;
     /// Error when trying to access non-existent accreditation
     const EAccreditationNotFound: u64 = 7;
 
@@ -36,7 +36,7 @@ module ith::main {
     }
 
     /// Root authority with the highest trust level in the system.
-    /// Can delegate trust to other entities and has unlimited permissions.
+    /// Can delegate and revoke trust to other entities.
     public struct RootAuthority has key, store {
         id: UID,
         account_id: ID,
@@ -48,7 +48,7 @@ module ith::main {
         id: UID,
         /// Statements that are trusted by the federation
         statements: Statements,
-        /// Rights to delegate accreditation permissions
+        /// Rights to delegate accreditation
         accreditations_to_accredit: VecMap<ID, Accreditations>,
         /// Rights for creating attestations
         accreditations_to_attest: VecMap<ID, Accreditations>,
@@ -89,7 +89,7 @@ module ith::main {
     // ===== Constructor Functions =====
 
     /// Creates a new federation with the sender as the first root authority.
-    /// Grants full permissions (attest and accredit capabilities) to the creator.
+    /// The creator of the Federation becomes the root authority of the Federation.
     public fun new_federation(ctx: &mut TxContext) {
         let federation_id = object::new(ctx);
         let mut federation = Federation {
@@ -184,24 +184,24 @@ module ith::main {
         self.governance.statements.data().contains(&statement_name)
     }
 
-    /// Gets accreditations for attestation for a specific user
-    public fun get_accreditations_to_attest(self: &Federation, user_id: &ID): &Accreditations {
-        self.governance.accreditations_to_attest.get(user_id)
+    /// Gets accreditations for attestation for a specific entity
+    public fun get_accreditations_to_attest(self: &Federation, entity_id: &ID): &Accreditations {
+        self.governance.accreditations_to_attest.get(entity_id)
     }
 
-    /// Checks if a user can create attestations
-    public fun is_attester(self: &Federation, user_id: &ID): bool {
-        self.governance.accreditations_to_attest.contains(user_id)
+    /// Checks if an entity can create attestations
+    public fun is_attester(self: &Federation, entity_id: &ID): bool {
+        self.governance.accreditations_to_attest.contains(entity_id)
     }
 
-    /// Gets accreditations for delegation for a specific user
-    public fun get_accreditations_to_accredit(self: &Federation, user_id: &ID): &Accreditations {
-        self.governance.accreditations_to_accredit.get(user_id)
+    /// Gets accreditations for delegation for a specific entity
+    public fun get_accreditations_to_accredit(self: &Federation, entity_id: &ID): &Accreditations {
+        self.governance.accreditations_to_accredit.get(entity_id)
     }
 
-    /// Checks if a user can delegate accreditations
-    public fun is_accreditor(self: &Federation, user_id: &ID): bool {
-        self.governance.accreditations_to_accredit.contains(user_id)
+    /// Checks if an entity can delegate accreditations
+    public fun is_accreditor(self: &Federation, entity_id: &ID): bool {
+        self.governance.accreditations_to_accredit.contains(entity_id)
     }
 
     /// Gets the list of root authorities (package-only access)
@@ -222,7 +222,7 @@ module ith::main {
         _ctx: &mut TxContext,
     ) {
         assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
-        assert!(!(allow_any && allowed_values.keys().length() > 0), EInvalidConstraint);
+        assert!(!(allow_any && allowed_values.keys().length() > 0), EInvalidStatementValueCondition);
 
         let statement = statement::new_statement(
             statement_name,
@@ -246,20 +246,20 @@ module ith::main {
         self.governance.statements.data_mut().remove(&statement_name);
     }
 
-    /// Revokes a trusted statement by setting its validity period
-    public fun revoke_trusted_statement(
+    /// Revokes a statement by setting its validity period
+    public fun revoke_statement(
         federation: &mut Federation,
         cap: &RootAuthorityCap,
         statement_name: StatementName,
         valid_to_ms: u64,
     ) {
         assert!(cap.federation_id == federation.federation_id(), EUnauthorizedWrongFederation);
-        let property_statement = federation
+        let statement = federation
             .governance
             .statements
             .data_mut()
             .get_mut(&statement_name);
-        property_statement.revoke(valid_to_ms);
+        statement.revoke(valid_to_ms);
     }
 
     /// Adds a new root authority to the federation.
@@ -283,7 +283,7 @@ module ith::main {
 
     /// Grants accreditation rights to another entity.
     /// Allows the receiver to delegate accreditation permissions to others.
-    public fun accredit(
+    public fun create_accreditation_to_accredit(
         self: &mut Federation,
         cap: &AccreditCap,
         receiver: ID,
@@ -303,7 +303,7 @@ module ith::main {
                     &want_statements,
                     current_time_ms,
                 ),
-                EUnauthorizedInsufficientAccreditation,
+                EUnauthorizedInsufficientAccreditationToAccredit,
             );
         };
 
@@ -326,7 +326,7 @@ module ith::main {
 
     /// Grants attestation rights to another entity.
     /// Allows the receiver to create trusted attestations.
-    public fun accredit_to_attest(
+    public fun create_accreditation_to_attest(
         self: &mut Federation,
         cap: &AttestCap,
         receiver: ID,
@@ -346,7 +346,7 @@ module ith::main {
                     &wanted_statements,
                     current_time_ms,
                 ),
-                EUnauthorizedInsufficientAccreditation,
+                EUnauthorizedInsufficientAccreditationToAccredit,
             );
         };
 
@@ -368,11 +368,11 @@ module ith::main {
         };
     }
 
-    /// Revokes attestation rights from a user
+    /// Revokes attestation rights from an entity
     public fun revoke_accreditation_to_attest(
         self: &mut Federation,
         cap: &AttestCap,
-        user_id: &ID,
+        entity_id: &ID,
         permission_id: &ID,
         ctx: &mut TxContext,
     ) {
@@ -380,8 +380,8 @@ module ith::main {
         assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
 
         let remover_accreditations = self.get_accreditations_to_attest(&ctx.sender().to_id());
-        let users_attest_permissions = self.get_accreditations_to_attest(user_id);
-        let mut accreditation_to_revoke_idx = users_attest_permissions.find_accredited_statement_id(
+        let entitys_attest_permissions = self.get_accreditations_to_attest(entity_id);
+        let mut accreditation_to_revoke_idx = entitys_attest_permissions.find_accredited_statement_id(
             permission_id,
         );
         assert!(accreditation_to_revoke_idx.is_some(), EAccreditationNotFound);
@@ -389,34 +389,34 @@ module ith::main {
         // Check revocation permissions
         if (!self.is_root_authority(&ctx.sender().to_id())) {
             let accreditation_to_revoke =
-                &users_attest_permissions.accredited_statements()[
+                &entitys_attest_permissions.accredited_statements()[
                     accreditation_to_revoke_idx.extract(),
                 ];
             let (_, statements) = (*accreditation_to_revoke.statements()).into_keys_values();
             assert!(
                 remover_accreditations.are_statements_compliant(&statements, current_time_ms),
-                EUnauthorizedInsufficientAttestation,
+                EUnauthorizedInsufficientAccreditationToAttest,
             );
         };
 
         // Remove the permission
-        let users_attest_permissions = self.governance.accreditations_to_attest.get_mut(user_id);
-        users_attest_permissions.remove_accredited_statement(permission_id);
+        let entitys_attest_permissions = self.governance.accreditations_to_attest.get_mut(entity_id);
+        entitys_attest_permissions.remove_accredited_statement(permission_id);
     }
 
-    /// Revokes accreditation rights from a user
+    /// Revokes accreditation rights from an entity
     public fun revoke_accreditation_to_accredit(
         self: &mut Federation,
         cap: &AccreditCap,
-        user_id: &ID,
+        entity_id: &ID,
         permission_id: &ID,
         ctx: &mut TxContext,
     ) {
         assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
         let remover_permissions = self.get_accreditations_to_accredit(&ctx.sender().to_id());
 
-        let users_accredit_permissions = self.get_accreditations_to_accredit(user_id);
-        let mut accreditation_to_revoke_idx = users_accredit_permissions.find_accredited_statement_id(
+        let entitys_accredit_permissions = self.get_accreditations_to_accredit(entity_id);
+        let mut accreditation_to_revoke_idx = entitys_accredit_permissions.find_accredited_statement_id(
             permission_id,
         );
         assert!(accreditation_to_revoke_idx.is_some(), EAccreditationNotFound);
@@ -424,23 +424,23 @@ module ith::main {
         // Check revocation permissions
         if (!self.is_root_authority(&ctx.sender().to_id())) {
             let accreditation_to_revoke =
-                &users_accredit_permissions.accredited_statements()[
+                &entitys_accredit_permissions.accredited_statements()[
                     accreditation_to_revoke_idx.extract(),
                 ];
             let current_time_ms = ctx.epoch_timestamp_ms();
             let (_, statements) = (*accreditation_to_revoke.statements()).into_keys_values();
             assert!(
                 remover_permissions.are_statements_compliant(&statements, current_time_ms),
-                EUnauthorizedInsufficientAccreditation,
+                EUnauthorizedInsufficientAccreditationToAccredit,
             );
         };
 
         // Remove the permission
-        let users_accredit_permissions = self
+        let entitys_accredit_permissions = self
             .governance
             .accreditations_to_accredit
-            .get_mut(user_id);
-        users_accredit_permissions.remove_accredited_statement(permission_id);
+            .get_mut(entity_id);
+        entitys_accredit_permissions.remove_accredited_statement(permission_id);
     }
 
     // ===== Validation Functions =====
@@ -454,19 +454,19 @@ module ith::main {
         ctx: &mut TxContext,
     ) {
         let current_time_ms = ctx.epoch_timestamp_ms();
-        assert!(self.is_statement_in_federation(statement_name), EInvalidProperty);
+        assert!(self.is_statement_in_federation(statement_name), EInvalidStatement);
 
         let accreditations = self.get_accreditations_to_attest(attester_id);
         assert!(
             accreditations.is_statement_allowed(&statement_name, &statement_value, current_time_ms),
-            EInvalidIssuerInsufficientAccreditation,
+            EAttesterInsufficientAccreditation,
         );
     }
 
     /// Validates multiple statements from an issuer
     public fun validate_statements(
         self: &Federation,
-        issuer_id: &ID,
+        attester_id: &ID,
         statements: VecMap<StatementName, StatementValue>,
         ctx: &mut TxContext,
     ) {
@@ -477,15 +477,15 @@ module ith::main {
         let mut idx = 0;
         while (idx < statement_names.length()) {
             let statement_name = statement_names[idx];
-            assert!(self.is_statement_in_federation(statement_name), EInvalidProperty);
+            assert!(self.is_statement_in_federation(statement_name), EInvalidStatement);
             idx = idx + 1;
         };
 
         // Then check if issuer has permissions for all statements
-        let accreditations = self.get_accreditations_to_attest(issuer_id);
+        let accreditations = self.get_accreditations_to_attest(attester_id);
         assert!(
             accreditations.are_statements_allowed(&statements, current_time_ms),
-            EInvalidIssuerInsufficientAccreditation,
+            EAttesterInsufficientAccreditation,
         );
     }
 
@@ -517,13 +517,13 @@ module ith::main_tests {
         AccreditCap,
         AttestCap,
         add_statement,
-        accredit_to_attest,
-        accredit,
+        create_accreditation_to_accredit,
+        create_accreditation_to_attest,
         revoke_accreditation_to_attest,
         revoke_accreditation_to_accredit
     };
     use ith::statement_name::new_statement_name;
-    use ith::statement_value::new_property_value_number;
+    use ith::statement_value::new_statement_value_number;
     use std::string::utf8;
 
     #[test]
@@ -577,7 +577,7 @@ module ith::main_tests {
     }
 
     #[test]
-    fun test_adding_trusted_statement() {
+    fun test_adding_statement() {
         let alice = @0x1;
         let mut scenario = test_scenario::begin(alice);
 
@@ -590,9 +590,9 @@ module ith::main_tests {
 
         // Add statement
         let statement_name = new_statement_name(utf8(b"statement_name"));
-        let property_value = new_property_value_number(10);
+        let statement_value = new_statement_value_number(10);
         let mut allowed_values = vec_set::empty();
-        allowed_values.insert(property_value);
+        allowed_values.insert(statement_value);
 
         fed.add_statement(&cap, statement_name, allowed_values, false, scenario.ctx());
         scenario.next_tx(alice);
@@ -623,7 +623,7 @@ module ith::main_tests {
 
         // Issue accreditation permission
         let statements = vector::empty();
-        fed.accredit(&accredit_cap, bob, statements, scenario.ctx());
+        fed.create_accreditation_to_accredit(&accredit_cap, bob, statements, scenario.ctx());
         scenario.next_tx(alice);
 
         // Verify permission was issued
@@ -654,7 +654,7 @@ module ith::main_tests {
 
         // Issue attestation permission
         let statements = vector::empty();
-        fed.accredit_to_attest(&attest_cap, bob, statements, scenario.ctx());
+        fed.create_accreditation_to_attest(&attest_cap, bob, statements, scenario.ctx());
         scenario.next_tx(alice);
 
         // Verify permission was issued
@@ -686,10 +686,10 @@ module ith::main_tests {
 
         // Issue permissions
         let statements = vector::empty();
-        fed.accredit(&accredit_cap, bob, statements, scenario.ctx());
+        fed.create_accreditation_to_accredit(&accredit_cap, bob, statements, scenario.ctx());
         scenario.next_tx(alice);
 
-        fed.accredit_to_attest(&attest_cap, bob, statements, scenario.ctx());
+        fed.create_accreditation_to_attest(&attest_cap, bob, statements, scenario.ctx());
         scenario.next_tx(alice);
 
         // Revoke attestation permission
@@ -710,7 +710,7 @@ module ith::main_tests {
         fed.revoke_accreditation_to_accredit(&accredit_cap, &bob, &permission_id, scenario.ctx());
         scenario.next_tx(alice);
 
-        // TODO: Fix - users should not have permissions after revocation
+        // TODO: Fix - entitys should not have permissions after revocation
         assert!(fed.is_attester(&bob), 0);
         assert!(fed.is_accreditor(&bob), 0);
 

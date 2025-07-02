@@ -55,7 +55,7 @@ async fn main() -> anyhow::Result<()> {
     let statements = Statement {
         statement_name,
         allowed_values,
-        expression: None,
+        condition: None,
         allow_any: false,
         timespan: Timespan::default(),
     };
@@ -75,9 +75,9 @@ async fn main() -> anyhow::Result<()> {
     println!("Federation: {:#?}", federation);
 
     // Check if the receiver has the permission to attest
-    let trusted_statements = federation.governance.accreditations_to_attest.contains_key(&receiver);
+    let statements = federation.governance.accreditations_to_attest.contains_key(&receiver);
 
-    assert!(trusted_statements);
+    assert!(statements);
 
     Ok(())
 }

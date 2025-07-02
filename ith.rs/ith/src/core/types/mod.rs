@@ -3,8 +3,7 @@
 mod accreditation;
 mod cap;
 mod event;
-mod statement_name;
-mod statements;
+mod statement;
 
 use std::collections::HashMap;
 
@@ -14,8 +13,7 @@ pub use event::*;
 use iota_sdk::types::base_types::ObjectID;
 use iota_sdk::types::id::UID;
 use serde::{Deserialize, Serialize};
-pub use statement_name::*;
-pub use statements::*;
+pub use statement::*;
 
 use crate::utils::deserialize_vec_map;
 

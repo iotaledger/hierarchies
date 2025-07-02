@@ -55,7 +55,7 @@ async fn main() -> anyhow::Result<()> {
     let statements = Statement {
         statement_name,
         allowed_values,
-        expression: None,
+        condition: None,
         allow_any: false,
         timespan: Timespan::default(),
     };

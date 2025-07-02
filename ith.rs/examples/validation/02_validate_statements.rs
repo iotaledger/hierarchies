@@ -5,7 +5,7 @@ use examples::get_funded_client;
 use iota_sdk::types::base_types::ObjectID;
 use ith::core::types::{Statement, StatementName, StatementValue, Timespan};
 
-/// Demonstrates how to use the offchain API to validate trusted properties.
+/// Demonstrates how to use the offchain API to validate statements.
 /// In this example we connect to a locally running private network, but it can be adapted
 /// to run on any IOTA node by setting the network and faucet endpoints.
 ///
@@ -40,7 +40,7 @@ async fn main() -> anyhow::Result<()> {
     let statements = Statement {
         statement_name: statement_name.clone(),
         allowed_values,
-        expression: None,
+        condition: None,
         allow_any: false,
         timespan: Timespan::default(),
     };
@@ -54,16 +54,16 @@ async fn main() -> anyhow::Result<()> {
             .context("Failed to issue permission to attest")?;
     }
 
-    // Validate trusted properties
-    let trusted_statements = [(statement_name, value)];
+    // Validate statements
+    let statements = [(statement_name, value)];
 
     let validate = ith_client
-        .validate_statements(*federation_id, (*receiver).into(), trusted_statements)
+        .validate_statements(*federation_id, (*receiver).into(), statements)
         .await;
 
     assert!(validate.is_ok());
 
-    println!("Validated trusted properties");
+    println!("Validated statements");
 
     Ok(())
 }
