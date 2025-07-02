@@ -1,11 +1,12 @@
 use std::collections::HashSet;
 
-use crate::client::{get_funded_test_client, TestClient};
 use ith::client::get_object_ref_by_id_with_bcs;
 use ith::core::types::statements::name::StatementName;
 use ith::core::types::statements::value::StatementValue;
 use ith::core::types::Federation;
 use product_common::core_client::{CoreClient, CoreClientReadOnly};
+
+use crate::client::{get_funded_test_client, TestClient};
 
 /// Helper function to create a federation for testing purposes.
 /// Returns the federation object and transaction response.
@@ -51,7 +52,7 @@ async fn test_add_statement() -> anyhow::Result<()> {
     assert!(result.is_ok(), "Failed to add statement: {:?}", result.err());
 
     // Verify the statement was added by fetching the federation
-    let federation: Federation = get_object_ref_by_id_with_bcs(&client, &federation_id.object_id()).await?;
+    let federation: Federation = get_object_ref_by_id_with_bcs(&client, federation_id.object_id()).await?;
     let statements = &federation.governance.statements.data;
 
     assert!(
@@ -151,7 +152,7 @@ async fn test_create_and_validate_statement() -> anyhow::Result<()> {
         .build_and_execute(&client)
         .await?;
 
-    let statement = client
+    client
         .validate_statement(
             *federation.id.object_id(),
             client.sender_address().into(),
@@ -159,7 +160,6 @@ async fn test_create_and_validate_statement() -> anyhow::Result<()> {
             statement_value,
         )
         .await?;
-    assert!(statement, "Statement should be valid");
 
     Ok(())
 }

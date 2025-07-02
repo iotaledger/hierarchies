@@ -13,7 +13,8 @@ use product_common::transaction::transaction_builder::Transaction;
 use tokio::sync::OnceCell;
 
 use crate::core::operations::{ITHImpl, ITHOperations};
-use crate::core::types::statements::{name::StatementName, value::StatementValue};
+use crate::core::types::statements::name::StatementName;
+use crate::core::types::statements::value::StatementValue;
 use crate::error::Error;
 
 pub mod add_statement {

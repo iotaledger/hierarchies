@@ -3,7 +3,10 @@ use std::collections::HashSet;
 use anyhow::Context;
 use examples::get_funded_client;
 use iota_sdk::types::base_types::ObjectID;
-use ith::core::types::{Statement, StatementName, StatementValue, Timespan};
+use ith::core::types::statements::name::StatementName;
+use ith::core::types::statements::value::StatementValue;
+use ith::core::types::statements::Statement;
+use ith::core::types::timespan::Timespan;
 
 /// Demonstrates how to use the offchain API to validate trusted properties.
 /// In this example we connect to a locally running private network, but it can be adapted
@@ -24,7 +27,7 @@ async fn main() -> anyhow::Result<()> {
 
     //   Add Statement
     let statement_name = StatementName::from("Example LTD");
-    let value = StatementValue::from("Hello");
+    let value = StatementValue::Text("Hello".to_owned());
     let allowed_values = HashSet::from_iter([value.clone()]);
 
     ith_client
@@ -40,7 +43,7 @@ async fn main() -> anyhow::Result<()> {
     let statements = Statement {
         statement_name: statement_name.clone(),
         allowed_values,
-        expression: None,
+        condition: None,
         allow_any: false,
         timespan: Timespan::default(),
     };

@@ -2,16 +2,10 @@ pub mod operations;
 pub mod transactions;
 pub mod types;
 
-use std::str::FromStr;
 
-use iota_interaction::rpc_types::IotaObjectDataOptions;
-use iota_interaction::types::base_types::{ObjectID, ObjectRef};
 use iota_interaction::types::programmable_transaction_builder::ProgrammableTransactionBuilder as Ptb;
 use iota_interaction::types::transaction::{Argument, ObjectArg};
-use iota_interaction::types::{TypeTag, IOTA_CLOCK_OBJECT_ID, IOTA_CLOCK_OBJECT_SHARED_VERSION};
-use iota_interaction::{IotaClientTrait, OptionalSync};
-use product_common::core_client::CoreClientReadOnly;
-use serde::Serialize;
+use iota_interaction::types::{IOTA_CLOCK_OBJECT_ID, IOTA_CLOCK_OBJECT_SHARED_VERSION};
 
 /// Adds a reference to the on-chain clock to `ptb`'s arguments.
 pub(crate) fn get_clock_ref(ptb: &mut Ptb) -> Argument {

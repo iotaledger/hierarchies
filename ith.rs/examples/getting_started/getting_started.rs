@@ -3,7 +3,9 @@ use std::collections::HashSet;
 use anyhow::Context;
 use examples::get_funded_client;
 use iota_sdk::types::base_types::ObjectID;
-use ith::core::types::{Statement, StatementName, StatementValue};
+use ith::core::types::statements::name::StatementName;
+use ith::core::types::statements::value::StatementValue;
+use ith::core::types::statements::Statement;
 
 /// Getting started
 ///
@@ -26,22 +28,22 @@ async fn main() -> anyhow::Result<()> {
 
     // Create a Statement with allowed values
     let statement_name = StatementName::new(["university", "a", "score", "department"]);
-    let value_biology = StatementValue::from("biology");
-    let value_physics = StatementValue::from("physics");
+    let value_biology = StatementValue::Text("biology".to_owned());
+    let value_physics = StatementValue::Text("physics".to_owned());
 
-    // Allowed values for the property in whole federation
-    let allowed_values_property = HashSet::from([value_biology.clone(), value_physics.clone()]);
+    // Allowed values for the statement in whole federation
+    let allowed_values_statements = HashSet::from([value_biology.clone(), value_physics.clone()]);
 
     // Create new federation
-    println!("creating a new federation");
+    println!("Creating a new federation");
     let federation = client.create_new_federation().build_and_execute(&client).await?;
-    println!("federation crated");
+    println!("Federation created");
     let federation_id = *federation.output.id.object_id();
 
-    println!("adding trust properties");
+    println!("Adding trusted statements");
     // Add the Statement to the federation. The federation owner can add Statements by default.
     client
-        .add_statement(federation_id, statement_name.clone(), allowed_values_property, false)
+        .add_statement(federation_id, statement_name.clone(), allowed_values_statements, false)
         .build_and_execute(&client)
         .await
         .context("Failed to add Statement")?;
@@ -66,8 +68,7 @@ async fn main() -> anyhow::Result<()> {
         .await
         .context("Failed creating attestation")?;
     println!(
-        "✅ Accreditation to attest has been created for the user {}",
-        attestation_receiver
+        "✅ Accreditation to attest has been created for the user {attestation_receiver}"
     );
 
     // Let's validate the Statements. Validation is a process of checking if the accreditation
@@ -110,8 +111,7 @@ async fn main() -> anyhow::Result<()> {
         .await;
     assert!(expected_error.is_err());
     println!(
-        "✅ Expected error on validation after revocation for '{:?}'",
-        value_physics
+        "✅ Expected error on validation after revocation for '{value_physics:?}'"
     );
 
     println!("🎉 Done");

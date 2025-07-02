@@ -89,7 +89,9 @@ use crate::core::transactions::{
     CreateAccreditation, CreateAccreditationToAttest, CreateFederation, RevokeAccreditationToAccredit,
     RevokeAccreditationToAttest,
 };
-use crate::core::types::statements::{name::StatementName, value::StatementValue, Statement};
+use crate::core::types::statements::name::StatementName;
+use crate::core::types::statements::value::StatementValue;
+use crate::core::types::statements::Statement;
 use crate::error::Error;
 
 /// The `ITHClient` struct is responsible for managing the connection to the

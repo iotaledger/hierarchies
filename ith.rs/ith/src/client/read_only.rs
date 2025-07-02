@@ -18,11 +18,9 @@ use serde::de::DeserializeOwned;
 
 use crate::client::{get_object_ref_by_id_with_bcs, network_id};
 use crate::core::operations::{ITHImpl, ITHOperations};
-use crate::core::types::Federation;
-use crate::core::types::{
-    statements::{name::StatementName, value::StatementValue},
-    Accreditations,
-};
+use crate::core::types::statements::name::StatementName;
+use crate::core::types::statements::value::StatementValue;
+use crate::core::types::{Accreditations, Federation};
 use crate::error::Error;
 use crate::iota_interaction_adapter::IotaClientAdapter;
 use crate::package;
@@ -290,10 +288,10 @@ impl ITHClientReadOnly {
         attester_id: ObjectID,
         statement_name: StatementName,
         statement_value: StatementValue,
-    ) -> Result<bool, Error> {
+    ) -> Result<(), Error> {
         let tx = ITHImpl::validate_statement(federation_id, attester_id, statement_name, statement_value, self).await?;
-        let result = self.execute_read_only_transaction(tx).await?;
-        Ok(result)
+        let _: () = self.execute_read_only_transaction(tx).await?;
+        Ok(())
     }
 
     /// Validates multiple statements for a specific user.
@@ -309,10 +307,10 @@ impl ITHClientReadOnly {
     pub async fn validate_statements(
         &self,
         federation_id: ObjectID,
-        user_id: ObjectID,
+        entity_id: ObjectID,
         statements: impl IntoIterator<Item = (StatementName, StatementValue)>,
     ) -> Result<bool, Error> {
-        let tx = ITHImpl::validate_statements(federation_id, user_id, statements.into_iter().collect(), self).await?;
+        let tx = ITHImpl::validate_statements(federation_id, entity_id, statements.into_iter().collect(), self).await?;
         let result = self.execute_read_only_transaction(tx).await?;
         Ok(result)
     }
@@ -344,18 +342,19 @@ impl ITHClientReadOnly {
             .await
             .map_err(|err| Error::UnexpectedApiResponse(format!("Failed to inspect transaction block: {err}")))?;
 
-        println!("inspection_result: {:?}", inspection_result);
-
         let execution_results = inspection_result
             .results
             .ok_or_else(|| Error::UnexpectedApiResponse("DevInspectResults missing 'results' field".to_string()))?;
 
-        let (return_value_bytes, _) = execution_results
+        let (return_value_bytes, tag) = execution_results
             .first()
             .ok_or_else(|| Error::UnexpectedApiResponse("Execution results list is empty".to_string()))?
             .return_values
             .first()
             .ok_or_else(|| Error::InvalidArgument("should have at least one return value".to_string()))?;
+
+        println!("return_value_bytes: {return_value_bytes:?}");
+        println!("tag: {tag:?}");
 
         let deserialized_output = bcs::from_bytes::<T>(return_value_bytes)?;
 

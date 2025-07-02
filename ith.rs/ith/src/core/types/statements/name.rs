@@ -47,7 +47,7 @@ impl StatementName {
 
 impl MoveType for StatementName {
     fn move_type(package: ObjectID) -> TypeTag {
-        TypeTag::from_str(format!("{}::statement_name::StatementName", package).as_str())
+        TypeTag::from_str(format!("{package}::statement_name::StatementName").as_str())
             .expect("Failed to create type tag")
     }
 }

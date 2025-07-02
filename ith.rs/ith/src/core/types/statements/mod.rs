@@ -6,18 +6,18 @@ use std::collections::{HashMap, HashSet};
 use std::str::FromStr;
 
 use iota_interaction::MoveType;
-use iota_sdk::types::base_types::{ObjectID, STD_OPTION_MODULE_NAME};
+use iota_sdk::types::base_types::ObjectID;
 use iota_sdk::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 use iota_sdk::types::transaction::{Argument, Command};
-use iota_sdk::types::{TypeTag, MOVE_STDLIB_PACKAGE_ID};
+use iota_sdk::types::TypeTag;
 use move_core_types::ident_str;
+use serde::{Deserialize, Serialize};
 
 use crate::core::types::statements::condition::StatementValueCondition;
-use crate::core::types::statements::name::{new_statement_name, StatementName};
-use crate::core::types::statements::value::{new_statement_value_number, new_statement_value_string, StatementValue};
+use crate::core::types::statements::name::StatementName;
+use crate::core::types::statements::value::StatementValue;
 use crate::core::types::timespan::Timespan;
 use crate::utils::{self, deserialize_vec_map, deserialize_vec_set};
-use serde::{Deserialize, Serialize};
 
 // Statements is a struct that contains a map of StatementName to Statement
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -72,7 +72,7 @@ impl Statement {
 
 impl MoveType for Statement {
     fn move_type(package: ObjectID) -> TypeTag {
-        TypeTag::from_str(format!("{}::statement::Statement", package).as_str()).expect("Failed to create type tag")
+        TypeTag::from_str(format!("{package}::statement::Statement").as_str()).expect("Failed to create type tag")
     }
 }
 

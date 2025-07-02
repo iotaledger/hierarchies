@@ -10,14 +10,13 @@ use iota_interaction::rpc_types::{IotaObjectDataFilter, IotaObjectDataOptions, I
 use iota_interaction::types::base_types::{IotaAddress, ObjectID, ObjectRef, SequenceNumber};
 use iota_interaction::types::object::Owner;
 use iota_interaction::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use iota_interaction::types::transaction::{Argument, CallArg, ObjectArg, ProgrammableTransaction};
+use iota_interaction::types::transaction::{CallArg, ObjectArg, ProgrammableTransaction};
 use iota_interaction::{ident_str, IotaClientTrait, MoveType, OptionalSync};
 use iota_sdk::types::transaction::Command;
-use iota_sdk::types::TypeTag;
 use product_common::core_client::CoreClientReadOnly;
 
-use crate::core::types::statements::name::{new_statement_name, StatementName};
-use crate::core::types::statements::value::{new_statement_value_number, new_statement_value_string, StatementValue};
+use crate::core::types::statements::name::StatementName;
+use crate::core::types::statements::value::StatementValue;
 use crate::core::types::statements::{new_property_statement, Statement};
 use crate::core::types::Capability;
 use crate::error::Error;
@@ -44,7 +43,7 @@ impl ITHImpl {
         C: CoreClientReadOnly + OptionalSync,
     {
         let cap_tag = StructTag::from_str(&format!("{}::{MAIN_ITH_MODULE}::{cap_type}", client.package_id()))
-            .map_err(|e| Error::InvalidArgument(format!("invalid cap tag: {}", e)))?;
+            .map_err(|e| Error::InvalidArgument(format!("invalid cap tag: {e}")))?;
 
         let filter = IotaObjectResponseQuery::new_with_filter(IotaObjectDataFilter::StructType(cap_tag));
 
@@ -55,7 +54,7 @@ impl ITHImpl {
                 .read_api()
                 .get_owned_objects(sender, Some(filter.clone()), cursor, None)
                 .await
-                .map_err(|e| Error::InvalidArgument(format!("failed to get owned objects: {}", e)))?;
+                .map_err(|e| Error::InvalidArgument(format!("failed to get owned objects: {e}")))?;
 
             let cap = std::mem::take(&mut page.data)
                 .into_iter()
@@ -103,7 +102,7 @@ impl ITHImpl {
             .read_api()
             .get_object_with_options(*object_id, IotaObjectDataOptions::default().with_owner())
             .await
-            .map_err(|e| Error::InvalidArgument(format!("failed to get object with options: {}", e)))?
+            .map_err(|e| Error::InvalidArgument(format!("failed to get object with options: {e}")))?
             .owner()
             .ok_or_else(|| Error::InvalidArgument("missing owner information".to_string()))?;
 
@@ -642,13 +641,14 @@ pub(crate) trait ITHOperations {
     /// statement name-value pairs according to their accreditations.
     async fn validate_statements<C>(
         federation_id: ObjectID,
-        issuer_id: ObjectID,
+        entity_id: ObjectID,
         statements: HashMap<StatementName, StatementValue>,
         client: &C,
     ) -> Result<ProgrammableTransaction, Error>
     where
         C: CoreClientReadOnly + OptionalSync,
     {
+        println!("validate_statements");
         let mut ptb = ProgrammableTransactionBuilder::new();
 
         let fed_ref = ITHImpl::get_fed_ref(client, federation_id).await?;
@@ -669,7 +669,7 @@ pub(crate) trait ITHOperations {
         let statement_value_tag = StatementValue::move_type(client.package_id());
 
         let statement_names = ptb.command(Command::MakeMoveVec(Some(statement_name_tag.clone()), statement_names));
-        let property_values = ptb.command(Command::MakeMoveVec(
+        let statement_values = ptb.command(Command::MakeMoveVec(
             Some(statement_value_tag.clone()),
             statement_values,
         ));
@@ -679,10 +679,10 @@ pub(crate) trait ITHOperations {
             ident_str!("utils").into(),
             ident_str!("vec_map_from_keys_values").into(),
             vec![statement_name_tag, statement_value_tag],
-            vec![statement_names, property_values],
+            vec![statement_names, statement_values],
         );
 
-        let issuer_id = ptb.pure(issuer_id)?;
+        let entity_id = ptb.pure(entity_id)?;
         let clock = super::get_clock_ref(&mut ptb);
 
         ptb.programmable_move_call(
@@ -690,7 +690,7 @@ pub(crate) trait ITHOperations {
             ident_str!("main").into(),
             ident_str!("validate_statements").into(),
             vec![],
-            vec![fed_ref, issuer_id, statements, clock],
+            vec![fed_ref, entity_id, statements, clock],
         );
 
         let tx = ptb.finish();

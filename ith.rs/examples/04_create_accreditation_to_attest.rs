@@ -3,8 +3,11 @@ use std::collections::HashSet;
 use anyhow::Context;
 use examples::get_funded_client;
 use iota_sdk::types::base_types::ObjectID;
-use ith::core::types::{Federation, Statement, StatementName, StatementValue, Timespan};
-use product_common::core_client::CoreClientReadOnly;
+use ith::core::types::statements::name::StatementName;
+use ith::core::types::statements::value::StatementValue;
+use ith::core::types::statements::Statement;
+use ith::core::types::timespan::Timespan;
+use ith::core::types::Federation;
 
 /// Demonstrate how to issue a permission to attest to a Statement.
 ///
@@ -33,7 +36,7 @@ async fn main() -> anyhow::Result<()> {
     let statement_name = StatementName::from("Example LTD");
 
     // Trusted property value
-    let value = StatementValue::from("Hello");
+    let value = StatementValue::Text("Hello".to_owned());
 
     let allowed_values = HashSet::from_iter([value]);
 
@@ -55,7 +58,7 @@ async fn main() -> anyhow::Result<()> {
     let statements = Statement {
         statement_name,
         allowed_values,
-        expression: None,
+        condition: None,
         allow_any: false,
         timespan: Timespan::default(),
     };
@@ -70,9 +73,9 @@ async fn main() -> anyhow::Result<()> {
     println!("Issued permission to attest");
 
     // Check if the permission was issued
-    let federation: Federation = ith_client.get_object_by_id(federation_id).await?;
+    let federation: Federation = ith_client.get_federation_by_id(federation_id).await?;
 
-    println!("Federation: {:#?}", federation);
+    println!("Federation: {federation:#?}");
 
     // Check if the receiver has the permission to attest
     let trusted_statements = federation.governance.accreditations_to_attest.contains_key(&receiver);

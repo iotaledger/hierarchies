@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::hash::Hash;
 
-use iota_sdk::types::base_types::{ObjectID, STD_OPTION_MODULE_NAME, STD_UTF8_MODULE_NAME};
+use iota_sdk::types::base_types::{ObjectID, STD_OPTION_MODULE_NAME};
 use iota_sdk::types::collection_types::{VecMap, VecSet};
 use iota_sdk::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 use iota_sdk::types::transaction::{Argument, Command};

@@ -2,7 +2,8 @@ use std::collections::HashSet;
 
 use anyhow::Context;
 use examples::get_funded_client;
-use ith::core::types::{StatementName, StatementValue};
+use ith::core::types::statements::name::StatementName;
+use ith::core::types::statements::value::StatementValue;
 
 /// Demonstrates how to use the offchain API to get federation properties.
 /// In this example we connect to a locally running private network, but it can be adapted
@@ -24,7 +25,7 @@ async fn main() -> anyhow::Result<()> {
     //   Add Statement
     {
         let statement_name = StatementName::from("Example LTD");
-        let value = StatementValue::from("Hello");
+        let value = StatementValue::Text("Hello".to_owned());
         let allowed_values = HashSet::from_iter([value.clone()]);
 
         // Add the Statement to the federation
@@ -38,7 +39,7 @@ async fn main() -> anyhow::Result<()> {
     // Add second Statement
     {
         let statement_name = StatementName::new(["Example LTD 2", "Example LTD 3"]);
-        let value = StatementValue::from("Hello 2");
+        let value = StatementValue::Text("Hello 2".to_owned());
         let allowed_values = HashSet::from_iter([value.clone()]);
 
         // Add the Statement to the federation
@@ -53,7 +54,7 @@ async fn main() -> anyhow::Result<()> {
 
     assert!(federation_properties.len() == 2);
 
-    println!("Federation properties: {:#?}", federation_properties);
+    println!("Federation properties: {federation_properties:#?}");
 
     Ok(())
 }

@@ -7,6 +7,7 @@ use iota_sdk::types::transaction::Argument;
 use iota_sdk::types::TypeTag;
 use move_core_types::ident_str;
 use serde::{Deserialize, Serialize};
+
 /// StatementValue represents the value of a Statement
 /// It can be either a text or a number
 #[derive(Debug, Clone, PartialEq, Hash, Eq, Serialize, Deserialize)]
@@ -63,7 +64,7 @@ pub(crate) fn new_statement_value_number(
 
 impl MoveType for StatementValue {
     fn move_type(package: ObjectID) -> TypeTag {
-        TypeTag::from_str(format!("{}::statement_value::StatementValue", package).as_str())
+        TypeTag::from_str(format!("{package}::statement_value::StatementValue").as_str())
             .expect("Failed to create type tag")
     }
 }

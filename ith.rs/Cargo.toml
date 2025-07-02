@@ -1,9 +1,5 @@
 [workspace]
-members = [
-    # "examples",
-    "ith",
-
-]
+members = ["examples", "ith"]
 resolver = "2"
 
 [workspace.package]

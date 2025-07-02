@@ -78,7 +78,7 @@ impl Transaction for CreateFederation {
             .clone();
 
         let event: Event<FederationCreatedEvent> = serde_json::from_value(events)
-            .map_err(|e| Error::TransactionUnexpectedResponse(format!("failed to parse event: {}", e)))?;
+            .map_err(|e| Error::TransactionUnexpectedResponse(format!("failed to parse event: {e}")))?;
 
         let federation_id = event.data.federation_address;
 

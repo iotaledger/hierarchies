@@ -33,7 +33,7 @@ impl StatementValueCondition {
 
 impl MoveType for StatementValueCondition {
     fn move_type(package: ObjectID) -> TypeTag {
-        TypeTag::from_str(format!("{}::statement_condition::StatementValueCondition", package).as_str())
+        TypeTag::from_str(format!("{package}::statement_condition::StatementValueCondition").as_str())
             .expect("Failed to create type tag")
     }
 }

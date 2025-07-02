@@ -1,8 +1,8 @@
-use crate::client::get_funded_test_client;
 use iota_sdk::types::base_types::ObjectID;
-use iota_sdk::types::object::Object;
 use ith::core::types::{Event, Federation, FederationCreatedEvent};
-use product_common::core_client::{CoreClient, CoreClientReadOnly};
+use product_common::core_client::CoreClient;
+
+use crate::client::get_funded_test_client;
 
 #[tokio::test]
 async fn test_creation_of_federation() -> anyhow::Result<()> {
@@ -58,12 +58,13 @@ async fn test_creation_of_federation_with_root_authorities() -> anyhow::Result<(
         .await?;
 
     // we assert that the federation has one root authority
-    let federation: Federation = client.get_object_by_id(*federation.object_id()).await?;
+    let federation: Federation = client.get_federation_by_id(*federation.object_id()).await?;
+
     assert_eq!(federation.root_authorities.len(), 2);
     assert!(federation
         .root_authorities
         .iter()
-        .any(|ra| *ra.id.object_id() == root_authority_id));
+        .any(|ra| ra.account_id == root_authority_id));
 
     Ok(())
 }

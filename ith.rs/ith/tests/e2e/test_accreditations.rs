@@ -1,10 +1,12 @@
 use std::collections::HashSet;
 
-use crate::client::get_funded_test_client;
 use iota_sdk::types::base_types::ObjectID;
-use ith::core::types::statements::{name::StatementName, value::StatementValue, Statement};
+use ith::core::types::statements::name::StatementName;
+use ith::core::types::statements::value::StatementValue;
+use ith::core::types::statements::Statement;
 use ith::core::types::Federation;
-use product_common::core_client::{CoreClient, CoreClientReadOnly};
+
+use crate::client::get_funded_test_client;
 
 #[tokio::test]
 async fn test_create_accreditation_to_attest() -> anyhow::Result<()> {
