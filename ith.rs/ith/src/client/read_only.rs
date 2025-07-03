@@ -324,8 +324,11 @@ impl ITHClientReadOnly {
     ///
     /// This function uses the `dev_inspect_transaction_block` endpoint of the IOTA client
     /// to simulate the execution of a programmable transaction without submitting it
-    /// to the network. The result of the first return value of the first execution result
-    /// is deserialized using BCS.
+    /// to the network.
+    ///
+    /// **Hybrid Strategy:**
+    /// Tries execution results in reverse order (last to first), which prioritizes
+    /// the most likely result while still checking all possibilities.
     ///
     /// # Arguments
     ///
@@ -349,19 +352,33 @@ impl ITHClientReadOnly {
             .results
             .ok_or_else(|| Error::UnexpectedApiResponse("DevInspectResults missing 'results' field".to_string()))?;
 
-        let (return_value_bytes, tag) = execution_results
-            .first()
-            .ok_or_else(|| Error::UnexpectedApiResponse("Execution results list is empty".to_string()))?
-            .return_values
-            .first()
-            .ok_or_else(|| Error::InvalidArgument("should have at least one return value".to_string()))?;
+        if execution_results.is_empty() {
+            return Err(Error::UnexpectedApiResponse(
+                "Execution results list is empty".to_string(),
+            ));
+        }
 
-        println!("return_value_bytes: {return_value_bytes:?}");
-        println!("tag: {tag:?}");
+        // Try execution results in reverse order (last to first)
+        let mut last_error = None;
 
-        let deserialized_output = bcs::from_bytes::<T>(return_value_bytes)?;
+        for (_, result) in execution_results.iter().enumerate().rev() {
+            if let Some((return_value_bytes, _)) = result.return_values.first() {
+                match bcs::from_bytes::<T>(return_value_bytes) {
+                    Ok(deserialized) => {
+                        return Ok(deserialized);
+                    }
+                    Err(e) => {
+                        last_error = Some(e);
+                    }
+                }
+            }
+        }
 
-        Ok(deserialized_output)
+        Err(Error::UnexpectedApiResponse(format!(
+            "No execution result could be deserialized as expected type. Total results: {}. Last error: {}",
+            execution_results.len(),
+            last_error.map_or("No return values found".to_string(), |e| e.to_string())
+        )))
     }
 }
 
