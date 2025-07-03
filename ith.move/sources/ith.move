@@ -11,21 +11,17 @@ use ith::{
 };
 use iota::clock::Clock;
 
-// ===== Errors =====
-/// Error when operation is performed with wrong federation
-const EUnauthorizedWrongFederation: u64 = 1;
-/// Error when entity lacks sufficient accreditation permissions
-const EUnauthorizedInsufficientAccreditationToAccredit: u64 = 2;
-/// Error when entity lacks sufficient attestation permissions
-const EUnauthorizedInsufficientAccreditationToAttest: u64 = 3;
-/// Error when property/statement is invalid
-const EInvalidStatement: u64 = 4;
-/// Error when attester has insufficient accreditation for the statement
-const EAttesterInsufficientAccreditation: u64 = 5;
-/// Error when Value Condition for Statement is invalid (e.g., allow_any=true with specific values)
-const EInvalidStatementValueCondition: u64 = 6;
-/// Error when trying to access non-existent accreditation
-const EAccreditationNotFound: u64 = 7;
+    // ===== Errors =====
+    /// Error when operation is performed with wrong federation
+    const EUnauthorizedWrongFederation: u64 = 1;
+    /// Error when entity lacks sufficient accreditation permissions
+    const EUnauthorizedInsufficientAccreditationToAccredit: u64 = 2;
+    /// Error when entity lacks sufficient attestation permissions
+    const EUnauthorizedInsufficientAccreditationToAttest: u64 = 3;
+    /// Error when Value Condition for Statement is invalid (e.g., allow_any=true with specific values)
+    const EInvalidStatementValueCondition: u64 = 4;
+    /// Error when trying to access non-existent accreditation
+    const EAccreditationNotFound: u64 = 5;
 
 // ===== Core Data Structures =====
 
@@ -213,18 +209,21 @@ public(package) fun root_authorities(self: &Federation): &vector<RootAuthority> 
 
 // ===== Write Functions =====
 
-/// Adds a new trusted statement to the federation.
-/// Only root authorities can perform this operation.
-public fun add_statement(
-    self: &mut Federation,
-    cap: &RootAuthorityCap,
-    statement_name: StatementName,
-    allowed_values: VecSet<StatementValue>,
-    allow_any: bool,
-    _ctx: &mut TxContext,
-) {
-    assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
-    assert!(!(allow_any && allowed_values.keys().length() > 0), EInvalidStatementValueCondition);
+    /// Adds a new trusted statement to the federation.
+    /// Only root authorities can perform this operation.
+    public fun add_statement(
+        self: &mut Federation,
+        cap: &RootAuthorityCap,
+        statement_name: StatementName,
+        allowed_values: VecSet<StatementValue>,
+        allow_any: bool,
+        _ctx: &mut TxContext,
+    ) {
+        assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
+        assert!(
+            !(allow_any && allowed_values.keys().length() > 0),
+            EInvalidStatementValueCondition,
+        );
 
     let statement = statement::new_statement(
         statement_name,
@@ -236,17 +235,17 @@ public fun add_statement(
     self.governance.statements.add_statement(statement);
 }
 
-/// Revokes a statement by setting its validity period
-public fun revoke_statement(
-    federation: &mut Federation,
-    cap: &RootAuthorityCap,
-    statement_name: StatementName,
-    valid_to_ms: u64,
-) {
-    assert!(cap.federation_id == federation.federation_id(), EUnauthorizedWrongFederation);
-    let statement = federation.governance.statements.data_mut().get_mut(&statement_name);
-    statement.revoke(valid_to_ms);
-}
+    /// Revokes a statement by setting its validity period
+    public fun revoke_statement(
+        federation: &mut Federation,
+        cap: &RootAuthorityCap,
+        statement_name: StatementName,
+        valid_to_ms: u64,
+    ) {
+        assert!(cap.federation_id == federation.federation_id(), EUnauthorizedWrongFederation);
+        let statement = federation.governance.statements.data_mut().get_mut(&statement_name);
+        statement.revoke(valid_to_ms);
+    }
 
 /// Adds a new root authority to the federation.
 /// Only existing root authorities can perform this operation.
@@ -385,10 +384,13 @@ public fun revoke_accreditation_to_attest(
         );
     };
 
-    // Remove the permission
-    let entitys_attest_permissions = self.governance.accreditations_to_attest.get_mut(entity_id);
-    entitys_attest_permissions.remove_accredited_statement(permission_id);
-}
+        // Remove the permission
+        let entitys_attest_permissions = self
+            .governance
+            .accreditations_to_attest
+            .get_mut(entity_id);
+        entitys_attest_permissions.remove_accredited_statement(permission_id);
+    }
 
 /// Revokes accreditation rights from an entity
 public fun revoke_accreditation_to_accredit(
@@ -431,49 +433,62 @@ public fun revoke_accreditation_to_accredit(
 
 // ===== Validation Functions =====
 
-/// Validates a single statement from an attester
-public fun validate_statement(
-    self: &Federation,
-    attester_id: &ID,
-    statement_name: StatementName,
-    statement_value: StatementValue,
-    clock: &Clock,
-) {
-    let current_time_ms = clock.timestamp_ms();
-    assert!(self.is_statement_in_federation(statement_name), EInvalidStatement);
+    /// Validates a single statement from an attester
+    /// Returns true if validation passes, false otherwise
+    public fun validate_statement(
+        self: &Federation,
+        attester_id: &ID,
+        statement_name: StatementName,
+        statement_value: StatementValue,
+        ctx: &mut TxContext,
+    ): bool {
+        let current_time_ms = ctx.epoch_timestamp_ms();
 
-    let accreditations = self.get_accreditations_to_attest(attester_id);
-    assert!(
-        accreditations.is_statement_allowed(&statement_name, &statement_value, current_time_ms),
-        EAttesterInsufficientAccreditation,
-    );
-}
+        // Check if statement is trusted by the federation
+        if (!self.is_statement_in_federation(statement_name)) {
+            return false
+        };
 
-/// Validates multiple statements from an issuer
-public fun validate_statements(
-    self: &Federation,
-    attester_id: &ID,
-    statements: VecMap<StatementName, StatementValue>,
-    clock: &Clock,
-) {
-    let current_time_ms = clock.timestamp_ms();
-    let statement_names = statements.keys();
+        // Check if attester has permissions for the statement
+        let accreditations = self.get_accreditations_to_attest(attester_id);
+        if (
+            !accreditations.is_statement_allowed(&statement_name, &statement_value, current_time_ms)
+        ) {
+            return false
+        };
 
-    // First check if all statements are trusted by the federation
-    let mut idx = 0;
-    while (idx < statement_names.length()) {
-        let statement_name = statement_names[idx];
-        assert!(self.is_statement_in_federation(statement_name), EInvalidStatement);
-        idx = idx + 1;
-    };
+        true
+    }
 
-    // Then check if issuer has permissions for all statements
-    let accreditations = self.get_accreditations_to_attest(attester_id);
-    assert!(
-        accreditations.are_statements_allowed(&statements, current_time_ms),
-        EAttesterInsufficientAccreditation,
-    );
-}
+    /// Validates multiple statements from an issuer
+    /// Returns true if all validations pass, false otherwise
+    public fun validate_statements(
+        self: &Federation,
+        attester_id: &ID,
+        statements: VecMap<StatementName, StatementValue>,
+        ctx: &mut TxContext,
+    ): bool {
+        let current_time_ms = ctx.epoch_timestamp_ms();
+        let statement_names = statements.keys();
+
+        // First check if all statements are trusted by the federation
+        let mut idx = 0;
+        while (idx < statement_names.length()) {
+            let statement_name = statement_names[idx];
+            if (!self.is_statement_in_federation(statement_name)) {
+                return false
+            };
+            idx = idx + 1;
+        };
+
+        // Then check if issuer has permissions for all statements
+        let accreditations = self.get_accreditations_to_attest(attester_id);
+        if (!accreditations.are_statements_allowed(&statements, current_time_ms)) {
+            return false
+        };
+
+        true
+    }
 
 // ===== Helper Functions =====
 
