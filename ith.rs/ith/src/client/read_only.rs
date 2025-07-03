@@ -347,7 +347,6 @@ impl ITHClientReadOnly {
             .await
             .map_err(|err| Error::UnexpectedApiResponse(format!("Failed to inspect transaction block: {err}")))?;
 
-
         let execution_results = inspection_result
             .results
             .ok_or_else(|| Error::UnexpectedApiResponse("DevInspectResults missing 'results' field".to_string()))?;
@@ -362,6 +361,7 @@ impl ITHClientReadOnly {
         let mut last_error = None;
 
         for (_, result) in execution_results.iter().enumerate().rev() {
+            // By default, the last return results will be from the function.
             if let Some((return_value_bytes, _)) = result.return_values.first() {
                 match bcs::from_bytes::<T>(return_value_bytes) {
                     Ok(deserialized) => {
