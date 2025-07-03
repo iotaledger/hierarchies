@@ -8,8 +8,6 @@ use iota_sdk::types::TypeTag;
 use move_core_types::ident_str;
 use serde::{Deserialize, Serialize};
 
-use crate::core::operations::move_names;
-
 /// StatementName represents the name of a Statement
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct StatementName {
@@ -41,25 +39,29 @@ impl StatementName {
     pub fn names(&self) -> &Vec<String> {
         &self.names
     }
+
+    pub fn to_ptb(&self, ptb: &mut ProgrammableTransactionBuilder, package_id: ObjectID) -> anyhow::Result<Argument> {
+        new_statement_name(self, ptb, package_id)
+    }
 }
 
 impl MoveType for StatementName {
     fn move_type(package: ObjectID) -> TypeTag {
-        TypeTag::from_str(format!("{}::{}::StatementName", package, move_names::MODULE_NAME).as_str())
+        TypeTag::from_str(format!("{package}::statement_name::StatementName").as_str())
             .expect("Failed to create type tag")
     }
 }
 
 /// Creates a new move type for a Statement name
 pub(crate) fn new_statement_name(
-    name: StatementName,
+    name: &StatementName,
     ptb: &mut ProgrammableTransactionBuilder,
     package_id: ObjectID,
 ) -> anyhow::Result<Argument> {
     let names = ptb.pure(name.names())?;
     let statement_names: Argument = ptb.programmable_move_call(
         package_id,
-        ident_str!(move_names::MODULE_NAME).into(),
+        ident_str!("statement_name").into(),
         ident_str!("new_statement_name_from_vector").into(),
         vec![],
         vec![names],
@@ -75,7 +77,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_statement_name() {
+    fn test_trusted_statement_name() {
         let name = StatementName::new(["name", "name2"]);
 
         let json = json!({

@@ -12,10 +12,10 @@ iota-keys.workspace = true
 iota-sdk.workspace = true
 ith = { path = "../ith" }
 jsonpath-rust.workspace = true
+product_common = { workspace = true, features = ["test-utils"] }
 secret-storage.workspace = true
 serde_json.workspace = true
 tokio.workspace = true
-product_common = { workspace = true, features = ["test-utils"] }
 
 [lib]
 path = "utils/utils.rs"
@@ -29,8 +29,8 @@ path = "02_add_root_authority.rs"
 name = "02_add_root_authority"
 
 [[example]]
-path = "03_add_and_remove_statement.rs"
-name = "03_add_and_remove_statement"
+path = "03_add_statements.rs"
+name = "03_add_statements"
 
 [[example]]
 path = "04_create_accreditation_to_attest.rs"
@@ -60,7 +60,6 @@ name = "02_validation_validate_statements"
 [[example]]
 path = "validation/03_get_statements.rs"
 name = "03_validation_get_statements"
-
 
 # Demo
 [[example]]

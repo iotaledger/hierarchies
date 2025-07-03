@@ -1,5 +1,4 @@
 //! # IOTA ITH (IOTA Trust Hierarchies)
-//!
 
 //! The **ITH (IOTA Trust Hierarchies)** is a non-opinionated solution designed
 //! to facilitate the hierarchical distribution of trust across entities in the

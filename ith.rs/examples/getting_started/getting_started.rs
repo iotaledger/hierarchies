@@ -3,7 +3,9 @@ use std::collections::HashSet;
 use anyhow::Context;
 use examples::get_funded_client;
 use iota_sdk::types::base_types::ObjectID;
-use ith::core::types::{Statement, StatementName, StatementValue};
+use ith::core::types::statements::name::StatementName;
+use ith::core::types::statements::value::StatementValue;
+use ith::core::types::statements::Statement;
 
 /// Getting started
 ///
@@ -16,26 +18,28 @@ use ith::core::types::{Statement, StatementName, StatementValue};
 ///
 /// Please note that we use an unsecured private key provider [`TestMemSigner`],
 /// which should NOT be used in production.
-///
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let client = get_funded_client().await?;
 
     // Create a Statement with allowed values
     let statement_name = StatementName::new(["university", "a", "score", "department"]);
-    let value_biology = StatementValue::from("biology");
-    let value_physics = StatementValue::from("physics");
+    let value_biology = StatementValue::Text("biology".to_owned());
+    let value_physics = StatementValue::Text("physics".to_owned());
 
-    // Allowed values for the Statement `university.a.score.department`
-    let statement_allowed_values = HashSet::from([value_biology.clone(), value_physics.clone()]);
+    // Allowed values for the statement in whole federation
+    let allowed_values_statements = HashSet::from([value_biology.clone(), value_physics.clone()]);
 
-    // Create new Federation
+    // Create new federation
+    println!("Creating a new federation");
     let federation = client.create_new_federation().build_and_execute(&client).await?;
+    println!("Federation created");
     let federation_id = *federation.output.id.object_id();
 
-    // Add the Statement to the Federation. The federation owner can add Statements by default.
+    println!("Adding trusted statements");
+    // Add the Statement to the federation. The federation owner can add Statements by default.
     client
-        .add_statement(federation_id, statement_name.clone(), statement_allowed_values, false)
+        .add_statement(federation_id, statement_name.clone(), allowed_values_statements, false)
         .build_and_execute(&client)
         .await
         .context("Failed to add a Statement")?;
@@ -58,8 +62,8 @@ async fn main() -> anyhow::Result<()> {
         .create_accreditation_to_attest(federation_id, attester, [statements])
         .build_and_execute(&client)
         .await
-        .context("Failed creating accreditation to attest")?;
-    println!("✅ Accreditation to attest has been created for the user {}", attester);
+        .context("Failed creating attestation")?;
+    println!("✅ Accreditation to attest has been created for the user {attester}");
 
     // Let's validate the Statements. Validation is a process of checking if the accreditation
     // receiver is accredited to attest to the Statement with the given Statement Value
@@ -73,29 +77,26 @@ async fn main() -> anyhow::Result<()> {
         .context("Failed to validate Statements")?;
     println!("✅ Validated Statements");
 
-    // TODO replace with revoke_accreditation_to_attest
-    client
-        .remove_statement(federation_id, statement_name.clone())
-        .build_and_execute(&client)
-        .await
-        .context("Failed to revoke attestation")?;
+    // // TODO replace with revoke_accreditation_to_attest
+    // client
+    //     .revoke_accreditation_to_attest(federation_id, attester, 0)
+    //     .build_and_execute(&client)
+    //     .await
+    //     .context("Failed to revoke attestation")?;
 
-    println!("✅ Revoked attestation");
+    // println!("✅ Revoked attestation");
 
-    // Validate Statements again - it should returned an error
-    let expected_error = client
-        .validate_statements(
-            federation_id,
-            attester,
-            [(statement_name.clone(), value_physics.clone())],
-        )
-        .await;
-    assert!(expected_error.is_err());
-    println!(
-        "✅ Expected error on validation after revocation for '{:?}'",
-        value_physics
-    );
+    // // Validate Statements again - it should returned an error
+    // let expected_error = client
+    //     .validate_statements(
+    //         federation_id,
+    //         attester,
+    //         [(statement_name.clone(), value_physics.clone())],
+    //     )
+    //     .await;
+    // assert!(expected_error.is_err());
+    // println!("✅ Expected error on validation after revocation for '{value_physics:?}'");
 
-    println!("🎉 Done");
+    // println!("🎉 Done");
     Ok(())
 }

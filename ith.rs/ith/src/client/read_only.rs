@@ -16,9 +16,11 @@ use product_common::network_name::NetworkName;
 use product_common::package_registry::{Env, Metadata};
 use serde::de::DeserializeOwned;
 
-use crate::client::network_id;
+use crate::client::{get_object_ref_by_id_with_bcs, network_id};
 use crate::core::operations::{ITHImpl, ITHOperations};
-use crate::core::types::{Accreditations, StatementName, StatementValue};
+use crate::core::types::statements::name::StatementName;
+use crate::core::types::statements::value::StatementValue;
+use crate::core::types::{Accreditations, Federation};
 use crate::error::Error;
 use crate::iota_interaction_adapter::IotaClientAdapter;
 use crate::package;
@@ -162,6 +164,12 @@ impl ITHClientReadOnly {
         Self::new_internal(client, network).await
     }
 
+    pub async fn get_federation_by_id(&self, federation_id: ObjectID) -> Result<Federation, Error> {
+        let fed = get_object_ref_by_id_with_bcs(self, &federation_id).await?;
+
+        Ok(fed)
+    }
+
     /// Retrieves all statement names registered in the federation.
     ///
     /// # Arguments
@@ -268,7 +276,7 @@ impl ITHClientReadOnly {
     /// # Arguments
     ///
     /// * `federation_id`: The [`ObjectID`] of the federation.
-    /// * `user_id`: The [`ObjectID`] of the user.
+    /// * `attester_id`: The [`ObjectID`] of the attester.
     /// * `statement_name`: The name of the statement to validate.
     /// * `statement_value`: The value of the statement to validate.
     ///
@@ -277,11 +285,11 @@ impl ITHClientReadOnly {
     pub async fn validate_statement(
         &self,
         federation_id: ObjectID,
-        user_id: ObjectID,
+        attester_id: ObjectID,
         statement_name: StatementName,
         statement_value: StatementValue,
     ) -> Result<bool, Error> {
-        let tx = ITHImpl::validate_statement(federation_id, user_id, statement_name, statement_value, self).await?;
+        let tx = ITHImpl::validate_statement(federation_id, attester_id, statement_name, statement_value, self).await?;
 
         let response = self.execute_read_only_transaction(tx).await?;
         Ok(response)
@@ -335,17 +343,21 @@ impl ITHClientReadOnly {
             .dev_inspect_transaction_block(IotaAddress::ZERO, TransactionKind::programmable(tx), None, None, None)
             .await
             .map_err(|err| Error::UnexpectedApiResponse(format!("Failed to inspect transaction block: {err}")))?;
+        println!("inspection_result: {inspection_result:?}");
 
         let execution_results = inspection_result
             .results
             .ok_or_else(|| Error::UnexpectedApiResponse("DevInspectResults missing 'results' field".to_string()))?;
 
-        let (return_value_bytes, _) = execution_results
+        let (return_value_bytes, tag) = execution_results
             .first()
             .ok_or_else(|| Error::UnexpectedApiResponse("Execution results list is empty".to_string()))?
             .return_values
             .first()
             .ok_or_else(|| Error::InvalidArgument("should have at least one return value".to_string()))?;
+
+        println!("return_value_bytes: {return_value_bytes:?}");
+        println!("tag: {tag:?}");
 
         let deserialized_output = bcs::from_bytes::<T>(return_value_bytes)?;
 
