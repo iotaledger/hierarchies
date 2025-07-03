@@ -346,7 +346,7 @@ impl ITHClientReadOnly {
             .dev_inspect_transaction_block(IotaAddress::ZERO, TransactionKind::programmable(tx), None, None, None)
             .await
             .map_err(|err| Error::UnexpectedApiResponse(format!("Failed to inspect transaction block: {err}")))?;
-        println!("inspection_result: {inspection_result:?}");
+
 
         let execution_results = inspection_result
             .results
