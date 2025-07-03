@@ -16,9 +16,11 @@ use product_common::network_name::NetworkName;
 use product_common::package_registry::{Env, Metadata};
 use serde::de::DeserializeOwned;
 
-use crate::client::network_id;
+use crate::client::{get_object_ref_by_id_with_bcs, network_id};
 use crate::core::operations::{ITHImpl, ITHOperations};
-use crate::core::types::{Accreditations, StatementName, StatementValue};
+use crate::core::types::statements::name::StatementName;
+use crate::core::types::statements::value::StatementValue;
+use crate::core::types::{Accreditations, Federation};
 use crate::error::Error;
 use crate::iota_interaction_adapter::IotaClientAdapter;
 use crate::package;
@@ -162,6 +164,12 @@ impl ITHClientReadOnly {
         Self::new_internal(client, network).await
     }
 
+    pub async fn get_federation_by_id(&self, federation_id: ObjectID) -> Result<Federation, Error> {
+        let fed = get_object_ref_by_id_with_bcs(self, &federation_id).await?;
+
+        Ok(fed)
+    }
+
     /// Retrieves all statement names registered in the federation.
     ///
     /// # Arguments
@@ -268,7 +276,7 @@ impl ITHClientReadOnly {
     /// # Arguments
     ///
     /// * `federation_id`: The [`ObjectID`] of the federation.
-    /// * `user_id`: The [`ObjectID`] of the user.
+    /// * `attester_id`: The [`ObjectID`] of the attester.
     /// * `statement_name`: The name of the statement to validate.
     /// * `statement_value`: The value of the statement to validate.
     ///
@@ -277,15 +285,14 @@ impl ITHClientReadOnly {
     pub async fn validate_statement(
         &self,
         federation_id: ObjectID,
-        user_id: ObjectID,
+        attester_id: ObjectID,
         statement_name: StatementName,
         statement_value: StatementValue,
     ) -> Result<bool, Error> {
-        let tx = ITHImpl::validate_statement(federation_id, user_id, statement_name, statement_value, self).await?;
-        // The [`execute_read_only_transaction`] returns a vector of strings [`StatementName`],
-        // which are the arguments of the `validate_statements` function. So we can ignore the result here.
-        let _: Vec<String> = self.execute_read_only_transaction(tx).await?;
-        Ok(true)
+        let tx = ITHImpl::validate_statement(federation_id, attester_id, statement_name, statement_value, self).await?;
+
+        let response = self.execute_read_only_transaction(tx).await?;
+        Ok(response)
     }
 
     /// Validates multiple statements for a specific user.
@@ -305,10 +312,9 @@ impl ITHClientReadOnly {
         statements: impl IntoIterator<Item = (StatementName, StatementValue)>,
     ) -> Result<bool, Error> {
         let tx = ITHImpl::validate_statements(federation_id, entity_id, statements.into_iter().collect(), self).await?;
-        // The [`execute_read_only_transaction`] returns a vector of strings [`StatementName`],
-        // which are the arguments of the `validate_statements` function. So we can ignore the result here.
-        let _: Vec<String> = self.execute_read_only_transaction(tx).await?;
-        Ok(true)
+
+        let response = self.execute_read_only_transaction(tx).await?;
+        Ok(response)
     }
 }
 
@@ -318,8 +324,11 @@ impl ITHClientReadOnly {
     ///
     /// This function uses the `dev_inspect_transaction_block` endpoint of the IOTA client
     /// to simulate the execution of a programmable transaction without submitting it
-    /// to the network. The result of the first return value of the first execution result
-    /// is deserialized using BCS.
+    /// to the network.
+    ///
+    /// **Hybrid Strategy:**
+    /// Tries execution results in reverse order (last to first), which prioritizes
+    /// the most likely result while still checking all possibilities.
     ///
     /// # Arguments
     ///
@@ -342,16 +351,34 @@ impl ITHClientReadOnly {
             .results
             .ok_or_else(|| Error::UnexpectedApiResponse("DevInspectResults missing 'results' field".to_string()))?;
 
-        let (return_value_bytes, _) = execution_results
-            .first()
-            .ok_or_else(|| Error::UnexpectedApiResponse("Execution results list is empty".to_string()))?
-            .return_values
-            .first()
-            .ok_or_else(|| Error::InvalidArgument("should have at least one return value".to_string()))?;
+        if execution_results.is_empty() {
+            return Err(Error::UnexpectedApiResponse(
+                "Execution results list is empty".to_string(),
+            ));
+        }
 
-        let deserialized_output = bcs::from_bytes::<T>(return_value_bytes)?;
+        // Try execution results in reverse order (last to first)
+        let mut last_error = None;
 
-        Ok(deserialized_output)
+        for (_, result) in execution_results.iter().enumerate().rev() {
+            // By default, the last return results will be from the function.
+            if let Some((return_value_bytes, _)) = result.return_values.first() {
+                match bcs::from_bytes::<T>(return_value_bytes) {
+                    Ok(deserialized) => {
+                        return Ok(deserialized);
+                    }
+                    Err(e) => {
+                        last_error = Some(e);
+                    }
+                }
+            }
+        }
+
+        Err(Error::UnexpectedApiResponse(format!(
+            "No execution result could be deserialized as expected type. Total results: {}. Last error: {}",
+            execution_results.len(),
+            last_error.map_or("No return values found".to_string(), |e| e.to_string())
+        )))
     }
 }
 

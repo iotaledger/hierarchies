@@ -20,7 +20,7 @@ use product_common::transaction::transaction_builder::Transaction;
 use tokio::sync::OnceCell;
 
 use crate::core::operations::{ITHImpl, ITHOperations};
-use crate::core::types::Statement;
+use crate::core::types::statements::Statement;
 use crate::error::Error;
 
 /// Transaction for creating accreditation to attest permissions.

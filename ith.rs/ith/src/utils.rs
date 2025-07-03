@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::hash::Hash;
 
-use iota_sdk::types::base_types::{ObjectID, STD_OPTION_MODULE_NAME, STD_UTF8_MODULE_NAME};
+use iota_sdk::types::base_types::{ObjectID, STD_OPTION_MODULE_NAME};
 use iota_sdk::types::collection_types::{VecMap, VecSet};
 use iota_sdk::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 use iota_sdk::types::transaction::{Argument, Command};
@@ -76,18 +76,6 @@ pub(crate) fn create_vec_set_from_move_values(
         vec![tag],
         vec![values],
     )
-}
-
-/// Creates a new move string
-pub(crate) fn new_move_string(value: String, ptb: &mut ProgrammableTransactionBuilder) -> anyhow::Result<Argument> {
-    let v = ptb.pure(value.as_bytes())?;
-    Ok(ptb.programmable_move_call(
-        MOVE_STDLIB_PACKAGE_ID,
-        STD_UTF8_MODULE_NAME.into(),
-        ident_str!("utf8").into(),
-        vec![],
-        vec![v],
-    ))
 }
 
 #[cfg(test)]

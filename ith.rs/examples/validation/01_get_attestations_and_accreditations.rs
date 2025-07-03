@@ -3,7 +3,10 @@ use std::collections::HashSet;
 use anyhow::Context;
 use examples::get_funded_client;
 use iota_sdk::types::base_types::ObjectID;
-use ith::core::types::{Statement, StatementName, StatementValue, Timespan};
+use ith::core::types::statements::name::StatementName;
+use ith::core::types::statements::value::StatementValue;
+use ith::core::types::statements::Statement;
+use ith::core::types::timespan::Timespan;
 use product_common::core_client::CoreClient;
 
 /// Demonstrates how to use the offchain API to check if a user has a permission to attest and accredit.
@@ -28,11 +31,11 @@ async fn main() -> anyhow::Result<()> {
 
     let permissions = ith_client.get_accreditations_to_attest(*federation_id, user_id).await?;
 
-    println!("Accreditations: {:#?}", permissions);
+    println!("Accreditations: {permissions:#?}");
 
     //   Add Statement
     let statement_name = StatementName::from("Example LTD");
-    let value = StatementValue::from("Hello");
+    let value = StatementValue::Text("Hello".to_owned());
     let allowed_values = HashSet::from_iter([value]);
 
     ith_client
@@ -70,7 +73,7 @@ async fn main() -> anyhow::Result<()> {
 
     assert!(permissions.statements.len() == 1);
 
-    println!("Accreditations: {:#?}", permissions);
+    println!("Accreditations: {permissions:#?}");
 
     // Issue Accredit permission
     {

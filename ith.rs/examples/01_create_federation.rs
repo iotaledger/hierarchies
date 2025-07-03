@@ -21,7 +21,7 @@ async fn main() -> anyhow::Result<()> {
         .build_and_execute(&ith_client)
         .await?;
 
-    println!("Federation created: {:#?}", federation);
+    println!("Federation created: {federation:#?}");
 
     Ok(())
 }

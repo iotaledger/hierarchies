@@ -15,7 +15,7 @@ use product_common::test_utils::{init_product_package, request_funds, InMemSigne
 use tokio::sync::OnceCell;
 
 /// Script file for publishing the package.
-pub const PUBLISH_SCRIPT_FILE: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../scripts/publish_ith.sh");
+pub const PUBLISH_SCRIPT_FILE: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../ith.move/scripts/publish_ith.sh");
 
 static PACKAGE_ID: OnceCell<ObjectID> = OnceCell::const_new();
 

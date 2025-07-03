@@ -25,7 +25,7 @@ async fn main() -> anyhow::Result<()> {
 
     // Create a new root authority object ID
     let new_root_authority = ObjectID::random();
-    println!("New Root Authority: {:#?}", new_root_authority);
+    println!("New Root Authority: {new_root_authority:#?}");
 
     // Federation ID
     let federation_id = *federation.output.id.object_id();
@@ -48,7 +48,7 @@ async fn main() -> anyhow::Result<()> {
     root_authorities
         .iter()
         .filter(|ra| ra.account_id == new_root_authority)
-        .for_each(|ra| println!("Root Authority: {:#?}", ra));
+        .for_each(|ra| println!("Root Authority: {ra:#?}"));
 
     Ok(())
 }
