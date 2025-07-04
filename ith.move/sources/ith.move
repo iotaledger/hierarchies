@@ -21,6 +21,8 @@ const EUnauthorizedInsufficientAccreditationToAttest: u64 = 3;
 const EInvalidStatementValueCondition: u64 = 4;
 /// Error when trying to access non-existent accreditation
 const EAccreditationNotFound: u64 = 5;
+/// Error when timestamp is in the past
+const ETimestampMustBeInTheFuture: u64 = 6;
 
 // ===== Core Data Structures =====
 
@@ -236,9 +238,25 @@ public fun revoke_statement(
     federation: &mut Federation,
     cap: &RootAuthorityCap,
     statement_name: StatementName,
-    valid_to_ms: u64,
+    clock: &Clock,
+    _: &mut TxContext,
 ) {
     assert!(cap.federation_id == federation.federation_id(), EUnauthorizedWrongFederation);
+    let statement = federation.governance.statements.data_mut().get_mut(&statement_name);
+    statement.revoke(clock.timestamp_ms());
+}
+
+/// Revokes a statement by setting its validity period
+public fun revoke_statement_at(
+    federation: &mut Federation,
+    cap: &RootAuthorityCap,
+    statement_name: StatementName,
+    valid_to_ms: u64,
+    clock: &Clock,
+    _: &mut TxContext,
+) {
+    assert!(cap.federation_id == federation.federation_id(), EUnauthorizedWrongFederation);
+    assert!(valid_to_ms > clock.timestamp_ms(), ETimestampMustBeInTheFuture);
     let statement = federation.governance.statements.data_mut().get_mut(&statement_name);
     statement.revoke(valid_to_ms);
 }

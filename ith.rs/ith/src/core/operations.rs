@@ -583,6 +583,45 @@ pub(crate) trait ITHOperations {
     async fn revoke_statement<C>(
         federation_id: ObjectID,
         statement_name: StatementName,
+        owner: IotaAddress,
+        client: &C,
+    ) -> Result<ProgrammableTransaction, Error>
+    where
+        C: CoreClientReadOnly + OptionalSync,
+    {
+        let mut ptb = ProgrammableTransactionBuilder::new();
+
+        let cap = ITHImpl::get_cap(client, Capability::RootAuthority, owner).await?;
+
+        let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
+
+        let fed_ref = ITHImpl::get_fed_ref(client, federation_id).await?;
+        let fed_ref = ptb.obj(fed_ref)?;
+
+        let statement_name = statement_name.to_ptb(&mut ptb, client.package_id())?;
+
+        let clock = super::get_clock_ref(&mut ptb);
+
+        ptb.programmable_move_call(
+            client.package_id(),
+            ident_str!(move_names::MODULE_MAIN).into(),
+            ident_str!("revoke_statement").into(),
+            vec![],
+            vec![fed_ref, cap, statement_name, clock],
+        );
+
+        let tx = ptb.finish();
+
+        Ok(tx)
+    }
+
+    /// Revokes a statement by setting its validity expiration time.
+    ///
+    /// Sets a time limit on when a statement is considered valid. After the specified
+    /// time, the statement can no longer be attested. Requires `RootAuthorityCap`.
+    async fn revoke_statement_at<C>(
+        federation_id: ObjectID,
+        statement_name: StatementName,
         valid_to_ms: u64,
         owner: IotaAddress,
         client: &C,
@@ -602,13 +641,14 @@ pub(crate) trait ITHOperations {
         let statement_name = statement_name.to_ptb(&mut ptb, client.package_id())?;
 
         let valid_to_ms = ptb.pure(valid_to_ms)?;
+        let clock = super::get_clock_ref(&mut ptb);
 
         ptb.programmable_move_call(
             client.package_id(),
             ident_str!(move_names::MODULE_MAIN).into(),
-            ident_str!("revoke_statement").into(),
+            ident_str!("revoke_statement_at").into(),
             vec![],
-            vec![fed_ref, cap, statement_name, valid_to_ms],
+            vec![fed_ref, cap, statement_name, valid_to_ms, clock],
         );
 
         let tx = ptb.finish();

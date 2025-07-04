@@ -209,7 +209,7 @@ where
         &self,
         federation_id: ObjectID,
         statement_name: StatementName,
-        valid_to_ms: u64,
+        valid_to_ms: Option<u64>,
     ) -> TransactionBuilder<RevokeStatement> {
         TransactionBuilder::new(RevokeStatement::new(
             federation_id,
