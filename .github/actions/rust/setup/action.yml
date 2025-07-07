@@ -1,0 +1,136 @@
+name: "rust-setup"
+description: "Prepares a rust environment and relevant caches."
+inputs:
+  target:
+    description: "Additionally install specified target for this toolchain, ex. x86_64-apple-darwin"
+    required: false
+  toolchain:
+    description: "Toolchain to install. Default: stable."
+    required: false
+    default: stable
+  components:
+    description: "Comma-separated string of additional components to install e.g. `clippy`, `rustfmt`"
+    required: false
+  os:
+    description: "OS of the runner, used for cache key construction."
+    required: true
+  job:
+    description: "Name of the job, used for cache key construction."
+    required: true
+  cargo-cache-enabled:
+    description: "Cache cargo folder. Default: false."
+    required: false
+    default: ""
+  target-cache-enabled:
+    description: "Cache build artifacts from the target path. Default: false."
+    required: false
+    default: ""
+  target-cache-path:
+    description: "Path of the target cache."
+    required: false
+    default: target
+  sccache-enabled:
+    description: "Install and use sccache. Default: false."
+    required: false
+    default: ""
+  sccache-path:
+    description: 'The sccache directory. E.g. "/home/runner/.cache/sccache"'
+    required: false
+runs:
+  using: "composite"
+  steps:
+    - name: Get current date
+      shell: bash
+      run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
+    - name: Setup rust toolchain
+      shell: bash
+      run: |
+
+        # self update is currently broken on Windows runners:
+        #   https://github.com/rust-lang/rustup/issues/3709
+        # so we'll skip self update for windows
+        OS=${{ inputs.os }}
+        IS_WINDOWS=false; [[ $OS =~ ^[wW]indows ]] && IS_WINDOWS=true
+
+        if [[ $IS_WINDOWS = true ]] ;
+        then
+          echo "skipping self update on windows runner due to https://github.com/rust-lang/rustup/issues/3709"
+        elif ! rustup self update; then
+            echo "rustup self update failed"
+        fi
+
+        TARGET=${{ inputs.target }}
+        if [[ $TARGET != '' ]]; then
+          rustup target add $TARGET
+        fi
+
+        if [[ $IS_WINDOWS = true ]] ;
+        then
+            echo "skipping self update on windows runner due to https://github.com/rust-lang/rustup/issues/3709"
+            rustup update --no-self-update
+        else
+            rustup update
+        fi
+
+        TOOLCHAIN=${{ inputs.toolchain }}
+        if [[ $TOOLCHAIN != 'stable' ]]; then
+           rustup toolchain install $TOOLCHAIN
+        fi
+
+        COMPONENTS=${{ inputs.components }}
+        if [[ $COMPONENTS != '' ]]; then
+          for i in ${COMPONENTS//,/ }
+          do
+            rustup component add $i $(if [ $TOOLCHAIN != '' ]; then echo --toolchain $TOOLCHAIN; fi)
+          done
+        fi
+
+        rustup show
+
+    - name: Cache cargo
+      uses: actions/cache@v4
+      if: inputs.cargo-cache-enabled == 'true'
+      with:
+        # https://doc.rust-lang.org/cargo/guide/cargo-home.html#caching-the-cargo-home-in-ci
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+        # Add date to the cache to keep it up to date
+        key: ${{ inputs.os }}-cargo-${{ inputs.job }}-${{ hashFiles('**/Cargo.toml') }}-${{ env.CURRENT_DATE }}
+        # Restore from outdated cache for speed
+        restore-keys: |
+          ${{ inputs.os }}-cargo-${{ inputs.job }}-${{ hashFiles('**/Cargo.toml') }}-
+          ${{ inputs.os }}-cargo-${{ inputs.job }}-
+          ${{ inputs.os }}-cargo-
+
+    # Generate Cargo.lock files for build, sccache cache keys.
+    # Allows dependencies updated on crates.io between runs to trigger storing an updated cache,
+    # which hashing Cargo.toml files alone does not.
+    - name: Cargo update
+      run: cargo update
+      shell: bash
+
+    - name: Cache build target
+      uses: actions/cache@v4
+      if: inputs.target-cache-enabled == 'true'
+      with:
+        path: ${{ inputs.target-cache-path }}
+        # Add date to the cache to keep it up to date
+        key: ${{ inputs.os }}-target-${{ inputs.job }}-${{ hashFiles('**/Cargo.lock') }}
+        # Restore from outdated cache for speed
+        restore-keys: |
+          ${{ inputs.os }}-target-${{ inputs.job }}-
+          ${{ inputs.os }}-target-
+
+    - name: Cache sccache
+      uses: actions/cache@v4
+      if: inputs.sccache-enabled == 'true'
+      with:
+        path: ${{ inputs.sccache-path }}
+        key: ${{ inputs.os }}-sccache-${{ inputs.job }}-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ inputs.os }}-sccache-${{ inputs.job }}-
+          ${{ inputs.os }}-sccache-
