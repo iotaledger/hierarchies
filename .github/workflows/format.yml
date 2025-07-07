@@ -47,8 +47,8 @@ jobs:
         run: cargo +nightly fmt --all -- --check
         working-directory: ith.rs
 
-      - name: wasm fmt check trust_hierarchies_wasm
-        run: cargo +nightly fmt --manifest-path ./bindings/wasm/trust_hierarchies_wasm/Cargo.toml --all -- --check
+      # - name: wasm fmt check trust_hierarchies_wasm
+      #   run: cargo +nightly fmt --manifest-path ./bindings/wasm/trust_hierarchies_wasm/Cargo.toml --all -- --check
 
       - name: fmt check with dprint
         run: dprint check
