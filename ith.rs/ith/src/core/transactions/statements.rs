@@ -105,7 +105,7 @@ pub mod revoke_statement {
     pub struct RevokeStatement {
         federation_id: ObjectID,
         statement_name: StatementName,
-        valid_to_ms: u64,
+        valid_to_ms: Option<u64>,
         owner: IotaAddress,
         cached_ptb: OnceCell<ProgrammableTransaction>,
     }
@@ -114,7 +114,7 @@ pub mod revoke_statement {
         pub fn new(
             federation_id: ObjectID,
             statement_name: StatementName,
-            valid_to_ms: u64,
+            valid_to_ms: Option<u64>,
             owner: IotaAddress,
         ) -> Self {
             Self {
@@ -130,14 +130,23 @@ pub mod revoke_statement {
         where
             C: CoreClientReadOnly + OptionalSync,
         {
-            let ptb = ITHImpl::revoke_statement(
-                self.federation_id,
-                self.statement_name.clone(),
-                self.valid_to_ms,
-                self.owner,
-                client,
-            )
-            .await?;
+            let ptb = match self.valid_to_ms {
+                Some(valid_to_ms) => {
+                    ITHImpl::revoke_statement_at(
+                        self.federation_id,
+                        self.statement_name.clone(),
+                        valid_to_ms,
+                        self.owner,
+                        client,
+                    )
+                    .await?
+                }
+                None => {
+                    ITHImpl::revoke_statement(self.federation_id, self.statement_name.clone(), self.owner, client)
+                        .await?
+                }
+            };
+
             Ok(ptb)
         }
     }
