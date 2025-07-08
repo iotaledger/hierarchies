@@ -38,5 +38,5 @@ jobs:
           dry-run: ${{ github.event.inputs.dry-run }}
           input-artifact-name: trust-hierarchies-wasm-bindings-build
           npm-token: ${{ secrets.NPM_TRUST_HIERARCHIES_TOKEN }}
-          working-directory: ./bindings/wasm/trust_hierarchies_wasm
           tag: ${{ github.event.inputs.tag }}
+          working-directory: ./bindings/wasm/trust_hierarchies_wasm

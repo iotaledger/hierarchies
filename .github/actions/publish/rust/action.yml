@@ -10,6 +10,10 @@ inputs:
   dry-run:
     description: "'true' = only log potential result; 'false' = publish'"
     required: true
+  working-directory:
+    description: "The working directory for the action's steps."
+    required: false
+    default: "."
 runs:
   using: "composite"
   steps:
@@ -18,7 +22,7 @@ runs:
       with:
         os: ${{ runner.os }}
         job: ${{ github.job }}
-
+        working-directory: ${{ inputs.working-directory }}
     - name: Install cargo-release
       shell: bash
       run: cargo install --version =0.25 cargo-release
@@ -29,6 +33,7 @@ runs:
         echo "dry-run: '${{ inputs.dry-run }}'"
         echo "version: '${{ inputs.version }}'"
         cargo login ${{ inputs.crates-token }}
+        cd ${{ inputs.working-directory }}
         cargo release config
         cargo release version --verbose --execute --no-confirm ${{ inputs.version }}
         cargo release publish --verbose $(if [ "${{ inputs.dry-run }}" = "false" ]; then echo --execute --no-confirm; fi)
