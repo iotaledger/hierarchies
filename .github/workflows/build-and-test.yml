@@ -165,15 +165,15 @@ jobs:
 
       - name: test Trust Hierarchies Move package
         if: matrix.os != 'windows-latest'
-        # publish the package and set the IOTA_TRUST_HIERARCHIES_PKG_ID env variable
+        # publish the package and set the IOTA_ITH_PKG_ID  env variable
         run: |
           iota move test
         working-directory: ith.move
 
       - name: publish Trust Hierarchies Move package
         if: matrix.os != 'windows-latest'
-        # publish the package and set the IOTA_TRUST_HIERARCHIES_PKG_ID env variable
-        run: echo "IOTA_TRUST_HIERARCHIES_PKG_ID=$(./publish_ith.sh)" >> "$GITHUB_ENV"
+        # publish the package and set the IOTA_ITH_PKG_ID  env variable
+        run: echo "IOTA_ITH_PKG_ID =$(./publish_ith.sh)" >> "$GITHUB_ENV"
         working-directory: ith.move/scripts/
 
       - name: Run tests
@@ -257,7 +257,7 @@ jobs:
   #     - name: publish Notarization Move package
   #       if: matrix.os != 'windows-latest'
   #       # publish the package and set the IOTA_NOTARIZATION_PKG_ID env variable
-  #       run: echo "IOTA_TRUST_HIERARCHIES_PKG_ID=$(./publish_package.sh)" >> "$GITHUB_ENV"
+  #       run: echo "IOTA_ITH_PKG_ID =$(./publish_package.sh)" >> "$GITHUB_ENV"
   #       working-directory: trust_hierarchies_move/scripts/
 
   #     - name: Install JS dependencies
@@ -301,8 +301,8 @@ jobs:
 #          iota-version: ${{ env.IOTA_VERSION }}
 #
 #      - name: publish Trust Hierarchies Move package
-#        # publish the package and set the IOTA_TRUST_HIERARCHIES_PKG_ID env variable
-#        run: echo "IOTA_TRUST_HIERARCHIES_PKG_ID=$(./publish_ith.sh)" >> "$GITHUB_ENV"
+#        # publish the package and set the IOTA_ITH_PKG_ID  env variable
+#        run: echo "IOTA_ITH_PKG_ID =$(./publish_ith.sh)" >> "$GITHUB_ENV"
 #        working-directory: ith.move/scripts/
 #
 #      - name: Build Docker image
@@ -314,7 +314,7 @@ jobs:
 #          tags: cypress-test:latest
 #          load: true
 #          build-args: |
-#            IOTA_TRUST_HIERARCHIES_PKG_ID=${{ env.IOTA_TRUST_HIERARCHIES_PKG_ID }}
+#            IOTA_ITH_PKG_ID =${{ env.IOTA_ITH_PKG_ID  }}
 #
 #      - name: Run cypress
 #        run: docker run --network host cypress-test test:browser:${{ matrix.browser }}
