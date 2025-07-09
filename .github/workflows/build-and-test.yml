@@ -165,15 +165,15 @@ jobs:
 
       - name: test Trust Hierarchies Move package
         if: matrix.os != 'windows-latest'
-        # publish the package and set the IOTA_ITH_PKG_ID  env variable
+        # publish the package and set the IOTA_ITH_PKG_ID env variable
         run: |
           iota move test
         working-directory: ith.move
 
       - name: publish Trust Hierarchies Move package
         if: matrix.os != 'windows-latest'
-        # publish the package and set the IOTA_ITH_PKG_ID  env variable
-        run: echo "IOTA_ITH_PKG_ID =$(./publish_ith.sh)" >> "$GITHUB_ENV"
+        # publish the package and set the IOTA_ITH_PKG_ID env variable
+        run: echo "IOTA_ITH_PKG_ID=$(./publish_ith.sh)" >> "$GITHUB_ENV"
         working-directory: ith.move/scripts/
 
       - name: Run tests
@@ -195,7 +195,7 @@ jobs:
       #        # run examples only on ubuntu for now
       #        if: matrix.os == 'ubuntu-24.04'
       #        run: |
-      #          cd bindings/wasm/notarization_wasm
+      #          cd bindings/wasm/trust_hierarchies_wasm
       #          npm ci
       #          npm run test:readme:rust
 
@@ -243,7 +243,7 @@ jobs:
   #       run: npm ci
   #       working-directory: bindings/wasm/trust_hierarchies_wasm
 
-  #     - name: Download bindings/wasm/notarization_wasm artifacts
+  #     - name: Download bindings/wasm/trust_hierarchies_wasm artifacts
   #       uses: actions/download-artifact@v4
   #       with:
   #         name: trust-hierarchies-wasm-bindings-build
@@ -254,10 +254,10 @@ jobs:
   #       with:
   #         iota-version: ${{ env.IOTA_VERSION }}
 
-  #     - name: publish Notarization Move package
+  #     - name: publish Trust Hierarchies Move package
   #       if: matrix.os != 'windows-latest'
-  #       # publish the package and set the IOTA_NOTARIZATION_PKG_ID env variable
-  #       run: echo "IOTA_ITH_PKG_ID =$(./publish_package.sh)" >> "$GITHUB_ENV"
+  #       # publish the package and set the IOTA_ITH_PKG_ID env variable
+  #       run: echo "IOTA_ITH_PKG_ID=$(./publish_package.sh)" >> "$GITHUB_ENV"
   #       working-directory: trust_hierarchies_move/scripts/
 
   #     - name: Install JS dependencies
@@ -301,8 +301,8 @@ jobs:
 #          iota-version: ${{ env.IOTA_VERSION }}
 #
 #      - name: publish Trust Hierarchies Move package
-#        # publish the package and set the IOTA_ITH_PKG_ID  env variable
-#        run: echo "IOTA_ITH_PKG_ID =$(./publish_ith.sh)" >> "$GITHUB_ENV"
+#        # publish the package and set the IOTA_ITH_PKG_ID env variable
+#        run: echo "IOTA_ITH_PKG_ID=$(./publish_ith.sh)" >> "$GITHUB_ENV"
 #        working-directory: ith.move/scripts/
 #
 #      - name: Build Docker image
@@ -314,7 +314,7 @@ jobs:
 #          tags: cypress-test:latest
 #          load: true
 #          build-args: |
-#            IOTA_ITH_PKG_ID =${{ env.IOTA_ITH_PKG_ID  }}
+#            IOTA_ITH_PKG_ID=${{ env.IOTA_ITH_PKG_ID }}
 #
 #      - name: Run cypress
 #        run: docker run --network host cypress-test test:browser:${{ matrix.browser }}
