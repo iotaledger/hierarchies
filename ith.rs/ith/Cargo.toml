@@ -8,13 +8,12 @@ edition.workspace = true
 anyhow.workspace = true
 async-trait.workspace = true
 bcs.workspace = true
-fastcrypto.workspace = true
-product_common = { workspace = true, default-features = false, features = ["transaction"] }
-secret-storage.workspace = true
+product_common = { workspace = true, default-features = false, features = [
+  "transaction",
+] }
+secret-storage = { workspace = true, default-features = false }
 serde.workspace = true
 serde_json.workspace = true
-shared-crypto.workspace = true
-strum = "0.26.3"
 thiserror.workspace = true
 tokio.workspace = true
 
@@ -33,7 +32,6 @@ iota_interaction_ts = { workspace = true }
 
 [dev-dependencies]
 async-trait.workspace = true
-jsonpath-rust.workspace = true
 product_common = { workspace = true, features = ["transaction", "test-utils"] }
 
 [features]
