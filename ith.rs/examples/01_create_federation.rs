@@ -1,4 +1,4 @@
-use examples::get_funded_client;
+use trust_hierarchies_examples::get_funded_client;
 
 /// Demonstrates how to create a Federation and publish it on chain.
 ///

@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use anyhow::Context;
-use examples::get_funded_client;
+use trust_hierarchies_examples::get_funded_client;
 use iota_sdk::types::base_types::ObjectID;
 use ith::core::types::statements::name::StatementName;
 use ith::core::types::statements::value::StatementValue;

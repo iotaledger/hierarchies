@@ -1,5 +1,5 @@
 [package]
-name = "examples"
+name = "trust_hierarchies_examples"
 authors.workspace = true
 edition.workspace = true
 

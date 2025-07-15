@@ -10,7 +10,11 @@ use std::ops::Deref;
 
 use iota_interaction::types::base_types::{IotaAddress, ObjectID};
 use iota_interaction::types::transaction::{ProgrammableTransaction, TransactionKind};
-use iota_interaction::{IotaClient, IotaClientTrait};
+use iota_interaction::IotaClientTrait;
+#[cfg(target_arch = "wasm32")]
+use iota_interaction_ts::bindings::WasmIotaClient;
+#[cfg(not(target_arch = "wasm32"))]
+use iota_sdk::IotaClient;
 use product_common::core_client::CoreClientReadOnly;
 use product_common::network_name::NetworkName;
 use product_common::package_registry::{Env, Metadata};
