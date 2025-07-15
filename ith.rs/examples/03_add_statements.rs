@@ -1,9 +1,11 @@
 use std::collections::HashSet;
 
 use anyhow::Context;
-use examples::get_funded_client;
-use ith::core::types::{Federation, StatementName, StatementValue};
-use product_common::core_client::CoreClientReadOnly;
+use ith::core::types::{
+    statements::{name::StatementName, value::StatementValue},
+    Federation,
+};
+use trust_hierarchies_examples::get_funded_client;
 
 /// Demonstrate how to add a Statement to a federation.
 ///

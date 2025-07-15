@@ -11,8 +11,7 @@ use iota_interaction::types::base_types::{IotaAddress, ObjectID, ObjectRef, Sequ
 use iota_interaction::types::object::Owner;
 use iota_interaction::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 use iota_interaction::types::transaction::Command;
-use iota_interaction::types::transaction::{Argument, CallArg, ObjectArg, ProgrammableTransaction};
-use iota_interaction::types::TypeTag;
+use iota_interaction::types::transaction::{CallArg, ObjectArg, ProgrammableTransaction};
 use iota_interaction::{ident_str, IotaClientTrait, MoveType, OptionalSync};
 use product_common::core_client::CoreClientReadOnly;
 

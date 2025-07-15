@@ -1,4 +1,4 @@
-use iota_sdk::types::base_types::ObjectID;
+use iota_interaction::types::base_types::ObjectID;
 use ith::core::types::{Event, Federation, FederationCreatedEvent};
 use product_common::core_client::CoreClient;
 

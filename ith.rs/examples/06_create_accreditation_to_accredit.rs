@@ -2,8 +2,11 @@ use std::collections::HashSet;
 
 use anyhow::Context;
 use iota_sdk::types::base_types::ObjectID;
-use ith::core::types::{Federation, Statement, StatementName, StatementValue, Timespan};
-use product_common::core_client::CoreClientReadOnly;
+use ith::core::types::{
+    statements::{name::StatementName, value::StatementValue, Statement},
+    timespan::Timespan,
+    Federation,
+};
 use trust_hierarchies_examples::get_funded_client;
 
 /// Demonstrate how to issue a permission to accredit to a Statement.
