@@ -13,10 +13,7 @@ extern crate serde;
 
 use wasm_bindgen::prelude::*;
 
-pub(crate) mod wasm_accreditations;
-pub(crate) mod wasm_hierarchies_client_read_only;
-pub(crate) mod wasm_statement_name;
-pub(crate) mod wasm_statement_value;
+pub(crate) mod wasm_types;
 
 /// Initializes the console error panic hook for better error messages
 #[wasm_bindgen(start)]
