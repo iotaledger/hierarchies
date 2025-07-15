@@ -1678,6 +1678,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "datatest-stable"
+version = "0.1.3"
+source = "git+https://github.com/nextest-rs/datatest-stable.git?rev=72db7f6d1bbe36a5407e96b9488a581f763e106f#72db7f6d1bbe36a5407e96b9488a581f763e106f"
+dependencies = [
+ "libtest-mimic",
+ "regex",
+ "walkdir",
+]
+
+[[package]]
 name = "der"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3460,7 +3470,7 @@ dependencies = [
  "anemo",
  "anemo-tower",
  "async-trait",
- "axum",
+ "axum 0.8.4",
  "bytes",
  "dashmap",
  "futures",
@@ -3532,7 +3542,7 @@ dependencies = [
  "snap",
  "tokio",
  "tokio-stream",
- "tonic",
+ "tonic 0.13.1",
  "tonic-health",
  "tower 0.4.13",
  "tower-http 0.5.2",
@@ -3787,7 +3797,7 @@ dependencies = [
  "strum_macros 0.26.4",
  "tap",
  "thiserror 1.0.69",
- "tonic",
+ "tonic 0.13.1",
  "tracing",
  "typed-store-error",
 ]
@@ -7878,7 +7888,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7e581ba15a835f4d9ea06c55ab1bd4dce26fc53752c69a04aac00703bfb49ba9"
 dependencies = [
  "async-trait",
- "axum",
+ "axum 0.7.9",
  "base64 0.22.1",
  "bytes",
  "h2",
@@ -8065,6 +8075,24 @@ dependencies = [
  "iota-sdk 1.2.3",
  "ith",
  "product_common",
+ "tokio",
+]
+
+[[package]]
+name = "trust_hierarchies_examples"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "fastcrypto",
+ "iota",
+ "iota-keys",
+ "iota-sdk 1.2.3",
+ "ith",
+ "jsonpath-rust 0.7.5",
+ "product_common",
+ "secret-storage",
+ "serde_json",
  "tokio",
 ]
 
