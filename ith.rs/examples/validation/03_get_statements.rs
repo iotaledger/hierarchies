@@ -4,7 +4,8 @@
 use std::collections::HashSet;
 
 use anyhow::Context;
-use ith::core::types::statements::{name::StatementName, value::StatementValue};
+use ith::core::types::statements::name::StatementName;
+use ith::core::types::statements::value::StatementValue;
 use trust_hierarchies_examples::get_funded_client;
 
 /// Demonstrates how to use the offchain API to get federation properties.
