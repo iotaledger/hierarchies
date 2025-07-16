@@ -207,13 +207,14 @@ jobs:
         uses: "./.github/actions/rust/sccache/stop"
         with:
           os: ${{matrix.os}}
-  # build-wasm:
-  #   needs: check-for-run-condition
-  #   if: ${{ needs.check-for-run-condition.outputs.should-run == 'true' }}
-  #   uses: "./.github/workflows/shared-build-wasm.yml"
-  #   with:
-  #     run-unit-tests: false
-  #     output-artifact-name: trust-hierarchies-wasm-bindings-build
+
+  build-wasm:
+    needs: check-for-run-condition
+    if: ${{ needs.check-for-run-condition.outputs.should-run == 'true' }}
+    uses: "./.github/workflows/shared-build-wasm.yml"
+    with:
+      run-unit-tests: false
+      output-artifact-name: hierarchies-wasm-bindings-build
 
   # test-wasm:
   #   needs: build-wasm
@@ -241,7 +242,7 @@ jobs:
   #     - name: Download bindings/wasm/hierarchies_wasm artifacts
   #       uses: actions/download-artifact@v4
   #       with:
-  #         name: trust-hierarchies-wasm-bindings-build
+  #         name: hierarchies-wasm-bindings-build
   #         path: bindings/wasm/hierarchies_wasm
 
   #     - name: Start iota sandbox
@@ -287,7 +288,7 @@ jobs:
 #      - name: Download bindings/wasm/hierarchies_wasm artifacts
 #        uses: actions/download-artifact@v4
 #        with:
-#          name: trust-hierarchies-wasm-bindings-build
+#          name: hierarchies-wasm-bindings-build
 #          path: bindings/wasm/hierarchies_wasm
 #
 #      - name: Start iota sandbox
