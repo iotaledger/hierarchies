@@ -7,12 +7,11 @@
 
 use std::str::FromStr;
 
-use iota_interaction::ident_str;
 use iota_interaction::types::base_types::ObjectID;
 use iota_interaction::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 use iota_interaction::types::transaction::Argument;
 use iota_interaction::types::TypeTag;
-use iota_interaction::MoveType;
+use iota_interaction::{ident_str, MoveType};
 use serde::{Deserialize, Serialize};
 
 /// StatementName represents the name of a Statement

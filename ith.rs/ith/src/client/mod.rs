@@ -14,8 +14,7 @@ mod full_client;
 mod read_only;
 
 pub use full_client::*;
-use iota_interaction::rpc_types::IotaData;
-use iota_interaction::rpc_types::IotaObjectDataOptions;
+use iota_interaction::rpc_types::{IotaData, IotaObjectDataOptions};
 use iota_interaction::types::base_types::ObjectID;
 use iota_interaction::IotaClientTrait;
 use product_common::core_client::CoreClientReadOnly;
