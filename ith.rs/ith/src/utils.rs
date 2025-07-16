@@ -13,6 +13,7 @@ use iota_interaction::types::transaction::{Argument, Command};
 use iota_interaction::types::{TypeTag, MOVE_STDLIB_PACKAGE_ID};
 use serde::{Deserialize, Deserializer, Serialize};
 
+/// Deserialize a [`VecMap`] into a [`HashMap`]
 pub(crate) fn deserialize_vec_map<'de, D, K, V>(deserializer: D) -> Result<HashMap<K, V>, D::Error>
 where
     D: Deserializer<'de>,
@@ -27,6 +28,7 @@ where
         .collect())
 }
 
+/// Deserialize a [`VecSet`] into a [`HashSet`]
 pub(crate) fn deserialize_vec_set<'de, D, T>(deserializer: D) -> Result<HashSet<T>, D::Error>
 where
     D: Deserializer<'de>,
@@ -36,6 +38,7 @@ where
     Ok(vec_set.contents.into_iter().collect())
 }
 
+/// Convert an option value into a [`ProgrammableMoveCall`] argument
 pub(crate) fn option_to_move<T: Serialize>(
     option: Option<T>,
     tag: TypeTag,
@@ -63,7 +66,7 @@ pub(crate) fn option_to_move<T: Serialize>(
     Ok(arg)
 }
 
-/// Create a VecSet from a vector of values
+/// Create a [`VecSet`] from a vector of values
 pub(crate) fn create_vec_set_from_move_values(
     values: Vec<Argument>,
     tag: TypeTag,

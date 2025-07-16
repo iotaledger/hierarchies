@@ -1,6 +1,16 @@
 // Copyright 2020-2025 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+//! ITH package registry
+//!
+//! This module provides a registry of ITH packages.
+//!
+//! The registry is a [`RwLock`] that is initialized with the contents of the
+//! `ith.move/Move.lock` file.
+//!
+//! The registry is used to lookup the package ID for the ITH package for a
+//! given network.
+
 #![allow(dead_code)]
 
 use std::sync::LazyLock;

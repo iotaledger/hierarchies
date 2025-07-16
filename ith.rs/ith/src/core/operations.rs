@@ -1,6 +1,21 @@
 // Copyright 2020-2025 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+//! # ITH Operations
+//!
+//! This module provides low-level operations for interacting with the ITH (IOTA Trust Hierarchy) module.
+//! It handles capability management, federation references, and transaction building.
+//!
+//! ## Trust Hierarchy Model
+//!
+//! ITH operates on a three-tier capability system:
+//! - **`RootAuthority`**: Full administrative control over federations
+//! - **`Accredit`**: Permission to delegate accreditation rights to others
+//! - **`Attest`**: Permission to create attestations for specific statements
+//!
+//! Capabilities are represented as owned objects in the IOTA network, ensuring
+//! secure and verifiable permission management.
+
 use std::collections::{HashMap, HashSet};
 use std::str::FromStr;
 
@@ -23,13 +38,25 @@ use crate::error::Error;
 use crate::utils::{self};
 
 const MAIN_ITH_MODULE: &str = move_names::MODULE_MAIN;
+
+/// Move package module names for ITH smart contract interactions.
+///
+/// These constants define the module names used when calling functions
+/// in the ITH Move package deployed on the IOTA network.
 pub mod move_names {
+    /// The main ITH package name
     pub const PACKAGE_NAME: &str = "ith";
+    /// Main module containing federation and core operations
     pub const MODULE_MAIN: &str = "main";
+    /// Module for statement-related operations
     pub const MODULE_STATEMENT: &str = "statement";
+    /// Module for statement value operations
     pub const MODULE_VALUE: &str = "statement_value";
+    /// Module for statement name operations
     pub const MODULE_NAME: &str = "statement_name";
+    /// Module for statement condition operations
     pub const MODULE_CONDITION: &str = "statement_condition";
+    /// Utility module for common operations
     pub const MODULE_UTILS: &str = "utils";
 }
 
@@ -37,6 +64,16 @@ pub mod move_names {
 ///
 /// This struct provides low-level operations for interacting with the ITH (IOTA Trust Hierarchy) module.
 /// It handles capability management, federation references, and transaction building.
+///
+/// ## Trust Hierarchy Model
+///
+/// ITH operates on a three-tier capability system:
+/// - **`RootAuthority`**: Full administrative control over federations
+/// - **`Accredit`**: Permission to delegate accreditation rights to others
+/// - **`Attest`**: Permission to create attestations for specific statements
+///
+/// Capabilities are represented as owned objects in the IOTA network, ensuring
+/// secure and verifiable permission management.
 #[derive(Debug, Clone)]
 pub(crate) struct ITHImpl;
 
@@ -47,6 +84,13 @@ impl ITHImpl {
     /// - `RootAuthority`: Full administrative access
     /// - `Accredit`: Permission to delegate accreditation rights
     /// - `Attest`: Permission to create attestations
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - The sender doesn't own the requested capability type
+    /// - The capability object structure is invalid
+    /// - Network communication fails
     pub(crate) async fn get_cap<C>(client: &C, cap_type: Capability, sender: IotaAddress) -> Result<ObjectRef, Error>
     where
         C: CoreClientReadOnly + OptionalSync,
@@ -84,7 +128,12 @@ impl ITHImpl {
     /// Creates a shared object reference for a federation.
     ///
     /// Federations are shared objects in the ITH system, requiring proper
-    /// reference handling for transaction building.
+    /// reference handling for transaction building. This function retrieves
+    /// the initial shared version needed for transaction construction.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the federation object is not found or not shared.
     async fn get_fed_ref<C>(client: &C, federation_id: ObjectID) -> Result<ObjectArg, Error>
     where
         C: CoreClientReadOnly + OptionalSync,
@@ -128,13 +177,35 @@ impl ITHImpl {
 ///
 /// Provides methods for managing federations, statements, and accreditations.
 /// Each method returns a `ProgrammableTransaction` that can be executed on-chain.
+///
+/// ## Core Operations
+///
+/// - **Federation Management**: Create and configure trust federations
+/// - **Statement Management**: Define and manage attestable statement types
+/// - **Accreditation**: Grant and revoke permission to delegate trust
+/// - **Attestation**: Grant and revoke permission to create attestations
+/// - **Validation**: Verify entity permissions for specific statements
+///
+/// All operations require appropriate capabilities and return transactions
+/// ready for execution on the IOTA network.
 #[cfg_attr(not(feature = "send-sync"), async_trait(?Send))]
 #[cfg_attr(feature = "send-sync", async_trait)]
 pub(crate) trait ITHOperations {
     /// Creates a new federation with the caller as the initial root authority.
     ///
     /// The federation is a shared object that manages trust hierarchies.
-    /// The creator receives `RootAuthorityCap`, `AccreditCap`, and `AttestCap`.
+    /// The creator receives all three capability types: `RootAuthorityCap`,
+    /// `AccreditCap`, and `AttestCap`, granting full control over the federation.
+    ///
+    /// # Parameters
+    ///
+    /// - `package_id`: The ITH Move package ID deployed on the network
+    ///
+    /// # Returns
+    ///
+    /// [`ProgrammableTransaction`] A transaction that when executed creates a
+    /// new federation and grants
+    /// the sender all initial capabilities.
     fn new_federation(package_id: ObjectID) -> Result<ProgrammableTransaction, Error> {
         let mut ptb = ProgrammableTransactionBuilder::new();
 
@@ -154,7 +225,22 @@ pub(crate) trait ITHOperations {
     /// Adds a new statement type to the federation.
     ///
     /// Statements define the types of claims that can be attested within the federation.
-    /// Requires `RootAuthorityCap`. Either specify allowed values or set `allow_any` to true.
+    /// You can either restrict allowed values to a specific set or allow any values.
+    ///
+    /// # Parameters
+    ///
+    /// - `federation_id`: The target federation
+    /// - `statement_name`: Unique identifier for the statement type
+    /// - `allowed_values`: Specific values permitted for this statement (ignored if `allow_any` is true)
+    /// - `allow_any`: Whether to allow any values for this statement type
+    /// - `owner`: Address that owns the required `RootAuthorityCap`
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - The owner doesn't have `RootAuthorityCap`
+    /// - The statement name already exists in the federation
+    /// - Network or transaction building fails
     async fn add_statement<C>(
         federation_id: ObjectID,
         statement_name: StatementName,
@@ -244,8 +330,21 @@ pub(crate) trait ITHOperations {
 
     /// Adds a new root authority to the federation.
     ///
-    /// Root authorities have the highest trust level and can perform all operations.
-    /// The new authority receives a `RootAuthorityCap`. Requires existing `RootAuthorityCap`.
+    /// Root authorities have the highest trust level and can perform all
+    /// operations.
+    /// The new authority receives a `RootAuthorityCap`. Requires existing
+    /// `RootAuthorityCap`.
+    ///
+    /// # Parameters
+    ///
+    /// - `federation_id`: The target federation
+    /// - `account_id`: The new root authority's account ID
+    /// - `owner`: Address that owns the required `RootAuthorityCap`
+    /// - `client`: The client to use for the operation
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the owner doesn't have `RootAuthorityCap`.
     async fn add_root_authority<C>(
         federation_id: ObjectID,
         account_id: ObjectID,
@@ -283,6 +382,18 @@ pub(crate) trait ITHOperations {
     ///
     /// Allows the receiver to further delegate accreditation rights for the specified statements.
     /// The granter must have sufficient permissions for all statements being delegated.
+    ///
+    /// # Parameters
+    ///
+    /// - `federation_id`: The target federation
+    /// - `receiver`: The user receiving the accreditation
+    /// - `want_statements`: The statements the receiver wants to delegate
+    /// - `owner`: Address that owns the required `AccreditCap`
+    /// - `client`: The client to use for the operation
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the owner doesn't have `AccreditCap`.
     async fn create_accreditation_to_accredit<C>(
         federation_id: ObjectID,
         receiver: ObjectID,
@@ -323,6 +434,18 @@ pub(crate) trait ITHOperations {
     ///
     /// Allows the receiver to create attestations for the specified statements.
     /// The granter must have sufficient permissions for all statements being delegated.
+    ///
+    /// # Parameters
+    ///
+    /// - `federation_id`: The target federation
+    /// - `receiver`: The user receiving the attestation accreditation
+    /// - `want_statements`: The statements the receiver wants to attest
+    /// - `owner`: Address that owns the required `AttestCap`
+    /// - `client`: The client to use for the operation
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the owner doesn't have `AttestCap`.
     async fn create_accreditation_to_attest<C>(
         federation_id: ObjectID,
         receiver: ObjectID,
@@ -363,6 +486,18 @@ pub(crate) trait ITHOperations {
     ///
     /// Removes specific accreditation rights from a user. The revoker must have
     /// sufficient permissions to revoke the target accreditation.
+    ///
+    /// # Parameters
+    ///
+    /// - `federation_id`: The target federation
+    /// - `user_id`: The user whose accreditation permissions to revoke
+    /// - `permission_id`: The specific accreditation permission to revoke
+    /// - `owner`: Address that owns the required `AccreditCap`
+    /// - `client`: The client to use for the operation
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the owner doesn't have `AccreditCap`.
     async fn revoke_accreditation_to_accredit<C>(
         federation_id: ObjectID,
         user_id: ObjectID,
@@ -401,6 +536,17 @@ pub(crate) trait ITHOperations {
     /// Retrieves all statement names registered in the federation.
     ///
     /// Returns a list of all statement types that can be attested within the federation.
+    /// This includes both active and revoked statements, but validation functions
+    /// will check expiration times when validating attestations.
+    ///
+    /// # Parameters
+    ///
+    /// - `federation_id`: The federation to query
+    /// - `client`: The client to use for the operation
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the federation object is not found or not shared.
     async fn get_statements<C>(federation_id: ObjectID, client: &C) -> Result<ProgrammableTransaction, Error>
     where
         C: CoreClientReadOnly + OptionalSync,
@@ -426,7 +572,23 @@ pub(crate) trait ITHOperations {
     /// Checks if a statement is registered in the federation.
     ///
     /// Verifies whether a specific statement type exists within the federation's
-    /// governance structure.
+    /// governance structure. This check is independent of the statement's
+    /// revocation status.
+    ///
+    /// # Parameters
+    ///
+    /// - `federation_id`: The federation to query
+    /// - `statement_name`: The statement type to check for
+    /// - `client`: The client to use for the operation
+    ///
+    /// # Returns
+    ///
+    /// A transaction that when executed returns true if the statement exists
+    /// in the federation, false otherwise.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the federation object is not found or not shared.
     async fn is_statement_in_federation<C>(
         federation_id: ObjectID,
         statement_name: StatementName,
@@ -457,7 +619,23 @@ pub(crate) trait ITHOperations {
     /// Retrieves attestation accreditations for a specific user.
     ///
     /// Returns the set of statements a user is authorized to attest, along with
-    /// any value constraints.
+    /// any value constraints. This shows what statements the user can create
+    /// attestations for, but not what they can delegate to others.
+    ///
+    /// # Parameters
+    ///
+    /// - `federation_id`: The federation to query
+    /// - `user_id`: The user whose attestation permissions to check
+    /// - `client`: The client to use for the operation
+    ///
+    /// # Returns
+    ///
+    /// A transaction that when executed returns the user's attestation
+    /// accreditations and their associated constraints.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the federation object is not found or not shared.
     async fn get_accreditations_to_attest<C>(
         federation_id: ObjectID,
         user_id: ObjectID,
@@ -518,7 +696,22 @@ pub(crate) trait ITHOperations {
     /// Retrieves accreditation permissions for a specific user.
     ///
     /// Returns the set of statements a user is authorized to delegate to others
-    /// for accreditation purposes.
+    /// for accreditation purposes. This shows what statements the user can
+    /// grant others permission to further delegate (create_accreditation_to_accredit).
+    ///
+    /// # Parameters
+    ///
+    /// - `federation_id`: The federation to query
+    /// - `user_id`: The user whose accreditation permissions to check
+    ///
+    /// # Returns
+    ///
+    /// A transaction that when executed returns the user's accreditation
+    /// permissions and their associated constraints.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the federation object is not found or not shared.
     async fn get_accreditations_to_accredit<C>(
         federation_id: ObjectID,
         user_id: ObjectID,
@@ -576,10 +769,27 @@ pub(crate) trait ITHOperations {
         Ok(tx)
     }
 
-    /// Revokes a statement by setting its validity expiration time.
+    /// Revokes a statement immediately using the current timestamp.
     ///
-    /// Sets a time limit on when a statement is considered valid. After the specified
-    /// time, the statement can no longer be attested. Requires `RootAuthorityCap`.
+    /// Sets the statement's validity expiration to the current time, effectively
+    /// revoking it immediately. After revocation, the statement can no longer be
+    /// attested. Requires `RootAuthorityCap`.
+    ///
+    /// # Parameters
+    ///
+    /// - `federation_id`: The federation containing the statement
+    /// - `statement_name`: The statement type to revoke
+    /// - `owner`: Address that owns the required `RootAuthorityCap`
+    /// - `client`: The client to use for the operation
+    ///
+    /// # Returns
+    ///
+    /// A transaction that when executed revokes the statement.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the owner doesn't have `RootAuthorityCap` or the
+    /// statement doesn't exist in the federation.
     async fn revoke_statement<C>(
         federation_id: ObjectID,
         statement_name: StatementName,
@@ -615,10 +825,28 @@ pub(crate) trait ITHOperations {
         Ok(tx)
     }
 
-    /// Revokes a statement by setting its validity expiration time.
+    /// Revokes a statement at a specific future timestamp.
     ///
-    /// Sets a time limit on when a statement is considered valid. After the specified
-    /// time, the statement can no longer be attested. Requires `RootAuthorityCap`.
+    /// Sets a specific time limit on when a statement is considered valid. After
+    /// the specified time, the statement can no longer be attested. This allows
+    /// for scheduled revocation. Requires `RootAuthorityCap`.
+    ///
+    /// # Parameters
+    ///
+    /// - `federation_id`: The federation containing the statement
+    /// - `statement_name`: The statement type to revoke
+    /// - `valid_to_ms`: Timestamp in milliseconds when the statement expires
+    /// - `owner`: Address that owns the required `RootAuthorityCap`
+    /// - `client`: The client to use for the operation
+    ///
+    /// # Returns
+    ///
+    /// A transaction that when executed revokes the statement.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the owner doesn't have `RootAuthorityCap` or the
+    /// statement doesn't exist in the federation.
     async fn revoke_statement_at<C>(
         federation_id: ObjectID,
         statement_name: StatementName,
@@ -656,9 +884,29 @@ pub(crate) trait ITHOperations {
         Ok(tx)
     }
 
-    // Validates a single statement against federation rules.
-    // Checks if the specified attester has permission to attest the given
-    // statement name and value combination according to their accreditations.
+    /// Validates a single statement against federation rules.
+    ///
+    /// Checks if the specified attester has permission to attest the given
+    /// statement name and value combination according to their accreditations.
+    /// This creates a transaction that will return true if the attester can
+    /// make the attestation, false otherwise.
+    ///
+    /// # Parameters
+    ///
+    /// - `federation_id`: The federation containing the statement rules
+    /// - `attester_id`: The entity whose attestation permissions to check
+    /// - `statement_name`: The statement type to validate
+    /// - `statement_value`: The specific value being attested
+    /// - `client`: The client to use for the operation
+    ///
+    /// # Returns
+    ///
+    /// A transaction that when executed returns a boolean indicating whether
+    /// the attestation is valid according to federation rules.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the federation object is not found or not shared.
     async fn validate_statement<C>(
         federation_id: ObjectID,
         attester_id: ObjectID,
@@ -697,8 +945,25 @@ pub(crate) trait ITHOperations {
 
     /// Validates multiple statements against federation rules.
     ///
-    /// Checks if the specified issuer has permission to attest all provided
+    /// Checks if the specified entity has permission to attest all provided
     /// statement name-value pairs according to their accreditations.
+    /// This is more efficient than multiple single-statement validations.
+    ///
+    /// # Parameters
+    ///
+    /// - `federation_id`: The federation containing the statement rules
+    /// - `entity_id`: The entity whose attestation permissions to check
+    /// - `statements`: Map of statement names to their values for validation
+    /// - `client`: The client to use for the operation
+    ///
+    /// # Returns
+    ///
+    /// A transaction that when executed returns true only if the entity
+    /// has permission to attest all provided statements.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the federation object is not found or not shared.
     async fn validate_statements<C>(
         federation_id: ObjectID,
         entity_id: ObjectID,

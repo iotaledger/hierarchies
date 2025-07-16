@@ -22,7 +22,8 @@ async fn main() -> anyhow::Result<()> {
     let federation = ith_client
         .create_new_federation()
         .build_and_execute(&ith_client)
-        .await?;
+        .await?
+        .output;
 
     println!("Federation created: {federation:#?}");
 

@@ -1,6 +1,10 @@
 // Copyright 2020-2025 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+//! # ITH Core
+//!
+//! This module provides the core functionality for the ITH (IOTA Trust Hierarchy) module.
+
 pub mod operations;
 pub mod transactions;
 pub mod types;

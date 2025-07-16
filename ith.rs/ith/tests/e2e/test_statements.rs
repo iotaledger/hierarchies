@@ -94,11 +94,8 @@ async fn test_revoke_statement() -> anyhow::Result<()> {
         )
         .build_and_execute(&client)
         .await?;
-
-    // Revoke the statement with a specific timestamp
-    let revoke_time = 1234567890u64;
     let result = client
-        .revoke_statement(*federation_id.object_id(), statement_name.clone(), Some(revoke_time))
+        .revoke_statement(*federation_id.object_id(), statement_name.clone(), None)
         .build_and_execute(&client)
         .await;
 

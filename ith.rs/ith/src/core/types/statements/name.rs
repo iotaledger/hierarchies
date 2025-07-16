@@ -1,6 +1,10 @@
 // Copyright 2020-2025 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+//! # ITH Statement Name
+//!
+//! This module provides a struct for representing a statement name.
+
 use std::str::FromStr;
 
 use iota_interaction::ident_str;

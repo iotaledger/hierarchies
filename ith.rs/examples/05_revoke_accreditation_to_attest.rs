@@ -10,8 +10,7 @@ use ith::core::types::statements::value::StatementValue;
 use ith::core::types::statements::Statement;
 use ith::core::types::timespan::Timespan;
 use ith::core::types::Federation;
-use product_common::core_client::{CoreClient, CoreClientReadOnly};
-use trust_hierarchies_examples::get_funded_client;
+use product_common::core_client::CoreClient;
 
 /// Demonstrate how to issue a permission to attest to a Statement.
 ///
@@ -81,7 +80,7 @@ async fn main() -> anyhow::Result<()> {
     println!("Issued permission to attest");
 
     // Check if the permission was issued
-    let federation: Federation = client.get_object_by_id(federation_id).await?;
+    let federation: Federation = client.get_federation_by_id(federation_id).await?;
 
     // Check if the receiver has the permission to attest
     let can_attest = federation.governance.accreditations_to_attest.contains_key(&receiver);
@@ -103,7 +102,7 @@ async fn main() -> anyhow::Result<()> {
         .context("Failed to revoke permission to attest")?;
 
     // Check if the permission was revoked
-    let federation: Federation = client.get_object_by_id(federation_id).await?;
+    let federation: Federation = client.get_federation_by_id(federation_id).await?;
 
     println!("Federation: {federation:#?}");
 

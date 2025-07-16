@@ -1,13 +1,17 @@
 // Copyright 2020-2025 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! # Create Federation
+//! # Add Root Authority Transaction
 //!
-//! This module defines the create federation struct and the operations for create federation.
+//! This module provides the transaction implementation for adding new root authorities
+//! to an existing federation in the ITH system.
 //!
 //! ## Overview
 //!
-//! The create federation is a struct that contains the state, metadata, and operations for a create federation.
+//! The `AddRootAuthority` transaction grants root authority capabilities to a new
+//! account within a federation. Root authorities have the highest level of trust
+//! and can perform all operations within the federation, including adding other
+//! root authorities and managing statements.
 
 use async_trait::async_trait;
 use iota_interaction::rpc_types::IotaTransactionBlockEffects;
@@ -21,6 +25,16 @@ use tokio::sync::OnceCell;
 use crate::core::operations::{ITHImpl, ITHOperations};
 use crate::error::Error;
 
+/// A transaction that adds a new root authority to an existing federation.
+///
+/// This transaction grants `RootAuthorityCap` to a new account, allowing them
+/// to perform all federation operations including adding other root authorities,
+/// managing statements, and creating accreditations.
+///
+/// ## Requirements
+///
+/// - The signer must already possess a `RootAuthorityCap` for the federation
+/// - The target account must not already have root authority capabilities
 pub struct AddRootAuthority {
     federation_id: ObjectID,
     account_id: ObjectID,
@@ -31,13 +45,15 @@ pub struct AddRootAuthority {
 impl AddRootAuthority {
     /// Creates a new [`AddRootAuthority`] instance.
     ///
-    /// ## Arguments
+    /// # Parameters
     ///
-    /// * `federation_id` - The ID of the federation where the root authority will be added.
-    /// * `account_id` - The account ID of the root authority.
-    /// * `signer_address` - The address of the signer (Used for the cap).
+    /// - `federation_id`: The ID of the federation where the root authority will be added
+    /// - `account_id`: The account ID that will receive root authority capabilities
+    /// - `signer_address`: The address of the current root authority performing the operation
     ///
-    /// ## Returns
+    /// # Returns
+    ///
+    /// A new `AddRootAuthority` transaction instance ready for execution.
     pub fn new(federation_id: ObjectID, account_id: ObjectID, signer_address: IotaAddress) -> Self {
         Self {
             federation_id,
@@ -47,7 +63,22 @@ impl AddRootAuthority {
         }
     }
 
-    /// Makes a [`ProgrammableTransaction`] for the [`CreateFederation`] instance.
+    /// Builds the programmable transaction for adding a root authority.
+    ///
+    /// This method creates the underlying Move transaction that will grant
+    /// `RootAuthorityCap` to the target account.
+    ///
+    /// # Parameters
+    ///
+    /// - `client`: The client providing access to the IOTA network
+    ///
+    /// # Returns
+    ///
+    /// A `ProgrammableTransaction` ready for execution on the IOTA network.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the signer doesn't have the required `RootAuthorityCap`.
     async fn make_ptb<C>(&self, client: &C) -> Result<ProgrammableTransaction, Error>
     where
         C: CoreClientReadOnly + OptionalSync,

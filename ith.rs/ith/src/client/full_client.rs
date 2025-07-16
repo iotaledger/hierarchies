@@ -189,6 +189,17 @@ where
         TransactionBuilder::new(AddRootAuthority::new(federation_id, account_id, self.sender_address()))
     }
 
+    /// Creates a new [`AddStatement`] transaction builder.
+    ///
+    /// # Arguments
+    ///
+    /// * `federation_id`: The [`ObjectID`] of the federation.
+    /// * `statement_name`: The name of the statement.
+    /// * `allowed_values`: The allowed values for the statement.
+    /// * `allow_any`: Whether to allow any value.
+    ///
+    /// # Returns
+    /// A [`TransactionBuilder`] for the [`AddStatement`] transaction.
     pub fn add_statement(
         &self,
         federation_id: ObjectID,
@@ -205,6 +216,16 @@ where
         ))
     }
 
+    /// Creates a new [`RevokeStatement`] transaction builder.
+    ///
+    /// # Arguments
+    ///
+    /// * `federation_id`: The [`ObjectID`] of the federation.
+    /// * `statement_name`: The name of the statement.
+    /// * `valid_to_ms`: The timestamp in milliseconds until which the statement is valid.
+    ///
+    /// # Returns
+    /// A [`TransactionBuilder`] for the [`RevokeStatement`] transaction.
     pub fn revoke_statement(
         &self,
         federation_id: ObjectID,
@@ -219,6 +240,16 @@ where
         ))
     }
 
+    /// Creates a new [`CreateAccreditationToAttest`] transaction builder.
+    ///
+    /// # Arguments
+    ///
+    /// * `federation_id`: The [`ObjectID`] of the federation.
+    /// * `receiver`: The [`ObjectID`] of the receiver.
+    /// * `want_statements`: The statements for which permissions are being granted.
+    ///
+    /// # Returns
+    /// A [`TransactionBuilder`] for the [`CreateAccreditationToAttest`] transaction.
     pub fn create_accreditation_to_attest(
         &self,
         federation_id: ObjectID,
@@ -233,6 +264,16 @@ where
         ))
     }
 
+    /// Creates a new [`RevokeAccreditationToAttest`] transaction builder.
+    ///
+    /// # Arguments
+    ///
+    /// * `federation_id`: The [`ObjectID`] of the federation.
+    /// * `user_id`: The [`ObjectID`] of the user.
+    /// * `permission_id`: The [`ObjectID`] of the permission.
+    ///
+    /// # Returns
+    /// A [`TransactionBuilder`] for the [`RevokeAccreditationToAttest`] transaction.
     pub fn revoke_accreditation_to_attest(
         &self,
         federation_id: ObjectID,
@@ -247,6 +288,16 @@ where
         ))
     }
 
+    /// Creates a new [`CreateAccreditation`] transaction builder.
+    ///
+    /// # Arguments
+    ///
+    /// * `federation_id`: The [`ObjectID`] of the federation.
+    /// * `receiver`: The [`ObjectID`] of the receiver.
+    /// * `want_statements`: The statements for which permissions are being granted.
+    ///
+    /// # Returns
+    /// A [`TransactionBuilder`] for the [`CreateAccreditation`] transaction.
     pub fn create_accreditation_to_accredit(
         &self,
         federation_id: ObjectID,
@@ -261,6 +312,16 @@ where
         ))
     }
 
+    /// Creates a new [`RevokeAccreditationToAccredit`] transaction builder.
+    ///
+    /// # Arguments
+    ///
+    /// * `federation_id`: The [`ObjectID`] of the federation.
+    /// * `user_id`: The [`ObjectID`] of the user.
+    /// * `permission_id`: The [`ObjectID`] of the permission.
+    ///
+    /// # Returns
+    /// A [`TransactionBuilder`] for the [`RevokeAccreditationToAccredit`] transaction.
     pub fn revoke_accreditation_to_accredit(
         &self,
         federation_id: ObjectID,

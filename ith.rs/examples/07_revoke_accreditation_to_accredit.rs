@@ -10,8 +10,8 @@ use ith::core::types::statements::value::StatementValue;
 use ith::core::types::statements::Statement;
 use ith::core::types::timespan::Timespan;
 use ith::core::types::Federation;
-use product_common::core_client::{CoreClient, CoreClientReadOnly};
-use trust_hierarchies_examples::get_funded_client;
+use product_common::core_client::CoreClient;
+
 /// Demonstrate how to issue a permission to accredit to a Statement.
 ///
 /// In this example we connect to a locally running private network, but it can
@@ -68,26 +68,23 @@ async fn main() -> anyhow::Result<()> {
 
     // Let us issue a permission to accredit to the Statement
     ith_client
-        .create_accreditation_to_attest(federation_id, receiver, vec![statements.clone()])
+        .create_accreditation_to_accredit(federation_id, receiver, vec![statements.clone()])
         .build_and_execute(&ith_client)
         .await
         .context("Failed to issue permission to attest")?;
 
     // Issue permission to the original account
     ith_client
-        .create_accreditation_to_attest(federation_id, ith_client.sender_address().into(), vec![statements])
+        .create_accreditation_to_accredit(federation_id, ith_client.sender_address().into(), vec![statements])
         .build_and_execute(&ith_client)
         .await
         .context("Failed to issue permission to attest")?;
 
     println!("Issued permission to attest");
 
-    // Check if the permission was issued
-    let federation: Federation = ith_client.get_object_by_id(federation_id).await?;
-
+    println!("Checking if the receiver has the permission to accredit");
     // Check if the receiver has the permission to accredit
-    let can_accredit = federation.governance.accreditations_to_accredit.contains_key(&receiver);
-
+    let can_accredit = ith_client.is_accreditor(federation_id, receiver).await?;
     assert!(can_accredit);
 
     // Revoke the permission
@@ -105,7 +102,7 @@ async fn main() -> anyhow::Result<()> {
         .context("Failed to revoke permission to accredit")?;
 
     // Check if the permission was revoked
-    let federation: Federation = ith_client.get_object_by_id(federation_id).await?;
+    let federation: Federation = ith_client.get_federation_by_id(federation_id).await?;
 
     println!("Federation: {federation:#?}");
 

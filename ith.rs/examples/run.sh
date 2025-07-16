@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 
 # Script to run all ITH examples
 # Usage: ./run.sh
@@ -16,12 +16,12 @@ echo "================================"
 
 examples=(
     "getting_started"
+    "01_validation_get_attestations_and_accreditations"
+    "02_validation_validate_statements"
+    "03_validation_get_statements"
     "01_create_federation"
-    "01_get_attestations_and_accreditations"
-    "02_validate_statements"
-    "03_get_statements"
     "02_add_root_authority"
-    "03_add_and_remove_statement"
+    "03_add_statements"
     "04_create_accreditation_to_attest"
     "05_revoke_accreditation_to_attest"
     "06_create_accreditation_to_accredit"

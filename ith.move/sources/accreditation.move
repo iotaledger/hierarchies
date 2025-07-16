@@ -13,22 +13,25 @@ public struct Accreditations has store {
     statements: vector<Accreditation>,
 }
 
-  /// Creates a new empty list of Accreditations.
-  public fun new_empty_accreditations() : Accreditations {
+/// Creates a new empty list of Accreditations.
+public fun new_empty_accreditations(): Accreditations {
     Accreditations {
         statements: vector::empty(),
     }
 }
 
-  /// Creates a collection of Accreditations.
-  public fun new_accreditations(statements : vector<Accreditation>) : Accreditations {
+/// Creates a collection of Accreditations.
+public fun new_accreditations(statements: vector<Accreditation>): Accreditations {
     Accreditations {
         statements: statements,
     }
 }
 
-  /// Adds an accredited Statement to the list of accreditations.
-  public(package) fun add_accreditation(self : &mut Accreditations, accredited_statement : Accreditation) {
+/// Adds an accredited Statement to the list of accreditations.
+public(package) fun add_accreditation(
+    self: &mut Accreditations,
+    accredited_statement: Accreditation,
+) {
     self.statements.push_back(accredited_statement);
 }
 
