@@ -164,6 +164,14 @@ impl ITHClientReadOnly {
         Self::new_internal(client, network).await
     }
 
+    /// Retrieves a federation by its ID.
+    ///
+    /// # Arguments
+    ///
+    /// * `federation_id`: The [`ObjectID`] of the federation.
+    ///
+    /// # Returns
+    /// A `Result` containing the [`Federation`] object or an [`Error`].
     pub async fn get_federation_by_id(&self, federation_id: ObjectID) -> Result<Federation, Error> {
         let fed = get_object_ref_by_id_with_bcs(self, &federation_id).await?;
 
