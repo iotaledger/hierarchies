@@ -1,3 +1,6 @@
+// Copyright 2025 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 mod accreditations;
 mod federation;
 mod statement_condition;

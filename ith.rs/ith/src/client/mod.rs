@@ -1,3 +1,6 @@
+// Copyright 2020-2025 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 //! Client module provides the client interface for the ITH service.
 //! Clients can be used to interact with the ITH service, create new federations,
 //! add statements, create attestations, and accreditations.
