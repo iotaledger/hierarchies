@@ -1,13 +1,18 @@
 // Copyright 2020-2025 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! # Create Federation
+//! # Create Federation Transaction
 //!
-//! This module defines the create federation struct and the operations for create federation.
+//! This module provides the transaction implementation for creating new federations
+//! in the ITH system. A federation serves as the root trust authority for a
+//! hierarchical trust network.
 //!
 //! ## Overview
 //!
-//! The create federation is a struct that contains the state, metadata, and operations for a create federation.
+//! The `CreateFederation` transaction creates a new shared federation object on the
+//! IOTA network and grants the transaction sender all three initial capability types:
+//! `RootAuthorityCap`, `AccreditCap`, and `AttestCap`. This establishes the sender
+//! as the federation's root authority with full control over the trust hierarchy.
 
 use async_trait::async_trait;
 use iota_interaction::rpc_types::{IotaTransactionBlockEffects, IotaTransactionBlockEvents};
@@ -35,13 +40,28 @@ impl Default for CreateFederation {
 
 impl CreateFederation {
     /// Creates a new [`CreateFederation`] instance.
+    ///
+    /// This creates a reusable transaction builder that can be used to create
+    /// multiple federation creation transactions. The transaction is cached
+    /// after the first build for efficiency.
     pub fn new() -> Self {
         Self {
             cached_ptb: OnceCell::new(),
         }
     }
 
-    /// Makes a [`ProgrammableTransaction`] for the [`CreateFederation`] instance.
+    /// Builds the programmable transaction for creating a federation.
+    ///
+    /// This method creates the underlying Move transaction that will create
+    /// the federation object and grant capabilities to the sender.
+    ///
+    /// # Parameters
+    ///
+    /// - `client`: The client providing the ITH package ID
+    ///
+    /// # Returns
+    ///
+    /// A `ProgrammableTransaction` ready for execution on the IOTA network.
     async fn make_ptb(&self, client: &impl CoreClientReadOnly) -> Result<ProgrammableTransaction, Error> {
         ITHImpl::new_federation(client.package_id())
     }

@@ -1,3 +1,11 @@
+// Copyright 2020-2025 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
+//! # ITH Capabilities
+//!
+//! This module provides capability types for the ITH (IOTA Trust Hierarchy)
+//! module.
+
 use core::fmt;
 use std::fmt::Display;
 
