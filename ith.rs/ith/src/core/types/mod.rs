@@ -36,7 +36,7 @@ pub struct RootAuthority {
 /// Represents the governance of a federation
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Governance {
-    id: UID,
+    pub id: UID,
     pub statements: Statements,
     #[serde(deserialize_with = "deserialize_vec_map")]
     pub accreditations_to_accredit: HashMap<ObjectID, Accreditations>,

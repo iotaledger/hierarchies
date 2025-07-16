@@ -6,9 +6,8 @@ use js_sys::Uint8Array;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
-// use crate::wasm_time_lock::WasmTimeLock;
-
 #[wasm_bindgen(js_name = StatementName, inspectable)]
+#[derive(Deserialize, Serialize)]
 pub struct WasmStatementName(pub(crate) StatementName);
 
 impl From<StatementName> for WasmStatementName {

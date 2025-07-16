@@ -1,6 +1,7 @@
 // Copyright 2025 IOTA Stiftung
 // SPDX-License-Identifier: Apache-1.0
 
+use std::collections::HashMap;
 use std::str::FromStr;
 
 use anyhow::anyhow;
@@ -14,8 +15,7 @@ use product_common::bindings::WasmObjectID;
 use product_common::core_client::CoreClientReadOnly;
 use wasm_bindgen::prelude::*;
 
-
-use crate::wasm_types::{WasmAccreditations, WasmStatementName, WasmStatementValue};
+use crate::wasm_types::{WasmAccreditations, WasmStatementName, WasmStatementValue, WasmFederation};
 
 /// A client to interact with Hierarchies objects on the IOTA ledger.
 ///
@@ -116,6 +116,13 @@ impl WasmHierarchiesClientReadOnly {
         self.0.chain_id().to_string()
     }
 
+    #[wasm_bindgen(js_name = getFederationById)]
+    pub async fn get_federation_by_id(&self, federation_id: WasmObjectID) -> Result<WasmFederation> {
+        let federation_id = parse_wasm_object_id(&federation_id)?;
+        let federation = self.0.get_federation_by_id(federation_id).await.map_err(wasm_error)?;
+        Ok(federation.into())
+    }
+
     /// Retrieves all statement names registered in the federation.
     ///
     /// # Arguments
@@ -124,12 +131,21 @@ impl WasmHierarchiesClientReadOnly {
     ///
     /// # Returns
     /// A `Result` containing the list of statement names or an [`Error`].
-    #[wasm_bindgen(js_name = gestStatements)]
+    #[wasm_bindgen(js_name = getStatements)]
     pub async fn get_statements(
         &self,
         federation_id: WasmObjectID,
     ) -> Result<Vec<WasmStatementName>> {
-        todo!("Implement get_statements in WasmHierarchiesClientReadOnly");
+        let federation_id = parse_wasm_object_id(&federation_id)?;
+        let statements = self
+            .0
+            .get_statements(federation_id)
+            .await
+            .map_err(wasm_error)?;
+        Ok(statements
+            .into_iter()
+            .map(|statement| statement.into())
+            .collect())
     }
 
     /// Checks if a statement is registered in the federation.
@@ -170,7 +186,14 @@ impl WasmHierarchiesClientReadOnly {
         federation_id: WasmObjectID,
         user_id: WasmObjectID,
     ) -> Result<WasmAccreditations> {
-        todo!()
+        let federation_id = parse_wasm_object_id(&federation_id)?;
+        let user_id = parse_wasm_object_id(&user_id)?;
+        let accreditations = self
+            .0
+            .get_accreditations_to_attest(federation_id, user_id)
+            .await
+            .map_err(wasm_error)?;
+        Ok(accreditations.into())
     }
 
     /// Checks if a user has attestation permissions.
@@ -188,7 +211,14 @@ impl WasmHierarchiesClientReadOnly {
         federation_id: WasmObjectID,
         user_id: WasmObjectID,
     ) -> Result<bool> {
-        todo!()
+        let federation_id = parse_wasm_object_id(&federation_id)?;
+        let user_id = parse_wasm_object_id(&user_id)?;
+        let is_attester = self
+            .0
+            .is_attester(federation_id, user_id)
+            .await
+            .map_err(wasm_error)?;
+        Ok(is_attester)
     }
 
     /// Retrieves accreditations to accredit for a specific user.
@@ -206,7 +236,14 @@ impl WasmHierarchiesClientReadOnly {
         federation_id: WasmObjectID,
         user_id: WasmObjectID,
     ) -> Result<WasmAccreditations> {
-        todo!()
+        let federation_id = parse_wasm_object_id(&federation_id)?;
+        let user_id = parse_wasm_object_id(&user_id)?;
+        let accreditations = self
+            .0
+            .get_accreditations_to_accredit(federation_id, user_id)
+            .await
+            .map_err(wasm_error)?;
+        Ok(accreditations.into())
     }
 
     /// Checks if a user has accreditations to accredit.
@@ -224,7 +261,14 @@ impl WasmHierarchiesClientReadOnly {
         federation_id: WasmObjectID,
         user_id: WasmObjectID,
     ) -> Result<bool> {
-        todo!()
+        let federation_id = parse_wasm_object_id(&federation_id)?;
+        let user_id = parse_wasm_object_id(&user_id)?;
+        let is_accreditor = self
+            .0
+            .is_accreditor(federation_id, user_id)
+            .await
+            .map_err(wasm_error)?;
+        Ok(is_accreditor)
     }
 
     /// Validates a statement for a specific user.
@@ -246,7 +290,16 @@ impl WasmHierarchiesClientReadOnly {
         statement_name: WasmStatementName,
         statement_value: WasmStatementValue,
     ) -> Result<bool> {
-        todo!()
+        let federation_id = parse_wasm_object_id(&federation_id)?;
+        let user_id = parse_wasm_object_id(&user_id)?;
+        let statement_name = statement_name.into();
+        let statement_value = statement_value.into();
+        let is_valid = self
+            .0
+            .validate_statement(federation_id, user_id, statement_name, statement_value)
+            .await
+            .map_err(wasm_error)?;
+        Ok(is_valid)
     }
 
     /// Validates multiple statements for a specific user.
@@ -264,8 +317,27 @@ impl WasmHierarchiesClientReadOnly {
         &self,
         federation_id: WasmObjectID,
         entity_id: WasmObjectID,
-        statements: js_sys::Array,
+        statements: js_sys::Map,
     ) -> Result<bool> {
-        todo!()
+        let federation_id = parse_wasm_object_id(&federation_id)?;
+        let entity_id = parse_wasm_object_id(&entity_id)?;
+
+        let mut converted_statements = HashMap::new();
+
+        statements.for_each(&mut |value, key| {
+            if let (Ok(statement_name), Ok(statement_value)) = (
+                serde_wasm_bindgen::from_value::<WasmStatementName>(key),
+                serde_wasm_bindgen::from_value::<WasmStatementValue>(value),
+            ) {
+                converted_statements.insert(statement_name.into(), statement_value.into());
+            }
+        });
+
+        let is_valid = self
+            .0
+            .validate_statements(federation_id, entity_id, converted_statements)
+            .await
+            .map_err(wasm_error)?;
+        Ok(is_valid)
     }
 }
