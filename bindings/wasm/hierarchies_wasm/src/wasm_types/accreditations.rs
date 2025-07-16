@@ -1,6 +1,9 @@
+use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
+/// Represents a collection of accreditation statements
 #[wasm_bindgen(js_name = Accreditations, inspectable)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct WasmAccreditations(pub(crate) ith::core::types::Accreditations);
 
 impl From<ith::core::types::Accreditations> for WasmAccreditations {
