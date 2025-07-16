@@ -47,9 +47,7 @@ default-features = false
 features = []
 
 [target.'cfg(all(target_arch = "wasm32", not(target_os = "wasi")))'.dependencies]
-getrandom = { version = "0.3", default-features = false, features = [
-  "wasm_js",
-] }
+getrandom = { version = "0.3", default-features = false, features = ["wasm_js"] }
 
 [profile.release]
 opt-level = 's'
@@ -67,6 +65,4 @@ empty_docs = "allow"
 
 [lints.rust]
 # required for current wasm_bindgen version
-unexpected_cfgs = { level = "warn", check-cfg = [
-  'cfg(wasm_bindgen_unstable_test_coverage)',
-] }
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(wasm_bindgen_unstable_test_coverage)'] }

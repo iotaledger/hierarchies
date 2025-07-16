@@ -4,8 +4,7 @@
     "markdown": {},
     "toml": {},
     "typescript": {
-        "indentWidth": 4,
-        "arrayExpression.preferHanging": true
+        "indentWidth": 4
     },
     "yaml": {},
     "includes": [

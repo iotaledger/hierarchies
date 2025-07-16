@@ -39,4 +39,4 @@ jobs:
           input-artifact-name: trust-hierarchies-wasm-bindings-build
           npm-token: ${{ secrets.NPM_TRUST_HIERARCHIES_TOKEN }}
           tag: ${{ github.event.inputs.tag }}
-          working-directory: ./bindings/wasm/trust_hierarchies_wasm
+          working-directory: ./bindings/wasm/hierarchies_wasm
