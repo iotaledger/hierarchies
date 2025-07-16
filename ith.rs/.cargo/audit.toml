@@ -1,0 +1,5 @@
+[advisories]
+ignore = [
+  "RUSTSEC-2023-0071", # temporary ignore until fix is provided
+  "RUSTSEC-2024-0437", # protobuf uncontrolled recursion https://github.com/iotaledger/iota/issues/5861
+]
