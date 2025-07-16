@@ -26,4 +26,4 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TRUST_HIERARCHIES_TOKEN }}
         run: |
-          npm dist-tag add @iota/trust-hierarchies@${{ github.event.inputs.version }} ${{ github.event.inputs.tag }}
+          npm dist-tag add @iota/hierarchies@${{ github.event.inputs.version }} ${{ github.event.inputs.tag }}
