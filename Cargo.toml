@@ -1,6 +1,7 @@
 [workspace]
-members = ["examples", "ith"]
-exclude = ["bindings/wasm/trust_hierarchies_wasm"]
+members = ["ith.rs/examples", 
+"ith.rs/ith"]
+exclude = ["bindings/wasm/hierarchies_wasm"]
 resolver = "2"
 
 [workspace.package]
