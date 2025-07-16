@@ -1,5 +1,5 @@
-// Copyright 2025 IOTA Stiftung
-// SPDX-License-Identifier: Apache-1.0
+// Copyright 2020-2025 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
 
 use std::collections::HashMap;
 use std::str::FromStr;
