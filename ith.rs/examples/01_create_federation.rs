@@ -1,3 +1,6 @@
+// Copyright 2020-2025 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use trust_hierarchies_examples::get_funded_client;
 
 /// Demonstrates how to create a Federation and publish it on chain.

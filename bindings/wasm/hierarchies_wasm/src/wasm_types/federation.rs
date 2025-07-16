@@ -1,3 +1,6 @@
+// Copyright 2025 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use ith::core::types::statements::{Statement, Statements};
 use ith::core::types::timespan::Timespan;
 use ith::core::types::{Federation, Governance, RootAuthority};

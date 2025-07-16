@@ -1,3 +1,6 @@
+// Copyright 2020-2025 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 //! # IOTA ITH (IOTA Trust Hierarchies)
 
 //! The **ITH (IOTA Trust Hierarchies)** is a non-opinionated solution designed

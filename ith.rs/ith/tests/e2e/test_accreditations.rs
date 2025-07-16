@@ -1,3 +1,6 @@
+// Copyright 2020-2025 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use std::collections::HashSet;
 
 use iota_interaction::types::base_types::ObjectID;
