@@ -11,6 +11,7 @@ use ith::core::types::statements::Statement;
 use ith::core::types::timespan::Timespan;
 use ith::core::types::Federation;
 use product_common::core_client::CoreClient;
+use trust_hierarchies_examples::get_funded_client;
 
 /// Demonstrate how to issue a permission to attest to a Statement.
 ///

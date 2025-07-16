@@ -7,7 +7,7 @@ The `build` folder provides build scripts needed to build the artifacts.
 
 Here is an overview of the existing artifacts:
 
-- `trust_hierarchies_wasm`<br>
+- `hierarchies_wasm`<br>
   Exports the NotarizationClient to TypeScript using wasm-bindgen generated wasm bindings
 
 ## Building an Artifact

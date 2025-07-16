@@ -43,10 +43,9 @@ jobs:
         uses: actions-rs-plus/clippy-check@b09a9c37c9df7db8b1a5d52e8fe8e0b6e3d574c4
         with:
           args: --all-targets --all-features -- -D warnings
-          working-directory: ith.rs
 
-      # - name: Wasm clippy check trust_hierarchies_wasm
+      # - name: Wasm clippy check hierarchies_wasm
       #   uses: actions-rs-plus/clippy-check@b09a9c37c9df7db8b1a5d52e8fe8e0b6e3d574c4
       #   if: ${{ false }}
       #   with:
-      #     args: --manifest-path ./bindings/wasm/trust_hierarchies_wasm/Cargo.toml --target wasm32-unknown-unknown --all-targets --all-features -- -D warnings
+      #     args: --manifest-path ./bindings/wasm/hierarchies_wasm/Cargo.toml --target wasm32-unknown-unknown --all-targets --all-features -- -D warnings
