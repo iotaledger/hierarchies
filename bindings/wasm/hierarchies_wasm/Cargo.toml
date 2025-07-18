@@ -21,8 +21,8 @@ async-trait = { version = "0.1", default-features = false }
 bcs = "0.1.6"
 console_error_panic_hook = { version = "0.1" }
 fastcrypto = { git = "https://github.com/MystenLabs/fastcrypto", rev = "2f502fd8570fe4e9cff36eea5bbd6fef22002898", package = "fastcrypto" }
-iota_interaction = { git = "https://github.com/iotaledger/product-core.git", tag = "v0.6.1", package = "iota_interaction", default-features = false }
-iota_interaction_ts = { git = "https://github.com/iotaledger/product-core.git", tag = "v0.6.1", package = "iota_interaction_ts" }
+iota_interaction = { git = "https://github.com/iotaledger/product-core.git", tag = "v0.7.0", package = "iota_interaction", default-features = false }
+iota_interaction_ts = { git = "https://github.com/iotaledger/product-core.git", tag = "v0.7.0", package = "iota_interaction_ts" }
 js-sys = { version = "0.3.61" }
 prefix-hex = { version = "0.7", default-features = false }
 serde = { version = "1.0", features = ["derive"] }
@@ -37,14 +37,21 @@ wasm-bindgen-futures = { version = "0.4", default-features = false }
 
 [dependencies.product_common]
 git = "https://github.com/iotaledger/product-core.git"
-tag = "v0.6.1"
+tag = "v0.7.0"
 package = "product_common"
-features = ["core-client", "transaction", "bindings", "binding-utils"]
+features = [
+  "core-client",
+  "transaction",
+  "bindings",
+  "binding-utils",
+  "gas-station",
+  "default-http-client",
+]
 
 [dependencies.ith]
 path = "../../../ith.rs/ith"
 default-features = false
-features = []
+features = ["gas-station", "default-http-client"]
 
 [target.'cfg(all(target_arch = "wasm32", not(target_os = "wasi")))'.dependencies]
 getrandom = { version = "0.3", default-features = false, features = ["wasm_js"] }

@@ -13,8 +13,11 @@ extern crate serde;
 
 use wasm_bindgen::prelude::*;
 
-pub(crate) mod wasm_types;
 mod client_read_only;
+pub(crate) mod wasm_types;
+
+// Export all product_common's bindings (e.g. Transaction, CoreClient, gas-station stuff, etc).
+pub use product_common::bindings::*;
 
 /// Initializes the console error panic hook for better error messages
 #[wasm_bindgen(start)]

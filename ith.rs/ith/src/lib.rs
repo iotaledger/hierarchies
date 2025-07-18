@@ -22,3 +22,8 @@ pub mod error;
 mod iota_interaction_adapter;
 pub mod package;
 mod utils;
+
+#[cfg(feature = "gas-station")]
+pub mod http_client {
+    pub use product_common::http_client::*;
+}
