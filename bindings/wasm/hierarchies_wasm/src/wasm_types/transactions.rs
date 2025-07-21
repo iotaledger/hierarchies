@@ -1,3 +1,6 @@
+// Copyright 2025 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use std::collections::HashSet;
 
 use iota_interaction_ts::bindings::{WasmIotaTransactionBlockEffects, WasmIotaTransactionBlockEvents};
