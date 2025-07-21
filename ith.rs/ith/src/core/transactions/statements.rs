@@ -1,11 +1,11 @@
+// Copyright 2020-2025 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 //! # Statement Management Transactions
 //!
 //! This module provides transaction implementations for managing statements
 //! within ITH federations. Statements define the types of claims that can
 //! be attested within a federation.
-
-// Copyright 2020-2025 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
 
 use std::collections::HashSet;
 
