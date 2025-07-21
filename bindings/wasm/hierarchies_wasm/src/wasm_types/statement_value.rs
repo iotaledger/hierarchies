@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use ith::core::types::statements::value::StatementValue;
-use js_sys::Uint8Array;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
