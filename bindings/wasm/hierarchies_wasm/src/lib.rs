@@ -13,8 +13,9 @@ extern crate serde;
 
 use wasm_bindgen::prelude::*;
 
-pub(crate) mod wasm_types;
 mod client_read_only;
+mod full_client;
+pub(crate) mod wasm_types;
 
 /// Initializes the console error panic hook for better error messages
 #[wasm_bindgen(start)]

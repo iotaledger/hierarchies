@@ -8,9 +8,7 @@ use product_common::bindings::WasmObjectID;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::wasm_bindgen;
 
-use crate::wasm_types::{
-    WasmAccreditations, WasmStatementCondition, WasmStatementName, WasmStatementValue,
-};
+use crate::wasm_types::{WasmAccreditations, WasmStatementCondition, WasmStatementName, WasmStatementValue};
 
 /// Represents a federation. A federation is a group of entities that have agreed to work together
 #[wasm_bindgen(js_name = Federation, inspectable)]
@@ -49,11 +47,7 @@ impl WasmFederation {
     /// An array of root authorities.
     #[wasm_bindgen(getter, js_name = rootAuthorities)]
     pub fn root_authorities(&self) -> Vec<WasmRootAuthority> {
-        self.0
-            .root_authorities
-            .iter()
-            .map(|ra| ra.clone().into())
-            .collect()
+        self.0.root_authorities.iter().map(|ra| ra.clone().into()).collect()
     }
 }
 
@@ -200,6 +194,12 @@ impl From<Statement> for WasmStatement {
     }
 }
 
+impl From<WasmStatement> for Statement {
+    fn from(value: WasmStatement) -> Self {
+        serde_wasm_bindgen::from_value(value.into()).expect("From implementation works")
+    }
+}
+
 #[wasm_bindgen(js_class = Statement)]
 impl WasmStatement {
     /// Retrieves the statement name.
@@ -217,11 +217,7 @@ impl WasmStatement {
     /// An array of allowed statement values.
     #[wasm_bindgen(getter, js_name = allowedValues)]
     pub fn allowed_values(&self) -> Vec<WasmStatementValue> {
-        self.0
-            .allowed_values
-            .iter()
-            .map(|v| v.clone().into())
-            .collect()
+        self.0.allowed_values.iter().map(|v| v.clone().into()).collect()
     }
 
     /// Retrieves the condition for this statement.
