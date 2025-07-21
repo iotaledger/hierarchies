@@ -1,8 +1,8 @@
 use anyhow::Context;
-use examples::get_funded_client;
 use iota_sdk::types::base_types::ObjectID;
 use ith::core::types::Federation;
 use product_common::core_client::CoreClientReadOnly;
+use trust_hierarchies_examples::get_funded_client;
 
 /// Demonstrate how to add a root authority to a federation.
 ///

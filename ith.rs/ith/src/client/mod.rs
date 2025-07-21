@@ -11,16 +11,17 @@ mod full_client;
 mod read_only;
 
 pub use full_client::*;
+use iota_interaction::rpc_types::IotaData;
+use iota_interaction::rpc_types::IotaObjectDataOptions;
+use iota_interaction::types::base_types::ObjectID;
 use iota_interaction::IotaClientTrait;
-use iota_interaction_rust::IotaClientAdapter;
-use iota_sdk::rpc_types::{IotaData, IotaObjectDataOptions};
-use iota_sdk::types::base_types::ObjectID;
 use product_common::core_client::CoreClientReadOnly;
 use product_common::network_name::NetworkName;
 pub use read_only::*;
 use serde::de::DeserializeOwned;
 
 use crate::error::Error;
+use crate::iota_interaction_adapter::IotaClientAdapter;
 
 /// Returns the network-id also known as chain-identifier provided by the specified iota_client
 async fn network_id(iota_client: &IotaClientAdapter) -> Result<NetworkName, Error> {

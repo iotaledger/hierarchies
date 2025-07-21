@@ -47,3 +47,8 @@ pub enum Error {
     #[error("Any error: {0}")]
     AnyError(#[from] anyhow::Error),
 }
+
+#[cfg(target_arch = "wasm32")]
+use product_common::impl_wasm_error_from;
+#[cfg(target_arch = "wasm32")]
+impl_wasm_error_from!(Error);
