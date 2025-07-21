@@ -8,7 +8,6 @@ use anyhow::anyhow;
 use iota_interaction::types::base_types::ObjectID;
 use iota_interaction_ts::bindings::WasmIotaClient;
 use iota_interaction_ts::wasm_error::{wasm_error, Result, WasmResult};
-
 use ith::client::ITHClientReadOnly;
 use product_common::bindings::utils::parse_wasm_object_id;
 use product_common::bindings::WasmObjectID;
