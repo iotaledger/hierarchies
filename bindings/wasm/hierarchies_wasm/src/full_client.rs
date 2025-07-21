@@ -9,9 +9,8 @@ use iota_interaction_ts::WasmPublicKey;
 use ith::client::ITHClient;
 use ith::core::types::statements::name::StatementName;
 use product_common::bindings::transaction::WasmTransactionBuilder;
-use product_common::bindings::utils::parse_wasm_object_id;
-use product_common::bindings::WasmObjectID;
-use product_common::bindings::{utils::into_transaction_builder, WasmIotaAddress};
+use product_common::bindings::utils::{into_transaction_builder, parse_wasm_object_id};
+use product_common::bindings::{WasmIotaAddress, WasmObjectID};
 use product_common::core_client::{CoreClient, CoreClientReadOnly};
 use wasm_bindgen::prelude::*;
 
