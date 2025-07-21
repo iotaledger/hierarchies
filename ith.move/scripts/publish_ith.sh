@@ -14,5 +14,5 @@ RESPONSE=$(iota client publish --with-unpublished-dependencies --silence-warning
     echo $RESPONSE
 }
 
-export PRODUCT_IOTA_PKG_ID=$PACKAGE_ID
-echo "${PRODUCT_IOTA_PKG_ID}"
+export IOTA_ITH_PKG_ID=$PACKAGE_ID
+echo "${IOTA_ITH_PKG_ID}"

@@ -5,16 +5,9 @@ edition.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-async-trait.workspace = true
-fastcrypto.workspace = true
-iota.workspace = true
-iota-keys.workspace = true
 iota-sdk.workspace = true
 ith = { path = "../ith" }
-jsonpath-rust.workspace = true
 product_common = { workspace = true, features = ["test-utils"] }
-secret-storage.workspace = true
-serde_json.workspace = true
 tokio.workspace = true
 
 [lib]

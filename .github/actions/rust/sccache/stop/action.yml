@@ -1,0 +1,13 @@
+name: "stop-sccache"
+description: "Stop sccache."
+inputs:
+  os:
+    description: "OS of the runner, used for sccache installation and start."
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Stop sccache
+      shell: bash
+      run: |
+        sccache --stop-server || true

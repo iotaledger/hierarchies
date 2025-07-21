@@ -35,7 +35,6 @@ iota_interaction_ts = { workspace = true }
 
 [dev-dependencies]
 async-trait.workspace = true
-jsonpath-rust.workspace = true
 product_common = { workspace = true, features = ["transaction", "test-utils"] }
 
 [features]

@@ -4,7 +4,7 @@
 use crate::iota_interaction_adapter::AdapterError;
 
 /// Errors that can occur when managing ITH
-#[derive(Debug, thiserror::Error, strum::IntoStaticStr)]
+#[derive(Debug, thiserror::Error)]
 #[non_exhaustive]
 pub enum Error {
     /// Caused by invalid keys.

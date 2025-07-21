@@ -1,0 +1,67 @@
+name: Format
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+      - "feat/**"
+
+    paths:
+      - ".github/workflows/format.yml"
+      - "**.rs"
+      - "**.toml"
+      - "**.ts"
+      - "**.js"
+      - "**.json"
+
+jobs:
+  format:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      # we use nightly to get access to advanced format capabilities
+      - name: Setup Rust
+        uses: "./.github/actions/rust/setup"
+        with:
+          toolchain: nightly
+          os: ${{ runner.os }}
+          job: ${{ github.job }}
+          components: rustfmt
+
+      - name: Install cargo-license-template
+        run: cargo install cargo-license-template
+
+      - name: Install dprint
+        run: npm install -g dprint
+
+      - name: core fmt check
+        run: cargo +nightly fmt --all -- --check
+        working-directory: ith.rs
+
+      # - name: wasm fmt check trust_hierarchies_wasm
+      #   run: cargo +nightly fmt --manifest-path ./bindings/wasm/trust_hierarchies_wasm/Cargo.toml --all -- --check
+
+      - name: fmt check with dprint
+        run: dprint check
+
+      - name: cargo-license-template check
+        run: cargo +nightly license-template --template .license_template --ignore .license_template_ignore --verbose
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+
+      - name: Install prettier-plugin-move
+        run: npm i @mysten/prettier-plugin-move
+
+      - name: prettier-move check
+        working-directory: ith.move
+        run: npx prettier-move -c **/*.move

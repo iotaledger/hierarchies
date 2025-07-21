@@ -1,0 +1,320 @@
+name: Build and run tests
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches:
+      - main
+      - "feat/**"
+      - "support/**"
+      - "develop"
+    paths:
+      - ".github/workflows/build-and-test.yml"
+      - ".github/workflows/shared-build-wasm.yml"
+      - ".github/actions/**"
+      - "**.rs"
+      - "**.toml"
+      - "**.lock"
+      - "bindings/**"
+      - "!bindings/**.md"
+      - "bindings/wasm/trust_hierarchies_wasm/README.md" # the Readme contain txm tests
+
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    - cron: "5 0 * * *" # everyday, 00:05, used for testnet scheduled test
+    - cron: "10 0 * * *" # everyday, 00:10 used for devnet scheduled test
+
+env:
+  RUST_BACKTRACE: full
+  CARGO_INCREMENTAL: 0 # disabled to reduce target cache size and improve sccache (https://github.com/mozilla/sccache#known-caveats)
+  SCCACHE_CACHE_SIZE: 2G
+  SCCACHE_IDLE_TIMEOUT: 0
+  # SCCACHE_RECACHE: 1 # uncomment to clear sccache cache, then re-comment
+  IOTA_VERSION: ${{github.event.schedule && (github.event.schedule == '5 0 * * *' && 'testnet' || 'devnet')}}
+
+jobs:
+  check-for-run-condition:
+    runs-on: ubuntu-24.04
+    outputs:
+      should-run: ${{ !github.event.pull_request || github.event.pull_request.draft == false }}
+    steps:
+      - run: |
+          # this run step does nothing, but is needed to get the job output
+
+  check-for-modification:
+    needs: check-for-run-condition
+    if: ${{ needs.check-for-run-condition.outputs.should-run == 'true' }}
+    runs-on: ubuntu-24.04
+    outputs:
+      core-modified: ${{ steps.change-detection.outputs.core-modified }} # map step output to job output
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Run change detection
+        id: change-detection
+        run: |
+          echo comparing $(git rev-parse HEAD^) and $(git rev-parse HEAD)
+          #https://git-scm.com/docs/git-diff#Documentation/git-diff.txt-emgitdiffemltoptionsgt--ltpathgt82308203
+          if [[ $(git diff HEAD^ HEAD -- ':!bindings') != '' ]]; then
+              # modified
+              CORE_MODIFIED=true
+          else
+              # unmodified
+              CORE_MODIFIED=false
+          fi
+          echo CORE_MODIFIED=$CORE_MODIFIED
+          echo "core-modified=$CORE_MODIFIED" >> $GITHUB_OUTPUT
+
+  build-and-test:
+    runs-on: ${{ matrix.os }}
+    needs: [check-for-run-condition, check-for-modification]
+    if: ${{ needs.check-for-run-condition.outputs.should-run == 'true' && needs.check-for-modification.outputs.core-modified == 'true' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-24.04
+            sccache-path: /home/runner/.cache/sccache
+          - os: macos-latest
+            sccache-path: /Users/runner/Library/Caches/Mozilla.sccache
+          - os: windows-latest
+            sccache-path: C:\\Users\\runner\\AppData\\Local\\Mozilla\\sccache\\cache
+    env:
+      SCCACHE_DIR: ${{ matrix.sccache-path }}
+      RUSTC_WRAPPER: sccache
+      IOTA_SERVER_LOGFILE: >-
+        ${{
+          matrix.os != 'windows-latest' &&
+            format(
+              'iota-server-logs-build-and-test-{0}-{1}-{2}-{3}.log',
+              matrix.os == 'ubuntu-24.04' && 'linux' || 'macos',
+              github.run_id,
+              github.run_number,
+              github.run_attempt
+            ) ||
+            ''
+        }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Ensure, OpenSSL is available in Windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
+          vcpkg install openssl:x64-windows-static-md
+
+      - name: Setup Rust and cache
+        uses: "./.github/actions/rust/setup"
+        with:
+          os: ${{ runner.os }}
+          job: ${{ github.job }}
+          cargo-cache-enabled: true
+          target-cache-enabled: true
+          sccache-enabled: true
+          sccache-path: ${{ matrix.sccache-path }}
+
+      - name: Setup sccache
+        uses: "./.github/actions/rust/sccache/setup"
+        with:
+          os: ${{matrix.os}}
+
+      - name: Check --no-default-features
+        if: matrix.os == 'ubuntu-24.04'
+        run: |
+          cargo metadata --format-version 1 | \
+          jq -r '.workspace_members[]' | \
+          awk '{print $1}' | \
+          xargs -I {} cargo check -p {} --no-default-features
+        working-directory: ith.rs
+
+      - name: Check default features
+        if: matrix.os == 'ubuntu-24.04'
+        run: |
+          cargo metadata --format-version 1 | \
+          jq -r '.workspace_members[]' | \
+          awk '{print $1}' | \
+          xargs -I {} cargo check -p {}
+        working-directory: ith.rs
+
+      # Clean debug target to avoid bloating the GitHub Actions cache.
+      # The previous builds cannot be re-used at all for the full --all-features --release build anyway.
+      - name: Clean target
+        if: matrix.os == 'ubuntu-24.04'
+        run: cargo clean
+        working-directory: ith.rs
+
+        # Build the library, tests, and examples without running them to avoid recompilation in the run tests step
+      - name: Build with default features
+        run: cargo build --workspace --tests --examples --release
+        working-directory: ith.rs
+
+      - name: Start iota sandbox
+        if: matrix.os != 'windows-latest'
+        uses: "./.github/actions/iota/setup"
+        with:
+          platform: ${{ matrix.os == 'ubuntu-24.04' && 'linux' || 'macos' }}
+          logfile: ${{ env.IOTA_SERVER_LOGFILE }}
+          iota-version: ${{ env.IOTA_VERSION }}
+
+      - name: test Trust Hierarchies Move package
+        if: matrix.os != 'windows-latest'
+        # publish the package and set the IOTA_ITH_PKG_ID env variable
+        run: |
+          iota move test
+        working-directory: ith.move
+
+      - name: publish Trust Hierarchies Move package
+        if: matrix.os != 'windows-latest'
+        # publish the package and set the IOTA_ITH_PKG_ID env variable
+        run: echo "IOTA_ITH_PKG_ID=$(./publish_ith.sh)" >> "$GITHUB_ENV"
+        working-directory: ith.move/scripts/
+
+      - name: Run tests
+        if: matrix.os != 'windows-latest'
+        run: cargo test --workspace --release -- --test-threads=1
+        working-directory: ith.rs
+
+      - name: Run Rust examples
+        # run examples only on ubuntu for now
+        if: matrix.os == 'ubuntu-24.04'
+        run: |
+          cargo metadata --format-version 1 --manifest-path ./examples/Cargo.toml | \
+          jq -r '.packages[] | select(.name == "examples") | .targets[].name' | \
+          awk '$1 ~ /[0-9].*/' | \
+          parallel -k -j 4 --retries 3 --joblog report.log ./target/release/examples/{}
+          cat report.log
+        working-directory: ith.rs
+      #      - name: Run Rust Readme examples
+      #        # run examples only on ubuntu for now
+      #        if: matrix.os == 'ubuntu-24.04'
+      #        run: |
+      #          cd bindings/wasm/trust_hierarchies_wasm
+      #          npm ci
+      #          npm run test:readme:rust
+
+      - name: Archive server logs
+        if: ${{ env.IOTA_SERVER_LOGFILE }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.IOTA_SERVER_LOGFILE }}
+          path: iota/${{ env.IOTA_SERVER_LOGFILE }}
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Stop sccache
+        uses: "./.github/actions/rust/sccache/stop"
+        with:
+          os: ${{matrix.os}}
+  # build-wasm:
+  #   needs: check-for-run-condition
+  #   if: ${{ needs.check-for-run-condition.outputs.should-run == 'true' }}
+  #   uses: "./.github/workflows/shared-build-wasm.yml"
+  #   with:
+  #     run-unit-tests: false
+  #     output-artifact-name: trust-hierarchies-wasm-bindings-build
+
+  # test-wasm:
+  #   needs: build-wasm
+  #   if: ${{ needs.check-for-run-condition.outputs.should-run == 'true' }}
+  #   runs-on: ubuntu-24.04
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: [ubuntu-24.04]
+  #       include:
+  #         - os: ubuntu-24.04
+
+  #   steps:
+  #     - uses: actions/checkout@v3
+
+  #     - name: Set up Node.js
+  #       uses: actions/setup-node@v1
+  #       with:
+  #         node-version: 20.x
+
+  #     - name: Install JS dependencies
+  #       run: npm ci
+  #       working-directory: bindings/wasm/trust_hierarchies_wasm
+
+  #     - name: Download bindings/wasm/trust_hierarchies_wasm artifacts
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: trust-hierarchies-wasm-bindings-build
+  #         path: bindings/wasm/trust_hierarchies_wasm
+
+  #     - name: Start iota sandbox
+  #       uses: "./.github/actions/iota/setup"
+  #       with:
+  #         iota-version: ${{ env.IOTA_VERSION }}
+
+  #     - name: publish Trust Hierarchies Move package
+  #       if: matrix.os != 'windows-latest'
+  #       # publish the package and set the IOTA_ITH_PKG_ID env variable
+  #       run: echo "IOTA_ITH_PKG_ID=$(./publish_package.sh)" >> "$GITHUB_ENV"
+  #       working-directory: trust_hierarchies_move/scripts/
+
+  #     - name: Install JS dependencies
+  #       run: npm ci
+  #       working-directory: bindings/wasm/trust_hierarchies_wasm
+
+  #     - name: Run Wasm examples
+  #       #run: npm run test:readme && npm run test:node
+  #       run: npm run test:node
+  #       working-directory: bindings/wasm/trust_hierarchies_wasm
+#  test-wasm-browser:
+#    needs: build-wasm
+#    if: ${{ needs.check-for-run-condition.outputs.should-run == 'true' }}
+#    runs-on: ubuntu-24.04
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        browser: [chrome, firefox]
+#
+#    steps:
+#      - uses: actions/checkout@v3
+#
+#      - name: Set up Node.js
+#        uses: actions/setup-node@v1
+#        with:
+#          node-version: 20.x
+#
+#      - name: Install JS dependencies
+#        run: npm ci
+#        working-directory: bindings/wasm/trust_hierarchies_wasm
+#
+#      - name: Download bindings/wasm/trust_hierarchies_wasm artifacts
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: trust-hierarchies-wasm-bindings-build
+#          path: bindings/wasm/trust_hierarchies_wasm
+#
+#      - name: Start iota sandbox
+#        uses: "./.github/actions/iota/setup"
+#        with:
+#          iota-version: ${{ env.IOTA_VERSION }}
+#
+#      - name: publish Trust Hierarchies Move package
+#        # publish the package and set the IOTA_ITH_PKG_ID env variable
+#        run: echo "IOTA_ITH_PKG_ID=$(./publish_ith.sh)" >> "$GITHUB_ENV"
+#        working-directory: ith.move/scripts/
+#
+#      - name: Build Docker image
+#        uses: docker/build-push-action@v6.2.0
+#        with:
+#          context: bindings/wasm/
+#          file: bindings/wasm/trust_hierarchies_wasm/cypress/Dockerfile
+#          push: false
+#          tags: cypress-test:latest
+#          load: true
+#          build-args: |
+#            IOTA_ITH_PKG_ID=${{ env.IOTA_ITH_PKG_ID }}
+#
+#      - name: Run cypress
+#        run: docker run --network host cypress-test test:browser:${{ matrix.browser }}
