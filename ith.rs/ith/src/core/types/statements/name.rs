@@ -15,7 +15,7 @@ use iota_interaction::{ident_str, MoveType};
 use serde::{Deserialize, Serialize};
 
 /// StatementName represents the name of a Statement
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, PartialOrd, Ord)]
 pub struct StatementName {
     names: Vec<String>,
 }
