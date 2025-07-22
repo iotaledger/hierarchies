@@ -1,7 +1,8 @@
 // Copyright 2025 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use ith::core::types::accreditation::Accreditation;
+use ith::core::types::Accreditation;
+use product_common::bindings::WasmObjectID;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
@@ -16,8 +17,8 @@ pub struct WasmAccreditation(pub(crate) Accreditation);
 impl WasmAccreditation {
     /// Returns the unique identifier of the accreditation.
     #[wasm_bindgen(getter)]
-    pub fn id(&self) -> String {
-        self.0.id.to_string()
+    pub fn id(&self) -> WasmObjectID {
+        self.0.id.object_id().to_string()
     }
 
     /// Returns the identifier of the entity that granted the accreditation.

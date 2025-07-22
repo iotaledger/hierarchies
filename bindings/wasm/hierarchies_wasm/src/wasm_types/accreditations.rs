@@ -19,7 +19,7 @@ impl WasmAccreditations {
         self.0
             .statements
             .iter()
-            .map(|accreditation| WasmAccreditation(accreditation.clone()).into())
+            .map(|accreditation| JsValue::from(WasmAccreditation(accreditation.clone())))
             .collect()
     }
 }
