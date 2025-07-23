@@ -71,16 +71,16 @@ jobs:
 
       - name: Install JS dependencies
         run: npm ci
-        working-directory: bindings/wasm/trust_hierarchies_wasm
+        working-directory: bindings/wasm/hierarchies_wasm
 
       - name: Build WASM bindings
         run: npm run build
-        working-directory: bindings/wasm/trust_hierarchies_wasm
+        working-directory: bindings/wasm/hierarchies_wasm
 
       - name: Run Node unit tests
         if: ${{ inputs.run-unit-tests }}
         run: npm run test:unit:node
-        working-directory: bindings/wasm/trust_hierarchies_wasm
+        working-directory: bindings/wasm/hierarchies_wasm
 
       - name: Stop sccache
         uses: "./.github/actions/rust/sccache/stop"
@@ -92,9 +92,9 @@ jobs:
         with:
           name: ${{ inputs.output-artifact-name }}
           path: |
-            bindings/wasm/trust_hierarchies_wasm/node
-            bindings/wasm/trust_hierarchies_wasm/web
-            bindings/wasm/trust_hierarchies_wasm/examples/dist
-            bindings/wasm/trust_hierarchies_wasm/docs
+            bindings/wasm/hierarchies_wasm/node
+            bindings/wasm/hierarchies_wasm/web
+            bindings/wasm/hierarchies_wasm/examples/dist
+            bindings/wasm/hierarchies_wasm/docs
           if-no-files-found: error
           retention-days: 1

@@ -1,12 +1,15 @@
+// Copyright 2020-2025 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use std::collections::HashSet;
 
 use anyhow::Context;
 use iota_sdk::types::base_types::ObjectID;
-use ith::core::types::{
-    statements::{name::StatementName, value::StatementValue, Statement},
-    timespan::Timespan,
-    Federation,
-};
+use ith::core::types::statements::name::StatementName;
+use ith::core::types::statements::value::StatementValue;
+use ith::core::types::statements::Statement;
+use ith::core::types::timespan::Timespan;
+use ith::core::types::Federation;
 use trust_hierarchies_examples::get_funded_client;
 
 /// Demonstrate how to issue a permission to accredit to a Statement.

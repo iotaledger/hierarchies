@@ -1,13 +1,16 @@
+// Copyright 2020-2025 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use std::collections::HashSet;
 
 use anyhow::Context;
-use trust_hierarchies_examples::get_funded_client;
 use iota_sdk::types::base_types::ObjectID;
 use ith::core::types::statements::name::StatementName;
 use ith::core::types::statements::value::StatementValue;
 use ith::core::types::statements::Statement;
 use ith::core::types::timespan::Timespan;
 use product_common::core_client::CoreClient;
+use trust_hierarchies_examples::get_funded_client;
 
 /// Demonstrates how to use the offchain API to check if a user has a permission to attest and accredit.
 ///

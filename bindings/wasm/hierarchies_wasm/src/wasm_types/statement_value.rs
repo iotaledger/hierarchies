@@ -9,6 +9,7 @@ use wasm_bindgen::prelude::*;
 // use crate::wasm_time_lock::WasmTimeLock;
 
 #[wasm_bindgen(js_name = StatementValue, inspectable)]
+#[derive(Deserialize, Serialize)]
 pub struct WasmStatementValue(pub(crate) StatementValue);
 
 impl From<StatementValue> for WasmStatementValue {

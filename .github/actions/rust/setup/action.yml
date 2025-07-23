@@ -113,7 +113,6 @@ runs:
     - name: Cargo update
       run: cargo update
       shell: bash
-      working-directory: ith.rs
 
     - name: Cache build target
       uses: actions/cache@v4
