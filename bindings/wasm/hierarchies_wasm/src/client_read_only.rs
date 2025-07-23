@@ -8,14 +8,13 @@ use anyhow::anyhow;
 use iota_interaction::types::base_types::ObjectID;
 use iota_interaction_ts::bindings::WasmIotaClient;
 use iota_interaction_ts::wasm_error::{wasm_error, Result, WasmResult};
-
 use ith::client::ITHClientReadOnly;
 use product_common::bindings::utils::parse_wasm_object_id;
 use product_common::bindings::WasmObjectID;
 use product_common::core_client::CoreClientReadOnly;
 use wasm_bindgen::prelude::*;
 
-use crate::wasm_types::{WasmAccreditations, WasmStatementName, WasmStatementValue, WasmFederation};
+use crate::wasm_types::{WasmAccreditations, WasmFederation, WasmStatementName, WasmStatementValue};
 
 /// A client to interact with Hierarchies objects on the IOTA ledger.
 ///
@@ -37,9 +36,7 @@ impl WasmHierarchiesClientReadOnly {
     /// A new `HierarchiesClientReadOnly` instance.
     #[wasm_bindgen(js_name = create)]
     pub async fn new(iota_client: WasmIotaClient) -> Result<WasmHierarchiesClientReadOnly> {
-        let inner_client = ITHClientReadOnly::new(iota_client)
-            .await
-            .map_err(wasm_error)?;
+        let inner_client = ITHClientReadOnly::new(iota_client).await.map_err(wasm_error)?;
         Ok(WasmHierarchiesClientReadOnly(inner_client))
     }
 
@@ -132,20 +129,10 @@ impl WasmHierarchiesClientReadOnly {
     /// # Returns
     /// A `Result` containing the list of statement names or an [`Error`].
     #[wasm_bindgen(js_name = getStatements)]
-    pub async fn get_statements(
-        &self,
-        federation_id: WasmObjectID,
-    ) -> Result<Vec<WasmStatementName>> {
+    pub async fn get_statements(&self, federation_id: WasmObjectID) -> Result<Vec<WasmStatementName>> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
-        let statements = self
-            .0
-            .get_statements(federation_id)
-            .await
-            .map_err(wasm_error)?;
-        Ok(statements
-            .into_iter()
-            .map(|statement| statement.into())
-            .collect())
+        let statements = self.0.get_statements(federation_id).await.map_err(wasm_error)?;
+        Ok(statements.into_iter().map(|statement| statement.into()).collect())
     }
 
     /// Checks if a statement is registered in the federation.
@@ -206,18 +193,10 @@ impl WasmHierarchiesClientReadOnly {
     /// # Returns
     /// A `Result` containing a boolean indicating if the user has attestation permissions or an [`Error`].
     #[wasm_bindgen(js_name = isAttester)]
-    pub async fn is_attester(
-        &self,
-        federation_id: WasmObjectID,
-        user_id: WasmObjectID,
-    ) -> Result<bool> {
+    pub async fn is_attester(&self, federation_id: WasmObjectID, user_id: WasmObjectID) -> Result<bool> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         let user_id = parse_wasm_object_id(&user_id)?;
-        let is_attester = self
-            .0
-            .is_attester(federation_id, user_id)
-            .await
-            .map_err(wasm_error)?;
+        let is_attester = self.0.is_attester(federation_id, user_id).await.map_err(wasm_error)?;
         Ok(is_attester)
     }
 
@@ -256,18 +235,10 @@ impl WasmHierarchiesClientReadOnly {
     /// # Returns
     /// A `Result` containing a boolean indicating if the user has accreditations to accredit or an [`Error`].
     #[wasm_bindgen(js_name = isAccreditor)]
-    pub async fn is_accreditor(
-        &self,
-        federation_id: WasmObjectID,
-        user_id: WasmObjectID,
-    ) -> Result<bool> {
+    pub async fn is_accreditor(&self, federation_id: WasmObjectID, user_id: WasmObjectID) -> Result<bool> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         let user_id = parse_wasm_object_id(&user_id)?;
-        let is_accreditor = self
-            .0
-            .is_accreditor(federation_id, user_id)
-            .await
-            .map_err(wasm_error)?;
+        let is_accreditor = self.0.is_accreditor(federation_id, user_id).await.map_err(wasm_error)?;
         Ok(is_accreditor)
     }
 
