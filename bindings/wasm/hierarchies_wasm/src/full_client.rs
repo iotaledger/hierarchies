@@ -43,6 +43,7 @@ impl WasmHierarchiesClient {
     /// Returns an error if the signer's public key cannot be retrieved.
     ///
     /// ```
+    #[wasm_bindgen(constructor)]
     pub async fn new(
         client: WasmHierarchiesClientReadOnly,
         signer: WasmTransactionSigner,
