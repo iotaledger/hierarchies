@@ -3810,8 +3810,8 @@ dependencies = [
 
 [[package]]
 name = "iota_interaction"
-version = "0.6.1"
-source = "git+https://github.com/iotaledger/product-core.git?tag=v0.6.1#dfa97298c0f56af53cd09fd73c0883a5b8be2689"
+version = "0.7.0"
+source = "git+https://github.com/iotaledger/product-core.git?tag=v0.7.0#50aef33a898a8763369cd6003626b06e21927a83"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3854,8 +3854,8 @@ dependencies = [
 
 [[package]]
 name = "iota_interaction_rust"
-version = "0.6.1"
-source = "git+https://github.com/iotaledger/product-core.git?tag=v0.6.1#dfa97298c0f56af53cd09fd73c0883a5b8be2689"
+version = "0.7.0"
+source = "git+https://github.com/iotaledger/product-core.git?tag=v0.7.0#50aef33a898a8763369cd6003626b06e21927a83"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3873,8 +3873,8 @@ dependencies = [
 
 [[package]]
 name = "iota_interaction_ts"
-version = "0.6.1"
-source = "git+https://github.com/iotaledger/product-core.git?tag=v0.6.1#dfa97298c0f56af53cd09fd73c0883a5b8be2689"
+version = "0.7.0"
+source = "git+https://github.com/iotaledger/product-core.git?tag=v0.7.0#50aef33a898a8763369cd6003626b06e21927a83"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -5929,8 +5929,8 @@ dependencies = [
 
 [[package]]
 name = "product_common"
-version = "0.6.1"
-source = "git+https://github.com/iotaledger/product-core.git?tag=v0.6.1#dfa97298c0f56af53cd09fd73c0883a5b8be2689"
+version = "0.7.0"
+source = "git+https://github.com/iotaledger/product-core.git?tag=v0.7.0#50aef33a898a8763369cd6003626b06e21927a83"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -5946,6 +5946,7 @@ dependencies = [
  "itertools 0.13.0",
  "lazy_static",
  "phf",
+ "reqwest",
  "secret-storage",
  "serde",
  "serde_json",
@@ -5953,6 +5954,7 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "toml 0.8.23",
+ "url",
 ]
 
 [[package]]

@@ -9,9 +9,7 @@ anyhow.workspace = true
 async-trait.workspace = true
 bcs.workspace = true
 fastcrypto.workspace = true
-product_common = { workspace = true, default-features = false, features = [
-  "transaction",
-] }
+product_common = { workspace = true, default-features = false, features = ["transaction"] }
 secret-storage.workspace = true
 serde.workspace = true
 serde_json.workspace = true
@@ -46,3 +44,8 @@ send-sync = [
 ]
 # Enables `Send` + `Sync` bounds for the storage traits.
 send-sync-storage = ["secret-storage/send-sync-storage"]
+
+# Enables an high-level integration with IOTA gas-station.
+gas-station = ["product_common/gas-station"]
+# Uses a default HTTP Client instead of a user-provided one.
+default-http-client = ["product_common/default-http-client"]
