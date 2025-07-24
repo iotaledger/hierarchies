@@ -82,6 +82,7 @@ use product_common::transaction::transaction_builder::TransactionBuilder;
 use secret_storage::Signer;
 
 use super::ITHClientReadOnly;
+use crate::client::errors::ClientError;
 use crate::core::transactions::add_root_authority::AddRootAuthority;
 use crate::core::transactions::statements::add_statement::AddStatement;
 use crate::core::transactions::statements::revoke_statement::RevokeStatement;
@@ -92,7 +93,6 @@ use crate::core::transactions::{
 use crate::core::types::statements::name::StatementName;
 use crate::core::types::statements::value::StatementValue;
 use crate::core::types::statements::Statement;
-use crate::error::Error;
 
 /// The `ITHClient` struct is responsible for managing the connection to the
 /// IOTA network and executing transactions on behalf of the ITH package.
@@ -130,11 +130,10 @@ where
     /// # Ok(())
     /// # }
     /// ```
-    pub async fn new(client: ITHClientReadOnly, signer: S) -> Result<Self, Error> {
-        let public_key = signer
-            .public_key()
-            .await
-            .map_err(|e| Error::InvalidKey(e.to_string()))?;
+    pub async fn new(client: ITHClientReadOnly, signer: S) -> Result<Self, ClientError> {
+        let public_key = signer.public_key().await.map_err(|e| ClientError::InvalidInput {
+            details: format!("Invalid key: {e}"),
+        })?;
 
         Ok(Self {
             public_key,

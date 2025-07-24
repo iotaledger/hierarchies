@@ -5,12 +5,13 @@
 //! specific operations on the ITH blockchain.
 
 pub mod add_root_authority;
+pub mod errors;
 mod new_federation;
-
+pub mod permissions;
 pub mod statements;
 
-pub mod permissions;
-
+// Re-export error types
 pub use add_root_authority::*;
+pub use errors::TransactionError;
 pub use new_federation::*;
 pub use permissions::*;

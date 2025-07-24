@@ -23,8 +23,8 @@ use product_common::transaction::transaction_builder::Transaction;
 use tokio::sync::OnceCell;
 
 use crate::core::operations::{ITHImpl, ITHOperations};
+use crate::core::transactions::TransactionError;
 use crate::core::types::{Event, Federation, FederationCreatedEvent};
-use crate::error::Error;
 
 /// A transaction that creates a new federation.
 #[derive(Debug, Clone)]
@@ -62,15 +62,15 @@ impl CreateFederation {
     /// # Returns
     ///
     /// A `ProgrammableTransaction` ready for execution on the IOTA network.
-    async fn make_ptb(&self, client: &impl CoreClientReadOnly) -> Result<ProgrammableTransaction, Error> {
-        ITHImpl::new_federation(client.package_id())
+    async fn make_ptb(&self, client: &impl CoreClientReadOnly) -> Result<ProgrammableTransaction, TransactionError> {
+        ITHImpl::new_federation(client.package_id()).map_err(TransactionError::from)
     }
 }
 
 #[cfg_attr(not(feature = "send-sync"), async_trait(?Send))]
 #[cfg_attr(feature = "send-sync", async_trait)]
 impl Transaction for CreateFederation {
-    type Error = Error;
+    type Error = TransactionError;
 
     type Output = Federation;
 
@@ -93,19 +93,24 @@ impl Transaction for CreateFederation {
         let events = events
             .data
             .first()
-            .ok_or_else(|| Error::TransactionUnexpectedResponse("events should be provided".to_string()))?
+            .ok_or_else(|| TransactionError::InvalidResponse)?
             .parsed_json
             .clone();
 
-        let event: Event<FederationCreatedEvent> = serde_json::from_value(events)
-            .map_err(|e| Error::TransactionUnexpectedResponse(format!("failed to parse event: {e}")))?;
+        let event: Event<FederationCreatedEvent> =
+            serde_json::from_value(events).map_err(|_e| TransactionError::EventProcessingFailed {
+                event_type: "FederationCreatedEvent".to_string(),
+            })?;
 
         let federation_id = event.data.federation_address;
 
-        let federation = client
-            .get_object_by_id(federation_id)
-            .await
-            .map_err(|e| Error::ObjectLookup(e.to_string()))?;
+        let federation =
+            client
+                .get_object_by_id(federation_id)
+                .await
+                .map_err(|e| TransactionError::ExecutionFailed {
+                    reason: format!("Failed to retrieve federation object: {e}"),
+                })?;
 
         Ok(federation)
     }

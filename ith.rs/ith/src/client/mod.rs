@@ -7,9 +7,11 @@
 //!   The client is represented by the [`ITHClient`] struct.
 //! - ReadOnlyClient: A client that can only perform off-chain operations. It doesn't require a signer with a private
 //!   key. The client is represented by the [`ITHClientReadOnly`] struct.
+pub mod errors;
 mod full_client;
 mod read_only;
 
+pub use errors::{ClientError, ReadOnlyClientError};
 pub use full_client::*;
 use iota_interaction::IotaClientTrait;
 use iota_interaction_rust::IotaClientAdapter;
@@ -20,36 +22,45 @@ use product_common::network_name::NetworkName;
 pub use read_only::*;
 use serde::de::DeserializeOwned;
 
-use crate::error::Error;
+use crate::error::{NetworkError, ObjectError};
 
 /// Returns the network-id also known as chain-identifier provided by the specified iota_client
-async fn network_id(iota_client: &IotaClientAdapter) -> Result<NetworkName, Error> {
+async fn network_id(iota_client: &IotaClientAdapter) -> Result<NetworkName, NetworkError> {
     let network_id = iota_client
         .read_api()
         .get_chain_identifier()
         .await
-        .map_err(|e| Error::RpcError(e.to_string()))?;
+        .map_err(|e| NetworkError::RpcFailed { source: Box::new(e) })?;
     Ok(network_id.try_into().expect("chain ID is a valid network name"))
 }
 
 pub async fn get_object_ref_by_id_with_bcs<T: DeserializeOwned>(
     client: &impl CoreClientReadOnly,
     object_id: &ObjectID,
-) -> Result<T, Error> {
+) -> Result<T, ObjectError> {
     let notarization = client
         .client_adapter()
         .read_api()
         .get_object_with_options(*object_id, IotaObjectDataOptions::bcs_lossless())
         .await
-        .map_err(|err| Error::ObjectLookup(err.to_string()))?
+        .map_err(|err| ObjectError::RetrievalFailed {
+            source: Box::new(NetworkError::RpcFailed { source: Box::new(err) }),
+        })?
         .data
-        .ok_or_else(|| Error::ObjectLookup("missing data in response".to_string()))?
+        .ok_or_else(|| ObjectError::NotFound {
+            id: object_id.to_string(),
+        })?
         .bcs
-        .ok_or_else(|| Error::ObjectLookup("missing object content in data".to_string()))?
+        .ok_or_else(|| ObjectError::NotFound {
+            id: object_id.to_string(),
+        })?
         .try_into_move()
-        .ok_or_else(|| Error::ObjectLookup("failed to convert data to move object".to_string()))?
+        .ok_or_else(|| ObjectError::WrongType {
+            expected: "Move object".to_string(),
+            actual: "other".to_string(),
+        })?
         .deserialize()
-        .map_err(|err| Error::ObjectLookup(err.to_string()))?;
+        .map_err(|err| ObjectError::RetrievalFailed { source: err.into() })?;
 
     Ok(notarization)
 }
