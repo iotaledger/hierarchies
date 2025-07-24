@@ -4,8 +4,7 @@
     "markdown": {},
     "toml": {},
     "typescript": {
-        "indentWidth": 4,
-        "arrayExpression.preferHanging": true
+        "indentWidth": 4
     },
     "yaml": {},
     "includes": [
@@ -14,7 +13,7 @@
     "excludes": [
         "**/*-lock.json",
         "**/{node_modules, target}",
-        "bindings/wasm/trust-hierarchies/{node,web}/**/*.{js,ts}"
+        "bindings/wasm/hierarchies_wasm/{node,web}/**/*.{js,ts}"
     ],
     "plugins": [
         "https://plugins.dprint.dev/markdown-0.18.0.wasm",

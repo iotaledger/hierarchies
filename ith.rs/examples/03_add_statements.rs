@@ -1,10 +1,13 @@
+// Copyright 2025 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use std::collections::HashSet;
 
 use anyhow::Context;
-use examples::get_funded_client;
 use ith::core::types::statements::name::StatementName;
 use ith::core::types::statements::value::StatementValue;
 use ith::core::types::Federation;
+use trust_hierarchies_examples::get_funded_client;
 
 /// Demonstrate how to add a Statement to a federation.
 ///

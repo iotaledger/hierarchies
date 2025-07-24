@@ -1,11 +1,14 @@
+// Copyright 2020-2025 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use std::collections::HashSet;
 
 use anyhow::Context;
-use examples::get_funded_client;
 use iota_sdk::types::base_types::ObjectID;
 use ith::core::types::statements::name::StatementName;
 use ith::core::types::statements::value::StatementValue;
 use ith::core::types::statements::Statement;
+use trust_hierarchies_examples::get_funded_client;
 
 /// Getting started
 ///

@@ -1,9 +1,12 @@
+// Copyright 2020-2025 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use std::collections::HashSet;
 
 use anyhow::Context;
-use examples::get_funded_client;
 use ith::core::types::statements::name::StatementName;
 use ith::core::types::statements::value::StatementValue;
+use trust_hierarchies_examples::get_funded_client;
 
 /// Demonstrates how to use the offchain API to get federation properties.
 /// In this example we connect to a locally running private network, but it can be adapted

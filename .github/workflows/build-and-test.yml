@@ -21,7 +21,7 @@ on:
       - "**.lock"
       - "bindings/**"
       - "!bindings/**.md"
-      - "bindings/wasm/trust_hierarchies_wasm/README.md" # the Readme contain txm tests
+      - "bindings/wasm/hierarchies_wasm/README.md" # the Readme contain txm tests
 
   schedule:
     # * is a special character in YAML so you have to quote this string
@@ -132,7 +132,6 @@ jobs:
           jq -r '.workspace_members[]' | \
           awk '{print $1}' | \
           xargs -I {} cargo check -p {} --no-default-features
-        working-directory: ith.rs
 
       - name: Check default features
         if: matrix.os == 'ubuntu-24.04'
@@ -141,19 +140,16 @@ jobs:
           jq -r '.workspace_members[]' | \
           awk '{print $1}' | \
           xargs -I {} cargo check -p {}
-        working-directory: ith.rs
 
       # Clean debug target to avoid bloating the GitHub Actions cache.
       # The previous builds cannot be re-used at all for the full --all-features --release build anyway.
       - name: Clean target
         if: matrix.os == 'ubuntu-24.04'
         run: cargo clean
-        working-directory: ith.rs
 
         # Build the library, tests, and examples without running them to avoid recompilation in the run tests step
       - name: Build with default features
         run: cargo build --workspace --tests --examples --release
-        working-directory: ith.rs
 
       - name: Start iota sandbox
         if: matrix.os != 'windows-latest'
@@ -179,7 +175,6 @@ jobs:
       - name: Run tests
         if: matrix.os != 'windows-latest'
         run: cargo test --workspace --release -- --test-threads=1
-        working-directory: ith.rs
 
       - name: Run Rust examples
         # run examples only on ubuntu for now
@@ -190,12 +185,12 @@ jobs:
           awk '$1 ~ /[0-9].*/' | \
           parallel -k -j 4 --retries 3 --joblog report.log ./target/release/examples/{}
           cat report.log
-        working-directory: ith.rs
+
       #      - name: Run Rust Readme examples
       #        # run examples only on ubuntu for now
       #        if: matrix.os == 'ubuntu-24.04'
       #        run: |
-      #          cd bindings/wasm/trust_hierarchies_wasm
+      #          cd bindings/wasm/hierarchies_wasm
       #          npm ci
       #          npm run test:readme:rust
 
@@ -212,13 +207,14 @@ jobs:
         uses: "./.github/actions/rust/sccache/stop"
         with:
           os: ${{matrix.os}}
-  # build-wasm:
-  #   needs: check-for-run-condition
-  #   if: ${{ needs.check-for-run-condition.outputs.should-run == 'true' }}
-  #   uses: "./.github/workflows/shared-build-wasm.yml"
-  #   with:
-  #     run-unit-tests: false
-  #     output-artifact-name: trust-hierarchies-wasm-bindings-build
+
+  build-wasm:
+    needs: check-for-run-condition
+    if: ${{ needs.check-for-run-condition.outputs.should-run == 'true' }}
+    uses: "./.github/workflows/shared-build-wasm.yml"
+    with:
+      run-unit-tests: false
+      output-artifact-name: hierarchies-wasm-bindings-build
 
   # test-wasm:
   #   needs: build-wasm
@@ -241,13 +237,13 @@ jobs:
 
   #     - name: Install JS dependencies
   #       run: npm ci
-  #       working-directory: bindings/wasm/trust_hierarchies_wasm
+  #       working-directory: bindings/wasm/hierarchies_wasm
 
-  #     - name: Download bindings/wasm/trust_hierarchies_wasm artifacts
+  #     - name: Download bindings/wasm/hierarchies_wasm artifacts
   #       uses: actions/download-artifact@v4
   #       with:
-  #         name: trust-hierarchies-wasm-bindings-build
-  #         path: bindings/wasm/trust_hierarchies_wasm
+  #         name: hierarchies-wasm-bindings-build
+  #         path: bindings/wasm/hierarchies_wasm
 
   #     - name: Start iota sandbox
   #       uses: "./.github/actions/iota/setup"
@@ -262,12 +258,12 @@ jobs:
 
   #     - name: Install JS dependencies
   #       run: npm ci
-  #       working-directory: bindings/wasm/trust_hierarchies_wasm
+  #       working-directory: bindings/wasm/hierarchies_wasm
 
   #     - name: Run Wasm examples
   #       #run: npm run test:readme && npm run test:node
   #       run: npm run test:node
-  #       working-directory: bindings/wasm/trust_hierarchies_wasm
+  #       working-directory: bindings/wasm/hierarchies_wasm
 #  test-wasm-browser:
 #    needs: build-wasm
 #    if: ${{ needs.check-for-run-condition.outputs.should-run == 'true' }}
@@ -287,13 +283,13 @@ jobs:
 #
 #      - name: Install JS dependencies
 #        run: npm ci
-#        working-directory: bindings/wasm/trust_hierarchies_wasm
+#        working-directory: bindings/wasm/hierarchies_wasm
 #
-#      - name: Download bindings/wasm/trust_hierarchies_wasm artifacts
+#      - name: Download bindings/wasm/hierarchies_wasm artifacts
 #        uses: actions/download-artifact@v4
 #        with:
-#          name: trust-hierarchies-wasm-bindings-build
-#          path: bindings/wasm/trust_hierarchies_wasm
+#          name: hierarchies-wasm-bindings-build
+#          path: bindings/wasm/hierarchies_wasm
 #
 #      - name: Start iota sandbox
 #        uses: "./.github/actions/iota/setup"
@@ -309,7 +305,7 @@ jobs:
 #        uses: docker/build-push-action@v6.2.0
 #        with:
 #          context: bindings/wasm/
-#          file: bindings/wasm/trust_hierarchies_wasm/cypress/Dockerfile
+#          file: bindings/wasm/hierarchies_wasm/cypress/Dockerfile
 #          push: false
 #          tags: cypress-test:latest
 #          load: true

@@ -1,11 +1,11 @@
+// Copyright 2020-2025 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 //! # Statement Management Transactions
 //!
 //! This module provides transaction implementations for managing statements
 //! within ITH federations. Statements define the types of claims that can
 //! be attested within a federation.
-
-// Copyright 2020-2025 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
 
 use std::collections::HashSet;
 
@@ -150,35 +150,6 @@ pub mod revoke_statement {
     ///
     /// - The owner must possess `RootAuthorityCap` for the federation
     /// - The statement must exist in the federation
-    ///
-    /// ## Usage
-    ///
-    /// ```rust,no_run
-    /// # use ith::core::transactions::statements::revoke_statement::RevokeStatement;
-    /// # use ith::core::types::statements::StatementName;
-    /// # use iota_interaction::types::base_types::{IotaAddress, ObjectID};
-    /// # use product_common::transaction::transaction_builder::Transaction;
-    ///
-    /// // Revoke immediately
-    /// let revoke_statement = RevokeStatement::new(
-    ///     federation_id,
-    ///     StatementName::new("example.statement".to_string()),
-    ///     None, // Revoke immediately
-    ///     owner_address,
-    /// );
-    ///
-    /// // Schedule revocation for future time
-    /// let revoke_statement = RevokeStatement::new(
-    ///     federation_id,
-    ///     StatementName::new("example.statement".to_string()),
-    ///     Some(1640995200000), // Revoke at specific timestamp
-    ///     owner_address,
-    /// );
-    /// let ptb = revoke_statement
-    ///     .build_programmable_transaction(&client)
-    ///     .await?;
-    /// # Ok::<(), Box<dyn std::error::Error>>(())
-    /// ```
     #[derive(Debug, Clone)]
     pub struct RevokeStatement {
         federation_id: ObjectID,

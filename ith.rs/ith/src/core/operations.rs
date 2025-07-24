@@ -25,9 +25,8 @@ use iota_interaction::rpc_types::{IotaObjectDataFilter, IotaObjectDataOptions, I
 use iota_interaction::types::base_types::{IotaAddress, ObjectID, ObjectRef, SequenceNumber};
 use iota_interaction::types::object::Owner;
 use iota_interaction::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use iota_interaction::types::transaction::{CallArg, ObjectArg, ProgrammableTransaction};
+use iota_interaction::types::transaction::{CallArg, Command, ObjectArg, ProgrammableTransaction};
 use iota_interaction::{ident_str, IotaClientTrait, MoveType, OptionalSync};
-use iota_sdk::types::transaction::Command;
 use product_common::core_client::CoreClientReadOnly;
 
 use crate::core::errors::{AccreditationError, CapabilityError, FederationError, OperationError};

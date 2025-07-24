@@ -29,4 +29,3 @@ jobs:
           version: ${{ github.event.inputs.version }}
           crates-token: ${{ secrets.CRATES_IO_TOKEN }}
           dry-run: ${{ github.event.inputs.dry-run }}
-          working-directory: ith.rs

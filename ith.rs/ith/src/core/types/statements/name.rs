@@ -7,16 +7,15 @@
 
 use std::str::FromStr;
 
-use iota_interaction::MoveType;
-use iota_sdk::types::base_types::ObjectID;
-use iota_sdk::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use iota_sdk::types::transaction::Argument;
-use iota_sdk::types::TypeTag;
-use move_core_types::ident_str;
+use iota_interaction::types::base_types::ObjectID;
+use iota_interaction::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
+use iota_interaction::types::transaction::Argument;
+use iota_interaction::types::TypeTag;
+use iota_interaction::{ident_str, MoveType};
 use serde::{Deserialize, Serialize};
 
 /// StatementName represents the name of a Statement
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, PartialOrd, Ord)]
 pub struct StatementName {
     names: Vec<String>,
 }

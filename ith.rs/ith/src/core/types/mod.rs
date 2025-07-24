@@ -14,8 +14,8 @@ use std::collections::HashMap;
 pub use accreditation::*;
 pub use cap::*;
 pub use event::*;
-use iota_sdk::types::base_types::ObjectID;
-use iota_sdk::types::id::UID;
+use iota_interaction::types::base_types::ObjectID;
+use iota_interaction::types::id::UID;
 use serde::{Deserialize, Serialize};
 
 use crate::core::types::statements::Statements;
@@ -39,7 +39,7 @@ pub struct RootAuthority {
 /// Represents the governance of a federation
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Governance {
-    id: UID,
+    pub id: UID,
     pub statements: Statements,
     #[serde(deserialize_with = "deserialize_vec_map")]
     pub accreditations_to_accredit: HashMap<ObjectID, Accreditations>,

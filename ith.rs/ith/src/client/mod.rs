@@ -1,3 +1,6 @@
+// Copyright 2020-2025 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 //! Client module provides the client interface for the ITH service.
 //! Clients can be used to interact with the ITH service, create new federations,
 //! add statements, create attestations, and accreditations.
@@ -13,16 +16,16 @@ mod read_only;
 
 pub use errors::{ClientError, ReadOnlyClientError};
 pub use full_client::*;
+use iota_interaction::rpc_types::{IotaData, IotaObjectDataOptions};
+use iota_interaction::types::base_types::ObjectID;
 use iota_interaction::IotaClientTrait;
-use iota_interaction_rust::IotaClientAdapter;
-use iota_sdk::rpc_types::{IotaData, IotaObjectDataOptions};
-use iota_sdk::types::base_types::ObjectID;
 use product_common::core_client::CoreClientReadOnly;
 use product_common::network_name::NetworkName;
 pub use read_only::*;
 use serde::de::DeserializeOwned;
 
 use crate::error::{NetworkError, ObjectError};
+use crate::iota_interaction_adapter::IotaClientAdapter;
 
 /// Returns the network-id also known as chain-identifier provided by the specified iota_client
 async fn network_id(iota_client: &IotaClientAdapter) -> Result<NetworkName, NetworkError> {

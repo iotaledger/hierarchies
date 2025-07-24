@@ -1,3 +1,6 @@
+// Copyright 2020-2025 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 //! # ITH Transaction Modules
 //!
 //! This module contains all transaction implementations for the ITH system.

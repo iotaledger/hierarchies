@@ -1,13 +1,16 @@
+// Copyright 2020-2025 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::hash::Hash;
 
-use iota_sdk::types::base_types::{ObjectID, STD_OPTION_MODULE_NAME};
-use iota_sdk::types::collection_types::{VecMap, VecSet};
-use iota_sdk::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use iota_sdk::types::transaction::{Argument, Command};
-use iota_sdk::types::{TypeTag, MOVE_STDLIB_PACKAGE_ID};
-use move_core_types::ident_str;
+use iota_interaction::ident_str;
+use iota_interaction::types::base_types::{ObjectID, STD_OPTION_MODULE_NAME};
+use iota_interaction::types::collection_types::{VecMap, VecSet};
+use iota_interaction::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
+use iota_interaction::types::transaction::{Argument, Command};
+use iota_interaction::types::{TypeTag, MOVE_STDLIB_PACKAGE_ID};
 use serde::{Deserialize, Deserializer, Serialize};
 
 /// Deserialize a [`VecMap`] into a [`HashMap`]
@@ -83,7 +86,7 @@ pub(crate) fn create_vec_set_from_move_values(
 
 #[cfg(test)]
 mod tests {
-    use iota_sdk::types::collection_types::Entry;
+    use iota_interaction::types::collection_types::Entry;
     use serde_json::Value;
 
     use super::*;
