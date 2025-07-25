@@ -127,10 +127,15 @@ pub mod add_statement {
             self.cached_ptb.get_or_try_init(|| self.make_ptb(client)).await.cloned()
         }
 
-        async fn apply<C>(mut self, _: &mut IotaTransactionBlockEffects, _: &C) -> Result<Self::Output, Self::Error>
+        async fn apply<C>(
+            mut self,
+            effects: &mut IotaTransactionBlockEffects,
+            _: &C,
+        ) -> Result<Self::Output, Self::Error>
         where
             C: CoreClientReadOnly + OptionalSync,
         {
+            println!("effects: {:#?}", effects);
             Ok(())
         }
     }

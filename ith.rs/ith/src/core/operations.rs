@@ -29,7 +29,7 @@ use iota_interaction::types::transaction::{CallArg, Command, ObjectArg, Programm
 use iota_interaction::{ident_str, IotaClientTrait, MoveType, OptionalSync};
 use product_common::core_client::CoreClientReadOnly;
 
-use crate::core::errors::{AccreditationError, CapabilityError, FederationError, OperationError};
+use crate::core::error::{CapabilityError, FederationError, OperationError};
 use crate::core::types::statements::name::StatementName;
 use crate::core::types::statements::value::StatementValue;
 use crate::core::types::statements::{new_property_statement, Statement};

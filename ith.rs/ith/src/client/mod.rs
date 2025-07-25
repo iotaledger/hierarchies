@@ -14,7 +14,7 @@ pub mod errors;
 mod full_client;
 mod read_only;
 
-pub use errors::{ClientError, ReadOnlyClientError};
+pub use errors::ClientError;
 pub use full_client::*;
 use iota_interaction::rpc_types::{IotaData, IotaObjectDataOptions};
 use iota_interaction::types::base_types::ObjectID;

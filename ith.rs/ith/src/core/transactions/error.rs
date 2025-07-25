@@ -6,7 +6,6 @@
 use thiserror::Error;
 
 use crate::core::OperationError;
-use crate::error::{NetworkError, ParseError};
 
 /// Errors that can occur during transaction building and execution
 #[derive(Debug, Error)]

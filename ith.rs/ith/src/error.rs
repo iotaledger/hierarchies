@@ -22,7 +22,6 @@
 //! - [`FederationError`] - Federation-specific operations
 //! - [`StatementError`] - Statement management and validation
 //! - [`CapabilityError`] - Capability verification and management
-//! - [`AccreditationError`] - Accreditation lifecycle operations
 //!
 //! ### Client Errors  
 //! - [`ClientError`] - Full client operations (read/write)
@@ -54,11 +53,11 @@ use iota_interaction_rust::AdapterError;
 use thiserror::Error;
 
 // Client errors
-pub use crate::client::{ClientError, ReadOnlyClientError};
+pub use crate::client::ClientError;
 // Transaction errors
 pub use crate::core::transactions::TransactionError;
 // Core operation errors
-pub use crate::core::{AccreditationError, CapabilityError, FederationError, OperationError, StatementError};
+pub use crate::core::{CapabilityError, FederationError, OperationError, StatementError};
 
 // == Common errors ==
 

@@ -5,55 +5,13 @@
 
 use thiserror::Error;
 
-use crate::core::transactions::TransactionError;
-use crate::core::{AccreditationError, CapabilityError, FederationError, OperationError, StatementError};
+use crate::core::error::OperationError;
 use crate::error::{ConfigError, NetworkError, ObjectError};
-
-/// High-level error type for ITH client operations
-#[derive(Debug, Error)]
-#[non_exhaustive]
-pub enum ClientError {
-    /// Federation operation failed
-    #[error(transparent)]
-    Federation(#[from] FederationError),
-
-    /// Statement operation failed
-    #[error(transparent)]
-    Statement(#[from] StatementError),
-
-    /// Capability operation failed
-    #[error(transparent)]
-    Capability(#[from] CapabilityError),
-
-    /// Accreditation operation failed
-    #[error(transparent)]
-    Accreditation(#[from] AccreditationError),
-
-    /// Transaction operation failed
-    #[error(transparent)]
-    Transaction(#[from] TransactionError),
-
-    /// Network operation failed
-    #[error(transparent)]
-    Network(#[from] NetworkError),
-
-    /// Configuration error
-    #[error(transparent)]
-    Config(#[from] ConfigError),
-
-    /// Client not initialized properly
-    #[error("client not initialized: {reason}")]
-    NotInitialized { reason: String },
-
-    /// Invalid input provided to client method
-    #[error("invalid input: {details}")]
-    InvalidInput { details: String },
-}
 
 /// Errors specific to read-only client operations
 #[derive(Debug, Error)]
 #[non_exhaustive]
-pub enum ReadOnlyClientError {
+pub enum ClientError {
     /// Network error
     #[error(transparent)]
     Network(#[from] NetworkError),
@@ -77,4 +35,8 @@ pub enum ReadOnlyClientError {
     /// Operation error
     #[error(transparent)]
     Operation(#[from] OperationError),
+
+    /// Invalid input
+    #[error("invalid input: {details}")]
+    InvalidInput { details: String },
 }

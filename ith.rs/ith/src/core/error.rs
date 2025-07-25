@@ -7,7 +7,7 @@ use iota_interaction::types::base_types::ObjectID;
 use thiserror::Error;
 
 use crate::core::types::Capability;
-use crate::error::{NetworkError, ObjectError, ParseError};
+use crate::error::{NetworkError, ObjectError};
 
 /// Errors that can occur during ITH operations
 #[derive(Debug, Error)]
@@ -21,10 +21,6 @@ pub enum OperationError {
     #[error("federation operation failed")]
     Federation(#[from] FederationError),
 
-    /// Accreditation operation failed
-    #[error("accreditation operation failed")]
-    Accreditation(#[from] AccreditationError),
-
     /// Object operation failed
     #[error("object operation failed")]
     Object(#[from] ObjectError),
@@ -32,6 +28,12 @@ pub enum OperationError {
     /// BCS serialization failed
     #[error("serialization failed")]
     Serialization {
+        #[source]
+        source: Box<dyn std::error::Error + Send + Sync>,
+    },
+    /// Any error
+    #[error("any error")]
+    Any {
         #[source]
         source: Box<dyn std::error::Error + Send + Sync>,
     },
@@ -43,10 +45,11 @@ impl From<bcs::Error> for OperationError {
     }
 }
 
-// Handle anyhow errors (from move_call and other operations)
 impl From<anyhow::Error> for OperationError {
     fn from(err: anyhow::Error) -> Self {
-        OperationError::Serialization { source: err.into() }
+        OperationError::Any {
+            source: err.into_boxed_dyn_error(),
+        }
     }
 }
 
@@ -122,59 +125,7 @@ pub enum CapabilityError {
     #[error("capability '{cap_type}' not found for owner")]
     NotFound { cap_type: String },
 
-    /// Insufficient capability for operation
-    #[error("insufficient capability: required={required}")]
-    Insufficient { required: String },
-
-    /// Capability ownership verification failed
-    #[error("capability ownership verification failed")]
-    OwnershipVerificationFailed {
-        #[source]
-        source: Box<dyn std::error::Error + Send + Sync>,
-    },
-
-    /// Capability has expired
-    #[error("capability '{cap_type}' expired at {expired_at}")]
-    Expired { cap_type: String, expired_at: u64 },
-
     /// Invalid capability type
     #[error("invalid capability type: {cap_type}")]
     InvalidType { cap_type: String },
-
-    /// Failed to parse capability
-    #[error("failed to parse capability")]
-    ParseFailed(#[from] ParseError),
-
-    /// Object retrieval error
-    #[error("capability object error")]
-    Object(#[from] ObjectError),
-}
-
-/// Errors that can occur during accreditation operations
-#[derive(Debug, Error)]
-#[non_exhaustive]
-pub enum AccreditationError {
-    /// Permission denied for accreditation operation
-    #[error("permission denied: {permission}")]
-    PermissionDenied { permission: String },
-
-    /// Accreditation not found
-    #[error("accreditation not found: {id}")]
-    NotFound { id: ObjectID },
-
-    /// Invalid accreditation type
-    #[error("invalid accreditation type: expected={expected}, got={actual}")]
-    InvalidType { expected: String, actual: String },
-
-    /// Accreditation lifecycle violation
-    #[error("accreditation lifecycle violation: {violation}")]
-    LifecycleViolation { violation: String },
-
-    /// Network error during accreditation operation
-    #[error("network error during accreditation operation")]
-    Network(#[from] NetworkError),
-
-    /// Capability error during accreditation
-    #[error("capability error during accreditation")]
-    Capability(#[from] CapabilityError),
 }
