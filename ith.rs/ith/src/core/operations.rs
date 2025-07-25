@@ -28,12 +28,14 @@ use iota_interaction::types::programmable_transaction_builder::ProgrammableTrans
 use iota_interaction::types::transaction::{CallArg, Command, ObjectArg, ProgrammableTransaction};
 use iota_interaction::{ident_str, IotaClientTrait, MoveType, OptionalSync};
 use product_common::core_client::CoreClientReadOnly;
+use thiserror::Error;
 
-use crate::core::error::{CapabilityError, FederationError, OperationError};
+use crate::core::error::OperationError;
 use crate::core::types::statements::name::StatementName;
 use crate::core::types::statements::value::StatementValue;
 use crate::core::types::statements::{new_property_statement, Statement};
 use crate::core::types::Capability;
+use crate::core::CapabilityError;
 use crate::error::{NetworkError, ObjectError};
 use crate::utils::{self};
 
@@ -146,7 +148,7 @@ impl ITHImpl {
     /// # Errors
     ///
     /// Returns an error if the federation object is not found or not shared.
-    async fn get_fed_ref<C>(client: &C, federation_id: ObjectID) -> Result<ObjectArg, FederationError>
+    async fn get_fed_ref<C>(client: &C, federation_id: ObjectID) -> Result<ObjectArg, OperationError>
     where
         C: CoreClientReadOnly + OptionalSync,
     {
@@ -154,7 +156,7 @@ impl ITHImpl {
             id: federation_id,
             initial_shared_version: ITHImpl::initial_shared_version(client, &federation_id)
                 .await
-                .map_err(FederationError::Object)?,
+                .map_err(|e| OperationError::Object(ObjectError::RetrievalFailed { source: Box::new(e) }))?,
             mutable: true,
         };
 

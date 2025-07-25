@@ -11,7 +11,7 @@ pub mod transactions;
 pub mod types;
 
 // Re-export error types for convenience
-pub use error::{CapabilityError, FederationError, OperationError, StatementError};
+pub use error::{CapabilityError, OperationError};
 use iota_interaction::types::programmable_transaction_builder::ProgrammableTransactionBuilder as Ptb;
 use iota_interaction::types::transaction::{Argument, ObjectArg};
 use iota_interaction::types::{IOTA_CLOCK_OBJECT_ID, IOTA_CLOCK_OBJECT_SHARED_VERSION};

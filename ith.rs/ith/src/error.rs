@@ -19,34 +19,16 @@
 //!
 //! ### Core Operation Errors
 //! - [`OperationError`] - Composite error for ITH operations
-//! - [`FederationError`] - Federation-specific operations
-//! - [`StatementError`] - Statement management and validation
 //! - [`CapabilityError`] - Capability verification and management
 //!
-//! ### Client Errors  
+//! ### Client Errors
 //! - [`ClientError`] - Full client operations (read/write)
-//! - [`ReadOnlyClientError`] - Read-only client operations
 //!
 //! ### Transaction Errors
 //! - [`TransactionError`] - Transaction building and execution
-//! - [`PermissionTransactionError`] - Permission-related transactions
 //!
 //! ## Usage
 //!
-//! ```rust,ignore
-//! use ith::error::{FederationError, ClientError};
-//!
-//! fn handle_federation_error(err: FederationError) {
-//!     match err {
-//!         FederationError::NotFound { id } => {
-//!             eprintln!("Federation {id} not found");
-//!         }
-//!         FederationError::InsufficientPermissions { id, required } => {
-//!             eprintln!("Need {required:?} capability for federation {id}");
-//!         }
-//!         _ => eprintln!("Federation error: {err}"),
-//!     }
-//! }
 //! ```
 
 use iota_interaction_rust::AdapterError;
@@ -57,7 +39,7 @@ pub use crate::client::ClientError;
 // Transaction errors
 pub use crate::core::transactions::TransactionError;
 // Core operation errors
-pub use crate::core::{CapabilityError, FederationError, OperationError, StatementError};
+pub use crate::core::{CapabilityError, OperationError};
 
 // == Common errors ==
 
