@@ -89,7 +89,7 @@ impl ITHClientReadOnly {
     /// # Returns
     ///
     /// A `Result` containing the initialized [`ITHClientReadOnly`] on success,
-    /// or an [`Error`] if the network is unrecognized or communication fails.
+    /// or an [`ClientError`] if the network is unrecognized or communication fails.
     pub async fn new(
         #[cfg(target_arch = "wasm32")] iota_client: WasmIotaClient,
         #[cfg(not(target_arch = "wasm32"))] iota_client: IotaClient,
@@ -149,7 +149,7 @@ impl ITHClientReadOnly {
     /// * `package_id`: The specific [`ObjectID`] of the ITH package to use.
     ///
     /// # Returns
-    /// A `Result` containing the initialized [`ITHClientReadOnly`] or an [`Error`].
+    /// A `Result` containing the initialized [`ITHClientReadOnly`] or an [`ClientError`].
     pub async fn new_with_pkg_id(
         #[cfg(target_arch = "wasm32")] iota_client: WasmIotaClient,
         #[cfg(not(target_arch = "wasm32"))] iota_client: IotaClient,
@@ -174,7 +174,7 @@ impl ITHClientReadOnly {
     /// * `federation_id`: The [`ObjectID`] of the federation.
     ///
     /// # Returns
-    /// A `Result` containing the [`Federation`] object or an [`Error`].
+    /// A `Result` containing the [`Federation`] object or an [`ClientError`].
     pub async fn get_federation_by_id(&self, federation_id: ObjectID) -> Result<Federation, ClientError> {
         let fed = get_object_ref_by_id_with_bcs(self, &federation_id).await?;
 
@@ -188,7 +188,7 @@ impl ITHClientReadOnly {
     /// * `federation_id`: The [`ObjectID`] of the federation.
     ///
     /// # Returns
-    /// A `Result` containing the list of statement names or an [`Error`].
+    /// A `Result` containing the list of statement names or an [`ClientError`].
     pub async fn get_statements(&self, federation_id: ObjectID) -> Result<Vec<StatementName>, ClientError> {
         let tx = ITHImpl::get_statements(federation_id, self).await?;
         let result = self.execute_read_only_transaction(tx).await?;
@@ -203,7 +203,7 @@ impl ITHClientReadOnly {
     /// * `statement_name`: The name of the statement to check.
     ///
     /// # Returns
-    /// A `Result` containing a boolean indicating if the statement is registered or an [`Error`].
+    /// A `Result` containing a boolean indicating if the statement is registered or an [`ClientError`].
     pub async fn is_statement_in_federation(
         &self,
         federation_id: ObjectID,
@@ -222,7 +222,7 @@ impl ITHClientReadOnly {
     /// * `user_id`: The [`ObjectID`] of the user.
     ///
     /// # Returns
-    /// A `Result` containing the attestation accreditations or an [`Error`].
+    /// A `Result` containing the attestation accreditations or an [`ClientError`].
     pub async fn get_accreditations_to_attest(
         &self,
         federation_id: ObjectID,
@@ -241,7 +241,7 @@ impl ITHClientReadOnly {
     /// * `user_id`: The [`ObjectID`] of the user.
     ///
     /// # Returns
-    /// A `Result` containing a boolean indicating if the user has attestation permissions or an [`Error`].
+    /// A `Result` containing a boolean indicating if the user has attestation permissions or an [`ClientError`].
     pub async fn is_attester(&self, federation_id: ObjectID, user_id: ObjectID) -> Result<bool, ClientError> {
         let tx = ITHImpl::is_attester(federation_id, user_id, self).await?;
         let result = self.execute_read_only_transaction(tx).await?;
@@ -256,7 +256,7 @@ impl ITHClientReadOnly {
     /// * `user_id`: The [`ObjectID`] of the user.
     ///
     /// # Returns
-    /// A `Result` containing the accreditations to accredit or an [`Error`].
+    /// A `Result` containing the accreditations to accredit or an [`ClientError`].
     pub async fn get_accreditations_to_accredit(
         &self,
         federation_id: ObjectID,
@@ -275,7 +275,7 @@ impl ITHClientReadOnly {
     /// * `user_id`: The [`ObjectID`] of the user.
     ///
     /// # Returns
-    /// A `Result` containing a boolean indicating if the user has accreditations to accredit or an [`Error`].
+    /// A `Result` containing a boolean indicating if the user has accreditations to accredit or an [`ClientError`].
     pub async fn is_accreditor(&self, federation_id: ObjectID, user_id: ObjectID) -> Result<bool, ClientError> {
         let tx = ITHImpl::is_accreditor(federation_id, user_id, self).await?;
         let result = self.execute_read_only_transaction(tx).await?;
@@ -292,7 +292,7 @@ impl ITHClientReadOnly {
     /// * `statement_value`: The value of the statement to validate.
     ///
     /// # Returns
-    /// A `Result` containing a boolean indicating if the statement is valid or an [`Error`].
+    /// A `Result` containing a boolean indicating if the statement is valid or an [`ClientError`].
     pub async fn validate_statement(
         &self,
         federation_id: ObjectID,
@@ -315,7 +315,7 @@ impl ITHClientReadOnly {
     /// * `statements`: The statements to validate.
     ///
     /// # Returns
-    /// A `Result` containing a boolean indicating if the statements are valid or an [`Error`].
+    /// A `Result` containing a boolean indicating if the statements are valid or an [`ClientError`].
     pub async fn validate_statements(
         &self,
         federation_id: ObjectID,
@@ -346,7 +346,8 @@ impl ITHClientReadOnly {
     /// * `tx`: The [`ProgrammableTransaction`] to execute.
     ///
     /// # Returns
-    /// A `Result` containing the deserialized result of type `T` or an [`Error`].
+    /// A `Result` containing the deserialized result of type `T` or an
+    /// [`ClientError`].
     async fn execute_read_only_transaction<T: DeserializeOwned>(
         &self,
         tx: ProgrammableTransaction,

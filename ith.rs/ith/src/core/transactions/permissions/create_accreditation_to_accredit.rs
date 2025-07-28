@@ -41,7 +41,7 @@ pub struct CreateAccreditation {
 }
 
 impl CreateAccreditation {
-    /// Creates a new [`CreateAccreditationToAccredit`] instance.
+    /// Creates a new [`CreateAccreditation`] instance.
     ///
     /// ## Arguments
     ///
@@ -52,7 +52,7 @@ impl CreateAccreditation {
     ///
     /// ## Returns
     ///
-    /// A new instance of [`CreateAccreditationToAccredit`]
+    /// A new instance of [`CreateAccreditation`]
     pub fn new(
         federation_id: ObjectID,
         receiver: ObjectID,
@@ -68,7 +68,7 @@ impl CreateAccreditation {
         }
     }
 
-    /// Makes a [`ProgrammableTransaction`] for the [`CreateAccreditationToAccredit`] instance.
+    /// Makes a [`ProgrammableTransaction`] for the [`CreateAccreditation`] instance.
     async fn make_ptb<C>(&self, client: &C) -> Result<ProgrammableTransaction, OperationError>
     where
         C: CoreClientReadOnly + OptionalSync,

@@ -37,6 +37,9 @@ async fn network_id(iota_client: &IotaClientAdapter) -> Result<NetworkName, Netw
     Ok(network_id.try_into().expect("chain ID is a valid network name"))
 }
 
+/// Get an object by its ID and deserialize it using BCS.
+///
+/// This function is used to retrieve an object from the IOTA network and deserialize it using BCS.
 pub async fn get_object_ref_by_id_with_bcs<T: DeserializeOwned>(
     client: &impl CoreClientReadOnly,
     object_id: &ObjectID,
