@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { createFederation  } from "./01_create_federation";
+import { addRootAuthority } from "./02_add_root_authority";
 
 export async function main(example?: string) {
     // Extract example name.
@@ -13,6 +14,8 @@ export async function main(example?: string) {
     switch (argument) {
         case "01_create_federation":
             return await createFederation();
+        case "02_add_root_authority":
+            return await addRootAuthority();
         default:
             throw "Unknown example name: '" + argument + "'";
     }
