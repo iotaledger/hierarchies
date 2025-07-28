@@ -14,7 +14,6 @@
 //! ### Common Errors
 //! - [`NetworkError`] - Network and RPC related errors
 //! - [`ConfigError`] - Configuration and setup errors
-//! - [`ParseError`] - Data parsing and format errors
 //! - [`ObjectError`] - Object retrieval and manipulation errors
 //!
 //! ### Core Operation Errors
@@ -26,10 +25,6 @@
 //!
 //! ### Transaction Errors
 //! - [`TransactionError`] - Transaction building and execution
-//!
-//! ## Usage
-//!
-//! ```
 
 use iota_interaction_rust::AdapterError;
 use thiserror::Error;
