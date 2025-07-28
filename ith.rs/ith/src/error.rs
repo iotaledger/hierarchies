@@ -68,18 +68,6 @@ pub enum ConfigError {
     Invalid { field: String },
 }
 
-/// Parsing and deserialization errors
-#[derive(Debug, Error)]
-#[non_exhaustive]
-pub enum ParseError {
-    /// BCS deserialization failed
-    #[error("BCS deserialization failed")]
-    BcsDeserializationFailed {
-        #[source]
-        source: Box<dyn std::error::Error + Send + Sync>,
-    },
-}
-
 /// Object lookup and retrieval errors
 #[derive(Debug, Error)]
 #[non_exhaustive]
@@ -104,12 +92,5 @@ pub enum ObjectError {
 impl From<AdapterError> for NetworkError {
     fn from(err: crate::iota_interaction_adapter::AdapterError) -> Self {
         NetworkError::RpcFailed { source: Box::new(err) }
-    }
-}
-
-// Convert bcs::Error to ParseError
-impl From<bcs::Error> for ParseError {
-    fn from(err: bcs::Error) -> Self {
-        ParseError::BcsDeserializationFailed { source: Box::new(err) }
     }
 }
