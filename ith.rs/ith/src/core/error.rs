@@ -3,11 +3,9 @@
 
 //! Domain-specific error types for ITH core operations
 
-use iota_interaction::types::base_types::ObjectID;
 use thiserror::Error;
 
-use crate::core::types::Capability;
-use crate::error::{NetworkError, ObjectError};
+use crate::error::ObjectError;
 
 /// Errors that can occur during ITH operations
 #[derive(Debug, Error)]

@@ -28,7 +28,6 @@ use iota_interaction::types::programmable_transaction_builder::ProgrammableTrans
 use iota_interaction::types::transaction::{CallArg, Command, ObjectArg, ProgrammableTransaction};
 use iota_interaction::{ident_str, IotaClientTrait, MoveType, OptionalSync};
 use product_common::core_client::CoreClientReadOnly;
-use thiserror::Error;
 
 use crate::core::error::OperationError;
 use crate::core::types::statements::name::StatementName;

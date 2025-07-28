@@ -23,7 +23,6 @@ use product_common::transaction::transaction_builder::Transaction;
 use tokio::sync::OnceCell;
 
 use crate::core::operations::{ITHImpl, ITHOperations};
-use crate::core::OperationError;
 use crate::error::TransactionError;
 
 /// A transaction that adds a new root authority to an existing federation.
@@ -32,8 +31,7 @@ use crate::error::TransactionError;
 /// to perform all federation operations including adding other root authorities,
 /// managing statements, and creating accreditations.
 ///
-/// ## Requirements
-///
+/// ## Requirements///
 /// - The signer must already possess a `RootAuthorityCap` for the federation
 /// - The target account must not already have root authority capabilities
 pub struct AddRootAuthority {
