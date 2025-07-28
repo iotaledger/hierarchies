@@ -23,7 +23,7 @@ use product_common::transaction::transaction_builder::Transaction;
 use tokio::sync::OnceCell;
 
 use crate::core::operations::{ITHImpl, ITHOperations};
-use crate::error::Error;
+use crate::error::TransactionError;
 
 /// A transaction that adds a new root authority to an existing federation.
 ///
@@ -31,8 +31,7 @@ use crate::error::Error;
 /// to perform all federation operations including adding other root authorities,
 /// managing statements, and creating accreditations.
 ///
-/// ## Requirements
-///
+/// ## Requirements///
 /// - The signer must already possess a `RootAuthorityCap` for the federation
 /// - The target account must not already have root authority capabilities
 pub struct AddRootAuthority {
@@ -79,7 +78,7 @@ impl AddRootAuthority {
     /// # Errors
     ///
     /// Returns an error if the signer doesn't have the required `RootAuthorityCap`.
-    async fn make_ptb<C>(&self, client: &C) -> Result<ProgrammableTransaction, Error>
+    async fn make_ptb<C>(&self, client: &C) -> Result<ProgrammableTransaction, TransactionError>
     where
         C: CoreClientReadOnly + OptionalSync,
     {
@@ -92,7 +91,7 @@ impl AddRootAuthority {
 #[cfg_attr(not(feature = "send-sync"), async_trait(?Send))]
 #[cfg_attr(feature = "send-sync", async_trait)]
 impl Transaction for AddRootAuthority {
-    type Error = Error;
+    type Error = TransactionError;
 
     type Output = ();
 

@@ -20,7 +20,7 @@ use product_common::core_client::CoreClientReadOnly;
 use product_common::package_registry::PackageRegistry;
 use tokio::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard, TryLockError};
 
-use crate::error::Error;
+use crate::error::ConfigError;
 
 type PackageRegistryLock = RwLockReadGuard<'static, PackageRegistry>;
 type PackageRegistryLockMut = RwLockWriteGuard<'static, PackageRegistry>;
@@ -55,7 +55,7 @@ pub(crate) fn blocking_ith_registry_mut() -> PackageRegistryLockMut {
 }
 
 /// Returns the package ID for the ITH package.
-pub(crate) async fn ith_package_id<C>(client: &C) -> Result<ObjectID, Error>
+pub(crate) async fn ith_package_id<C>(client: &C) -> Result<ObjectID, ConfigError>
 where
     C: CoreClientReadOnly,
 {
@@ -63,5 +63,7 @@ where
     ith_package_registry()
         .await
         .package_id(network)
-        .ok_or_else(|| Error::InvalidConfig(format!("cannot find ITH package ID for network {network}")))
+        .ok_or_else(|| ConfigError::PackageNotFound {
+            network: network.to_string(),
+        })
 }

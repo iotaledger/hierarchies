@@ -20,7 +20,7 @@ use product_common::transaction::transaction_builder::Transaction;
 use tokio::sync::OnceCell;
 
 use crate::core::operations::{ITHImpl, ITHOperations};
-use crate::error::Error;
+use crate::core::OperationError;
 
 /// Transaction for revoking accreditation to accredit permissions.
 ///
@@ -68,7 +68,7 @@ impl RevokeAccreditationToAccredit {
     }
 
     /// Makes a [`ProgrammableTransaction`] for the [`RevokeAccreditationToAccredit`] instance.
-    async fn make_ptb<C>(&self, client: &C) -> Result<ProgrammableTransaction, Error>
+    async fn make_ptb<C>(&self, client: &C) -> Result<ProgrammableTransaction, OperationError>
     where
         C: CoreClientReadOnly + OptionalSync,
     {
@@ -88,7 +88,7 @@ impl RevokeAccreditationToAccredit {
 #[cfg_attr(not(feature = "send-sync"), async_trait(?Send))]
 #[cfg_attr(feature = "send-sync", async_trait)]
 impl Transaction for RevokeAccreditationToAccredit {
-    type Error = Error;
+    type Error = OperationError;
     type Output = ();
 
     async fn build_programmable_transaction<C>(&self, client: &C) -> Result<ProgrammableTransaction, Self::Error>

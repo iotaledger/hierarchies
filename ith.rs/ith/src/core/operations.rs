@@ -29,11 +29,13 @@ use iota_interaction::types::transaction::{CallArg, Command, ObjectArg, Programm
 use iota_interaction::{ident_str, IotaClientTrait, MoveType, OptionalSync};
 use product_common::core_client::CoreClientReadOnly;
 
+use crate::core::error::OperationError;
 use crate::core::types::statements::name::StatementName;
 use crate::core::types::statements::value::StatementValue;
 use crate::core::types::statements::{new_property_statement, Statement};
 use crate::core::types::Capability;
-use crate::error::Error;
+use crate::core::CapabilityError;
+use crate::error::{NetworkError, ObjectError};
 use crate::utils::{self};
 
 const MAIN_ITH_MODULE: &str = move_names::MODULE_MAIN;
@@ -90,12 +92,20 @@ impl ITHImpl {
     /// - The sender doesn't own the requested capability type
     /// - The capability object structure is invalid
     /// - Network communication fails
-    pub(crate) async fn get_cap<C>(client: &C, cap_type: Capability, sender: IotaAddress) -> Result<ObjectRef, Error>
+    pub(crate) async fn get_cap<C>(
+        client: &C,
+        cap_type: Capability,
+        sender: IotaAddress,
+    ) -> Result<ObjectRef, CapabilityError>
     where
         C: CoreClientReadOnly + OptionalSync,
     {
-        let cap_tag = StructTag::from_str(&format!("{}::{MAIN_ITH_MODULE}::{cap_type}", client.package_id()))
-            .map_err(|e| Error::InvalidArgument(format!("invalid cap tag: {e}")))?;
+        let cap_tag =
+            StructTag::from_str(&format!("{}::{MAIN_ITH_MODULE}::{cap_type}", client.package_id())).map_err(|_| {
+                CapabilityError::InvalidType {
+                    cap_type: cap_type.to_string(),
+                }
+            })?;
 
         let filter = IotaObjectResponseQuery::new_with_filter(IotaObjectDataFilter::StructType(cap_tag));
 
@@ -106,7 +116,9 @@ impl ITHImpl {
                 .read_api()
                 .get_owned_objects(sender, Some(filter.clone()), cursor, None)
                 .await
-                .map_err(|e| Error::InvalidArgument(format!("failed to get owned objects: {e}")))?;
+                .map_err(|_e| CapabilityError::NotFound {
+                    cap_type: cap_type.to_string(),
+                })?;
 
             let cap = std::mem::take(&mut page.data)
                 .into_iter()
@@ -121,7 +133,9 @@ impl ITHImpl {
             }
         }
 
-        Err(Error::InvalidArgument("cap not found".to_string()))
+        Err(CapabilityError::NotFound {
+            cap_type: cap_type.to_string(),
+        })
     }
 
     /// Creates a shared object reference for a federation.
@@ -133,13 +147,15 @@ impl ITHImpl {
     /// # Errors
     ///
     /// Returns an error if the federation object is not found or not shared.
-    async fn get_fed_ref<C>(client: &C, federation_id: ObjectID) -> Result<ObjectArg, Error>
+    async fn get_fed_ref<C>(client: &C, federation_id: ObjectID) -> Result<ObjectArg, OperationError>
     where
         C: CoreClientReadOnly + OptionalSync,
     {
         let fed_ref = ObjectArg::SharedObject {
             id: federation_id,
-            initial_shared_version: ITHImpl::initial_shared_version(client, &federation_id).await?,
+            initial_shared_version: ITHImpl::initial_shared_version(client, &federation_id)
+                .await
+                .map_err(|e| OperationError::Object(ObjectError::RetrievalFailed { source: Box::new(e) }))?,
             mutable: true,
         };
 
@@ -150,7 +166,10 @@ impl ITHImpl {
     ///
     /// Required for properly referencing shared objects in IOTA transactions.
     /// Returns an error if the object is not shared.
-    pub(crate) async fn initial_shared_version<C>(client: &C, object_id: &ObjectID) -> Result<SequenceNumber, Error>
+    pub(crate) async fn initial_shared_version<C>(
+        client: &C,
+        object_id: &ObjectID,
+    ) -> Result<SequenceNumber, ObjectError>
     where
         C: CoreClientReadOnly + OptionalSync,
     {
@@ -159,15 +178,20 @@ impl ITHImpl {
             .read_api()
             .get_object_with_options(*object_id, IotaObjectDataOptions::default().with_owner())
             .await
-            .map_err(|e| Error::InvalidArgument(format!("failed to get object with options: {e}")))?
+            .map_err(|e| ObjectError::RetrievalFailed {
+                source: Box::new(NetworkError::RpcFailed { source: Box::new(e) }),
+            })?
             .owner()
-            .ok_or_else(|| Error::InvalidArgument("missing owner information".to_string()))?;
+            .ok_or_else(|| ObjectError::NotFound {
+                id: object_id.to_string(),
+            })?;
 
         match owner {
             Owner::Shared { initial_shared_version } => Ok(initial_shared_version),
-            _ => Err(Error::InvalidArgument(format!(
-                "object {object_id} is not a shared object"
-            ))),
+            _ => Err(ObjectError::WrongType {
+                expected: "SharedObject".to_string(),
+                actual: "ImmOrOwnedObject".to_string(),
+            }),
         }
     }
 }
@@ -205,7 +229,7 @@ pub(crate) trait ITHOperations {
     /// [`ProgrammableTransaction`] A transaction that when executed creates a
     /// new federation and grants
     /// the sender all initial capabilities.
-    fn new_federation(package_id: ObjectID) -> Result<ProgrammableTransaction, Error> {
+    fn new_federation(package_id: ObjectID) -> Result<ProgrammableTransaction, OperationError> {
         let mut ptb = ProgrammableTransactionBuilder::new();
 
         ptb.move_call(
@@ -247,7 +271,7 @@ pub(crate) trait ITHOperations {
         allow_any: bool,
         owner: IotaAddress,
         client: &C,
-    ) -> Result<ProgrammableTransaction, Error>
+    ) -> Result<ProgrammableTransaction, OperationError>
     where
         C: CoreClientReadOnly + OptionalSync,
     {
@@ -298,7 +322,7 @@ pub(crate) trait ITHOperations {
         permission_id: ObjectID,
         owner: IotaAddress,
         client: &C,
-    ) -> Result<ProgrammableTransaction, Error>
+    ) -> Result<ProgrammableTransaction, OperationError>
     where
         C: CoreClientReadOnly + OptionalSync,
     {
@@ -349,7 +373,7 @@ pub(crate) trait ITHOperations {
         account_id: ObjectID,
         owner: IotaAddress,
         client: &C,
-    ) -> Result<ProgrammableTransaction, Error>
+    ) -> Result<ProgrammableTransaction, OperationError>
     where
         C: CoreClientReadOnly + OptionalSync,
     {
@@ -399,7 +423,7 @@ pub(crate) trait ITHOperations {
         want_statements: Vec<Statement>,
         owner: IotaAddress,
         client: &C,
-    ) -> Result<ProgrammableTransaction, Error>
+    ) -> Result<ProgrammableTransaction, OperationError>
     where
         C: CoreClientReadOnly + OptionalSync,
     {
@@ -451,7 +475,7 @@ pub(crate) trait ITHOperations {
         want_statements: Vec<Statement>,
         owner: IotaAddress,
         client: &C,
-    ) -> Result<ProgrammableTransaction, Error>
+    ) -> Result<ProgrammableTransaction, OperationError>
     where
         C: CoreClientReadOnly + OptionalSync,
     {
@@ -503,7 +527,7 @@ pub(crate) trait ITHOperations {
         permission_id: ObjectID,
         owner: IotaAddress,
         client: &C,
-    ) -> Result<ProgrammableTransaction, Error>
+    ) -> Result<ProgrammableTransaction, OperationError>
     where
         C: CoreClientReadOnly + OptionalSync,
     {
@@ -546,7 +570,7 @@ pub(crate) trait ITHOperations {
     /// # Errors
     ///
     /// Returns an error if the federation object is not found or not shared.
-    async fn get_statements<C>(federation_id: ObjectID, client: &C) -> Result<ProgrammableTransaction, Error>
+    async fn get_statements<C>(federation_id: ObjectID, client: &C) -> Result<ProgrammableTransaction, OperationError>
     where
         C: CoreClientReadOnly + OptionalSync,
     {
@@ -592,7 +616,7 @@ pub(crate) trait ITHOperations {
         federation_id: ObjectID,
         statement_name: StatementName,
         client: &C,
-    ) -> Result<ProgrammableTransaction, Error>
+    ) -> Result<ProgrammableTransaction, OperationError>
     where
         C: CoreClientReadOnly + OptionalSync,
     {
@@ -639,7 +663,7 @@ pub(crate) trait ITHOperations {
         federation_id: ObjectID,
         user_id: ObjectID,
         client: &C,
-    ) -> Result<ProgrammableTransaction, Error>
+    ) -> Result<ProgrammableTransaction, OperationError>
     where
         C: CoreClientReadOnly + OptionalSync,
     {
@@ -669,7 +693,7 @@ pub(crate) trait ITHOperations {
         federation_id: ObjectID,
         user_id: ObjectID,
         client: &C,
-    ) -> Result<ProgrammableTransaction, Error>
+    ) -> Result<ProgrammableTransaction, OperationError>
     where
         C: CoreClientReadOnly + OptionalSync,
     {
@@ -715,7 +739,7 @@ pub(crate) trait ITHOperations {
         federation_id: ObjectID,
         user_id: ObjectID,
         client: &C,
-    ) -> Result<ProgrammableTransaction, Error>
+    ) -> Result<ProgrammableTransaction, OperationError>
     where
         C: CoreClientReadOnly + OptionalSync,
     {
@@ -745,7 +769,7 @@ pub(crate) trait ITHOperations {
         federation_id: ObjectID,
         user_id: ObjectID,
         client: &C,
-    ) -> Result<ProgrammableTransaction, Error>
+    ) -> Result<ProgrammableTransaction, OperationError>
     where
         C: CoreClientReadOnly + OptionalSync,
     {
@@ -794,7 +818,7 @@ pub(crate) trait ITHOperations {
         statement_name: StatementName,
         owner: IotaAddress,
         client: &C,
-    ) -> Result<ProgrammableTransaction, Error>
+    ) -> Result<ProgrammableTransaction, OperationError>
     where
         C: CoreClientReadOnly + OptionalSync,
     {
@@ -852,7 +876,7 @@ pub(crate) trait ITHOperations {
         valid_to_ms: u64,
         owner: IotaAddress,
         client: &C,
-    ) -> Result<ProgrammableTransaction, Error>
+    ) -> Result<ProgrammableTransaction, OperationError>
     where
         C: CoreClientReadOnly + OptionalSync,
     {
@@ -912,7 +936,7 @@ pub(crate) trait ITHOperations {
         statement_name: StatementName,
         statement_value: StatementValue,
         client: &C,
-    ) -> Result<ProgrammableTransaction, Error>
+    ) -> Result<ProgrammableTransaction, OperationError>
     where
         C: CoreClientReadOnly + OptionalSync,
     {
@@ -968,7 +992,7 @@ pub(crate) trait ITHOperations {
         entity_id: ObjectID,
         statements: HashMap<StatementName, StatementValue>,
         client: &C,
-    ) -> Result<ProgrammableTransaction, Error>
+    ) -> Result<ProgrammableTransaction, OperationError>
     where
         C: CoreClientReadOnly + OptionalSync,
     {

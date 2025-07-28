@@ -21,7 +21,7 @@ use tokio::sync::OnceCell;
 use crate::core::operations::{ITHImpl, ITHOperations};
 use crate::core::types::statements::name::StatementName;
 use crate::core::types::statements::value::StatementValue;
-use crate::error::Error;
+use crate::core::OperationError;
 
 /// Transaction for adding new statement types to federations.
 pub mod add_statement {
@@ -95,7 +95,7 @@ pub mod add_statement {
         ///
         /// Returns an error if the owner doesn't have `RootAuthorityCap` or if
         /// the statement name already exists in the federation.
-        async fn make_ptb<C>(&self, client: &C) -> Result<ProgrammableTransaction, Error>
+        async fn make_ptb<C>(&self, client: &C) -> Result<ProgrammableTransaction, OperationError>
         where
             C: CoreClientReadOnly + OptionalSync,
         {
@@ -116,7 +116,7 @@ pub mod add_statement {
     #[cfg_attr(not(feature = "send-sync"), async_trait(?Send))]
     #[cfg_attr(feature = "send-sync", async_trait)]
     impl Transaction for AddStatement {
-        type Error = Error;
+        type Error = OperationError;
 
         type Output = ();
 
@@ -127,10 +127,15 @@ pub mod add_statement {
             self.cached_ptb.get_or_try_init(|| self.make_ptb(client)).await.cloned()
         }
 
-        async fn apply<C>(mut self, _: &mut IotaTransactionBlockEffects, _: &C) -> Result<Self::Output, Self::Error>
+        async fn apply<C>(
+            mut self,
+            effects: &mut IotaTransactionBlockEffects,
+            _: &C,
+        ) -> Result<Self::Output, Self::Error>
         where
             C: CoreClientReadOnly + OptionalSync,
         {
+            println!("effects: {:#?}", effects);
             Ok(())
         }
     }
@@ -205,7 +210,7 @@ pub mod revoke_statement {
         ///
         /// Returns an error if the owner doesn't have `RootAuthorityCap` or if
         /// the statement doesn't exist in the federation.
-        async fn make_ptb<C>(&self, client: &C) -> Result<ProgrammableTransaction, Error>
+        async fn make_ptb<C>(&self, client: &C) -> Result<ProgrammableTransaction, OperationError>
         where
             C: CoreClientReadOnly + OptionalSync,
         {
@@ -233,7 +238,7 @@ pub mod revoke_statement {
     #[cfg_attr(not(feature = "send-sync"), async_trait(?Send))]
     #[cfg_attr(feature = "send-sync", async_trait)]
     impl Transaction for RevokeStatement {
-        type Error = Error;
+        type Error = OperationError;
 
         type Output = ();
 

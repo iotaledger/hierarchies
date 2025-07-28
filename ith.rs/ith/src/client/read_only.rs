@@ -20,12 +20,13 @@ use product_common::network_name::NetworkName;
 use product_common::package_registry::{Env, Metadata};
 use serde::de::DeserializeOwned;
 
+use crate::client::error::ClientError;
 use crate::client::{get_object_ref_by_id_with_bcs, network_id};
 use crate::core::operations::{ITHImpl, ITHOperations};
 use crate::core::types::statements::name::StatementName;
 use crate::core::types::statements::value::StatementValue;
 use crate::core::types::{Accreditations, Federation};
-use crate::error::Error;
+use crate::error::ConfigError;
 use crate::iota_interaction_adapter::IotaClientAdapter;
 use crate::package;
 
@@ -92,7 +93,7 @@ impl ITHClientReadOnly {
     pub async fn new(
         #[cfg(target_arch = "wasm32")] iota_client: WasmIotaClient,
         #[cfg(not(target_arch = "wasm32"))] iota_client: IotaClient,
-    ) -> Result<Self, Error> {
+    ) -> Result<Self, ClientError> {
         let client = IotaClientAdapter::new(iota_client);
         let network = network_id(&client).await?;
         Self::new_internal(client, network).await
@@ -107,17 +108,15 @@ impl ITHClientReadOnly {
     ///
     /// * `iota_client`: The IOTA client adapter.
     /// * `network`: The name of the network.
-    async fn new_internal(iota_client: IotaClientAdapter, network: NetworkName) -> Result<Self, Error> {
+    async fn new_internal(iota_client: IotaClientAdapter, network: NetworkName) -> Result<Self, ClientError> {
         let chain_id = network.as_ref().to_string();
         let (network, ith_pkg_id) = {
             let package_registry = package::ith_package_registry().await;
-            let package_id = package_registry
-          .package_id(&network)
-          .ok_or_else(|| {
-            Error::InvalidConfig(format!(
-              "no information for a published `ith` package on network {network}; try to use `ITHClientReadOnly::new_with_package_id`"
-            ))
-          })?;
+            let package_id = package_registry.package_id(&network).ok_or_else(|| {
+                ClientError::Configuration(ConfigError::PackageNotFound {
+                    network: network.to_string(),
+                })
+            })?;
             let network = match chain_id.as_str() {
                 product_common::package_registry::MAINNET_CHAIN_ID => {
                     NetworkName::try_from("iota").expect("valid network name")
@@ -155,7 +154,7 @@ impl ITHClientReadOnly {
         #[cfg(target_arch = "wasm32")] iota_client: WasmIotaClient,
         #[cfg(not(target_arch = "wasm32"))] iota_client: IotaClient,
         package_id: ObjectID,
-    ) -> Result<Self, Error> {
+    ) -> Result<Self, ClientError> {
         let client = IotaClientAdapter::new(iota_client);
         let network = network_id(&client).await?;
 
@@ -176,7 +175,7 @@ impl ITHClientReadOnly {
     ///
     /// # Returns
     /// A `Result` containing the [`Federation`] object or an [`Error`].
-    pub async fn get_federation_by_id(&self, federation_id: ObjectID) -> Result<Federation, Error> {
+    pub async fn get_federation_by_id(&self, federation_id: ObjectID) -> Result<Federation, ClientError> {
         let fed = get_object_ref_by_id_with_bcs(self, &federation_id).await?;
 
         Ok(fed)
@@ -190,7 +189,7 @@ impl ITHClientReadOnly {
     ///
     /// # Returns
     /// A `Result` containing the list of statement names or an [`Error`].
-    pub async fn get_statements(&self, federation_id: ObjectID) -> Result<Vec<StatementName>, Error> {
+    pub async fn get_statements(&self, federation_id: ObjectID) -> Result<Vec<StatementName>, ClientError> {
         let tx = ITHImpl::get_statements(federation_id, self).await?;
         let result = self.execute_read_only_transaction(tx).await?;
         Ok(result)
@@ -209,7 +208,7 @@ impl ITHClientReadOnly {
         &self,
         federation_id: ObjectID,
         statement_name: StatementName,
-    ) -> Result<bool, Error> {
+    ) -> Result<bool, ClientError> {
         let tx = ITHImpl::is_statement_in_federation(federation_id, statement_name, self).await?;
         let result = self.execute_read_only_transaction(tx).await?;
         Ok(result)
@@ -228,7 +227,7 @@ impl ITHClientReadOnly {
         &self,
         federation_id: ObjectID,
         user_id: ObjectID,
-    ) -> Result<Accreditations, Error> {
+    ) -> Result<Accreditations, ClientError> {
         let tx = ITHImpl::get_accreditations_to_attest(federation_id, user_id, self).await?;
         let result = self.execute_read_only_transaction(tx).await?;
         Ok(result)
@@ -243,7 +242,7 @@ impl ITHClientReadOnly {
     ///
     /// # Returns
     /// A `Result` containing a boolean indicating if the user has attestation permissions or an [`Error`].
-    pub async fn is_attester(&self, federation_id: ObjectID, user_id: ObjectID) -> Result<bool, Error> {
+    pub async fn is_attester(&self, federation_id: ObjectID, user_id: ObjectID) -> Result<bool, ClientError> {
         let tx = ITHImpl::is_attester(federation_id, user_id, self).await?;
         let result = self.execute_read_only_transaction(tx).await?;
         Ok(result)
@@ -262,7 +261,7 @@ impl ITHClientReadOnly {
         &self,
         federation_id: ObjectID,
         user_id: ObjectID,
-    ) -> Result<Accreditations, Error> {
+    ) -> Result<Accreditations, ClientError> {
         let tx = ITHImpl::get_accreditations_to_accredit(federation_id, user_id, self).await?;
         let result = self.execute_read_only_transaction(tx).await?;
         Ok(result)
@@ -277,7 +276,7 @@ impl ITHClientReadOnly {
     ///
     /// # Returns
     /// A `Result` containing a boolean indicating if the user has accreditations to accredit or an [`Error`].
-    pub async fn is_accreditor(&self, federation_id: ObjectID, user_id: ObjectID) -> Result<bool, Error> {
+    pub async fn is_accreditor(&self, federation_id: ObjectID, user_id: ObjectID) -> Result<bool, ClientError> {
         let tx = ITHImpl::is_accreditor(federation_id, user_id, self).await?;
         let result = self.execute_read_only_transaction(tx).await?;
         Ok(result)
@@ -300,7 +299,7 @@ impl ITHClientReadOnly {
         attester_id: ObjectID,
         statement_name: StatementName,
         statement_value: StatementValue,
-    ) -> Result<bool, Error> {
+    ) -> Result<bool, ClientError> {
         let tx = ITHImpl::validate_statement(federation_id, attester_id, statement_name, statement_value, self).await?;
 
         let response = self.execute_read_only_transaction(tx).await?;
@@ -322,7 +321,7 @@ impl ITHClientReadOnly {
         federation_id: ObjectID,
         entity_id: ObjectID,
         statements: impl IntoIterator<Item = (StatementName, StatementValue)>,
-    ) -> Result<bool, Error> {
+    ) -> Result<bool, ClientError> {
         let tx = ITHImpl::validate_statements(federation_id, entity_id, statements.into_iter().collect(), self).await?;
 
         let response = self.execute_read_only_transaction(tx).await?;
@@ -351,22 +350,24 @@ impl ITHClientReadOnly {
     async fn execute_read_only_transaction<T: DeserializeOwned>(
         &self,
         tx: ProgrammableTransaction,
-    ) -> Result<T, Error> {
+    ) -> Result<T, ClientError> {
         let inspection_result = self
             .client
             .read_api()
             .dev_inspect_transaction_block(IotaAddress::ZERO, TransactionKind::programmable(tx), None, None, None)
             .await
-            .map_err(|err| Error::UnexpectedApiResponse(format!("Failed to inspect transaction block: {err}")))?;
+            .map_err(|err| ClientError::ExecutionFailed {
+                reason: format!("Failed to inspect transaction block: {err}"),
+            })?;
 
-        let execution_results = inspection_result
-            .results
-            .ok_or_else(|| Error::UnexpectedApiResponse("DevInspectResults missing 'results' field".to_string()))?;
+        let execution_results = inspection_result.results.ok_or_else(|| ClientError::InvalidResponse {
+            reason: "DevInspectResults missing 'results' field".to_string(),
+        })?;
 
         if execution_results.is_empty() {
-            return Err(Error::UnexpectedApiResponse(
-                "Execution results list is empty".to_string(),
-            ));
+            return Err(ClientError::InvalidResponse {
+                reason: "Execution results list is empty".to_string(),
+            });
         }
 
         // Try execution results in reverse order (last to first)
@@ -386,11 +387,13 @@ impl ITHClientReadOnly {
             }
         }
 
-        Err(Error::UnexpectedApiResponse(format!(
-            "No execution result could be deserialized as expected type. Total results: {}. Last error: {}",
-            execution_results.len(),
-            last_error.map_or("No return values found".to_string(), |e| e.to_string())
-        )))
+        Err(ClientError::InvalidResponse {
+            reason: format!(
+                "No execution result could be deserialized as expected type. Total results: {}. Last error: {}",
+                execution_results.len(),
+                last_error.map_or("No return values found".to_string(), |e| e.to_string())
+            ),
+        })
     }
 }
 

@@ -35,13 +35,13 @@ latest-published-id = "0x46b63bbdfde26aba118f3e9f86405f7337fe463f8bd7a0164614482
 published-version = "1"
 
 [env.local]
-chain-id = "bb0fb12c"
-original-published-id = "0x39b3322c56933a610bf039306aa930972f90fc5c0e143755a103325c016ad7fa"
-latest-published-id = "0x39b3322c56933a610bf039306aa930972f90fc5c0e143755a103325c016ad7fa"
+chain-id = "dd2181e5"
+original-published-id = "0x2319aae93cbe97ef111290154a571effb10989bca0ea8804e7804e8aebd9bb67"
+latest-published-id = "0x2319aae93cbe97ef111290154a571effb10989bca0ea8804e7804e8aebd9bb67"
 published-version = "1"
 
 [env.localnet]
-chain-id = "1c7a1c55"
-original-published-id = "0x8038882d6d827c237fd41af9dd3c3b9c0661ffb465b9cc5b005eeb685efebce5"
-latest-published-id = "0x8038882d6d827c237fd41af9dd3c3b9c0661ffb465b9cc5b005eeb685efebce5"
+chain-id = "c9ef459e"
+original-published-id = "0xc1922d2be028e1a89db07b5faec33dc80f866563f8af6c0985d73657e39d1848"
+latest-published-id = "0xc1922d2be028e1a89db07b5faec33dc80f866563f8af6c0985d73657e39d1848"
 published-version = "1"

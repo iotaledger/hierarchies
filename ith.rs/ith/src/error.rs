@@ -1,54 +1,96 @@
 // Copyright 2020-2025 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::iota_interaction_adapter::AdapterError;
+//! Error types for the ITH library
+//!
+//! This module re-exports all domain-specific error types used throughout the library,
+//! providing a single location for users to discover and import error types.
+//!
+//! ## Error Architecture
+//!
+//! The ITH library uses domain-specific error types instead of a monolithic error enum.
+//! Each domain has its own error type that provides detailed context for that specific area:
+//!
+//! ### Common Errors
+//! - [`NetworkError`] - Network and RPC related errors
+//! - [`ConfigError`] - Configuration and setup errors
+//! - [`ParseError`] - Data parsing and format errors
+//! - [`ObjectError`] - Object retrieval and manipulation errors
+//!
+//! ### Core Operation Errors
+//! - [`OperationError`] - Composite error for ITH operations
+//! - [`CapabilityError`] - Capability verification and management
+//!
+//! ### Client Errors
+//! - [`ClientError`] - Full client operations (read/write)
+//!
+//! ### Transaction Errors
+//! - [`TransactionError`] - Transaction building and execution
+//!
+//! ## Usage
+//!
+//! ```
 
-/// Errors that can occur when managing ITH
-#[derive(Debug, thiserror::Error, strum::IntoStaticStr)]
+use iota_interaction_rust::AdapterError;
+use thiserror::Error;
+
+// Client errors
+pub use crate::client::ClientError;
+// Transaction errors
+pub use crate::core::transactions::TransactionError;
+// Core operation errors
+pub use crate::core::{CapabilityError, OperationError};
+
+// == Common errors ==
+
+/// Network-related errors that can occur during RPC operations
+#[derive(Debug, Error)]
 #[non_exhaustive]
-pub enum Error {
-    /// Caused by invalid keys.
-    #[error("invalid key: {0}")]
-    InvalidKey(String),
-    /// Config is invalid.
-    #[error("invalid config: {0}")]
-    InvalidConfig(String),
-    /// An error caused by either a connection issue or an invalid RPC call.
-    #[error("RPC error: {0}")]
-    RpcError(String),
-    /// The provided IOTA Client returned an error
-    #[error("IOTA client error: {0}")]
-    IotaClient(#[from] AdapterError),
-    /// Generic error
-    #[error("{0}")]
-    GenericError(String),
-    /// Failed to parse tag
-    #[error("Failed to parse tag: {0}")]
-    FailedToParseTag(String),
-    /// Invalid argument
-    #[error("Invalid argument: {0}")]
-    InvalidArgument(String),
-    /// Invalid unlock time
-    #[error("Invalid unlock time: {0}")]
-    TimeLock(String),
-    /// The response from the IOTA node API was not in the expected format.
-    #[error("unexpected API response: {0}")]
-    UnexpectedApiResponse(String),
-    /// Failed to deserialize data using BCS.
-    #[error("BCS deserialization error: {0}")]
-    DeserializationError(#[from] bcs::Error),
-    /// The response from the IOTA node API was not in the expected format.
-    #[error("unexpected API response: {0}")]
-    TransactionUnexpectedResponse(String),
-    /// Failed to get object with options
-    #[error("Failed to get object with options: {0}")]
-    ObjectLookup(String),
-    /// An anyhow::error.
-    #[error("Any error: {0}")]
-    AnyError(#[from] anyhow::Error),
+pub enum NetworkError {
+    /// RPC call failed
+    #[error("RPC call failed")]
+    RpcFailed {
+        #[source]
+        source: Box<dyn std::error::Error + Send + Sync>,
+    },
 }
 
-#[cfg(target_arch = "wasm32")]
-use product_common::impl_wasm_error_from;
-#[cfg(target_arch = "wasm32")]
-impl_wasm_error_from!(Error);
+/// Configuration-related errors
+#[derive(Debug, Error)]
+#[non_exhaustive]
+pub enum ConfigError {
+    /// Package not found for the specified network
+    #[error("package not found for network: {network}")]
+    PackageNotFound { network: String },
+
+    /// Invalid configuration field
+    #[error("invalid configuration: {field}")]
+    Invalid { field: String },
+}
+
+/// Object lookup and retrieval errors
+#[derive(Debug, Error)]
+#[non_exhaustive]
+pub enum ObjectError {
+    /// Object not found on the network
+    #[error("object not found: {id}")]
+    NotFound { id: String },
+
+    /// Failed to retrieve object with options
+    #[error("failed to retrieve object")]
+    RetrievalFailed {
+        #[source]
+        source: Box<dyn std::error::Error + Send + Sync>,
+    },
+
+    /// Object has wrong type
+    #[error("wrong object type: expected {expected}, got {actual}")]
+    WrongType { expected: String, actual: String },
+}
+
+// Convert AdapterError to NetworkError
+impl From<AdapterError> for NetworkError {
+    fn from(err: crate::iota_interaction_adapter::AdapterError) -> Self {
+        NetworkError::RpcFailed { source: Box::new(err) }
+    }
+}
