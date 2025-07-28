@@ -82,7 +82,7 @@ use product_common::transaction::transaction_builder::TransactionBuilder;
 use secret_storage::Signer;
 
 use super::ITHClientReadOnly;
-use crate::client::errors::ClientError;
+use crate::client::error::ClientError;
 use crate::core::transactions::add_root_authority::AddRootAuthority;
 use crate::core::transactions::statements::add_statement::AddStatement;
 use crate::core::transactions::statements::revoke_statement::RevokeStatement;

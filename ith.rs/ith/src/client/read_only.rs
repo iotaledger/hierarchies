@@ -20,7 +20,7 @@ use product_common::network_name::NetworkName;
 use product_common::package_registry::{Env, Metadata};
 use serde::de::DeserializeOwned;
 
-use crate::client::errors::ClientError;
+use crate::client::error::ClientError;
 use crate::client::{get_object_ref_by_id_with_bcs, network_id};
 use crate::core::operations::{ITHImpl, ITHOperations};
 use crate::core::types::statements::name::StatementName;

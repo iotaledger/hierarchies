@@ -10,11 +10,11 @@
 //!   The client is represented by the [`ITHClient`] struct.
 //! - ReadOnlyClient: A client that can only perform off-chain operations. It doesn't require a signer with a private
 //!   key. The client is represented by the [`ITHClientReadOnly`] struct.
-pub mod errors;
+pub mod error;
 mod full_client;
 mod read_only;
 
-pub use errors::ClientError;
+pub use error::ClientError;
 pub use full_client::*;
 use iota_interaction::rpc_types::{IotaData, IotaObjectDataOptions};
 use iota_interaction::types::base_types::ObjectID;
