@@ -220,12 +220,6 @@ pub(crate) trait ITHOperations {
     /// The creator receives all three capability types: `RootAuthorityCap`,
     /// `AccreditCap`, and `AttestCap`, granting full control over the federation.
     ///
-    /// # Parameters
-    ///
-    /// - `package_id`: The ITH Move package ID deployed on the network
-    ///
-    /// # Returns
-    ///
     /// [`ProgrammableTransaction`] A transaction that when executed creates a
     /// new federation and grants
     /// the sender all initial capabilities.
@@ -250,14 +244,6 @@ pub(crate) trait ITHOperations {
     /// Statements define the types of claims that can be attested within the federation.
     /// You can either restrict allowed values to a specific set or allow any values.
     ///
-    /// # Parameters
-    ///
-    /// - `federation_id`: The target federation
-    /// - `statement_name`: Unique identifier for the statement type
-    /// - `allowed_values`: Specific values permitted for this statement (ignored if `allow_any` is true)
-    /// - `allow_any`: Whether to allow any values for this statement type
-    /// - `owner`: Address that owns the required `RootAuthorityCap`
-    ///
     /// # Errors
     ///
     /// Returns an error if:
@@ -267,7 +253,7 @@ pub(crate) trait ITHOperations {
     async fn add_statement<C>(
         federation_id: ObjectID,
         statement_name: StatementName,
-        allowed_values: HashSet<StatementValue>,
+        allowed_statement_values: HashSet<StatementValue>,
         allow_any: bool,
         owner: IotaAddress,
         client: &C,
@@ -291,7 +277,7 @@ pub(crate) trait ITHOperations {
         let value_tag = StatementValue::move_type(client.package_id());
 
         let mut values_of_property = vec![];
-        for property_value in allowed_values {
+        for property_value in allowed_statement_values {
             let value = property_value.to_ptb(&mut ptb, client.package_id())?;
             values_of_property.push(value);
         }
@@ -358,13 +344,6 @@ pub(crate) trait ITHOperations {
     /// The new authority receives a `RootAuthorityCap`. Requires existing
     /// `RootAuthorityCap`.
     ///
-    /// # Parameters
-    ///
-    /// - `federation_id`: The target federation
-    /// - `account_id`: The new root authority's account ID
-    /// - `owner`: Address that owns the required `RootAuthorityCap`
-    /// - `client`: The client to use for the operation
-    ///
     /// # Errors
     ///
     /// Returns an error if the owner doesn't have `RootAuthorityCap`.
@@ -405,14 +384,6 @@ pub(crate) trait ITHOperations {
     ///
     /// Allows the receiver to further delegate accreditation rights for the specified statements.
     /// The granter must have sufficient permissions for all statements being delegated.
-    ///
-    /// # Parameters
-    ///
-    /// - `federation_id`: The target federation
-    /// - `receiver`: The user receiving the accreditation
-    /// - `want_statements`: The statements the receiver wants to delegate
-    /// - `owner`: Address that owns the required `AccreditCap`
-    /// - `client`: The client to use for the operation
     ///
     /// # Errors
     ///
@@ -458,14 +429,6 @@ pub(crate) trait ITHOperations {
     /// Allows the receiver to create attestations for the specified statements.
     /// The granter must have sufficient permissions for all statements being delegated.
     ///
-    /// # Parameters
-    ///
-    /// - `federation_id`: The target federation
-    /// - `receiver`: The user receiving the attestation accreditation
-    /// - `want_statements`: The statements the receiver wants to attest
-    /// - `owner`: Address that owns the required `AttestCap`
-    /// - `client`: The client to use for the operation
-    ///
     /// # Errors
     ///
     /// Returns an error if the owner doesn't have `AttestCap`.
@@ -509,14 +472,6 @@ pub(crate) trait ITHOperations {
     ///
     /// Removes specific accreditation rights from a user. The revoker must have
     /// sufficient permissions to revoke the target accreditation.
-    ///
-    /// # Parameters
-    ///
-    /// - `federation_id`: The target federation
-    /// - `user_id`: The user whose accreditation permissions to revoke
-    /// - `permission_id`: The specific accreditation permission to revoke
-    /// - `owner`: Address that owns the required `AccreditCap`
-    /// - `client`: The client to use for the operation
     ///
     /// # Errors
     ///
@@ -562,11 +517,6 @@ pub(crate) trait ITHOperations {
     /// This includes both active and revoked statements, but validation functions
     /// will check expiration times when validating attestations.
     ///
-    /// # Parameters
-    ///
-    /// - `federation_id`: The federation to query
-    /// - `client`: The client to use for the operation
-    ///
     /// # Errors
     ///
     /// Returns an error if the federation object is not found or not shared.
@@ -598,11 +548,6 @@ pub(crate) trait ITHOperations {
     /// governance structure. This check is independent of the statement's
     /// revocation status.
     ///
-    /// # Parameters
-    ///
-    /// - `federation_id`: The federation to query
-    /// - `statement_name`: The statement type to check for
-    /// - `client`: The client to use for the operation
     ///
     /// # Returns
     ///
@@ -644,12 +589,6 @@ pub(crate) trait ITHOperations {
     /// Returns the set of statements a user is authorized to attest, along with
     /// any value constraints. This shows what statements the user can create
     /// attestations for, but not what they can delegate to others.
-    ///
-    /// # Parameters
-    ///
-    /// - `federation_id`: The federation to query
-    /// - `user_id`: The user whose attestation permissions to check
-    /// - `client`: The client to use for the operation
     ///
     /// # Returns
     ///
@@ -722,11 +661,6 @@ pub(crate) trait ITHOperations {
     /// for accreditation purposes. This shows what statements the user can
     /// grant others permission to further delegate (create_accreditation_to_accredit).
     ///
-    /// # Parameters
-    ///
-    /// - `federation_id`: The federation to query
-    /// - `user_id`: The user whose accreditation permissions to check
-    ///
     /// # Returns
     ///
     /// A transaction that when executed returns the user's accreditation
@@ -798,13 +732,6 @@ pub(crate) trait ITHOperations {
     /// revoking it immediately. After revocation, the statement can no longer be
     /// attested. Requires `RootAuthorityCap`.
     ///
-    /// # Parameters
-    ///
-    /// - `federation_id`: The federation containing the statement
-    /// - `statement_name`: The statement type to revoke
-    /// - `owner`: Address that owns the required `RootAuthorityCap`
-    /// - `client`: The client to use for the operation
-    ///
     /// # Returns
     ///
     /// A transaction that when executed revokes the statement.
@@ -854,13 +781,6 @@ pub(crate) trait ITHOperations {
     /// the specified time, the statement can no longer be attested. This allows
     /// for scheduled revocation. Requires `RootAuthorityCap`.
     ///
-    /// # Parameters
-    ///
-    /// - `federation_id`: The federation containing the statement
-    /// - `statement_name`: The statement type to revoke
-    /// - `valid_to_ms`: Timestamp in milliseconds when the statement expires
-    /// - `owner`: Address that owns the required `RootAuthorityCap`
-    /// - `client`: The client to use for the operation
     ///
     /// # Returns
     ///
@@ -914,14 +834,6 @@ pub(crate) trait ITHOperations {
     /// This creates a transaction that will return true if the attester can
     /// make the attestation, false otherwise.
     ///
-    /// # Parameters
-    ///
-    /// - `federation_id`: The federation containing the statement rules
-    /// - `attester_id`: The entity whose attestation permissions to check
-    /// - `statement_name`: The statement type to validate
-    /// - `statement_value`: The specific value being attested
-    /// - `client`: The client to use for the operation
-    ///
     /// # Returns
     ///
     /// A transaction that when executed returns a boolean indicating whether
@@ -972,12 +884,6 @@ pub(crate) trait ITHOperations {
     /// statement name-value pairs according to their accreditations.
     /// This is more efficient than multiple single-statement validations.
     ///
-    /// # Parameters
-    ///
-    /// - `federation_id`: The federation containing the statement rules
-    /// - `entity_id`: The entity whose attestation permissions to check
-    /// - `statements`: Map of statement names to their values for validation
-    /// - `client`: The client to use for the operation
     ///
     /// # Returns
     ///

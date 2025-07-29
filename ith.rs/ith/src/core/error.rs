@@ -8,7 +8,7 @@ use thiserror::Error;
 use crate::error::ObjectError;
 
 /// Errors that can occur during ITH operations
-#[derive(Debug, Error)]
+#[derive(Debug, Error, strum::IntoStaticStr)]
 #[non_exhaustive]
 pub enum OperationError {
     /// Capability operation failed
@@ -48,7 +48,7 @@ impl From<anyhow::Error> for OperationError {
 }
 
 /// Errors that can occur during capability operations
-#[derive(Debug, Error)]
+#[derive(Debug, Error, strum::IntoStaticStr)]
 #[non_exhaustive]
 pub enum CapabilityError {
     /// Capability not found

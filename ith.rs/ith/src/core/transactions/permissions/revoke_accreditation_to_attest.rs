@@ -41,17 +41,6 @@ pub struct RevokeAccreditationToAttest {
 
 impl RevokeAccreditationToAttest {
     /// Creates a new [`RevokeAccreditationToAttest`] instance.
-    ///
-    /// ## Arguments
-    ///
-    /// * `federation_id` - The ID of the federation where the accreditation will be revoked
-    /// * `user_id` - The ID of the user whose attestation permissions will be revoked
-    /// * `permission_id` - The ID of the specific permission/accreditation to revoke
-    /// * `signer_address` - The address of the signer (must have AttestCap)
-    ///
-    /// ## Returns
-    ///
-    /// A new instance of [`RevokeAccreditationToAttest`]
     pub fn new(
         federation_id: ObjectID,
         entity_id: ObjectID,

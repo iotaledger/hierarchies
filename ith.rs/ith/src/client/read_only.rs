@@ -103,11 +103,6 @@ impl ITHClientReadOnly {
     ///
     /// This function looks up the ITH package ID based on the provided network name
     /// using the internal package registry.
-    ///
-    /// # Arguments
-    ///
-    /// * `iota_client`: The IOTA client adapter.
-    /// * `network`: The name of the network.
     async fn new_internal(iota_client: IotaClientAdapter, network: NetworkName) -> Result<Self, ClientError> {
         let chain_id = network.as_ref().to_string();
         let (network, ith_pkg_id) = {
@@ -139,17 +134,9 @@ impl ITHClientReadOnly {
 
     /// Creates a new [`ITHClientReadOnly`] with a specific ITH package ID.
     ///
-    /// This function allows overriding the package ID lookup from the registry, which is useful
-    /// for connecting to networks where the package ID is known but not yet registered, or
-    /// for testing with custom deployments.
-    ///
-    /// # Arguments
-    ///
-    /// * `iota_client`: The IOTA client instance.
-    /// * `package_id`: The specific [`ObjectID`] of the ITH package to use.
-    ///
-    /// # Returns
-    /// A `Result` containing the initialized [`ITHClientReadOnly`] or an [`ClientError`].
+    /// This function allows overriding the package ID lookup from the registry,
+    /// which is useful for connecting to networks where the package ID is known
+    /// but not yet registered, or for testing with custom deployments.
     pub async fn new_with_pkg_id(
         #[cfg(target_arch = "wasm32")] iota_client: WasmIotaClient,
         #[cfg(not(target_arch = "wasm32"))] iota_client: IotaClient,
@@ -168,13 +155,6 @@ impl ITHClientReadOnly {
     }
 
     /// Retrieves a federation by its ID.
-    ///
-    /// # Arguments
-    ///
-    /// * `federation_id`: The [`ObjectID`] of the federation.
-    ///
-    /// # Returns
-    /// A `Result` containing the [`Federation`] object or an [`ClientError`].
     pub async fn get_federation_by_id(&self, federation_id: ObjectID) -> Result<Federation, ClientError> {
         let fed = get_object_ref_by_id_with_bcs(self, &federation_id).await?;
 
@@ -182,13 +162,6 @@ impl ITHClientReadOnly {
     }
 
     /// Retrieves all statement names registered in the federation.
-    ///
-    /// # Arguments
-    ///
-    /// * `federation_id`: The [`ObjectID`] of the federation.
-    ///
-    /// # Returns
-    /// A `Result` containing the list of statement names or an [`ClientError`].
     pub async fn get_statements(&self, federation_id: ObjectID) -> Result<Vec<StatementName>, ClientError> {
         let tx = ITHImpl::get_statements(federation_id, self).await?;
         let result = self.execute_read_only_transaction(tx).await?;
@@ -196,14 +169,6 @@ impl ITHClientReadOnly {
     }
 
     /// Checks if a statement is registered in the federation.
-    ///
-    /// # Arguments
-    ///
-    /// * `federation_id`: The [`ObjectID`] of the federation.
-    /// * `statement_name`: The name of the statement to check.
-    ///
-    /// # Returns
-    /// A `Result` containing a boolean indicating if the statement is registered or an [`ClientError`].
     pub async fn is_statement_in_federation(
         &self,
         federation_id: ObjectID,
@@ -215,14 +180,6 @@ impl ITHClientReadOnly {
     }
 
     /// Retrieves attestation accreditations for a specific user.
-    ///
-    /// # Arguments
-    ///
-    /// * `federation_id`: The [`ObjectID`] of the federation.
-    /// * `user_id`: The [`ObjectID`] of the user.
-    ///
-    /// # Returns
-    /// A `Result` containing the attestation accreditations or an [`ClientError`].
     pub async fn get_accreditations_to_attest(
         &self,
         federation_id: ObjectID,
@@ -234,14 +191,6 @@ impl ITHClientReadOnly {
     }
 
     /// Checks if a user has attestation permissions.
-    ///
-    /// # Arguments
-    ///
-    /// * `federation_id`: The [`ObjectID`] of the federation.
-    /// * `user_id`: The [`ObjectID`] of the user.
-    ///
-    /// # Returns
-    /// A `Result` containing a boolean indicating if the user has attestation permissions or an [`ClientError`].
     pub async fn is_attester(&self, federation_id: ObjectID, user_id: ObjectID) -> Result<bool, ClientError> {
         let tx = ITHImpl::is_attester(federation_id, user_id, self).await?;
         let result = self.execute_read_only_transaction(tx).await?;
@@ -249,14 +198,6 @@ impl ITHClientReadOnly {
     }
 
     /// Retrieves accreditations to accredit for a specific user.
-    ///
-    /// # Arguments
-    ///
-    /// * `federation_id`: The [`ObjectID`] of the federation.
-    /// * `user_id`: The [`ObjectID`] of the user.
-    ///
-    /// # Returns
-    /// A `Result` containing the accreditations to accredit or an [`ClientError`].
     pub async fn get_accreditations_to_accredit(
         &self,
         federation_id: ObjectID,
@@ -268,14 +209,6 @@ impl ITHClientReadOnly {
     }
 
     /// Checks if a user has accreditations to accredit.
-    ///
-    /// # Arguments
-    ///
-    /// * `federation_id`: The [`ObjectID`] of the federation.
-    /// * `user_id`: The [`ObjectID`] of the user.
-    ///
-    /// # Returns
-    /// A `Result` containing a boolean indicating if the user has accreditations to accredit or an [`ClientError`].
     pub async fn is_accreditor(&self, federation_id: ObjectID, user_id: ObjectID) -> Result<bool, ClientError> {
         let tx = ITHImpl::is_accreditor(federation_id, user_id, self).await?;
         let result = self.execute_read_only_transaction(tx).await?;
@@ -283,16 +216,6 @@ impl ITHClientReadOnly {
     }
 
     /// Validates a statement for a specific user.
-    ///
-    /// # Arguments
-    ///
-    /// * `federation_id`: The [`ObjectID`] of the federation.
-    /// * `attester_id`: The [`ObjectID`] of the attester.
-    /// * `statement_name`: The name of the statement to validate.
-    /// * `statement_value`: The value of the statement to validate.
-    ///
-    /// # Returns
-    /// A `Result` containing a boolean indicating if the statement is valid or an [`ClientError`].
     pub async fn validate_statement(
         &self,
         federation_id: ObjectID,
@@ -307,15 +230,6 @@ impl ITHClientReadOnly {
     }
 
     /// Validates multiple statements for a specific user.
-    ///
-    /// # Arguments
-    ///
-    /// * `federation_id`: The [`ObjectID`] of the federation.
-    /// * `user_id`: The [`ObjectID`] of the user.
-    /// * `statements`: The statements to validate.
-    ///
-    /// # Returns
-    /// A `Result` containing a boolean indicating if the statements are valid or an [`ClientError`].
     pub async fn validate_statements(
         &self,
         federation_id: ObjectID,

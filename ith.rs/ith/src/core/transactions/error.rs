@@ -8,7 +8,7 @@ use thiserror::Error;
 use crate::core::OperationError;
 
 /// Errors that can occur during transaction building and execution
-#[derive(Debug, Error)]
+#[derive(Debug, Error, strum::IntoStaticStr)]
 #[non_exhaustive]
 pub enum TransactionError {
     /// Transaction execution failed
