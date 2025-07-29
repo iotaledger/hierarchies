@@ -22,10 +22,16 @@ impl WasmStatementName {
         Self(StatementName::new(names))
     }
 
-    /// Returns the statement names as a `js_sys::Array` of strings.
-    #[wasm_bindgen(js_name = getNames)]
+    /// Returns the statement names as
+    #[wasm_bindgen(js_name = getNames, unchecked_return_type = "Array<String>")]
     pub fn get_names(&self) -> js_sys::Array {
         self.0.names().iter().map(JsValue::from).collect()
+    }
+
+    /// Returns the dotted representation of the statement name.
+    #[wasm_bindgen(js_name = dotted)]
+    pub fn dotted(&self) -> String {
+        self.0.names().join(".").to_string()
     }
 }
 

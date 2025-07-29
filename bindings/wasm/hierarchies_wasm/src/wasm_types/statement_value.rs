@@ -85,3 +85,12 @@ impl From<WasmStatementValue> for StatementValue {
         value.0
     }
 }
+
+// #[derive(Serialize, Deserialize, Debug, Clone)]
+// pub struct StatementValues(pub Vec<StatementValue>);
+
+// impl From<WasmStatementValues> for StatementValues {
+//     fn from(values: WasmStatementValues) -> Self {
+//         serde_wasm_bindgen::from_value(values.into()).expect("Failed to convert WasmStatementValues to StatementValues")
+//     }
+// }

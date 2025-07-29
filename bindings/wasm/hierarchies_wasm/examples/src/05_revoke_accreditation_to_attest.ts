@@ -1,0 +1,105 @@
+// Copyright 2020-2025 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
+import {
+    HierarchiesClient,
+    Statement,
+    StatementName,
+    StatementValue,
+    Timespan,
+} from "@iota/hierarchies/node";
+import { randomBytes } from "crypto";
+import { getFundedClient } from "./util";
+
+/**
+ * Demonstrate how to revoke a permission to attest to a Statement.
+ *
+ * In this example we connect to a locally running private network, but it can
+ * be adapted to run on any IOTA node by setting the network and faucet
+ * endpoints.
+ */
+export async function revokeAccreditationToAttest(client?: HierarchiesClient) {
+    console.log("Running revoke accreditation to attest example");
+
+    // Get the client instance
+    const ithClient = client ?? (await getFundedClient());
+
+    // Create a new federation
+    const { output: federation } = await ithClient.createNewFederation().buildAndExecute(ithClient);
+
+    // The ID of the federation
+    const federationId = federation.id;
+
+    // The name of the statement
+    const statementName = new StatementName(["Example LTD"]);
+
+    // The value of the statement
+    const value = StatementValue.newText("Hello");
+
+    const allowedValues = [value];
+
+    console.log("Adding statement");
+
+    // Add the statement to the federation
+    await ithClient
+        .addStatement(federationId, statementName, allowedValues, false)
+        .buildAndExecute(ithClient);
+
+    console.log("Added statement");
+
+    // A receiver is an account that will receive the attestation
+    const receiver = "0x" + randomBytes(32).toString("hex");
+    const allowedValuesAccreditation = [StatementValue.newText("Hello")];
+
+    // Statements
+    const statement = new Statement(
+        statementName,
+        allowedValuesAccreditation,
+        undefined,
+        false,
+        new Timespan(),
+    );
+
+    // Let us issue a permission to attest to the Statement
+    await ithClient
+        .createAccreditationToAttest(federationId, receiver, [statement])
+        .buildAndExecute(ithClient);
+
+    console.log("Issued permission to attest");
+
+    // Check if the permission was issued
+    let federationData = await ithClient.readOnly().getFederationById(federationId);
+
+    // Check if the receiver has the permission to attest
+    const canAccredit = federationData.governance.accreditationsToAttest.has(
+        receiver,
+    );
+    if (!canAccredit) {
+        throw new Error("Accreditation not found for receiver");
+    }
+    console.log("Accreditation found for receiver");
+
+    // Revoke the permission
+    const statements = await ithClient.readOnly().getAccreditationsToAttest(federationId, receiver);
+
+    if (statements.statements.length === 0) {
+        throw new Error("No statements found to revoke");
+    }
+
+    const permissionId = statements.statements[0].id;
+
+    await ithClient.revokeAccreditationToAttest(federationId, receiver, permissionId).buildAndExecute(ithClient);
+
+    console.log("Revoked permission to attest");
+
+    // Check if the permission was revoked
+    federationData = await ithClient.readOnly().getFederationById(federationId);
+
+    const receiverAccreditations = federationData.governance.accreditationsToAttest.get(receiver);
+
+    if (receiverAccreditations && receiverAccreditations.statements.length > 0) {
+        throw new Error("Accreditation not revoked");
+    }
+
+    console.log("Accreditation successfully revoked for receiver");
+}

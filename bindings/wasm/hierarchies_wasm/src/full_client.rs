@@ -8,6 +8,7 @@ use iota_interaction_ts::wasm_error::{Result, WasmResult};
 use iota_interaction_ts::WasmPublicKey;
 use ith::client::ITHClient;
 use ith::core::types::statements::name::StatementName;
+use ith::core::types::statements::value::StatementValue;
 use product_common::bindings::transaction::WasmTransactionBuilder;
 use product_common::bindings::utils::{into_transaction_builder, parse_wasm_object_id};
 use product_common::bindings::{WasmIotaAddress, WasmObjectID};
@@ -93,22 +94,19 @@ impl WasmHierarchiesClient {
     pub fn add_statement(
         &self,
         federation_id: WasmObjectID,
-        statement_name: WasmStatementName,
-        allowed_values: js_sys::Set,
+        statement_name: &WasmStatementName,
+        allowed_values: Box<[WasmStatementValue]>,
         allow_any: bool,
     ) -> Result<WasmTransactionBuilder> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
-        let statement_name = StatementName::from(statement_name.0);
-        let allowed_values: Vec<WasmStatementValue> = allowed_values
-            .entries()
-            .into_iter()
-            .map(|value| value.map(|object| serde_wasm_bindgen::from_value(object).unwrap()))
-            .collect::<Result<_>>()?;
-        let allowed_values_hashset = allowed_values.into_iter().map(|v| v.into()).collect::<HashSet<_>>();
+        let statement_name = StatementName::from(statement_name.0.clone());
+
+        let unique_allowed_values: HashSet<StatementValue> =
+            HashSet::from_iter(allowed_values.iter().cloned().map(|v| v.0.clone()));
 
         let tx = self
             .0
-            .add_statement(federation_id, statement_name, allowed_values_hashset, allow_any)
+            .add_statement(federation_id, statement_name, unique_allowed_values, allow_any)
             .into_inner();
 
         Ok(into_transaction_builder(WasmAddStatement(tx)))
@@ -124,11 +122,11 @@ impl WasmHierarchiesClient {
     pub fn revoke_statement(
         &self,
         federation_id: WasmObjectID,
-        statement_name: WasmStatementName,
+        statement_name: &WasmStatementName,
         valid_to_ms: Option<u64>,
     ) -> Result<WasmTransactionBuilder> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
-        let statement_name = StatementName::from(statement_name.0);
+        let statement_name = StatementName::from(statement_name.0.clone());
         let tx = self
             .0
             .revoke_statement(federation_id, statement_name, valid_to_ms)
@@ -148,20 +146,18 @@ impl WasmHierarchiesClient {
         &self,
         federation_id: WasmObjectID,
         receiver: WasmObjectID,
-        want_statements: js_sys::Array,
+        want_statements: Box<[WasmStatement]>,
     ) -> Result<WasmTransactionBuilder> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         let receiver = parse_wasm_object_id(&receiver)?;
 
-        let want_statements: Vec<WasmStatement> = want_statements
-            .entries()
-            .into_iter()
-            .map(|value| value.map(|object| serde_wasm_bindgen::from_value(object).unwrap()))
-            .collect::<Result<_>>()?;
-
         let tx = self
             .0
-            .create_accreditation_to_attest(federation_id, receiver, want_statements.into_iter().map(|s| s.into()))
+            .create_accreditation_to_attest(
+                federation_id,
+                receiver,
+                want_statements.iter().cloned().map(|s| s.into()),
+            )
             .into_inner();
 
         Ok(into_transaction_builder(WasmCreateAccreditationToAttest(tx)))
@@ -205,19 +201,18 @@ impl WasmHierarchiesClient {
         &self,
         federation_id: WasmObjectID,
         receiver: WasmObjectID,
-        want_statements: js_sys::Array,
+        want_statements: Box<[WasmStatement]>,
     ) -> Result<WasmTransactionBuilder> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         let receiver = parse_wasm_object_id(&receiver)?;
-        let want_statements: Vec<WasmStatement> = want_statements
-            .entries()
-            .into_iter()
-            .map(|value| value.map(|object| serde_wasm_bindgen::from_value(object).unwrap()))
-            .collect::<Result<_>>()?;
 
         let tx = self
             .0
-            .create_accreditation_to_accredit(federation_id, receiver, want_statements.into_iter().map(|s| s.into()))
+            .create_accreditation_to_accredit(
+                federation_id,
+                receiver,
+                want_statements.iter().cloned().map(|s| s.into()),
+            )
             .into_inner();
 
         Ok(into_transaction_builder(WasmCreateAccreditationToAccredit(tx)))

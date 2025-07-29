@@ -41,7 +41,7 @@ latest-published-id = "0x2319aae93cbe97ef111290154a571effb10989bca0ea8804e7804e8
 published-version = "1"
 
 [env.localnet]
-chain-id = "c87cd2e7"
-original-published-id = "0x8980577b0da13358cbf202a43b495a4ed1e554d6eb66978b6112de25b7085e57"
-latest-published-id = "0x8980577b0da13358cbf202a43b495a4ed1e554d6eb66978b6112de25b7085e57"
+chain-id = "56599d84"
+original-published-id = "0x10390301581bae61fa07096334e04a74fb7df6168beb4443abf8e2b4590b76ad"
+latest-published-id = "0x10390301581bae61fa07096334e04a74fb7df6168beb4443abf8e2b4590b76ad"
 published-version = "1"

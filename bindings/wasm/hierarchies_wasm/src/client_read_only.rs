@@ -113,6 +113,14 @@ impl WasmHierarchiesClientReadOnly {
         self.0.chain_id().to_string()
     }
 
+    /// Retrieves a federation by its ID.
+    ///
+    /// # Arguments
+    ///
+    /// * `federation_id`: The [`ObjectID`] of the federation.
+    ///
+    /// # Returns
+    /// A `Result` containing the [`Federation`] object or an [`Error`].
     #[wasm_bindgen(js_name = getFederationById)]
     pub async fn get_federation_by_id(&self, federation_id: WasmObjectID) -> Result<WasmFederation> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
