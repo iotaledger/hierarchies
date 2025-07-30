@@ -300,7 +300,7 @@ public fun create_accreditation_to_accredit(
         let statement = &want_statements[idx];
         assert!(
             self.is_statement_in_federation(*statement.statement_name()),
-            EStatementNotInFederation
+            EStatementNotInFederation,
         );
         idx = idx + 1;
     };
@@ -354,7 +354,7 @@ public fun create_accreditation_to_attest(
         let statement = &wanted_statements[idx];
         assert!(
             self.is_statement_in_federation(*statement.statement_name()),
-            EStatementNotInFederation
+            EStatementNotInFederation,
         );
         idx = idx + 1;
     };
