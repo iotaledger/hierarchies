@@ -15,7 +15,6 @@ use ith::{
         create_accreditation_to_accredit,
         create_accreditation_to_attest
     },
-    statement::{Self, Statement},
     statement_name::new_statement_name,
     statement_value::new_statement_value_number
 };
