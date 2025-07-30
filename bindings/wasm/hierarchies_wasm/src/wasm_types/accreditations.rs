@@ -14,8 +14,8 @@ pub struct WasmAccreditations(pub(crate) ith::core::types::Accreditations);
 #[wasm_bindgen(js_class = Accreditations)]
 impl WasmAccreditations {
     /// Returns the accreditations as an array.
-    #[wasm_bindgen(getter)]
-    pub fn statements(&self) -> js_sys::Array {
+    #[wasm_bindgen(getter, unchecked_return_type = "Array<Accreditation>")]
+    pub fn accreditations(&self) -> js_sys::Array {
         self.0
             .statements
             .iter()

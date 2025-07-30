@@ -17,6 +17,13 @@ pub mod client_read_only;
 pub mod full_client;
 pub mod wasm_types;
 
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(s: &str);
+
+}
+
 /// Initializes the console error panic hook for better error messages
 #[wasm_bindgen(start)]
 pub fn start() -> Result<(), JsValue> {

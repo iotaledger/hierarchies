@@ -12,6 +12,7 @@ use crate::utils::deserialize_vec_map;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Accreditations {
+    // TODO change to accreditations
     pub statements: Vec<Accreditation>,
 }
 

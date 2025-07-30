@@ -34,6 +34,20 @@ impl WasmHierarchiesClientReadOnly {
     ///
     /// # Returns
     /// A new `HierarchiesClientReadOnly` instance.
+    ///
+    /// # TypeScript Usage
+    /// This method returns a `Promise` in TypeScript.
+    /// - On success, the promise resolves with `WasmHierarchiesClientReadOnly`.
+    /// - On failure, the promise rejects with an `Error`.
+    ///
+    /// ```typescript
+    /// try {
+    ///   const client = await HierarchiesClientReadOnly.create(iotaClient);
+    ///   console.log("Client created:", client);
+    /// } catch (error) {
+    ///   console.error("Failed to create client:", error);
+    /// }
+    /// ```
     #[wasm_bindgen(js_name = create)]
     pub async fn new(iota_client: WasmIotaClient) -> Result<WasmHierarchiesClientReadOnly> {
         let inner_client = ITHClientReadOnly::new(iota_client).await.map_err(wasm_error)?;
@@ -48,6 +62,20 @@ impl WasmHierarchiesClientReadOnly {
     ///
     /// # Returns
     /// A new `HierarchiesClientReadOnly` instance.
+    ///
+    /// # TypeScript Usage
+    /// This method returns a `Promise` in TypeScript.
+    /// - On success, the promise resolves with `WasmHierarchiesClientReadOnly`.
+    /// - On failure, the promise rejects with an `Error`.
+    ///
+    /// ```typescript
+    /// try {
+    ///   const client = await HierarchiesClientReadOnly.createWithPkgId(iotaClient, pkgId);
+    ///   console.log("Client created:", client);
+    /// } catch (error) {
+    ///   console.error("Failed to create client:", error);
+    /// }
+    /// ```
     #[wasm_bindgen(js_name = createWithPkgId)]
     pub async fn new_new_with_pkg_id(
         iota_client: WasmIotaClient,
@@ -113,6 +141,28 @@ impl WasmHierarchiesClientReadOnly {
         self.0.chain_id().to_string()
     }
 
+    /// Retrieves a federation by its ID.
+    ///
+    /// # Arguments
+    ///
+    /// * `federation_id`: The [`ObjectID`] of the federation.
+    ///
+    /// # Returns
+    /// A `Result` containing the [`Federation`] object or an [`Error`].
+    ///
+    /// # TypeScript Usage
+    /// This method returns a `Promise` in TypeScript.
+    /// - On success, the promise resolves with `WasmFederation`.
+    /// - On failure, the promise rejects with an `Error`.
+    ///
+    /// ```typescript
+    /// try {
+    ///   const federation = await client.getFederationById(federationId);
+    ///   console.log("Federation:", federation);
+    /// } catch (error) {
+    ///   console.error("Failed to get federation:", error);
+    /// }
+    /// ```
     #[wasm_bindgen(js_name = getFederationById)]
     pub async fn get_federation_by_id(&self, federation_id: WasmObjectID) -> Result<WasmFederation> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
@@ -128,6 +178,20 @@ impl WasmHierarchiesClientReadOnly {
     ///
     /// # Returns
     /// A `Result` containing the list of statement names or an [`Error`].
+    ///
+    /// # TypeScript Usage
+    /// This method returns a `Promise` in TypeScript.
+    /// - On success, the promise resolves with `WasmStatementName[]`.
+    /// - On failure, the promise rejects with an `Error`.
+    ///
+    /// ```typescript
+    /// try {
+    ///   const statements = await client.getStatements(federationId);
+    ///   console.log("Statements:", statements);
+    /// } catch (error) {
+    ///   console.error("Failed to get statements:", error);
+    /// }
+    /// ```
     #[wasm_bindgen(js_name = getStatements)]
     pub async fn get_statements(&self, federation_id: WasmObjectID) -> Result<Vec<WasmStatementName>> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
@@ -144,6 +208,20 @@ impl WasmHierarchiesClientReadOnly {
     ///
     /// # Returns
     /// A `Result` containing a boolean indicating if the statement is registered or an [`Error`].
+    ///
+    /// # TypeScript Usage
+    /// This method returns a `Promise` in TypeScript.
+    /// - On success, the promise resolves with a `boolean`.
+    /// - On failure, the promise rejects with an `Error`.
+    ///
+    /// ```typescript
+    /// try {
+    ///   const isRegistered = await client.isStatementInFederation(federationId, statementName);
+    ///   console.log("Is statement registered:", isRegistered);
+    /// } catch (error) {
+    ///   console.error("Failed to check statement registration:", error);
+    /// }
+    /// ```
     #[wasm_bindgen(js_name = isStatementInFederation)]
     pub async fn is_statement_in_federation(
         &self,
@@ -167,6 +245,20 @@ impl WasmHierarchiesClientReadOnly {
     ///
     /// # Returns
     /// A `Result` containing the attestation accreditations or an [`Error`].
+    ///
+    /// # TypeScript Usage
+    /// This method returns a `Promise` in TypeScript.
+    /// - On success, the promise resolves with `WasmAccreditations`.
+    /// - On failure, the promise rejects with an `Error`.
+    ///
+    /// ```typescript
+    /// try {
+    ///   const accreditations = await client.getAccreditationsToAttest(federationId, userId);
+    ///   console.log("Accreditations:", accreditations);
+    /// } catch (error) {
+    ///   console.error("Failed to get accreditations:", error);
+    /// }
+    /// ```
     #[wasm_bindgen(js_name = getAccreditationsToAttest)]
     pub async fn get_accreditations_to_attest(
         &self,
@@ -192,6 +284,20 @@ impl WasmHierarchiesClientReadOnly {
     ///
     /// # Returns
     /// A `Result` containing a boolean indicating if the user has attestation permissions or an [`Error`].
+    ///
+    /// # TypeScript Usage
+    /// This method returns a `Promise` in TypeScript.
+    /// - On success, the promise resolves with a `boolean`.
+    /// - On failure, the promise rejects with an `Error`.
+    ///
+    /// ```typescript
+    /// try {
+    ///   const isAttester = await client.isAttester(federationId, userId);
+    ///   console.log("Is attester:", isAttester);
+    /// } catch (error) {
+    ///   console.error("Failed to check attester status:", error);
+    /// }
+    /// ```
     #[wasm_bindgen(js_name = isAttester)]
     pub async fn is_attester(&self, federation_id: WasmObjectID, user_id: WasmObjectID) -> Result<bool> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
@@ -209,6 +315,20 @@ impl WasmHierarchiesClientReadOnly {
     ///
     /// # Returns
     /// A `Result` containing the accreditations to accredit or an [`Error`].
+    ///
+    /// # TypeScript Usage
+    /// This method returns a `Promise` in TypeScript.
+    /// - On success, the promise resolves with `WasmAccreditations`.
+    /// - On failure, the promise rejects with an `Error`.
+    ///
+    /// ```typescript
+    /// try {
+    ///   const accreditations = await client.getAccreditationsToAccredit(federationId, userId);
+    ///   console.log("Accreditations:", accreditations);
+    /// } catch (error) {
+    ///   console.error("Failed to get accreditations:", error);
+    /// }
+    /// ```
     #[wasm_bindgen(js_name = getAccreditationsToAccredit)]
     pub async fn get_accreditations_to_accredit(
         &self,
@@ -234,6 +354,20 @@ impl WasmHierarchiesClientReadOnly {
     ///
     /// # Returns
     /// A `Result` containing a boolean indicating if the user has accreditations to accredit or an [`Error`].
+    ///
+    /// # TypeScript Usage
+    /// This method returns a `Promise` in TypeScript.
+    /// - On success, the promise resolves with a `boolean`.
+    /// - On failure, the promise rejects with an `Error`.
+    ///
+    /// ```typescript
+    /// try {
+    ///   const isAccreditor = await client.isAccreditor(federationId, userId);
+    ///   console.log("Is accreditor:", isAccreditor);
+    /// } catch (error) {
+    ///   console.error("Failed to check accreditor status:", error);
+    /// }
+    /// ```
     #[wasm_bindgen(js_name = isAccreditor)]
     pub async fn is_accreditor(&self, federation_id: WasmObjectID, user_id: WasmObjectID) -> Result<bool> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
@@ -253,6 +387,20 @@ impl WasmHierarchiesClientReadOnly {
     ///
     /// # Returns
     /// A `Result` containing a boolean indicating if the statement is valid or an [`Error`].
+    ///
+    /// # TypeScript Usage
+    /// This method returns a `Promise` in TypeScript.
+    /// - On success, the promise resolves with a `boolean`.
+    /// - On failure, the promise rejects with an `Error`.
+    ///
+    /// ```typescript
+    /// try {
+    ///   const isValid = await client.validateStatement(federationId, userId, statementName, statementValue);
+    ///   console.log("Is statement valid:", isValid);
+    /// } catch (error) {
+    ///   console.error("Failed to validate statement:", error);
+    /// }
+    /// ```
     #[wasm_bindgen(js_name = validateStatement)]
     pub async fn validate_statement(
         &self,
@@ -283,6 +431,20 @@ impl WasmHierarchiesClientReadOnly {
     ///
     /// # Returns
     /// A `Result` containing a boolean indicating if the statements are valid or an [`Error`].
+    ///
+    /// # TypeScript Usage
+    /// This method returns a `Promise` in TypeScript.
+    /// - On success, the promise resolves with a `boolean`.
+    /// - On failure, the promise rejects with an `Error`.
+    ///
+    /// ```typescript
+    /// try {
+    ///   const areValid = await client.validateStatements(federationId, userId, statements);
+    ///   console.log("Are statements valid:", areValid);
+    /// } catch (error) {
+    ///   console.error("Failed to validate statements:", error);
+    /// }
+    /// ```
     #[wasm_bindgen(js_name = validateStatements)]
     pub async fn validate_statements(
         &self,
