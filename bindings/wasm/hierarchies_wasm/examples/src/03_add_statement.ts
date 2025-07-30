@@ -9,12 +9,12 @@ import { getFundedClient } from "./util";
  */
 export async function addStatement(): Promise<void> {
     // Get the client instance
-    const hierarchiesClient = await getFundedClient();
+    const hierarchies = await getFundedClient();
 
     // Create a new federation
-    const { output: federation }: { output: Federation } = await hierarchiesClient
+    const { output: federation }: { output: Federation } = await hierarchies
         .createNewFederation()
-        .buildAndExecute(hierarchiesClient);
+        .buildAndExecute(hierarchies);
 
     // Federation ID
     const federationId = federation.id;
@@ -24,18 +24,18 @@ export async function addStatement(): Promise<void> {
     const statementNameDotted = statementName.dotted();
 
     // Trusted property value
-    const value = StatementValue.newText("Hello");
-    const anotherValue = StatementValue.newText("World");
+    const value = StatementValue.fromText("Hello");
+    const anotherValue = StatementValue.fromText("World");
     const allowedValues = [value, anotherValue];
 
 
     // Add the Statement to the federation
-    await hierarchiesClient
+    await hierarchies
         .addStatement(federationId, statementName, allowedValues, false)
-        .buildAndExecute(hierarchiesClient);
+        .buildAndExecute(hierarchies);
 
     // Get the updated federation
-    const updatedFederation: Federation = await hierarchiesClient.readOnly().getFederationById(federationId);
+    const updatedFederation: Federation = await hierarchies.readOnly().getFederationById(federationId);
 
 
     for (const [i,  statement] of updatedFederation.governance.statements.data.entries()) {

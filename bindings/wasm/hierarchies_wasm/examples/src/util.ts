@@ -7,7 +7,7 @@ import { getFaucetHost, requestIotaFromFaucetV0 } from "@iota/iota-sdk/faucet";
 import { Ed25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
 import { HierarchiesClient, HierarchiesClientReadOnly } from "@iota/hierarchies/node";
 
-export const IOTA_HIERARCHIES_PKG_ID = globalThis?.process?.env?.IOTA_HIERARCHIES_PKG_ID || "0x10390301581bae61fa07096334e04a74fb7df6168beb4443abf8e2b4590b76ad";
+export const IOTA_HIERARCHIES_PKG_ID = globalThis?.process?.env?.IOTA_HIERARCHIES_PKG_ID || "0x17108a3c13a5c919acf4857fb4d6bfe7fa5494cf8ab0cd18c42e6aa09d2a5283";
 export const NETWORK_NAME_FAUCET = globalThis?.process?.env?.NETWORK_NAME_FAUCET || "localnet";
 export const NETWORK_URL = globalThis?.process?.env?.NETWORK_URL || "http://127.0.0.1:9000";
 

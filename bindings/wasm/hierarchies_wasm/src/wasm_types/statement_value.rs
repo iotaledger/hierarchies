@@ -18,8 +18,8 @@ impl WasmStatementValue {
     /// # Arguments
     ///
     /// * `text` - The string value.
-    #[wasm_bindgen(js_name = newText)]
-    pub fn new_text(text: String) -> Self {
+    #[wasm_bindgen(js_name = fromText)]
+    pub fn from_text(text: String) -> Self {
         Self(StatementValue::Text(text))
     }
 
@@ -28,8 +28,8 @@ impl WasmStatementValue {
     /// # Arguments
     ///
     /// * `number` - The numeric value.
-    #[wasm_bindgen(js_name = newNumber)]
-    pub fn new_number(number: u64) -> Self {
+    #[wasm_bindgen(js_name = fromNumber)]
+    pub fn from_number(number: u64) -> Self {
         Self(StatementValue::Number(number))
     }
 
@@ -85,12 +85,3 @@ impl From<WasmStatementValue> for StatementValue {
         value.0
     }
 }
-
-// #[derive(Serialize, Deserialize, Debug, Clone)]
-// pub struct StatementValues(pub Vec<StatementValue>);
-
-// impl From<WasmStatementValues> for StatementValues {
-//     fn from(values: WasmStatementValues) -> Self {
-//         serde_wasm_bindgen::from_value(values.into()).expect("Failed to convert WasmStatementValues to StatementValues")
-//     }
-// }

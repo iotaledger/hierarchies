@@ -6,12 +6,12 @@ import { getFundedClient } from "./util";
 
 
 export async function addRootAuthority(): Promise<void> {
-    const hierarchiesClient = await getFundedClient();
+    const hierarchies = await getFundedClient();
 
     // Create a new federation
-    const { output: federation } : { output : Federation} = (await hierarchiesClient
+    const { output: federation } : { output : Federation} = (await hierarchies
         .createNewFederation()
-        .buildAndExecute(hierarchiesClient));
+        .buildAndExecute(hierarchies));
 
     console.log("\n✅ Federation created successfully!");
     console.log("Federation ID: ", federation.id);
@@ -19,14 +19,14 @@ export async function addRootAuthority(): Promise<void> {
     const newRootAuthority : string = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
 
     // Add the root authority to the federation
-    await hierarchiesClient
+    await hierarchies
         .addRootAuthority(federation.id, newRootAuthority)
-        .buildAndExecute(hierarchiesClient);
+        .buildAndExecute(hierarchies);
 
     console.log("\n✅ Root authority added successfully!");
 
     // Get the updated federation and print it
-    const updatedFederation: Federation = await hierarchiesClient.readOnly().getFederationById(federation.id);
+    const updatedFederation: Federation = await hierarchies.readOnly().getFederationById(federation.id);
 
     // Check if the root authority was added
     const rootAuthorities = updatedFederation.rootAuthorities;

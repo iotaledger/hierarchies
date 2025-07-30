@@ -5,7 +5,6 @@ import {
     Statement,
     StatementName,
     StatementValue,
-    Timespan,
 } from "@iota/hierarchies/node";
 import { getFundedClient } from "./util";
 import { HierarchiesClient } from "@iota/hierarchies/node";
@@ -22,10 +21,10 @@ export async function createAccreditationToAccredit(client?: HierarchiesClient) 
     console.log("Running create accreditation to accredit example");
 
     // Get the client instance
-    const ithClient = client ?? (await getFundedClient());
+    const hierarchies = client ?? (await getFundedClient());
 
     // Create a new federation
-    const { output: federation } = await ithClient.createNewFederation().buildAndExecute(ithClient);
+    const { output: federation } = await hierarchies.createNewFederation().buildAndExecute(hierarchies);
 
     // The ID of the federation
     const federationId = federation.id;
@@ -34,41 +33,35 @@ export async function createAccreditationToAccredit(client?: HierarchiesClient) 
     const statementName = new StatementName(["Example LTD"]);
 
     // The value of the statement
-    const value = StatementValue.newText("Hello");
+    const value = StatementValue.fromText("Hello");
 
     const allowedValues = [value];
 
     console.log("Adding statement");
 
     // Add the statement to the federation
-    await ithClient
+    await hierarchies
         .addStatement(federationId, statementName, allowedValues, false)
-        .buildAndExecute(ithClient);
+        .buildAndExecute(hierarchies);
 
     console.log("Added statement");
 
     // A receiver is an account that will receive the accreditation
     const receiver = "0x" + randomBytes(32).toString("hex");
-    const allowedValuesAccreditation = [ StatementValue.newText("Hello")];
+    const allowedValuesAccreditation = [ StatementValue.fromText("Hello")];
 
     // Statements
-    const statement = new Statement(
-            statementName,
-            allowedValuesAccreditation,
-            undefined,
-            false,
-            new Timespan()
-          );
+    const statement = new Statement(statementName).withAllowedValues([StatementValue.fromText("Hello")]);
 
     // Let us issue a permission to accredit to the Statement
-    await ithClient
+    await hierarchies
         .createAccreditationToAccredit(federationId, receiver, [statement])
-        .buildAndExecute(ithClient);
+        .buildAndExecute(hierarchies);
 
     console.log("Issued permission to accredit");
 
     // Check if the permission was issued
-    const federationData = await ithClient.readOnly().getFederationById(federationId);
+    const federationData = await hierarchies.readOnly().getFederationById(federationId);
 
     console.log("Federation:", federationData);
 

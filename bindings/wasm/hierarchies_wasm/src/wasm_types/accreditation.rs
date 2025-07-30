@@ -6,7 +6,7 @@ use product_common::bindings::WasmObjectID;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
-use crate::wasm_types::{WasmStatement, WasmStatementName};
+use crate::wasm_types::WasmStatement;
 
 /// Represents an accreditation, which is a collection of statements granted by an accreditor.
 #[wasm_bindgen(js_name = Accreditation, inspectable)]
@@ -29,15 +29,13 @@ impl WasmAccreditation {
 
     /// Returns the statements associated with this accreditation as a map.
     #[wasm_bindgen(getter)]
-    pub fn statements(&self) -> js_sys::Map {
-        let map = js_sys::Map::new();
-        for (key, value) in self.0.statements.iter() {
-            map.set(
-                &WasmStatementName(key.clone()).into(),
-                &WasmStatement(value.clone()).into(),
-            );
-        }
-        map
+    pub fn statements(&self) -> Box<[WasmStatement]> {
+        self.0
+            .statements
+            .iter()
+            .map(|(_, statement)| WasmStatement::from(statement.clone()))
+            .collect::<Vec<_>>()
+            .into_boxed_slice()
     }
 }
 

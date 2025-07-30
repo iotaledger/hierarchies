@@ -8,6 +8,9 @@ import { createAccreditationToAttest } from "./04_create_accreditation_to_attest
 import { revokeAccreditationToAttest } from "./05_revoke_accreditation_to_attest";
 import { createAccreditationToAccredit } from "./06_create_accreditation_to_accredit";
 import { revokeAccreditationToAccredit } from "./07_revoke_accreditation_to_accredit";
+import { getAccreditations } from "./validation/01_get_accreditations";
+import { validateStatements } from "./validation/02_validate_statements";
+import { getStatements } from "./validation/03_get_statements";
 
 export async function main(example?: string) {
     // Extract example name.
@@ -31,6 +34,12 @@ export async function main(example?: string) {
             return await createAccreditationToAccredit();
         case "07_revoke_accreditation_to_accredit":
             return await revokeAccreditationToAccredit();
+        case "01_get_accreditations":
+            return await getAccreditations();
+        case "02_validate_statements":
+            return await validateStatements();
+        case "03_get_statements":
+            return await getStatements();
         default:
             throw "Unknown example name: '" + argument + "'";
     }

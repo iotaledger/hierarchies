@@ -1,6 +1,8 @@
 // Copyright 2025 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::collections::HashSet;
+
 use ith::core::types::statements::{Statement, Statements};
 use ith::core::types::timespan::Timespan;
 use ith::core::types::{Federation, Governance, RootAuthority};
@@ -172,6 +174,11 @@ impl WasmStatements {
             .map(|(_, v)| WasmStatement::from(v.clone()))
             .collect::<Vec<_>>()
     }
+
+    /// Adds a new statement to the statements list
+    pub fn add_statement(&mut self, statement: WasmStatement) {
+        self.0.data.insert(statement.statement_name().0.clone(), statement.0);
+    }
 }
 
 /// Represents a statement that can be granted to an account. A statement
@@ -200,20 +207,32 @@ impl From<WasmStatement> for Statement {
 #[wasm_bindgen(js_class = Statement)]
 impl WasmStatement {
     #[wasm_bindgen(constructor)]
-    pub fn new(
-        statement_name: &WasmStatementName,
-        allowed_values: Box<[WasmStatementValue]>,
-        condition: Option<WasmStatementCondition>,
-        allow_any: bool,
-        timespan: WasmTimespan,
-    ) -> Self {
+    pub fn new(statement_name: &WasmStatementName) -> Self {
         WasmStatement(Statement {
             statement_name: statement_name.clone().into(),
-            allowed_values: allowed_values.iter().cloned().map(|v| v.into()).collect(),
-            condition: condition.map(|c| c.into()),
-            allow_any,
-            timespan: timespan.0,
+            allowed_values: HashSet::new(),
+            condition: None,
+            allow_any: false,
+            timespan: Timespan::default(),
         })
+    }
+
+    #[wasm_bindgen(js_name=withAllowedValues)]
+    pub fn with_allowed_values(mut self, allowed_values: Box<[WasmStatementValue]>) -> Self {
+        self.0.allowed_values = allowed_values.iter().cloned().map(|v| v.0).collect();
+        self
+    }
+
+    #[wasm_bindgen(js_name=withCondition)]
+    pub fn with_condition(mut self, condition: WasmStatementCondition) -> Self {
+        self.0.condition = Some(condition.0);
+        self
+    }
+
+    #[wasm_bindgen(js_name=withAllowAny)]
+    pub fn with_allow_any(mut self, allow_any: bool) -> Self {
+        self.0.allow_any = allow_any;
+        self
     }
 
     /// Retrieves the statement name.
@@ -225,13 +244,25 @@ impl WasmStatement {
         self.0.statement_name.clone().into()
     }
 
+    /// Sets the statement name.
+    #[wasm_bindgen(setter, js_name = statementName)]
+    pub fn set_statement_name(&mut self, statement_name: WasmStatementName) {
+        self.0.statement_name = statement_name.0;
+    }
+
     /// Retrieves the allowed values for this statement.
     ///
     /// # Returns
     /// An array of allowed statement values.
     #[wasm_bindgen(getter, js_name = allowedValues)]
-    pub fn allowed_values(&self) -> Vec<WasmStatementValue> {
+    pub fn allowed_values(&self) -> Box<[WasmStatementValue]> {
         self.0.allowed_values.iter().map(|v| v.clone().into()).collect()
+    }
+
+    /// Sets the allowed values for this statement.
+    #[wasm_bindgen(setter, js_name = allowedValues)]
+    pub fn set_allowed_values(&mut self, allowed_values: Box<[WasmStatementValue]>) {
+        self.0.allowed_values = allowed_values.iter().cloned().map(|v| v.0).collect();
     }
 
     /// Retrieves the condition for this statement.
@@ -243,6 +274,12 @@ impl WasmStatement {
         self.0.condition.as_ref().map(|c| c.clone().into())
     }
 
+    /// Sets the condition for this statement.
+    #[wasm_bindgen(setter, js_name = condition)]
+    pub fn set_condition(&mut self, condition: WasmStatementCondition) {
+        self.0.condition = Some(condition.0);
+    }
+
     /// Checks if any value is allowed for this statement.
     ///
     /// # Returns
@@ -252,6 +289,12 @@ impl WasmStatement {
         self.0.allow_any
     }
 
+    /// Sets whether any value is allowed for this statement.
+    #[wasm_bindgen(setter, js_name = allowAny)]
+    pub fn set_allow_any(&mut self, allow_any: bool) {
+        self.0.allow_any = allow_any;
+    }
+
     /// Retrieves the timespan for this statement.
     ///
     /// # Returns
@@ -259,6 +302,12 @@ impl WasmStatement {
     #[wasm_bindgen(getter)]
     pub fn timespan(&self) -> WasmTimespan {
         self.0.timespan.clone().into()
+    }
+
+    /// Sets the timespan for this statement.
+    #[wasm_bindgen(setter, js_name = timespan)]
+    pub fn set_timespan(&mut self, timespan: WasmTimespan) {
+        self.0.timespan = timespan.0;
     }
 }
 
@@ -281,18 +330,6 @@ impl WasmTimespan {
         WasmTimespan(Timespan::default())
     }
 
-    /// Sets the start and end timestamps for the timespan.
-    #[wasm_bindgen(setter, js_name = setValidFromMs)]
-    pub fn set_valid_from_ms(&mut self, ms: u64) {
-        self.0.valid_from_ms = Some(ms);
-    }
-
-    /// Sets the end timestamp for the timespan.
-    #[wasm_bindgen(setter, js_name = validUntilMs)]
-    pub fn set_valid_until_ms(&mut self, ms: u64) {
-        self.0.valid_until_ms = Some(ms);
-    }
-
     /// Retrieves the start timestamp.
     ///
     /// # Returns
@@ -302,6 +339,12 @@ impl WasmTimespan {
         self.0.valid_from_ms
     }
 
+    /// Sets the start and end timestamps for the timespan.
+    #[wasm_bindgen(setter, js_name = setValidFromMs)]
+    pub fn set_valid_from_ms(&mut self, ms: u64) {
+        self.0.valid_from_ms = Some(ms);
+    }
+
     /// Retrieves the end timestamp.
     ///
     /// # Returns
@@ -309,5 +352,11 @@ impl WasmTimespan {
     #[wasm_bindgen(getter, js_name = validUntilMs)]
     pub fn valid_until_ms(&self) -> Option<u64> {
         self.0.valid_until_ms
+    }
+
+    /// Sets the end timestamp for the timespan.
+    #[wasm_bindgen(setter, js_name = validUntilMs)]
+    pub fn set_valid_until_ms(&mut self, ms: u64) {
+        self.0.valid_until_ms = Some(ms);
     }
 }

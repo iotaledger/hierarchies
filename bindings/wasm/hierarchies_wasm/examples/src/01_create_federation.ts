@@ -5,9 +5,9 @@ import { Federation } from "@iota/hierarchies/node";
 import { getFundedClient } from "./util";
 
 export async function createFederation(): Promise<void> {
-    const hierarchiesClient = await getFundedClient();
+    const hierarchies = await getFundedClient();
 
-    const {output: federation}: {output: Federation}  = await hierarchiesClient.createNewFederation().buildAndExecute(hierarchiesClient);
+    const {output: federation}: {output: Federation}  = await hierarchies.createNewFederation().buildAndExecute(hierarchies);
 
     console.log("\n✅ Federation created successfully!");
     console.log("Notarization ID: ", federation.id);
