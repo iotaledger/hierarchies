@@ -31,7 +31,7 @@ use crate::error::TransactionError;
 /// to perform all federation operations including adding other root authorities,
 /// managing statements, and creating accreditations.
 ///
-/// ## Requirements///
+/// ## Requirements
 /// - The signer must already possess a `RootAuthorityCap` for the federation
 /// - The target account must not already have root authority capabilities
 pub struct AddRootAuthority {
@@ -43,12 +43,6 @@ pub struct AddRootAuthority {
 
 impl AddRootAuthority {
     /// Creates a new [`AddRootAuthority`] instance.
-    ///
-    /// # Parameters
-    ///
-    /// - `federation_id`: The ID of the federation where the root authority will be added
-    /// - `account_id`: The account ID that will receive root authority capabilities
-    /// - `signer_address`: The address of the current root authority performing the operation
     ///
     /// # Returns
     ///
@@ -66,10 +60,6 @@ impl AddRootAuthority {
     ///
     /// This method creates the underlying Move transaction that will grant
     /// `RootAuthorityCap` to the target account.
-    ///
-    /// # Parameters
-    ///
-    /// - `client`: The client providing access to the IOTA network
     ///
     /// # Returns
     ///

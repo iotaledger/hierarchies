@@ -9,7 +9,7 @@ use crate::core::error::OperationError;
 use crate::error::{ConfigError, NetworkError, ObjectError};
 
 /// Errors specific to read-only client operations
-#[derive(Debug, Error)]
+#[derive(Debug, Error, strum::IntoStaticStr)]
 #[non_exhaustive]
 pub enum ClientError {
     /// Network error

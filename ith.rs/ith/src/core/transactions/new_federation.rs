@@ -55,12 +55,7 @@ impl CreateFederation {
     /// This method creates the underlying Move transaction that will create
     /// the federation object and grant capabilities to the sender.
     ///
-    /// # Parameters
-    ///
-    /// - `client`: The client providing the ITH package ID
-    ///
     /// # Returns
-    ///
     /// A `ProgrammableTransaction` ready for execution on the IOTA network.
     async fn make_ptb(&self, client: &impl CoreClientReadOnly) -> Result<ProgrammableTransaction, TransactionError> {
         ITHImpl::new_federation(client.package_id()).map_err(TransactionError::from)

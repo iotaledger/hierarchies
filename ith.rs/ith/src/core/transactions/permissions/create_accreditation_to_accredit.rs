@@ -42,17 +42,6 @@ pub struct CreateAccreditation {
 
 impl CreateAccreditation {
     /// Creates a new [`CreateAccreditation`] instance.
-    ///
-    /// ## Arguments
-    ///
-    /// * `federation_id` - The ID of the federation where the accreditation will be granted
-    /// * `receiver` - The ID of the user who will receive the accreditation permissions
-    /// * `want_statements` - The statements for which permissions are being granted
-    /// * `signer_address` - The address of the signer (must have AccreditCap)
-    ///
-    /// ## Returns
-    ///
-    /// A new instance of [`CreateAccreditation`]
     pub fn new(
         federation_id: ObjectID,
         receiver: ObjectID,

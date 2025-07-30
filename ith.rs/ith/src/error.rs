@@ -26,7 +26,9 @@
 //! ### Transaction Errors
 //! - [`TransactionError`] - Transaction building and execution
 
-use iota_interaction_rust::AdapterError;
+use crate::iota_interaction_adapter::AdapterError;
+#[cfg(target_arch = "wasm32")]
+use product_common::impl_wasm_error_from;
 use thiserror::Error;
 
 // Client errors
@@ -39,7 +41,7 @@ pub use crate::core::{CapabilityError, OperationError};
 // == Common errors ==
 
 /// Network-related errors that can occur during RPC operations
-#[derive(Debug, Error)]
+#[derive(Debug, Error, strum::IntoStaticStr)]
 #[non_exhaustive]
 pub enum NetworkError {
     /// RPC call failed
@@ -51,7 +53,7 @@ pub enum NetworkError {
 }
 
 /// Configuration-related errors
-#[derive(Debug, Error)]
+#[derive(Debug, Error, strum::IntoStaticStr)]
 #[non_exhaustive]
 pub enum ConfigError {
     /// Package not found for the specified network
@@ -64,7 +66,7 @@ pub enum ConfigError {
 }
 
 /// Object lookup and retrieval errors
-#[derive(Debug, Error)]
+#[derive(Debug, Error, strum::IntoStaticStr)]
 #[non_exhaustive]
 pub enum ObjectError {
     /// Object not found on the network
@@ -89,3 +91,18 @@ impl From<AdapterError> for NetworkError {
         NetworkError::RpcFailed { source: Box::new(err) }
     }
 }
+
+#[cfg(target_arch = "wasm32")]
+impl_wasm_error_from!(ConfigError);
+#[cfg(target_arch = "wasm32")]
+impl_wasm_error_from!(ObjectError);
+#[cfg(target_arch = "wasm32")]
+impl_wasm_error_from!(NetworkError);
+#[cfg(target_arch = "wasm32")]
+impl_wasm_error_from!(ClientError);
+#[cfg(target_arch = "wasm32")]
+impl_wasm_error_from!(TransactionError);
+#[cfg(target_arch = "wasm32")]
+impl_wasm_error_from!(CapabilityError);
+#[cfg(target_arch = "wasm32")]
+impl_wasm_error_from!(OperationError);

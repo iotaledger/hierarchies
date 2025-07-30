@@ -41,7 +41,7 @@ pub mod add_statement {
     pub struct AddStatement {
         federation_id: ObjectID,
         statement_name: StatementName,
-        allowed_values: HashSet<StatementValue>,
+        allowed_statement_values: HashSet<StatementValue>,
         allow_any: bool,
         owner: IotaAddress,
         cached_ptb: OnceCell<ProgrammableTransaction>,
@@ -50,28 +50,20 @@ pub mod add_statement {
     impl AddStatement {
         /// Creates a new [`AddStatement`] instance.
         ///
-        /// # Parameters
-        ///
-        /// - `federation_id`: The ID of the federation where the statement will be added
-        /// - `statement_name`: The unique name identifier for the statement type
-        /// - `allowed_values`: Set of specific values permitted for this statement (ignored if `allow_any` is true)
-        /// - `allow_any`: Whether to allow any values for this statement type
-        /// - `owner`: Address that owns the required `RootAuthorityCap`
-        ///
         /// # Returns
         ///
         /// A new `AddStatement` transaction instance ready for execution.
         pub fn new(
             federation_id: ObjectID,
             statement_name: StatementName,
-            allowed_values: HashSet<StatementValue>,
+            allowed_statement_values: HashSet<StatementValue>,
             allow_any: bool,
             owner: IotaAddress,
         ) -> Self {
             Self {
                 federation_id,
                 statement_name,
-                allowed_values,
+                allowed_statement_values,
                 allow_any,
                 owner,
                 cached_ptb: OnceCell::new(),
@@ -82,10 +74,6 @@ pub mod add_statement {
         ///
         /// This method creates the underlying Move transaction that will add
         /// the new statement type to the federation with the specified constraints.
-        ///
-        /// # Parameters
-        ///
-        /// - `client`: The client providing access to the IOTA network
         ///
         /// # Returns
         ///
@@ -102,7 +90,7 @@ pub mod add_statement {
             let ptb = ITHImpl::add_statement(
                 self.federation_id,
                 self.statement_name.clone(),
-                self.allowed_values.clone(),
+                self.allowed_statement_values.clone(),
                 self.allow_any,
                 self.owner,
                 client,
@@ -167,14 +155,6 @@ pub mod revoke_statement {
     impl RevokeStatement {
         /// Creates a new [`RevokeStatement`] instance.
         ///
-        /// # Parameters
-        ///
-        /// - `federation_id`: The ID of the federation containing the statement
-        /// - `statement_name`: The name of the statement type to revoke
-        /// - `valid_to_ms`: Optional timestamp in milliseconds when the statement should expire. If `None`, the
-        ///   statement is revoked immediately using the current time.
-        /// - `owner`: Address that owns the required `RootAuthorityCap`
-        ///
         /// # Returns
         ///
         /// A new `RevokeStatement` transaction instance ready for execution.
@@ -197,10 +177,6 @@ pub mod revoke_statement {
         ///
         /// This method creates the underlying Move transaction that will revoke
         /// the statement type, either immediately or at a scheduled time.
-        ///
-        /// # Parameters
-        ///
-        /// - `client`: The client providing access to the IOTA network
         ///
         /// # Returns
         ///

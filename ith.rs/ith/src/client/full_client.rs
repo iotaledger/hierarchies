@@ -72,10 +72,10 @@
 use std::collections::HashSet;
 use std::ops::Deref;
 
+use crate::iota_interaction_adapter::IotaClientAdapter;
 use iota_interaction::types::base_types::{IotaAddress, ObjectID};
 use iota_interaction::types::crypto::PublicKey;
 use iota_interaction::{IotaKeySignature, OptionalSync};
-use iota_interaction_rust::IotaClientAdapter;
 use product_common::core_client::{CoreClient, CoreClientReadOnly};
 use product_common::network_name::NetworkName;
 use product_common::transaction::transaction_builder::TransactionBuilder;
@@ -148,38 +148,11 @@ where
     S: Signer<IotaKeySignature> + OptionalSync,
 {
     /// Creates a builder for a locked notarization.
-    ///
-    /// ## Example
-    ///
-    /// ```rust,ignore
-    /// # use ith::client::full_client::ITHClient;
-    /// # async fn example(client: &ITHClient<impl secret_storage::Signer<iota_interaction::IotaKeySignature>>) -> Result<(), Box<dyn std::error::Error>> {
-    /// let result = client
-    ///     .create_new_federation()
-    ///     .await?;
-    /// # Ok(())
-    /// # }
-    /// ```
-    ///
-    /// See [`ITHClient::create_new_federation`] for configuration options.
     pub fn create_new_federation(&self) -> TransactionBuilder<CreateFederation> {
         TransactionBuilder::new(CreateFederation::new())
     }
 
     /// Creates a [`TransactionBuilder`] for adding a root authority to a federation.
-    ///
-    /// ## Example
-    ///
-    /// ```rust,ignore
-    /// # use ith::client::full_client::ITHClient;
-    /// # async fn example(client: &ITHClient<impl secret_storage::Signer<iota_interaction::IotaKeySignature>>) -> Result<(), Box<dyn std::error::Error>> {
-    /// let result = client
-    ///     .add_root_authority(federation_id, account_id)
-    ///     .build_and_execute(&client)
-    ///     .await?;
-    /// # Ok(())
-    /// # }
-    /// ```
     pub fn add_root_authority(
         &self,
         federation_id: ObjectID,
@@ -189,42 +162,23 @@ where
     }
 
     /// Creates a new [`AddStatement`] transaction builder.
-    ///
-    /// # Arguments
-    ///
-    /// * `federation_id`: The [`ObjectID`] of the federation.
-    /// * `statement_name`: The name of the statement.
-    /// * `allowed_values`: The allowed values for the statement.
-    /// * `allow_any`: Whether to allow any value.
-    ///
-    /// # Returns
-    /// A [`TransactionBuilder`] for the [`AddStatement`] transaction.
     pub fn add_statement(
         &self,
         federation_id: ObjectID,
         statement_name: StatementName,
-        allowed_values: HashSet<StatementValue>,
+        allowed_statement_values: HashSet<StatementValue>,
         allow_any: bool,
     ) -> TransactionBuilder<AddStatement> {
         TransactionBuilder::new(AddStatement::new(
             federation_id,
             statement_name,
-            allowed_values,
+            allowed_statement_values,
             allow_any,
             self.sender_address(),
         ))
     }
 
     /// Creates a new [`RevokeStatement`] transaction builder.
-    ///
-    /// # Arguments
-    ///
-    /// * `federation_id`: The [`ObjectID`] of the federation.
-    /// * `statement_name`: The name of the statement.
-    /// * `valid_to_ms`: The timestamp in milliseconds until which the statement is valid.
-    ///
-    /// # Returns
-    /// A [`TransactionBuilder`] for the [`RevokeStatement`] transaction.
     pub fn revoke_statement(
         &self,
         federation_id: ObjectID,
@@ -240,15 +194,6 @@ where
     }
 
     /// Creates a new [`CreateAccreditationToAttest`] transaction builder.
-    ///
-    /// # Arguments
-    ///
-    /// * `federation_id`: The [`ObjectID`] of the federation.
-    /// * `receiver`: The [`ObjectID`] of the receiver.
-    /// * `want_statements`: The statements for which permissions are being granted.
-    ///
-    /// # Returns
-    /// A [`TransactionBuilder`] for the [`CreateAccreditationToAttest`] transaction.
     pub fn create_accreditation_to_attest(
         &self,
         federation_id: ObjectID,
@@ -264,15 +209,6 @@ where
     }
 
     /// Creates a new [`RevokeAccreditationToAttest`] transaction builder.
-    ///
-    /// # Arguments
-    ///
-    /// * `federation_id`: The [`ObjectID`] of the federation.
-    /// * `user_id`: The [`ObjectID`] of the user.
-    /// * `permission_id`: The [`ObjectID`] of the permission.
-    ///
-    /// # Returns
-    /// A [`TransactionBuilder`] for the [`RevokeAccreditationToAttest`] transaction.
     pub fn revoke_accreditation_to_attest(
         &self,
         federation_id: ObjectID,
@@ -288,39 +224,21 @@ where
     }
 
     /// Creates a new [`CreateAccreditation`] transaction builder.
-    ///
-    /// # Arguments
-    ///
-    /// * `federation_id`: The [`ObjectID`] of the federation.
-    /// * `receiver`: The [`ObjectID`] of the receiver.
-    /// * `want_statements`: The statements for which permissions are being granted.
-    ///
-    /// # Returns
-    /// A [`TransactionBuilder`] for the [`CreateAccreditation`] transaction.
     pub fn create_accreditation_to_accredit(
         &self,
         federation_id: ObjectID,
         receiver: ObjectID,
-        want_statements: impl IntoIterator<Item = Statement>,
+        statements: impl IntoIterator<Item = Statement>,
     ) -> TransactionBuilder<CreateAccreditation> {
         TransactionBuilder::new(CreateAccreditation::new(
             federation_id,
             receiver,
-            want_statements.into_iter().collect(),
+            statements.into_iter().collect(),
             self.sender_address(),
         ))
     }
 
     /// Creates a new [`RevokeAccreditationToAccredit`] transaction builder.
-    ///
-    /// # Arguments
-    ///
-    /// * `federation_id`: The [`ObjectID`] of the federation.
-    /// * `user_id`: The [`ObjectID`] of the user.
-    /// * `permission_id`: The [`ObjectID`] of the permission.
-    ///
-    /// # Returns
-    /// A [`TransactionBuilder`] for the [`RevokeAccreditationToAccredit`] transaction.
     pub fn revoke_accreditation_to_accredit(
         &self,
         federation_id: ObjectID,
