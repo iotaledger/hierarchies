@@ -1,8 +1,9 @@
 // Copyright 2025 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { Federation, StatementName, StatementValue, Statement } from "@iota/hierarchies/node";
+import { Federation, StatementName, StatementValue } from "@iota/hierarchies/node";
 import { getFundedClient } from "./util";
+import assert from "assert";
 
 /**
  * Demonstrates how to add a Statement to a federation.
@@ -16,34 +17,30 @@ export async function addStatement(): Promise<void> {
         .createNewFederation()
         .buildAndExecute(hierarchies);
 
-    // Federation ID
-    const federationId = federation.id;
+    console.log("\n✅ Federation created successfully!");
+    console.log("Federation ID: ", federation.id);
 
     // Trusted property name
     const statementName = new StatementName(["company", "example"]);
-    const statementNameDotted = statementName.dotted();
 
     // Trusted property value
-    const value = StatementValue.fromText("Hello");
-    const anotherValue = StatementValue.fromText("World");
+    const value = StatementValue.newText("Hello");
+    const anotherValue = StatementValue.newText("World");
     const allowedValues = [value, anotherValue];
 
 
     // Add the Statement to the federation
     await hierarchies
-        .addStatement(federationId, statementName, allowedValues, false)
+        .addStatement(federation.id, statementName, allowedValues, false)
         .buildAndExecute(hierarchies);
 
+    console.log(`\n✅ Statement: ${statementName.dotted()} was added successfully.`);
+
     // Get the updated federation
-    const updatedFederation: Federation = await hierarchies.readOnly().getFederationById(federationId);
+    const updatedFederation: Federation = await hierarchies.readOnly().getFederationById(federation.id);
 
+    const addedStatement = updatedFederation.governance.statements.data.find(s => s.statementName.dotted() === statementName.dotted());
+    assert(addedStatement, `Didn't find the Statement in the Federation: ${statementName.dotted()}`);
 
-    for (const [i,  statement] of updatedFederation.governance.statements.data.entries()) {
-        if (statement.statementName.dotted() == statementNameDotted) {
-            console.log(`\n✅ Statement: ${statement.statementName.dotted()} was added successfully.`);
-            return
-        }
-    }
-
-    console.error("\n❌ Didn't find the Statement in the Federation: ", statementNameDotted);
+    console.log("\n✅ Statement was successfully added to the federation.");
 }

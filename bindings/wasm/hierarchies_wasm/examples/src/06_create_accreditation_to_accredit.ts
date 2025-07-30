@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
+    Federation,
     Statement,
     StatementName,
     StatementValue,
@@ -9,6 +10,7 @@ import {
 import { getFundedClient } from "./util";
 import { HierarchiesClient } from "@iota/hierarchies/node";
 import { randomBytes } from "crypto";
+import assert from "assert";
 
 /**
  * Demonstrate how to issue a permission to accredit to a Statement.
@@ -18,61 +20,49 @@ import { randomBytes } from "crypto";
  * endpoints.
  */
 export async function createAccreditationToAccredit(client?: HierarchiesClient) {
-    console.log("Running create accreditation to accredit example");
+    console.log("\nRunning create accreditation to accredit example");
 
     // Get the client instance
     const hierarchies = client ?? (await getFundedClient());
 
     // Create a new federation
-    const { output: federation } = await hierarchies.createNewFederation().buildAndExecute(hierarchies);
-
-    // The ID of the federation
-    const federationId = federation.id;
+    const { output: federation }: { output: Federation } = await hierarchies.createNewFederation().buildAndExecute(hierarchies);
+    console.log("\n✅ Federation created successfully!");
+    console.log("Federation ID: ", federation.id);
 
     // The name of the statement
     const statementName = new StatementName(["Example LTD"]);
 
     // The value of the statement
-    const value = StatementValue.fromText("Hello");
+    const value = StatementValue.newText("Hello");
 
     const allowedValues = [value];
 
-    console.log("Adding statement");
-
     // Add the statement to the federation
     await hierarchies
-        .addStatement(federationId, statementName, allowedValues, false)
+        .addStatement(federation.id, statementName, allowedValues, false)
         .buildAndExecute(hierarchies);
+    console.log(`\n✅ Statement ${statementName.dotted()} added successfully`);
 
-    console.log("Added statement");
 
     // A receiver is an account that will receive the accreditation
     const receiver = "0x" + randomBytes(32).toString("hex");
-    const allowedValuesAccreditation = [ StatementValue.fromText("Hello")];
 
     // Statements
-    const statement = new Statement(statementName).withAllowedValues([StatementValue.fromText("Hello")]);
+    const statement = new Statement(statementName).withAllowedValues([StatementValue.newText("Hello")]);
 
     // Let us issue a permission to accredit to the Statement
     await hierarchies
-        .createAccreditationToAccredit(federationId, receiver, [statement])
+        .createAccreditationToAccredit(federation.id, receiver, [statement])
         .buildAndExecute(hierarchies);
+    console.log(`\n✅ Accreditation to accredit issued successfully for ${receiver}`);
 
-    console.log("Issued permission to accredit");
 
     // Check if the permission was issued
-    const federationData = await hierarchies.readOnly().getFederationById(federationId);
+    const accreditationsToAccredit = await hierarchies.readOnly().getAccreditationsToAccredit(federation.id, receiver);
 
-    console.log("Federation:", federationData);
+    assert(accreditationsToAccredit.accreditations.length > 0, "Accreditation not found for receiver");
+    assert(accreditationsToAccredit.accreditations[0].statements[0].statementName.dotted() === statementName.dotted(), "Statement name does not match");
 
-    // Check if the receiver has the permission to accredit
-    const hasPermission = federationData.governance.accreditationsToAccredit.has(
-        receiver,
-    );
-
-    if (!hasPermission) {
-        throw new Error("Accreditation not found for receiver");
-    }
-
-    console.log("Accreditation found for receiver");
+    console.log("\n✅ Accreditation to accredit found for receiver");
 }

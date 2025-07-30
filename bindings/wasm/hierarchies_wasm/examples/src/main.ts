@@ -20,6 +20,17 @@ export async function main(example?: string) {
     }
 
     switch (argument) {
+        case "all":
+            await createFederation();
+            await addRootAuthority();
+            await addStatement();
+            await createAccreditationToAttest();
+            await revokeAccreditationToAttest();
+            await createAccreditationToAccredit();
+            await revokeAccreditationToAccredit();
+            await getAccreditations();
+            await validateStatements();
+            return await getStatements();
         case "01_create_federation":
             return await createFederation();
         case "02_add_root_authority":
