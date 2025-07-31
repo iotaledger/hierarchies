@@ -48,8 +48,8 @@ features = [
   "default-http-client",
 ]
 
-[dependencies.ith]
-path = "../../../ith.rs/ith"
+[dependencies.hierarchies]
+path = "../../../hierarchies-rs/hierarchies"
 default-features = false
 features = ["gas-station", "default-http-client"]
 

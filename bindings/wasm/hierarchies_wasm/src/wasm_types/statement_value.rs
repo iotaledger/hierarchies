@@ -1,7 +1,7 @@
 // Copyright 2025 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use ith::core::types::statements::value::StatementValue;
+use hierarchies::core::types::statements::value::StatementValue;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 

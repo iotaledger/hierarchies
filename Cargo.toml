@@ -1,5 +1,5 @@
 [workspace]
-members = ["ith.rs/examples", "ith.rs/ith"]
+members = ["hierarchies-rs/examples", "hierarchies-rs/hierarchies"]
 exclude = ["bindings/wasm/hierarchies_wasm"]
 resolver = "2"
 
@@ -8,7 +8,7 @@ authors = ["IOTA Stiftung"]
 edition = "2021"
 homepage = "https://www.iota.org"
 license = "Apache-2.0"
-repository = "https://github.com/iotaledger/ith"
+repository = "https://github.com/iotaledger/hierarchies"
 
 [workspace.dependencies]
 anyhow = "1.0"

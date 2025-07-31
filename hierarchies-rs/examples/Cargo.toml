@@ -1,0 +1,60 @@
+[package]
+name = "hierarchies_examples"
+authors.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+iota-sdk.workspace = true
+hierarchies = { path = "../hierarchies" }
+product_common = { workspace = true, features = ["test-utils"] }
+tokio.workspace = true
+
+[lib]
+path = "utils/utils.rs"
+
+[[example]]
+path = "01_create_federation.rs"
+name = "01_create_federation"
+
+[[example]]
+path = "02_add_root_authority.rs"
+name = "02_add_root_authority"
+
+[[example]]
+path = "03_add_statements.rs"
+name = "03_add_statements"
+
+[[example]]
+path = "04_create_accreditation_to_attest.rs"
+name = "04_create_accreditation_to_attest"
+
+[[example]]
+path = "05_revoke_accreditation_to_attest.rs"
+name = "05_revoke_accreditation_to_attest"
+
+[[example]]
+path = "06_create_accreditation_to_accredit.rs"
+name = "06_create_accreditation_to_accredit"
+
+[[example]]
+path = "07_revoke_accreditation_to_accredit.rs"
+name = "07_revoke_accreditation_to_accredit"
+
+# Validation
+[[example]]
+path = "validation/01_get_attestations_and_accreditations.rs"
+name = "01_validation_get_attestations_and_accreditations"
+
+[[example]]
+path = "validation/02_validate_statements.rs"
+name = "02_validation_validate_statements"
+
+[[example]]
+path = "validation/03_get_statements.rs"
+name = "03_validation_get_statements"
+
+# Demo
+[[example]]
+path = "getting_started/getting_started.rs"
+name = "getting_started"

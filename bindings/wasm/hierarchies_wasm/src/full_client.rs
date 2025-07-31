@@ -6,9 +6,9 @@ use std::collections::HashSet;
 use iota_interaction_ts::bindings::{WasmIotaClient, WasmTransactionSigner};
 use iota_interaction_ts::wasm_error::{Result, WasmResult};
 use iota_interaction_ts::WasmPublicKey;
-use ith::client::ITHClient;
-use ith::core::types::statements::name::StatementName;
-use ith::core::types::statements::value::StatementValue;
+use hierarchies::client::HierarchiesClient;
+use hierarchies::core::types::statements::name::StatementName;
+use hierarchies::core::types::statements::value::StatementValue;
 use product_common::bindings::transaction::WasmTransactionBuilder;
 use product_common::bindings::utils::{into_transaction_builder, parse_wasm_object_id};
 use product_common::bindings::{WasmIotaAddress, WasmObjectID};
@@ -28,7 +28,7 @@ use crate::wasm_types::{WasmStatement, WasmStatementName, WasmStatementValue};
 /// you can use {@link HierarchiesClientReadOnly}, which does not require an account or signing capabilities.
 
 #[wasm_bindgen(js_name = HierarchiesClient)]
-pub struct WasmHierarchiesClient(pub(crate) ITHClient<WasmTransactionSigner>);
+pub struct WasmHierarchiesClient(pub(crate) HierarchiesClient<WasmTransactionSigner>);
 
 #[wasm_bindgen(js_class=HierarchiesClient)]
 impl WasmHierarchiesClient {
@@ -49,13 +49,13 @@ impl WasmHierarchiesClient {
         client: WasmHierarchiesClientReadOnly,
         signer: WasmTransactionSigner,
     ) -> Result<WasmHierarchiesClient> {
-        let inner_client = ITHClient::new(client.0, signer).await.wasm_result()?;
+        let inner_client = HierarchiesClient::new(client.0, signer).await.wasm_result()?;
         Ok(WasmHierarchiesClient(inner_client))
     }
 
     /// Creates a new [`WasmTransactionBuilder`] for creating a new federation.
     ///
-    /// See [`ITHClient::create_new_federation`] for more details.
+    /// See [`HierarchiesClient::create_new_federation`] for more details.
     #[wasm_bindgen(js_name = createNewFederation)]
     pub fn create_new_federation(&self) -> Result<WasmTransactionBuilder> {
         let tx = self.0.create_new_federation().into_inner();

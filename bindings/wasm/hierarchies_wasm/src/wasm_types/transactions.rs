@@ -6,9 +6,9 @@ use std::collections::HashSet;
 use iota_interaction_ts::bindings::{WasmIotaTransactionBlockEffects, WasmIotaTransactionBlockEvents};
 use iota_interaction_ts::core_client::WasmCoreClientReadOnly;
 use iota_interaction_ts::wasm_error::{wasm_error, Result};
-use ith::core::transactions::statements::add_statement::AddStatement;
-use ith::core::transactions::statements::revoke_statement::RevokeStatement;
-use ith::core::transactions::{
+use hierarchies::core::transactions::statements::add_statement::AddStatement;
+use hierarchies::core::transactions::statements::revoke_statement::RevokeStatement;
+use hierarchies::core::transactions::{
     AddRootAuthority, CreateAccreditation, CreateAccreditationToAttest, CreateFederation,
     RevokeAccreditationToAccredit, RevokeAccreditationToAttest,
 };

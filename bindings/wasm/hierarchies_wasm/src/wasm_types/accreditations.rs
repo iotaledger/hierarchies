@@ -3,13 +3,13 @@
 
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
-
+use hierarchies::core::types::Accreditations;
 use crate::wasm_types::accreditation::WasmAccreditation;
 
 /// Represents a collection of accreditation statements
 #[wasm_bindgen(js_name = Accreditations, inspectable)]
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Eq)]
-pub struct WasmAccreditations(pub(crate) ith::core::types::Accreditations);
+pub struct WasmAccreditations(pub(crate) Accreditations);
 
 #[wasm_bindgen(js_class = Accreditations)]
 impl WasmAccreditations {
@@ -24,13 +24,13 @@ impl WasmAccreditations {
     }
 }
 
-impl From<ith::core::types::Accreditations> for WasmAccreditations {
-    fn from(value: ith::core::types::Accreditations) -> Self {
+impl From<Accreditations> for WasmAccreditations {
+    fn from(value: Accreditations) -> Self {
         WasmAccreditations(value)
     }
 }
 
-impl From<WasmAccreditations> for ith::core::types::Accreditations {
+impl From<WasmAccreditations> for Accreditations {
     fn from(value: WasmAccreditations) -> Self {
         value.0
     }

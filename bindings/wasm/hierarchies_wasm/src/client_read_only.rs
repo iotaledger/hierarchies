@@ -8,7 +8,7 @@ use anyhow::anyhow;
 use iota_interaction::types::base_types::ObjectID;
 use iota_interaction_ts::bindings::WasmIotaClient;
 use iota_interaction_ts::wasm_error::{wasm_error, Result, WasmResult};
-use ith::client::ITHClientReadOnly;
+use hierarchies::client::HierarchiesClientReadOnly;
 use product_common::bindings::utils::parse_wasm_object_id;
 use product_common::bindings::WasmObjectID;
 use product_common::core_client::CoreClientReadOnly;
@@ -22,7 +22,7 @@ use crate::wasm_types::{WasmAccreditations, WasmFederation, WasmStatementName, W
 /// or signing capabilities. For write operations, use {@link HierarchiesClient}.
 #[derive(Clone)]
 #[wasm_bindgen(js_name = HierarchiesClientReadOnly)]
-pub struct WasmHierarchiesClientReadOnly(pub(crate) ITHClientReadOnly);
+pub struct WasmHierarchiesClientReadOnly(pub(crate) HierarchiesClientReadOnly);
 
 // Builder-related functions
 #[wasm_bindgen(js_class = HierarchiesClientReadOnly)]
@@ -50,7 +50,7 @@ impl WasmHierarchiesClientReadOnly {
     /// ```
     #[wasm_bindgen(js_name = create)]
     pub async fn new(iota_client: WasmIotaClient) -> Result<WasmHierarchiesClientReadOnly> {
-        let inner_client = ITHClientReadOnly::new(iota_client).await.map_err(wasm_error)?;
+        let inner_client = HierarchiesClientReadOnly::new(iota_client).await.map_err(wasm_error)?;
         Ok(WasmHierarchiesClientReadOnly(inner_client))
     }
 
@@ -81,7 +81,7 @@ impl WasmHierarchiesClientReadOnly {
         iota_client: WasmIotaClient,
         iota_hierarchies_pkg_id: String,
     ) -> Result<WasmHierarchiesClientReadOnly> {
-        let inner_client = ITHClientReadOnly::new_with_pkg_id(
+        let inner_client = HierarchiesClientReadOnly::new_with_pkg_id(
             iota_client,
             ObjectID::from_str(&iota_hierarchies_pkg_id)
                 .map_err(|e| anyhow!("Could not parse iota_hierarchies_pkg_id: {}", e.to_string()))

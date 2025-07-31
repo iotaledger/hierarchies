@@ -161,16 +161,16 @@ jobs:
 
       - name: test Trust Hierarchies Move package
         if: matrix.os != 'windows-latest'
-        # publish the package and set the IOTA_ITH_PKG_ID env variable
+        # publish the package and set the IOTA_HIERARCHIES_PKG_ID env variable
         run: |
           iota move test
-        working-directory: ith.move
+        working-directory: hierarchies-move
 
       - name: publish Trust Hierarchies Move package
         if: matrix.os != 'windows-latest'
-        # publish the package and set the IOTA_ITH_PKG_ID env variable
-        run: echo "IOTA_ITH_PKG_ID=$(./publish_ith.sh)" >> "$GITHUB_ENV"
-        working-directory: ith.move/scripts/
+        # publish the package and set the IOTA_HIERARCHIES_PKG_ID env variable
+        run: echo "IOTA_HIERARCHIES_PKG_ID=$(./publish_hierarchies.sh)" >> "$GITHUB_ENV"
+        working-directory: hierarchies-move/scripts/
 
       - name: Run tests
         if: matrix.os != 'windows-latest'
@@ -252,8 +252,8 @@ jobs:
 
   #     - name: publish Trust Hierarchies Move package
   #       if: matrix.os != 'windows-latest'
-  #       # publish the package and set the IOTA_ITH_PKG_ID env variable
-  #       run: echo "IOTA_ITH_PKG_ID=$(./publish_package.sh)" >> "$GITHUB_ENV"
+  #       # publish the package and set the IOTA_HIERARCHIES_PKG_ID env variable
+  #       run: echo "IOTA_HIERARCHIES_PKG_ID=$(./publish_package.sh)" >> "$GITHUB_ENV"
   #       working-directory: trust_hierarchies_move/scripts/
 
   #     - name: Install JS dependencies
@@ -297,9 +297,9 @@ jobs:
 #          iota-version: ${{ env.IOTA_VERSION }}
 #
 #      - name: publish Trust Hierarchies Move package
-#        # publish the package and set the IOTA_ITH_PKG_ID env variable
-#        run: echo "IOTA_ITH_PKG_ID=$(./publish_ith.sh)" >> "$GITHUB_ENV"
-#        working-directory: ith.move/scripts/
+#        # publish the package and set the IOTA_HIERARCHIES_PKG_ID env variable
+#        run: echo "IOTA_HIERARCHIES_PKG_ID=$(./publish_hierarchies.sh)" >> "$GITHUB_ENV"
+#        working-directory: hierarchies-move/scripts/
 #
 #      - name: Build Docker image
 #        uses: docker/build-push-action@v6.2.0
@@ -310,7 +310,7 @@ jobs:
 #          tags: cypress-test:latest
 #          load: true
 #          build-args: |
-#            IOTA_ITH_PKG_ID=${{ env.IOTA_ITH_PKG_ID }}
+#            IOTA_HIERARCHIES_PKG_ID=${{ env.IOTA_HIERARCHIES_PKG_ID }}
 #
 #      - name: Run cypress
 #        run: docker run --network host cypress-test test:browser:${{ matrix.browser }}
