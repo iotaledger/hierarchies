@@ -2,13 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Federation, Statement, StatementName, StatementValue } from "@iota/hierarchies/node";
-import { getFundedClient } from "../util";
-import { randomBytes } from "crypto";
 import assert from "assert";
+import { randomBytes } from "crypto";
+import { getFundedClient } from "../util";
 
 export async function getStatements(): Promise<void> {
     const hierarchies = await getFundedClient();
-    const { output: federation }: { output: Federation } = await hierarchies.createNewFederation().buildAndExecute(hierarchies);
+    const { output: federation }: { output: Federation } = await hierarchies.createNewFederation().buildAndExecute(
+        hierarchies,
+    );
 
     console.log("\n✅ Federation created successfully!");
     console.log("Federation ID: ", federation.id);
@@ -21,7 +23,6 @@ export async function getStatements(): Promise<void> {
         .buildAndExecute(hierarchies);
     console.log(`\n✅ Statement ${statementName.dotted()} added successfully`);
 
-
     const statementToAttest = new Statement(statementName).withAllowedValues([StatementValue.newText("Hello")]);
     const accreditationReceiver = "0x" + randomBytes(32).toString("hex");
 
@@ -29,7 +30,6 @@ export async function getStatements(): Promise<void> {
     await hierarchies.createAccreditationToAttest(federation.id, accreditationReceiver, [statementToAttest])
         .buildAndExecute(hierarchies);
     console.log(`\n✅ Accreditation to attest created for ${accreditationReceiver}`);
-
 
     // Get the statements
     const retrievedStatements = await hierarchies.readOnly().getStatements(federation.id);
