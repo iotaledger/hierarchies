@@ -951,6 +951,79 @@ pub(crate) trait HierarchiesOperations {
 
         Ok(tx)
     }
+
+    /// Check if root authority is in the federation.
+    async fn is_root_authority<C>(
+        federation_id: ObjectID,
+        user_id: ObjectID,
+        client: &C,
+    ) -> Result<ProgrammableTransaction, OperationError>
+    where
+        C: CoreClientReadOnly + OptionalSync,
+    {
+        let mut ptb = ProgrammableTransactionBuilder::new();
+
+        let fed_ref = HierarchiesImpl::get_fed_ref(client, federation_id).await?;
+        let fed_ref = CallArg::Object(fed_ref);
+        let user_id = CallArg::Pure(bcs::to_bytes(&user_id)?);
+
+        ptb.move_call(
+            client.package_id(),
+            ident_str!(move_names::MODULE_MAIN).into(),
+            ident_str!("is_root_authority").into(),
+            vec![],
+            vec![fed_ref, user_id],
+        )?;
+
+        let tx = ptb.finish();
+
+        Ok(tx)
+    }
+
+    /// Revokes a root authority from the federation.
+    ///
+    /// Only existing root authorities can revoke other root authorities.
+    /// Cannot revoke the last root authority to prevent lockout.
+    /// The revoked authority's capability remains but becomes unusable.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - The owner doesn't have `RootAuthorityCap`
+    /// - The account_id is not a root authority
+    /// - Attempting to revoke the last root authority
+    async fn revoke_root_authority<C>(
+        federation_id: ObjectID,
+        account_id: ObjectID,
+        owner: IotaAddress,
+        client: &C,
+    ) -> Result<ProgrammableTransaction, OperationError>
+    where
+        C: CoreClientReadOnly + OptionalSync,
+    {
+        let mut ptb = ProgrammableTransactionBuilder::new();
+
+        let cap = HierarchiesImpl::get_cap(client, Capability::RootAuthority, owner).await?;
+
+        let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
+
+        let fed_ref = HierarchiesImpl::get_fed_ref(client, federation_id).await?;
+        let fed_ref = ptb.obj(fed_ref)?;
+
+        let account_id_arg = ptb.pure(account_id)?;
+
+        ptb.programmable_move_call(
+            client.package_id(),
+            ident_str!(move_names::MODULE_MAIN).into(),
+            ident_str!("revoke_root_authority").into(),
+            vec![],
+            vec![fed_ref, cap, account_id_arg],
+        );
+
+        let tx = ptb.finish();
+
+        Ok(tx)
+    }
 }
 
 impl HierarchiesOperations for HierarchiesImpl {}

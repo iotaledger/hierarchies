@@ -161,6 +161,13 @@ impl HierarchiesClientReadOnly {
         Ok(fed)
     }
 
+    /// Check if root authority is in the federation.
+    pub async fn is_root_authority(&self, federation_id: ObjectID, user_id: ObjectID) -> Result<bool, ClientError> {
+        let tx = HierarchiesImpl::is_root_authority(federation_id, user_id, self).await?;
+        let result = self.execute_read_only_transaction(tx).await?;
+        Ok(result)
+    }
+
     /// Retrieves all statement names registered in the federation.
     pub async fn get_statements(&self, federation_id: ObjectID) -> Result<Vec<StatementName>, ClientError> {
         let tx = HierarchiesImpl::get_statements(federation_id, self).await?;

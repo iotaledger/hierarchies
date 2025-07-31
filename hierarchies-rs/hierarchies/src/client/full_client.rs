@@ -83,6 +83,7 @@ use secret_storage::Signer;
 use super::HierarchiesClientReadOnly;
 use crate::client::error::ClientError;
 use crate::core::transactions::add_root_authority::AddRootAuthority;
+use crate::core::transactions::revoke_root_authority::RevokeRootAuthority;
 use crate::core::transactions::statements::add_statement::AddStatement;
 use crate::core::transactions::statements::revoke_statement::RevokeStatement;
 use crate::core::transactions::{
@@ -159,6 +160,22 @@ where
         account_id: ObjectID,
     ) -> TransactionBuilder<AddRootAuthority> {
         TransactionBuilder::new(AddRootAuthority::new(federation_id, account_id, self.sender_address()))
+    }
+
+    /// Creates a [`TransactionBuilder`] for revoking a root authority from a federation.
+    ///
+    /// Only existing root authorities can revoke other root authorities.
+    /// Cannot revoke the last root authority to prevent lockout.
+    pub fn revoke_root_authority(
+        &self,
+        federation_id: ObjectID,
+        account_id: ObjectID,
+    ) -> TransactionBuilder<RevokeRootAuthority> {
+        TransactionBuilder::new(RevokeRootAuthority::new(
+            federation_id,
+            account_id,
+            self.sender_address(),
+        ))
     }
 
     /// Creates a new [`AddStatement`] transaction builder.

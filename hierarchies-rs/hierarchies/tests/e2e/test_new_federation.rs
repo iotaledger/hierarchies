@@ -60,6 +60,11 @@ async fn test_creation_of_federation_with_root_authorities() -> anyhow::Result<(
         .build_and_execute(&client)
         .await?;
 
+    let is_root_authority = client
+        .is_root_authority(*federation.object_id(), root_authority_id)
+        .await?;
+    assert!(is_root_authority);
+
     // we assert that the federation has one root authority
     let federation: Federation = client.get_federation_by_id(*federation.object_id()).await?;
 

@@ -27,6 +27,7 @@ pub struct Federation {
     pub id: UID,
     pub governance: Governance,
     pub root_authorities: Vec<RootAuthority>,
+    pub revoked_root_authorities: Vec<ObjectID>,
 }
 
 /// Represents a root authority. A root authority is an entity that has the highest level of authority in a federation

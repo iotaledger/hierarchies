@@ -11,6 +11,7 @@ pub mod add_root_authority;
 pub mod error;
 mod new_federation;
 pub mod permissions;
+pub mod revoke_root_authority;
 pub mod statements;
 
 // Re-export error types
@@ -18,3 +19,4 @@ pub use add_root_authority::*;
 pub use error::TransactionError;
 pub use new_federation::*;
 pub use permissions::*;
+pub use revoke_root_authority::*;

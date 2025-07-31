@@ -19,6 +19,7 @@ use crate::client_read_only::WasmHierarchiesClientReadOnly;
 use crate::wasm_types::transactions::{
     WasmAddRootAuthority, WasmAddStatement, WasmCreateAccreditationToAccredit, WasmCreateAccreditationToAttest,
     WasmCreateFederation, WasmRevokeAccreditationToAccredit, WasmRevokeAccreditationToAttest, WasmRevokeStatement,
+    WasmRevokeRootAuthority,
 };
 use crate::wasm_types::{WasmStatement, WasmStatementName, WasmStatementValue};
 
@@ -80,6 +81,28 @@ impl WasmHierarchiesClient {
 
         let tx = self.0.add_root_authority(federation_id, account_id).into_inner();
         Ok(into_transaction_builder(WasmAddRootAuthority(tx)))
+    }
+
+    /// Creates a [`WasmTransactionBuilder`] for revoking a root authority from a federation.
+    ///
+    /// Only existing root authorities can revoke other root authorities.
+    /// Cannot revoke the last root authority to prevent lockout.
+    ///
+    /// # Arguments
+    ///
+    /// * `federation_id` - The [`WasmObjectID`] of the federation.
+    /// * `account_id` - The [`WasmObjectID`] of the account to revoke as a root authority.
+    #[wasm_bindgen(js_name = revokeRootAuthority)]
+    pub fn revoke_root_authority(
+        &self,
+        federation_id: WasmObjectID,
+        account_id: WasmObjectID,
+    ) -> Result<WasmTransactionBuilder> {
+        let federation_id = parse_wasm_object_id(&federation_id)?;
+        let account_id = parse_wasm_object_id(&account_id)?;
+
+        let tx = self.0.revoke_root_authority(federation_id, account_id).into_inner();
+        Ok(into_transaction_builder(WasmRevokeRootAuthority(tx)))
     }
 
     /// Creates a new [`WasmTransactionBuilder`] for adding a statement to a federation.

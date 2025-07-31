@@ -41,6 +41,10 @@ name = "06_create_accreditation_to_accredit"
 path = "07_revoke_accreditation_to_accredit.rs"
 name = "07_revoke_accreditation_to_accredit"
 
+[[example]]
+path = "08_revoke_root_authority.rs"
+name = "08_revoke_root_authority"
+
 # Validation
 [[example]]
 path = "validation/01_get_attestations_and_accreditations.rs"

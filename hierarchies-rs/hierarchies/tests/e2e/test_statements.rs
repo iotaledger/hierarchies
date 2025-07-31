@@ -197,3 +197,115 @@ async fn test_add_statement_with_allow_any() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[tokio::test]
+async fn test_add_statement_with_empty_allowed_values_and_allow_any_false_fails() -> anyhow::Result<()> {
+    let client = get_funded_test_client().await?;
+
+    // Create a new federation
+    let federation_id = client
+        .create_new_federation()
+        .build_and_execute(&client)
+        .await?
+        .output
+        .id;
+
+    // Try to add a statement with empty allowed values and allow_any = false
+    let statement_name = StatementName::from("test.invalid.statement");
+    let allowed_values = HashSet::new(); // Empty set
+
+    let result = client
+        .add_statement(*federation_id.object_id(), statement_name, allowed_values, false)
+        .build_and_execute(&client)
+        .await;
+
+    assert!(
+        result.is_err(),
+        "Should fail with empty allowed values and allow_any=false"
+    );
+
+    // Check that the error message contains expected content
+    let error_msg = result.unwrap_err().to_string();
+    assert!(error_msg.contains("8"));
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_add_statement_with_empty_allowed_values_and_allow_any_true_succeeds() -> anyhow::Result<()> {
+    let client = get_funded_test_client().await?;
+
+    // Create a new federation
+    let federation_id = client
+        .create_new_federation()
+        .build_and_execute(&client)
+        .await?
+        .output
+        .id;
+
+    // Add a statement with empty allowed values and allow_any = true (should succeed)
+    let statement_name = StatementName::from("test.any.value.statement");
+    let allowed_values = HashSet::new(); // Empty set
+
+    let result = client
+        .add_statement(*federation_id.object_id(), statement_name.clone(), allowed_values, true)
+        .build_and_execute(&client)
+        .await;
+
+    assert!(
+        result.is_ok(),
+        "Should succeed with empty allowed values and allow_any=true"
+    );
+
+    // Verify the statement was added
+    assert!(
+        client
+            .is_statement_in_federation(*federation_id.object_id(), statement_name)
+            .await?
+    );
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_add_statement_with_allowed_values_and_allow_any_false_succeeds() -> anyhow::Result<()> {
+    let client = get_funded_test_client().await?;
+
+    // Create a new federation
+    let federation_id = client
+        .create_new_federation()
+        .build_and_execute(&client)
+        .await?
+        .output
+        .id;
+
+    // Add a statement with specific allowed values and allow_any = false (should succeed)
+    let statement_name = StatementName::from("test.restricted.statement");
+    let mut allowed_values = HashSet::new();
+    allowed_values.insert(StatementValue::Number(1));
+    allowed_values.insert(StatementValue::Number(2));
+
+    let result = client
+        .add_statement(
+            *federation_id.object_id(),
+            statement_name.clone(),
+            allowed_values,
+            false,
+        )
+        .build_and_execute(&client)
+        .await;
+
+    assert!(
+        result.is_ok(),
+        "Should succeed with non-empty allowed values and allow_any=false"
+    );
+
+    // Verify the statement was added
+    assert!(
+        client
+            .is_statement_in_federation(*federation_id.object_id(), statement_name)
+            .await?
+    );
+
+    Ok(())
+}
