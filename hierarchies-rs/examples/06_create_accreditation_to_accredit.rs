@@ -4,13 +4,13 @@
 use std::collections::HashSet;
 
 use anyhow::Context;
-use iota_sdk::types::base_types::ObjectID;
 use hierarchies::core::types::statements::name::StatementName;
 use hierarchies::core::types::statements::value::StatementValue;
 use hierarchies::core::types::statements::Statement;
 use hierarchies::core::types::timespan::Timespan;
 use hierarchies::core::types::Federation;
 use hierarchies_examples::get_funded_client;
+use iota_sdk::types::base_types::ObjectID;
 
 /// Demonstrate how to issue a permission to accredit to a Statement.
 ///

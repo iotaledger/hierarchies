@@ -4,14 +4,14 @@
 use std::collections::HashSet;
 
 use anyhow::Context;
-use iota_sdk::types::base_types::ObjectID;
 use hierarchies::core::types::statements::name::StatementName;
 use hierarchies::core::types::statements::value::StatementValue;
 use hierarchies::core::types::statements::Statement;
 use hierarchies::core::types::timespan::Timespan;
 use hierarchies::core::types::Federation;
-use product_common::core_client::CoreClient;
 use hierarchies_examples::get_funded_client;
+use iota_sdk::types::base_types::ObjectID;
+use product_common::core_client::CoreClient;
 
 /// Demonstrate how to issue a permission to attest to a Statement.
 ///
@@ -28,7 +28,10 @@ async fn main() -> anyhow::Result<()> {
     let hierarchies_client = get_funded_client().await?;
 
     // Create new federation
-    let federation = hierarchies_client.create_new_federation().build_and_execute(&hierarchies_client).await?;
+    let federation = hierarchies_client
+        .create_new_federation()
+        .build_and_execute(&hierarchies_client)
+        .await?;
 
     // Federation ID
     let federation_id = *federation.output.id.object_id();
@@ -73,7 +76,11 @@ async fn main() -> anyhow::Result<()> {
 
     // Issue permission to the original account
     hierarchies_client
-        .create_accreditation_to_attest(federation_id, hierarchies_client.sender_address().into(), vec![statements])
+        .create_accreditation_to_attest(
+            federation_id,
+            hierarchies_client.sender_address().into(),
+            vec![statements],
+        )
         .build_and_execute(&hierarchies_client)
         .await
         .context("Failed to issue permission to attest")?;

@@ -14,20 +14,14 @@ repository = "https://github.com/iotaledger/hierarchies"
 anyhow = "1.0"
 async-trait = "0.1"
 bcs = "0.1"
-fastcrypto = { git = "https://github.com/MystenLabs/fastcrypto", rev = "2f502fd8570fe4e9cff36eea5bbd6fef22002898", package = "fastcrypto" }
-iota = { git = "https://github.com/iotaledger/iota.git", package = "iota", tag = "v1.2.3" }
-iota-keys = { git = "https://github.com/iotaledger/iota.git", package = "iota-keys", tag = "v1.2.3" }
-iota-sdk = { git = "https://github.com/iotaledger/iota.git", package = "iota-sdk", tag = "v1.2.3" }
 iota_interaction = { git = "https://github.com/iotaledger/product-core.git", default-features = false, tag = "v0.7.0", package = "iota_interaction" }
 iota_interaction_rust = { git = "https://github.com/iotaledger/product-core.git", default-features = false, tag = "v0.7.0", package = "iota_interaction_rust" }
 iota_interaction_ts = { git = "https://github.com/iotaledger/product-core.git", default-features = false, tag = "v0.7.0", package = "iota_interaction_ts" }
 jsonpath-rust = "0.7"
-move-core-types = { git = "https://github.com/iotaledger/iota.git", package = "move-core-types", tag = "v1.2.3" }
 product_common = { git = "https://github.com/iotaledger/product-core.git", tag = "v0.7.0", default-features = false, package = "product_common" }
 secret-storage = { git = "https://github.com/iotaledger/secret-storage", tag = "v0.3.0", default-features = false }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-shared-crypto = { git = "https://github.com/iotaledger/iota.git", package = "shared-crypto", tag = "v1.2.3" }
 strum = { version = "0.27", default-features = false, features = ["std", "derive"] }
 thiserror = "2.0"
 tokio = { version = "1.44", default-features = false, features = ["sync"] }

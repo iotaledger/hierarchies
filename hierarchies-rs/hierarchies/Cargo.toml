@@ -8,14 +8,10 @@ edition.workspace = true
 anyhow.workspace = true
 async-trait.workspace = true
 bcs.workspace = true
-fastcrypto.workspace = true
-product_common = { workspace = true, default-features = false, features = [
-  "transaction",
-] }
+product_common = { workspace = true, default-features = false, features = ["transaction"] }
 secret-storage.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-shared-crypto.workspace = true
 strum.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
@@ -23,9 +19,6 @@ tokio.workspace = true
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 iota_interaction = { workspace = true, default-features = false }
 iota_interaction_rust = { workspace = true, default-features = false }
-iota-sdk = { workspace = true }
-iota-keys = { workspace = true }
-move-core-types = { workspace = true }
 secret-storage = { workspace = true, default-features = false }
 tokio = { workspace = true }
 

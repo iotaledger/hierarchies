@@ -1,16 +1,11 @@
 // Copyright 2020-2025 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    Federation,
-    Statement,
-    StatementName,
-    StatementValue,
-} from "@iota/hierarchies/node";
-import { getFundedClient } from "./util";
+import { Federation, Statement, StatementName, StatementValue } from "@iota/hierarchies/node";
 import { HierarchiesClient } from "@iota/hierarchies/node";
-import { randomBytes } from "crypto";
 import assert from "assert";
+import { randomBytes } from "crypto";
+import { getFundedClient } from "./util";
 
 /**
  * Demonstrate how to issue a permission to accredit to a Statement.
@@ -26,7 +21,9 @@ export async function createAccreditationToAccredit(client?: HierarchiesClient) 
     const hierarchies = client ?? (await getFundedClient());
 
     // Create a new federation
-    const { output: federation }: { output: Federation } = await hierarchies.createNewFederation().buildAndExecute(hierarchies);
+    const { output: federation }: { output: Federation } = await hierarchies.createNewFederation().buildAndExecute(
+        hierarchies,
+    );
     console.log("\n✅ Federation created successfully!");
     console.log("Federation ID: ", federation.id);
 
@@ -44,7 +41,6 @@ export async function createAccreditationToAccredit(client?: HierarchiesClient) 
         .buildAndExecute(hierarchies);
     console.log(`\n✅ Statement ${statementName.dotted()} added successfully`);
 
-
     // A receiver is an account that will receive the accreditation
     const receiver = "0x" + randomBytes(32).toString("hex");
 
@@ -57,12 +53,14 @@ export async function createAccreditationToAccredit(client?: HierarchiesClient) 
         .buildAndExecute(hierarchies);
     console.log(`\n✅ Accreditation to accredit issued successfully for ${receiver}`);
 
-
     // Check if the permission was issued
     const accreditationsToAccredit = await hierarchies.readOnly().getAccreditationsToAccredit(federation.id, receiver);
 
     assert(accreditationsToAccredit.accreditations.length > 0, "Accreditation not found for receiver");
-    assert(accreditationsToAccredit.accreditations[0].statements[0].statementName.dotted() === statementName.dotted(), "Statement name does not match");
+    assert(
+        accreditationsToAccredit.accreditations[0].statements[0].statementName.dotted() === statementName.dotted(),
+        "Statement name does not match",
+    );
 
     console.log("\n✅ Accreditation to accredit found for receiver");
 }

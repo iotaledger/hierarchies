@@ -72,7 +72,6 @@
 use std::collections::HashSet;
 use std::ops::Deref;
 
-use crate::iota_interaction_adapter::IotaClientAdapter;
 use iota_interaction::types::base_types::{IotaAddress, ObjectID};
 use iota_interaction::types::crypto::PublicKey;
 use iota_interaction::{IotaKeySignature, OptionalSync};
@@ -93,6 +92,7 @@ use crate::core::transactions::{
 use crate::core::types::statements::name::StatementName;
 use crate::core::types::statements::value::StatementValue;
 use crate::core::types::statements::Statement;
+use crate::iota_interaction_adapter::IotaClientAdapter;
 
 /// The `HierarchiesClient` struct is responsible for managing the connection to the
 /// IOTA network and executing transactions on behalf of the Hierarchies package.

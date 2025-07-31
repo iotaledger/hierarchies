@@ -4,18 +4,21 @@
 use std::ops::Deref;
 use std::sync::Arc;
 
+use hierarchies::client::{HierarchiesClient, HierarchiesClientReadOnly};
 use iota_interaction::types::base_types::{IotaAddress, ObjectID};
 use iota_interaction::types::crypto::PublicKey;
 use iota_interaction::{IotaClientBuilder, IOTA_LOCAL_NETWORK_URL};
 use iota_interaction_rust::IotaClientAdapter;
-use hierarchies::client::{HierarchiesClient, HierarchiesClientReadOnly};
 use product_common::core_client::{CoreClient, CoreClientReadOnly};
 use product_common::network_name::NetworkName;
 use product_common::test_utils::{init_product_package, request_funds, InMemSigner};
 use tokio::sync::OnceCell;
 
 /// Script file for publishing the package.
-pub const PUBLISH_SCRIPT_FILE: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../hierarchies-move/scripts/publish_hierarchies.sh");
+pub const PUBLISH_SCRIPT_FILE: &str = concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../hierarchies-move/scripts/publish_hierarchies.sh"
+);
 
 static PACKAGE_ID: OnceCell<ObjectID> = OnceCell::const_new();
 

@@ -1,16 +1,10 @@
 // Copyright 2020-2025 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    Federation,
-    HierarchiesClient,
-    Statement,
-    StatementName,
-    StatementValue,
-} from "@iota/hierarchies/node";
-import { getFundedClient } from "./util";
-import { randomBytes } from "crypto";
+import { Federation, HierarchiesClient, Statement, StatementName, StatementValue } from "@iota/hierarchies/node";
 import assert from "assert";
+import { randomBytes } from "crypto";
+import { getFundedClient } from "./util";
 
 /**
  * Demonstrate how to revoke a permission to accredit to a Statement.
@@ -26,7 +20,9 @@ export async function revokeAccreditationToAccredit(client?: HierarchiesClient) 
     const hierarchies = client ?? (await getFundedClient());
 
     // Create a new federation
-    const { output: federation }: { output: Federation } = await hierarchies.createNewFederation().buildAndExecute(hierarchies);
+    const { output: federation }: { output: Federation } = await hierarchies.createNewFederation().buildAndExecute(
+        hierarchies,
+    );
     console.log("\n✅ Federation created successfully!");
     console.log("Federation ID: ", federation.id);
 
@@ -61,7 +57,6 @@ export async function revokeAccreditationToAccredit(client?: HierarchiesClient) 
     assert(accreditationsToAccredit.accreditations.length > 0, "Receiver should have permission to accredit");
     console.log("\n✅ Accreditation to accredit found for receiver");
 
-
     // Revoke the permission
     const permissionId = accreditationsToAccredit.accreditations[0].id;
 
@@ -69,7 +64,6 @@ export async function revokeAccreditationToAccredit(client?: HierarchiesClient) 
         .revokeAccreditationToAccredit(federation.id, receiver, permissionId)
         .buildAndExecute(hierarchies);
     console.log("\n✅ Accreditation to accredit revoked successfully");
-
 
     // Check if the permission was revoked
     accreditationsToAccredit = await hierarchies.readOnly().getAccreditationsToAccredit(federation.id, receiver);

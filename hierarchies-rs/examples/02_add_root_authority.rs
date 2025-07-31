@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use anyhow::Context;
-use iota_sdk::types::base_types::ObjectID;
 use hierarchies::core::types::Federation;
-use product_common::core_client::CoreClientReadOnly;
 use hierarchies_examples::get_funded_client;
+use iota_sdk::types::base_types::ObjectID;
+use product_common::core_client::CoreClientReadOnly;
 
 /// Demonstrate how to add a root authority to a federation.
 ///

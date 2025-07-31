@@ -3,11 +3,11 @@
 
 use std::collections::HashSet;
 
-use iota_interaction::types::base_types::ObjectID;
 use hierarchies::core::types::statements::name::StatementName;
 use hierarchies::core::types::statements::value::StatementValue;
 use hierarchies::core::types::statements::Statement;
 use hierarchies::core::types::Federation;
+use iota_interaction::types::base_types::ObjectID;
 
 use crate::client::get_funded_test_client;
 

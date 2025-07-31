@@ -26,7 +26,6 @@
 //! ### Transaction Errors
 //! - [`TransactionError`] - Transaction building and execution
 
-use crate::iota_interaction_adapter::AdapterError;
 #[cfg(target_arch = "wasm32")]
 use product_common::impl_wasm_error_from;
 use thiserror::Error;
@@ -37,6 +36,7 @@ pub use crate::client::ClientError;
 pub use crate::core::transactions::TransactionError;
 // Core operation errors
 pub use crate::core::{CapabilityError, OperationError};
+use crate::iota_interaction_adapter::AdapterError;
 
 // == Common errors ==
 

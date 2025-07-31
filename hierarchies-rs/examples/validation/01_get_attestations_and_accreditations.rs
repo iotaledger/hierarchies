@@ -4,13 +4,13 @@
 use std::collections::HashSet;
 
 use anyhow::Context;
-use iota_sdk::types::base_types::ObjectID;
 use hierarchies::core::types::statements::name::StatementName;
 use hierarchies::core::types::statements::value::StatementValue;
 use hierarchies::core::types::statements::Statement;
 use hierarchies::core::types::timespan::Timespan;
-use product_common::core_client::CoreClient;
 use hierarchies_examples::get_funded_client;
+use iota_sdk::types::base_types::ObjectID;
+use product_common::core_client::CoreClient;
 
 /// Demonstrates how to use the offchain API to check if a user has a permission to attest and accredit.
 ///
@@ -32,7 +32,9 @@ async fn main() -> anyhow::Result<()> {
 
     let user_id = hierarchies_client.sender_address().into();
 
-    let permissions = hierarchies_client.get_accreditations_to_attest(*federation_id, user_id).await?;
+    let permissions = hierarchies_client
+        .get_accreditations_to_attest(*federation_id, user_id)
+        .await?;
 
     println!("Accreditations: {permissions:#?}");
 

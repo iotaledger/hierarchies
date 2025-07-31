@@ -1,8 +1,8 @@
 // Copyright 2020-2025 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_interaction::types::base_types::ObjectID;
 use hierarchies::core::types::{Event, Federation, FederationCreatedEvent};
+use iota_interaction::types::base_types::ObjectID;
 use product_common::core_client::CoreClient;
 
 use crate::client::get_funded_test_client;

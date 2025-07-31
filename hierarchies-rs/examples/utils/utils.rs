@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use anyhow::Context;
-use iota_sdk::{IotaClientBuilder, IOTA_LOCAL_NETWORK_URL};
 use hierarchies::client::{HierarchiesClient, HierarchiesClientReadOnly};
+use iota_sdk::{IotaClientBuilder, IOTA_LOCAL_NETWORK_URL};
 use product_common::test_utils::{request_funds, InMemSigner};
 
 pub async fn get_read_only_client() -> anyhow::Result<HierarchiesClientReadOnly> {
