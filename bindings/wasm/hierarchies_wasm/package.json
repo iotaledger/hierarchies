@@ -7,7 +7,7 @@
     "license": "Apache-2.0",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/iotaledger/trust-hierarchies.git"
+        "url": "git+https://github.com/iotaledger/hierarchies.git"
     },
     "directories": {
         "example": "examples"
@@ -42,7 +42,7 @@
         "CYPRESS_VERIFY_TIMEOUT": 100000
     },
     "bugs": {
-        "url": "https://github.com/iotaledger/trust-hierarchies.rs/issues"
+        "url": "https://github.com/iotaledger/hierarchies.rs/issues"
     },
     "publishConfig": {
         "access": "public"

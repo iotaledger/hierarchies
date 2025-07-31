@@ -2,13 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Federation } from "@iota/hierarchies/node";
-import { getFundedClient } from "./util";
 import assert from "assert";
+import { getFundedClient } from "./util";
 
 export async function createFederation(): Promise<void> {
     const hierarchies = await getFundedClient();
 
-    const { output: federation }: { output: Federation } = await hierarchies.createNewFederation().buildAndExecute(hierarchies);
+    const { output: federation }: { output: Federation } = await hierarchies.createNewFederation().buildAndExecute(
+        hierarchies,
+    );
 
     console.log("\n✅ Federation created successfully!");
     console.log("Federation ID: ", federation.id);

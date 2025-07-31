@@ -9,24 +9,24 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
     branches:
       - main
-      - "feat/**"
-      - "support/**"
-      - "develop"
+      - 'feat/**'
+      - 'support/**'
+      - 'develop'
     paths:
-      - ".github/workflows/build-and-test.yml"
-      - ".github/workflows/shared-build-wasm.yml"
-      - ".github/actions/**"
-      - "**.rs"
-      - "**.toml"
-      - "**.lock"
-      - "bindings/**"
-      - "!bindings/**.md"
-      - "bindings/wasm/hierarchies_wasm/README.md" # the Readme contain txm tests
+      - '.github/workflows/build-and-test.yml'
+      - '.github/workflows/shared-build-wasm.yml'
+      - '.github/actions/**'
+      - '**.rs'
+      - '**.toml'
+      - '**.lock'
+      - 'bindings/**'
+      - '!bindings/**.md'
+      - 'bindings/wasm/hierarchies_wasm/README.md' # the Readme contain txm tests
 
   schedule:
     # * is a special character in YAML so you have to quote this string
-    - cron: "5 0 * * *" # everyday, 00:05, used for testnet scheduled test
-    - cron: "10 0 * * *" # everyday, 00:10 used for devnet scheduled test
+    - cron: '5 0 * * *' # everyday, 00:05, used for testnet scheduled test
+    - cron: '10 0 * * *' # everyday, 00:10 used for devnet scheduled test
 
 env:
   RUST_BACKTRACE: full
@@ -111,7 +111,7 @@ jobs:
           vcpkg install openssl:x64-windows-static-md
 
       - name: Setup Rust and cache
-        uses: "./.github/actions/rust/setup"
+        uses: './.github/actions/rust/setup'
         with:
           os: ${{ runner.os }}
           job: ${{ github.job }}
@@ -121,7 +121,7 @@ jobs:
           sccache-path: ${{ matrix.sccache-path }}
 
       - name: Setup sccache
-        uses: "./.github/actions/rust/sccache/setup"
+        uses: './.github/actions/rust/sccache/setup'
         with:
           os: ${{matrix.os}}
 
@@ -153,7 +153,7 @@ jobs:
 
       - name: Start iota sandbox
         if: matrix.os != 'windows-latest'
-        uses: "./.github/actions/iota/setup"
+        uses: './.github/actions/iota/setup'
         with:
           platform: ${{ matrix.os == 'ubuntu-24.04' && 'linux' || 'macos' }}
           logfile: ${{ env.IOTA_SERVER_LOGFILE }}
@@ -204,113 +204,113 @@ jobs:
           retention-days: 1
 
       - name: Stop sccache
-        uses: "./.github/actions/rust/sccache/stop"
+        uses: './.github/actions/rust/sccache/stop'
         with:
           os: ${{matrix.os}}
 
   build-wasm:
     needs: check-for-run-condition
     if: ${{ needs.check-for-run-condition.outputs.should-run == 'true' }}
-    uses: "./.github/workflows/shared-build-wasm.yml"
+    uses: './.github/workflows/shared-build-wasm.yml'
     with:
       run-unit-tests: false
       output-artifact-name: hierarchies-wasm-bindings-build
 
-  # test-wasm:
-  #   needs: build-wasm
-  #   if: ${{ needs.check-for-run-condition.outputs.should-run == 'true' }}
-  #   runs-on: ubuntu-24.04
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       os: [ubuntu-24.04]
-  #       include:
-  #         - os: ubuntu-24.04
+  test-wasm:
+    needs: build-wasm
+    if: ${{ needs.check-for-run-condition.outputs.should-run == 'true' }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04]
+        include:
+          - os: ubuntu-24.04
 
-  #   steps:
-  #     - uses: actions/checkout@v3
+    steps:
+      - uses: actions/checkout@v3
 
-  #     - name: Set up Node.js
-  #       uses: actions/setup-node@v1
-  #       with:
-  #         node-version: 20.x
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
 
-  #     - name: Install JS dependencies
-  #       run: npm ci
-  #       working-directory: bindings/wasm/hierarchies_wasm
+      - name: Install JS dependencies
+        run: npm ci
+        working-directory: bindings/wasm/hierarchies_wasm
 
-  #     - name: Download bindings/wasm/hierarchies_wasm artifacts
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: hierarchies-wasm-bindings-build
-  #         path: bindings/wasm/hierarchies_wasm
+      - name: Download bindings/wasm/hierarchies_wasm artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: hierarchies-wasm-bindings-build
+          path: bindings/wasm/hierarchies_wasm
 
-  #     - name: Start iota sandbox
-  #       uses: "./.github/actions/iota/setup"
-  #       with:
-  #         iota-version: ${{ env.IOTA_VERSION }}
+      - name: Start iota sandbox
+        uses: './.github/actions/iota/setup'
+        with:
+          iota-version: ${{ env.IOTA_VERSION }}
 
-  #     - name: publish Trust Hierarchies Move package
-  #       if: matrix.os != 'windows-latest'
-  #       # publish the package and set the IOTA_ITH_PKG_ID env variable
-  #       run: echo "IOTA_ITH_PKG_ID=$(./publish_package.sh)" >> "$GITHUB_ENV"
-  #       working-directory: trust_hierarchies_move/scripts/
+      - name: publish Trust Hierarchies Move package
+        if: matrix.os != 'windows-latest'
+        # publish the package and set the IOTA_ITH_PKG_ID env variable
+        run: echo "IOTA_ITH_PKG_ID=$(./publish_package.sh)" >> "$GITHUB_ENV"
+        working-directory: ith.move/scripts/
 
-  #     - name: Install JS dependencies
-  #       run: npm ci
-  #       working-directory: bindings/wasm/hierarchies_wasm
+      - name: Install JS dependencies
+        run: npm ci
+        working-directory: bindings/wasm/hierarchies_wasm
 
-  #     - name: Run Wasm examples
-  #       #run: npm run test:readme && npm run test:node
-  #       run: npm run test:node
-  #       working-directory: bindings/wasm/hierarchies_wasm
-#  test-wasm-browser:
-#    needs: build-wasm
-#    if: ${{ needs.check-for-run-condition.outputs.should-run == 'true' }}
-#    runs-on: ubuntu-24.04
-#    strategy:
-#      fail-fast: false
-#      matrix:
-#        browser: [chrome, firefox]
-#
-#    steps:
-#      - uses: actions/checkout@v3
-#
-#      - name: Set up Node.js
-#        uses: actions/setup-node@v1
-#        with:
-#          node-version: 20.x
-#
-#      - name: Install JS dependencies
-#        run: npm ci
-#        working-directory: bindings/wasm/hierarchies_wasm
-#
-#      - name: Download bindings/wasm/hierarchies_wasm artifacts
-#        uses: actions/download-artifact@v4
-#        with:
-#          name: hierarchies-wasm-bindings-build
-#          path: bindings/wasm/hierarchies_wasm
-#
-#      - name: Start iota sandbox
-#        uses: "./.github/actions/iota/setup"
-#        with:
-#          iota-version: ${{ env.IOTA_VERSION }}
-#
-#      - name: publish Trust Hierarchies Move package
-#        # publish the package and set the IOTA_ITH_PKG_ID env variable
-#        run: echo "IOTA_ITH_PKG_ID=$(./publish_ith.sh)" >> "$GITHUB_ENV"
-#        working-directory: ith.move/scripts/
-#
-#      - name: Build Docker image
-#        uses: docker/build-push-action@v6.2.0
-#        with:
-#          context: bindings/wasm/
-#          file: bindings/wasm/hierarchies_wasm/cypress/Dockerfile
-#          push: false
-#          tags: cypress-test:latest
-#          load: true
-#          build-args: |
-#            IOTA_ITH_PKG_ID=${{ env.IOTA_ITH_PKG_ID }}
-#
-#      - name: Run cypress
-#        run: docker run --network host cypress-test test:browser:${{ matrix.browser }}
+      - name: Run Wasm examples
+        run: npm run test:node
+        working-directory: bindings/wasm/hierarchies_wasm
+
+        #  test-wasm-browser:
+    #    needs: build-wasm
+    #    if: ${{ needs.check-for-run-condition.outputs.should-run == 'true' }}
+    #    runs-on: ubuntu-24.04
+    #    strategy:
+    #      fail-fast: false
+    #      matrix:
+    #        browser: [chrome, firefox]
+    #
+    #    steps:
+    #      - uses: actions/checkout@v3
+    #
+    #      - name: Set up Node.js
+    #        uses: actions/setup-node@v1
+    #        with:
+    #          node-version: 20.x
+    #
+    #      - name: Install JS dependencies
+    #        run: npm ci
+    #        working-directory: bindings/wasm/hierarchies_wasm
+    #
+    #      - name: Download bindings/wasm/hierarchies_wasm artifacts
+    #        uses: actions/download-artifact@v4
+    #        with:
+    #          name: hierarchies-wasm-bindings-build
+    #          path: bindings/wasm/hierarchies_wasm
+    #
+    #      - name: Start iota sandbox
+    #        uses: "./.github/actions/iota/setup"
+    #        with:
+    #          iota-version: ${{ env.IOTA_VERSION }}
+    #
+    #      - name: publish Trust Hierarchies Move package
+    #        # publish the package and set the IOTA_ITH_PKG_ID env variable
+    #        run: echo "IOTA_ITH_PKG_ID=$(./publish_ith.sh)" >> "$GITHUB_ENV"
+    #        working-directory: ith.move/scripts/
+    #
+    #      - name: Build Docker image
+    #        uses: docker/build-push-action@v6.2.0
+    #        with:
+    #          context: bindings/wasm/
+    #          file: bindings/wasm/hierarchies_wasm/cypress/Dockerfile
+    #          push: false
+    #          tags: cypress-test:latest
+    #          load: true
+    #          build-args: |
+    #            IOTA_ITH_PKG_ID=${{ env.IOTA_ITH_PKG_ID }}
+    #
+    #      - name: Run cypress
+    #        run: docker run --network host cypress-test test:browser:${{ matrix.browser }}
