@@ -3,9 +3,9 @@
 
 use std::collections::HashSet;
 
-use ith::core::types::statements::{Statement, Statements};
-use ith::core::types::timespan::Timespan;
-use ith::core::types::{Federation, Governance, RootAuthority};
+use hierarchies::core::types::statements::{Statement, Statements};
+use hierarchies::core::types::timespan::Timespan;
+use hierarchies::core::types::{Federation, Governance, RootAuthority};
 use product_common::bindings::WasmObjectID;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::wasm_bindgen;

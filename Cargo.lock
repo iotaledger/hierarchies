@@ -2767,6 +2767,36 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6fe2267d4ed49bc07b63801559be28c718ea06c4738b7a03c94df7386d2cde46"
 
 [[package]]
+name = "hierarchies"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "bcs",
+ "iota_interaction",
+ "iota_interaction_rust",
+ "iota_interaction_ts",
+ "product_common",
+ "secret-storage",
+ "serde",
+ "serde_json",
+ "strum 0.27.2",
+ "thiserror 2.0.12",
+ "tokio",
+]
+
+[[package]]
+name = "hierarchies_examples"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "hierarchies",
+ "iota-sdk 1.2.3",
+ "product_common",
+ "tokio",
+]
+
+[[package]]
 name = "hkdf"
 version = "0.12.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4002,30 +4032,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285"
 dependencies = [
  "either",
-]
-
-[[package]]
-name = "ith"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "bcs",
- "fastcrypto",
- "iota-keys",
- "iota-sdk 1.2.3",
- "iota_interaction",
- "iota_interaction_rust",
- "iota_interaction_ts",
- "move-core-types",
- "product_common",
- "secret-storage",
- "serde",
- "serde_json",
- "shared-crypto",
- "strum 0.27.2",
- "thiserror 2.0.12",
- "tokio",
 ]
 
 [[package]]
@@ -8070,17 +8076,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
-]
-
-[[package]]
-name = "trust_hierarchies_examples"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "iota-sdk 1.2.3",
- "ith",
- "product_common",
- "tokio",
 ]
 
 [[package]]

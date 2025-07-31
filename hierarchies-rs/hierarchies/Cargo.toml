@@ -1,0 +1,46 @@
+[package]
+name = "hierarchies"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+async-trait.workspace = true
+bcs.workspace = true
+product_common = { workspace = true, default-features = false, features = ["transaction"] }
+secret-storage.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+strum.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+iota_interaction = { workspace = true, default-features = false }
+iota_interaction_rust = { workspace = true, default-features = false }
+secret-storage = { workspace = true, default-features = false }
+tokio = { workspace = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+iota_interaction = { workspace = true, default-features = false }
+iota_interaction_ts = { workspace = true }
+
+[dev-dependencies]
+async-trait.workspace = true
+product_common = { workspace = true, features = ["transaction", "test-utils"] }
+
+[features]
+default = ["send-sync"]
+send-sync = [
+  "send-sync-storage",
+  "product_common/send-sync",
+  "iota_interaction/send-sync-transaction",
+]
+# Enables `Send` + `Sync` bounds for the storage traits.
+send-sync-storage = ["secret-storage/send-sync-storage"]
+
+# Enables an high-level integration with IOTA gas-station.
+gas-station = ["product_common/gas-station"]
+# Uses a default HTTP Client instead of a user-provided one.
+default-http-client = ["product_common/default-http-client"]
