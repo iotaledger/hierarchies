@@ -139,8 +139,6 @@ public(package) fun to_map_of_statements(
     return map
 }
 
-// ===== Timespan ========
-
 /// Represents a time statement. The valid_from_ms and valid_until_ms are
 /// optional, if they are not set, the statement is valid for all time.
 public struct Timespan has copy, drop, store {

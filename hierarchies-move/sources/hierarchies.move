@@ -136,7 +136,7 @@ public fun new_federation(ctx: &mut TxContext) {
     // Emit federation created event
     event::emit(Event {
         data: FederationCreatedEvent {
-            federation_address: federation.federation_id().to_address(),
+            federation_address: object::uid_to_address(&federation.id),
         },
     });
 

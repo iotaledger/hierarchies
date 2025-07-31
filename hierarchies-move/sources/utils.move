@@ -7,11 +7,18 @@ const ELengthMismatch: u64 = 0;
 
 public(package) fun contains_one_of<D: copy + drop>(source: &vector<D>, one_of: &vector<D>): bool {
     let len_one_of = vector::length<D>(one_of);
+    // If one_of is empty, there's nothing to match, so return false
+    if (len_one_of == 0) {
+        return false
+    };
     let mut idx_one_of = 0;
-    while (idx_one_of < len_one_of) { if (vector::contains<D>(source, &one_of[idx_one_of])) {
+    while (idx_one_of < len_one_of) {
+        if (vector::contains<D>(source, &one_of[idx_one_of])) {
             return true
-        }; idx_one_of = idx_one_of + 1; };
-    return true
+        };
+        idx_one_of = idx_one_of + 1;
+    };
+    return false
 }
 
 public(package) fun contains_all_from<D: copy + drop>(
@@ -30,7 +37,7 @@ public(package) fun contains_all_from<D: copy + drop>(
     return true
 }
 
-public(package) fun copy_vector<D: copy>(src: &vector<D>): vector<D> {
+public fun copy_vector<D: copy>(src: &vector<D>): vector<D> {
     let mut idx = 0;
     let mut cloned: vector<D> = vector::empty();
     while (idx < src.length()) {

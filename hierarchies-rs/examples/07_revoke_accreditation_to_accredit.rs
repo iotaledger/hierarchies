@@ -98,7 +98,7 @@ async fn main() -> anyhow::Result<()> {
         .await
         .context("Failed to find permission to accredit")?;
 
-    let permission_id = permissions.statements[0].id.object_id();
+    let permission_id = permissions.accreditations[0].id.object_id();
 
     hierarchies_client
         .revoke_accreditation_to_accredit(federation_id, receiver, *permission_id)
@@ -114,6 +114,6 @@ async fn main() -> anyhow::Result<()> {
     // Check if the receiver has the permission to accredit
     let can_accredit = federation.governance.accreditations_to_accredit.get(&receiver).unwrap();
 
-    assert!(can_accredit.statements.is_empty());
+    assert!(can_accredit.accreditations.is_empty());
     Ok(())
 }

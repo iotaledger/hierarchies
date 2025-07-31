@@ -1,10 +1,10 @@
 // Copyright 2025 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::wasm_types::accreditation::WasmAccreditation;
+use hierarchies::core::types::Accreditations;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
-use hierarchies::core::types::Accreditations;
-use crate::wasm_types::accreditation::WasmAccreditation;
 
 /// Represents a collection of accreditation statements
 #[wasm_bindgen(js_name = Accreditations, inspectable)]
@@ -17,7 +17,7 @@ impl WasmAccreditations {
     #[wasm_bindgen(getter, unchecked_return_type = "Array<Accreditation>")]
     pub fn accreditations(&self) -> js_sys::Array {
         self.0
-            .statements
+            .accreditations
             .iter()
             .map(|accreditation| JsValue::from(WasmAccreditation(accreditation.clone())))
             .collect()

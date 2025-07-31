@@ -5,6 +5,14 @@ use hierarchies::{statement_condition, statement_value};
 use std::string;
 
 #[test]
+fun test_contains_at_beginning() {
+    let condition = statement_condition::new_condition_contains(string::utf8(b"hello"));
+    let value = statement_value::new_statement_value_string(string::utf8(b"hello world"));
+
+    assert!(statement_condition::condition_matches(&condition, &value), 0);
+}
+
+#[test]
 fun test_starts_with_match() {
     let condition = statement_condition::new_condition_starts_with(string::utf8(b"hello"));
     let value = statement_value::new_statement_value_string(string::utf8(b"hello world"));
@@ -29,6 +37,14 @@ fun test_starts_with_wrong_type() {
 }
 
 #[test]
+fun test_contains_at_end() {
+    let condition = statement_condition::new_condition_contains(string::utf8(b"world"));
+    let value = statement_value::new_statement_value_string(string::utf8(b"hello world"));
+
+    assert!(statement_condition::condition_matches(&condition, &value), 0);
+}
+
+#[test]
 fun test_ends_with_match() {
     let condition = statement_condition::new_condition_ends_with(string::utf8(b"world"));
     let value = statement_value::new_statement_value_string(string::utf8(b"hello world"));
@@ -43,6 +59,8 @@ fun test_ends_with_no_match() {
 
     assert!(!statement_condition::condition_matches(&condition, &value), 0);
 }
+
+
 
 #[test]
 fun test_contains_match() {
@@ -107,3 +125,21 @@ fun test_string_shorter_than_condition() {
 
     assert!(!statement_condition::condition_matches(&condition, &value), 0);
 }
+
+#[test]
+fun test_contains_single_character() {
+    let condition = statement_condition::new_condition_contains(string::utf8(b"o"));
+    let value = statement_value::new_statement_value_string(string::utf8(b"hello world"));
+
+    assert!(statement_condition::condition_matches(&condition, &value), 0);
+}
+
+#[test]
+fun test_contains_empty_string() {
+    let condition = statement_condition::new_condition_contains(string::utf8(b""));
+    let value = statement_value::new_statement_value_string(string::utf8(b"hello world"));
+
+    assert!(statement_condition::condition_matches(&condition, &value), 0);
+}
+
+

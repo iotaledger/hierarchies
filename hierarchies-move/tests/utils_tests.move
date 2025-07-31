@@ -7,6 +7,7 @@ module hierarchies::utils_tests;
 
 use hierarchies::utils;
 use iota::{vec_map, vec_set};
+use std::string;
 
 #[test]
 fun test_vec_map_from_keys_values_works() {
@@ -52,8 +53,8 @@ fun test_contains_one_of_empty_one_of() {
     let source = vector[1, 2, 3];
     let one_of: vector<u64> = vector[];
 
-    // Note: Based on the implementation, this should return true since the while loop doesn't execute
-    assert!(utils::contains_one_of(&source, &one_of), 0);
+    // If one_of is empty, there's nothing to match, so return false
+    assert!(!utils::contains_one_of(&source, &one_of), 0);
 }
 
 #[test]
@@ -61,7 +62,15 @@ fun test_contains_one_of_empty_source() {
     let source: vector<u64> = vector[];
     let one_of = vector[1, 2, 3];
 
-    assert!(utils::contains_one_of(&source, &one_of), 0);
+    // If source is empty, there's nothing to match against, so return false
+    assert!(!utils::contains_one_of(&source, &one_of), 0);
+}
+
+#[test]
+fun test_contains_one_of_false() {
+    let source = vector[1, 2, 3, 4];
+    let one_of = vector[5, 6, 7];
+    assert!(!utils::contains_one_of(&source, &one_of), 0);
 }
 
 #[test]
@@ -150,4 +159,96 @@ fun test_create_vec_set_no_duplicates() {
     assert!(vec_set::contains(&set, &1), 1);
     assert!(vec_set::contains(&set, &2), 2);
     assert!(vec_set::contains(&set, &3), 3);
+}
+
+
+
+// ===== Tests for contains_one_of function bug fix =====
+
+#[test]
+fun test_contains_one_of_single_element_match() {
+    let source = vector[1, 2, 3, 4];
+    let one_of = vector[3];
+
+    assert!(utils::contains_one_of(&source, &one_of), 0);
+}
+
+#[test]
+fun test_contains_one_of_single_element_no_match() {
+    let source = vector[1, 2, 3, 4];
+    let one_of = vector[5];
+
+    assert!(!utils::contains_one_of(&source, &one_of), 0);
+}
+
+#[test]
+fun test_contains_one_of_multiple_elements_first_match() {
+    let source = vector[1, 2, 3, 4];
+    let one_of = vector[5, 6, 1, 7];
+
+    assert!(utils::contains_one_of(&source, &one_of), 0);
+}
+
+#[test]
+fun test_contains_one_of_multiple_elements_middle_match() {
+    let source = vector[1, 2, 3, 4];
+    let one_of = vector[5, 6, 3, 7];
+
+    assert!(utils::contains_one_of(&source, &one_of), 0);
+}
+
+#[test]
+fun test_contains_one_of_multiple_elements_last_match() {
+    let source = vector[1, 2, 3, 4];
+    let one_of = vector[5, 6, 7, 4];
+
+    assert!(utils::contains_one_of(&source, &one_of), 0);
+}
+
+#[test]
+fun test_contains_one_of_multiple_elements_no_match() {
+    let source = vector[1, 2, 3, 4];
+    let one_of = vector[5, 6, 7, 8];
+
+    assert!(!utils::contains_one_of(&source, &one_of), 0);
+}
+
+#[test]
+fun test_contains_one_of_duplicate_elements() {
+    let source = vector[1, 2, 3, 4];
+    let one_of = vector[3, 3, 3];
+
+    assert!(utils::contains_one_of(&source, &one_of), 0);
+}
+
+#[test]
+fun test_contains_one_of_source_with_duplicates() {
+    let source = vector[1, 2, 2, 3, 4];
+    let one_of = vector[2];
+
+    assert!(utils::contains_one_of(&source, &one_of), 0);
+}
+
+#[test]
+fun test_contains_one_of_both_empty() {
+    let source: vector<u64> = vector[];
+    let one_of: vector<u64> = vector[];
+
+    assert!(!utils::contains_one_of(&source, &one_of), 0);
+}
+
+#[test]
+fun test_contains_one_of_string_values() {
+    let source = vector[string::utf8(b"hello"), string::utf8(b"world")];
+    let one_of = vector[string::utf8(b"world")];
+
+    assert!(utils::contains_one_of(&source, &one_of), 0);
+}
+
+#[test]
+fun test_contains_one_of_string_values_no_match() {
+    let source = vector[string::utf8(b"hello"), string::utf8(b"world")];
+    let one_of = vector[string::utf8(b"test")];
+
+    assert!(!utils::contains_one_of(&source, &one_of), 0);
 }

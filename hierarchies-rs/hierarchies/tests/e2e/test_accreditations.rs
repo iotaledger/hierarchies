@@ -222,7 +222,7 @@ async fn test_revoke_accreditation_to_attest() -> anyhow::Result<()> {
     let user_accreditations = accreditations.get(&receiver_id);
     assert!(user_accreditations.is_some(), "No accreditations found for user");
 
-    let permission_id = user_accreditations.unwrap().statements.first().unwrap().id.clone();
+    let permission_id = user_accreditations.unwrap().accreditations.first().unwrap().id.clone();
 
     // Revoke the accreditation
     let result = client
@@ -282,7 +282,7 @@ async fn test_revoke_accreditation_to_accredit() -> anyhow::Result<()> {
     let user_accreditations = accreditations.get(&receiver_id);
     assert!(user_accreditations.is_some(), "No accreditations found for user");
 
-    let permission_id = user_accreditations.unwrap().statements.first().unwrap().id.clone();
+    let permission_id = user_accreditations.unwrap().accreditations.first().unwrap().id.clone();
 
     // Revoke the accreditation
     let result = client

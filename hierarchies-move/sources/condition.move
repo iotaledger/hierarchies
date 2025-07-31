@@ -72,7 +72,7 @@ public fun condition_matches(self: &StatementValueCondition, value: &StatementVa
                 return false
             };
             let index = value_string.index_of(ref_string);
-            return index != value_string.length()
+            return index < value_string.length()
         },
         StatementValueCondition::GreaterThan(ref_value) => {
             let maybe_value_number = value.as_number();

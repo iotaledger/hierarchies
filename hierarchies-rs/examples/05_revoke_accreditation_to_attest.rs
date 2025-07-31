@@ -101,7 +101,7 @@ async fn main() -> anyhow::Result<()> {
         .await
         .context("Failed to find permission to attest")?;
 
-    let permission_id = statements.statements[0].id.object_id();
+    let permission_id = statements.accreditations[0].id.object_id();
 
     hierarchies_client
         .revoke_accreditation_to_attest(federation_id, receiver, *permission_id)
@@ -117,6 +117,6 @@ async fn main() -> anyhow::Result<()> {
     // Check if the receiver has the permission to attest
     let can_attest = federation.governance.accreditations_to_attest.get(&receiver).unwrap();
 
-    assert!(can_attest.statements.is_empty());
+    assert!(can_attest.accreditations.is_empty());
     Ok(())
 }

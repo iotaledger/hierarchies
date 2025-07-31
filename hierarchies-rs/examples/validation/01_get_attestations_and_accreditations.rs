@@ -76,7 +76,7 @@ async fn main() -> anyhow::Result<()> {
         .await
         .context("Failed to find permission to attest")?;
 
-    assert!(permissions.statements.len() == 1);
+    assert!(permissions.accreditations.len() == 1);
 
     println!("Accreditations: {permissions:#?}");
 
@@ -95,7 +95,7 @@ async fn main() -> anyhow::Result<()> {
         .await
         .context("Failed to find permission to accredit")?;
 
-    assert!(permissions.statements.len() == 1);
+    assert!(permissions.accreditations.len() == 1);
 
     Ok(())
 }
