@@ -23,6 +23,8 @@ const EInvalidStatementValueCondition: u64 = 4;
 const EAccreditationNotFound: u64 = 5;
 /// Error when timestamp is in the past
 const ETimestampMustBeInTheFuture: u64 = 6;
+/// Error when trying to create accreditation for statement not in federation
+const EStatementNotInFederation: u64 = 7;
 
 // ===== Core Data Structures =====
 
@@ -292,6 +294,17 @@ public fun create_accreditation_to_accredit(
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
     let current_time_ms = ctx.epoch_timestamp_ms();
 
+    // Validate that all statement names exist in federation
+    let mut idx = 0;
+    while (idx < want_statements.length()) {
+        let statement = &want_statements[idx];
+        assert!(
+            self.is_statement_in_federation(*statement.statement_name()),
+            EStatementNotInFederation,
+        );
+        idx = idx + 1;
+    };
+
     // Check permissions only if sender is not a root authority
     if (!self.is_root_authority(&ctx.sender().to_id())) {
         let accreditations_to_accredit = self.get_accreditations_to_accredit(
@@ -334,6 +347,17 @@ public fun create_accreditation_to_attest(
 ) {
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
     let current_time_ms = ctx.epoch_timestamp_ms();
+
+    // Validate that all statement names exist in federation
+    let mut idx = 0;
+    while (idx < wanted_statements.length()) {
+        let statement = &wanted_statements[idx];
+        assert!(
+            self.is_statement_in_federation(*statement.statement_name()),
+            EStatementNotInFederation,
+        );
+        idx = idx + 1;
+    };
 
     // Check permissions only if sender is not a root authority
     if (!self.is_root_authority(&ctx.sender().to_id())) {

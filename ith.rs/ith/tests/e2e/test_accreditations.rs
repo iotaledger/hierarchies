@@ -438,3 +438,197 @@ async fn test_statement_with_numeric_values() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[tokio::test]
+async fn test_create_accreditation_to_accredit_fails_for_nonexistent_statement() -> anyhow::Result<()> {
+    let client = get_funded_test_client().await?;
+
+    let federation_id = client
+        .create_new_federation()
+        .build_and_execute(&client)
+        .await?
+        .output
+        .id;
+
+    // Try to create an accreditation for a statement that doesn't exist in the federation
+    let nonexistent_statement_name = StatementName::from("nonexistent.role");
+    let mut allowed_values = HashSet::new();
+    allowed_values.insert(StatementValue::Text("admin".to_string()));
+
+    let statement = Statement::new(nonexistent_statement_name).with_allowed_values(allowed_values);
+
+    // This should fail because the statement name doesn't exist in the federation
+    let receiver_id = ObjectID::random();
+    let result = client
+        .create_accreditation_to_accredit(*federation_id.object_id(), receiver_id, vec![statement])
+        .build_and_execute(&client)
+        .await;
+
+    assert!(
+        result.is_err(),
+        "Expected failure when creating accreditation for nonexistent statement, but got success"
+    );
+
+    let error_msg = format!("{:?}", result.err().unwrap());
+    assert!(
+        error_msg.contains("7"), // EStatementNotInFederation
+        "Expected EStatementNotInFederation error, got: {error_msg}"
+    );
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_create_accreditation_to_attest_fails_for_nonexistent_statement() -> anyhow::Result<()> {
+    let client = get_funded_test_client().await?;
+
+    // Create a new federation (but don't add any statements)
+    let federation_id = client
+        .create_new_federation()
+        .build_and_execute(&client)
+        .await?
+        .output
+        .id;
+
+    // Try to create an accreditation for a statement that doesn't exist in the federation
+    let nonexistent_statement_name = StatementName::from("nonexistent.certification");
+    let mut allowed_values = HashSet::new();
+    allowed_values.insert(StatementValue::Text("verified".to_string()));
+
+    let statement = Statement::new(nonexistent_statement_name).with_allowed_values(allowed_values);
+
+    // This should fail because the statement name doesn't exist in the federation
+    let receiver_id = ObjectID::random();
+    let result = client
+        .create_accreditation_to_attest(*federation_id.object_id(), receiver_id, vec![statement])
+        .build_and_execute(&client)
+        .await;
+
+    assert!(
+        result.is_err(),
+        "Expected failure when creating accreditation for nonexistent statement, but got success"
+    );
+
+    let error_msg = format!("{:?}", result.err().unwrap());
+    assert!(
+        error_msg.contains("7"), // EStatementNotInFederation
+        "Expected EStatementNotInFederation error, got: {error_msg}"
+    );
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_create_accreditation_succeeds_after_adding_statement() -> anyhow::Result<()> {
+    let client = get_funded_test_client().await?;
+
+    // Create a new federation
+    let federation_id = client
+        .create_new_federation()
+        .build_and_execute(&client)
+        .await?
+        .output
+        .id;
+
+    // First, add a statement to the federation
+    let statement_name = StatementName::from("test.role");
+    let mut allowed_values = HashSet::new();
+    allowed_values.insert(StatementValue::Text("admin".to_string()));
+    allowed_values.insert(StatementValue::Text("user".to_string()));
+
+    client
+        .add_statement(
+            *federation_id.object_id(),
+            statement_name.clone(),
+            allowed_values.clone(),
+            false,
+        )
+        .build_and_execute(&client)
+        .await?;
+
+    // Now create an accreditation for the statement we just added
+    let statement = Statement::new(statement_name).with_allowed_values(vec![StatementValue::Text("admin".to_string())]);
+
+    // This should succeed because the statement name exists in the federation
+    let receiver_id = ObjectID::random();
+    let result = client
+        .create_accreditation_to_accredit(*federation_id.object_id(), receiver_id, vec![statement])
+        .build_and_execute(&client)
+        .await;
+
+    assert!(
+        result.is_ok(),
+        "Failed to create accreditation for existing statement: {:?}",
+        result.err()
+    );
+
+    // Verify the accreditation was created
+    let federation: Federation = client.get_federation_by_id(*federation_id.object_id()).await?;
+    assert!(federation
+        .governance
+        .accreditations_to_accredit
+        .contains_key(&receiver_id));
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_create_accreditation_with_multiple_statements_partial_exist() -> anyhow::Result<()> {
+    let client = get_funded_test_client().await?;
+
+    // Create a new federation
+    let federation_id = client
+        .create_new_federation()
+        .build_and_execute(&client)
+        .await?
+        .output
+        .id;
+
+    // Add only one statement to the federation
+    let existing_statement_name = StatementName::from("existing.role");
+    let mut allowed_values = HashSet::new();
+    allowed_values.insert(StatementValue::Text("admin".to_string()));
+
+    client
+        .add_statement(
+            *federation_id.object_id(),
+            existing_statement_name.clone(),
+            allowed_values.clone(),
+            false,
+        )
+        .build_and_execute(&client)
+        .await?;
+
+    // Try to create an accreditation with both existing and non-existing statements
+    let existing_statement =
+        Statement::new(existing_statement_name).with_allowed_values(vec![StatementValue::Text("admin".to_string())]);
+
+    let nonexistent_statement_name = StatementName::from("nonexistent.certification");
+    let nonexistent_statement = Statement::new(nonexistent_statement_name)
+        .with_allowed_values(vec![StatementValue::Text("verified".to_string())]);
+
+    // This should fail because one of the statements doesn't exist in the federation
+    let receiver_id = ObjectID::random();
+    let result = client
+        .create_accreditation_to_attest(
+            *federation_id.object_id(),
+            receiver_id,
+            vec![existing_statement, nonexistent_statement],
+        )
+        .build_and_execute(&client)
+        .await;
+
+    assert!(
+        result.is_err(),
+        "Expected failure when creating accreditation with partially existing statements, but got success"
+    );
+
+    // Check that the error contains the expected error message
+    let error_msg = format!("{:?}", result.err().unwrap());
+    assert!(
+        error_msg.contains("7"), // EStatementNotInFederation
+        "Expected EStatementNotInFederation error, got: {error_msg}"
+    );
+
+    Ok(())
+}
