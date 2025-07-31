@@ -19,7 +19,7 @@ npm install @iota/iota-sdk
 You can install the latest alpha version of the library by running the following command:
 
 ```bash npm2yarn
-npm install @iota/trust-hierarchies@alpha
+npm install @iota/hierarchies@alpha
 ```
 
 ## Build the Library
