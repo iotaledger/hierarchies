@@ -5,8 +5,8 @@
 #[test_only]
 module hierarchies::utils_tests;
 
-use iota::{vec_map, vec_set};
 use hierarchies::utils;
+use iota::{vec_map, vec_set};
 
 #[test]
 fun test_vec_map_from_keys_values_works() {
