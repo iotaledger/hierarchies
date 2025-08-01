@@ -31,6 +31,11 @@ const ERootAuthorityNotFound: u64 = 8;
 const ECannotRevokeLastRootAuthority: u64 = 9;
 /// Error when using a revoked root authority capability
 const ERevokedRootAuthority: u64 = 10;
+/// Empty allowed values list without allow_any flag
+const EEmptyAllowedValuesWithoutAllowAny: u64 = 11;
+
+// ===== Constants =====
+const TIME_BUFFER_MS: u64 = 5000;
 
 // ===== Core Data Structures =====
 
@@ -233,6 +238,7 @@ public fun add_statement(
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
     assert!(!self.is_revoked_root_authority(&ctx.sender().to_id()), ERevokedRootAuthority);
     assert!(!(allow_any && allowed_values.keys().length() > 0), EInvalidStatementValueCondition);
+    assert!(allow_any || allowed_values.keys().length() > 0, EEmptyAllowedValuesWithoutAllowAny);
 
     let statement = statement::new_statement(
         statement_name,
@@ -269,7 +275,7 @@ public fun revoke_statement_at(
 ) {
     assert!(cap.federation_id == federation.federation_id(), EUnauthorizedWrongFederation);
     assert!(!federation.is_revoked_root_authority(&ctx.sender().to_id()), ERevokedRootAuthority);
-    assert!(valid_to_ms > clock.timestamp_ms(), ETimestampMustBeInTheFuture);
+    assert!(valid_to_ms > clock.timestamp_ms() + TIME_BUFFER_MS, ETimestampMustBeInTheFuture);
     let statement = federation.governance.statements.data_mut().get_mut(&statement_name);
     statement.revoke(valid_to_ms);
 }
@@ -299,7 +305,7 @@ public fun revoke_root_authority(
     self: &mut Federation,
     cap: &RootAuthorityCap,
     account_id: ID,
-    _ctx: &mut TxContext,
+    _: &mut TxContext,
 ) {
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
 

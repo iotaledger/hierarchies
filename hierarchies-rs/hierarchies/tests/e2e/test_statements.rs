@@ -224,9 +224,11 @@ async fn test_add_statement_with_empty_allowed_values_and_allow_any_false_fails(
         "Should fail with empty allowed values and allow_any=false"
     );
 
-    // Check that the error message contains expected content
     let error_msg = result.unwrap_err().to_string();
-    assert!(error_msg.contains("8"));
+    assert!(
+        error_msg.contains("11"),
+        "Expected error code 11 for EEmptyAllowedValuesWithoutAllowAny, got: {error_msg}"
+    );
 
     Ok(())
 }

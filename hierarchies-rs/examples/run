@@ -26,6 +26,8 @@ examples=(
     "05_revoke_accreditation_to_attest"
     "06_create_accreditation_to_accredit"
     "07_revoke_accreditation_to_accredit"
+    "08_revoke_root_authority"
+
 )
 
 for example in "${examples[@]}"; do
