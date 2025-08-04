@@ -89,14 +89,65 @@ public struct AccreditCap has key {
 
 // ===== Event Structures =====
 
-/// Generic event wrapper
-public struct Event<D> has copy, drop {
-    data: D,
-}
-
 /// Event emitted when a new federation is created
 public struct FederationCreatedEvent has copy, drop {
     federation_address: address,
+}
+
+/// Event emitted when a statement is added to the federation
+public struct StatementAddedEvent has copy, drop {
+    federation_address: address,
+    statement_name: StatementName,
+    allow_any: bool,
+}
+
+/// Event emitted when a statement is revoked
+public struct StatementRevokedEvent has copy, drop {
+    federation_address: address,
+    statement_name: StatementName,
+    valid_to_ms: u64,
+}
+
+/// Event emitted when a root authority is added
+public struct RootAuthorityAddedEvent has copy, drop {
+    federation_address: address,
+    account_id: ID,
+}
+
+/// Event emitted when a root authority is revoked
+public struct RootAuthorityRevokedEvent has copy, drop {
+    federation_address: address,
+    account_id: ID,
+}
+
+/// Event emitted when accreditation to accredit is created
+public struct AccreditationToAccreditCreatedEvent has copy, drop {
+    federation_address: address,
+    receiver: ID,
+    accreditor: ID,
+}
+
+/// Event emitted when accreditation to attest is created
+public struct AccreditationToAttestCreatedEvent has copy, drop {
+    federation_address: address,
+    receiver: ID,
+    accreditor: ID,
+}
+
+/// Event emitted when accreditation to attest is revoked
+public struct AccreditationToAttestRevokedEvent has copy, drop {
+    federation_address: address,
+    entity_id: ID,
+    permission_id: ID,
+    revoker: ID,
+}
+
+/// Event emitted when accreditation to accredit is revoked
+public struct AccreditationToAccreditRevokedEvent has copy, drop {
+    federation_address: address,
+    entity_id: ID,
+    permission_id: ID,
+    revoker: ID,
 }
 
 // ===== Constructor Functions =====
@@ -134,10 +185,8 @@ public fun new_federation(ctx: &mut TxContext) {
     let accredit_cap = new_cap_accredit(&federation, ctx);
 
     // Emit federation created event
-    event::emit(Event {
-        data: FederationCreatedEvent {
-            federation_address: federation.federation_id().to_address(),
-        },
+    event::emit(FederationCreatedEvent {
+        federation_address: federation.federation_id().to_address(),
     });
 
     // Transfer capabilities to creator
@@ -248,6 +297,13 @@ public fun add_statement(
     );
 
     self.governance.statements.add_statement(statement);
+
+    // Emit statement added event
+    event::emit(StatementAddedEvent {
+        federation_address: self.federation_id().to_address(),
+        statement_name,
+        allow_any,
+    });
 }
 
 /// Revokes a statement by setting its validity period
@@ -262,6 +318,13 @@ public fun revoke_statement(
     assert!(!federation.is_revoked_root_authority(&ctx.sender().to_id()), ERevokedRootAuthority);
     let statement = federation.governance.statements.data_mut().get_mut(&statement_name);
     statement.revoke(clock.timestamp_ms());
+
+    // Emit statement revoked event
+    event::emit(StatementRevokedEvent {
+        federation_address: federation.federation_id().to_address(),
+        statement_name,
+        valid_to_ms: clock.timestamp_ms(),
+    });
 }
 
 /// Revokes a statement by setting its validity period
@@ -278,6 +341,13 @@ public fun revoke_statement_at(
     assert!(valid_to_ms > clock.timestamp_ms() + TIME_BUFFER_MS, ETimestampMustBeInTheFuture);
     let statement = federation.governance.statements.data_mut().get_mut(&statement_name);
     statement.revoke(valid_to_ms);
+
+    // Emit statement revoked event
+    event::emit(StatementRevokedEvent {
+        federation_address: federation.federation_id().to_address(),
+        statement_name,
+        valid_to_ms,
+    });
 }
 
 /// Adds a new root authority to the federation.
@@ -296,6 +366,12 @@ public fun add_root_authority(
 
     let cap = new_root_authority_cap(self, ctx);
     transfer::transfer(cap, account_id.to_address());
+
+    // Emit root authority added event
+    event::emit(RootAuthorityAddedEvent {
+        federation_address: self.federation_id().to_address(),
+        account_id,
+    });
 }
 
 /// Revokes a root authority from the federation.
@@ -336,6 +412,12 @@ public fun revoke_root_authority(
     };
 
     assert!(found, ERootAuthorityNotFound);
+
+    // Emit root authority revoked event
+    event::emit(RootAuthorityRevokedEvent {
+        federation_address: self.federation_id().to_address(),
+        account_id,
+    });
 }
 
 /// Grants accreditation rights to another entity.
@@ -389,7 +471,12 @@ public fun create_accreditation_to_accredit(
 
         // Create and transfer capability
         transfer::transfer(self.new_cap_accredit(ctx), receiver.to_address());
-    }
+    };
+    event::emit(AccreditationToAccreditCreatedEvent {
+        federation_address: self.federation_id().to_address(),
+        receiver,
+        accreditor: ctx.sender().to_id(),
+    });
 }
 
 /// Grants attestation rights to another entity.
@@ -445,6 +532,13 @@ public fun create_accreditation_to_attest(
         // Create and transfer capability
         transfer::transfer(self.new_cap_attest(ctx), receiver.to_address());
     };
+
+    // Emit accreditation to attest created event
+    event::emit(AccreditationToAttestCreatedEvent {
+        federation_address: self.federation_id().to_address(),
+        receiver,
+        accreditor: ctx.sender().to_id(),
+    });
 }
 
 /// Revokes attestation rights from an entity
@@ -459,8 +553,8 @@ public fun revoke_accreditation_to_attest(
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
 
     let remover_accreditations = self.get_accreditations_to_attest(&ctx.sender().to_id());
-    let entitys_attest_permissions = self.get_accreditations_to_attest(entity_id);
-    let mut accreditation_to_revoke_idx = entitys_attest_permissions.find_accredited_statement_id(
+    let entities_attest_permissions = self.get_accreditations_to_attest(entity_id);
+    let mut accreditation_to_revoke_idx = entities_attest_permissions.find_accredited_statement_id(
         permission_id,
     );
     assert!(accreditation_to_revoke_idx.is_some(), EAccreditationNotFound);
@@ -468,7 +562,7 @@ public fun revoke_accreditation_to_attest(
     // Check revocation permissions
     if (!self.is_root_authority(&ctx.sender().to_id())) {
         let accreditation_to_revoke =
-            &entitys_attest_permissions.accredited_statements()[
+            &entities_attest_permissions.accredited_statements()[
                 accreditation_to_revoke_idx.extract(),
             ];
         let (_, statements) = (*accreditation_to_revoke.statements()).into_keys_values();
@@ -479,8 +573,16 @@ public fun revoke_accreditation_to_attest(
     };
 
     // Remove the permission
-    let entitys_attest_permissions = self.governance.accreditations_to_attest.get_mut(entity_id);
-    entitys_attest_permissions.remove_accredited_statement(permission_id);
+    let entities_attest_permissions = self.governance.accreditations_to_attest.get_mut(entity_id);
+    entities_attest_permissions.remove_accredited_statement(permission_id);
+
+    // Emit accreditation to attest revoked event
+    event::emit(AccreditationToAttestRevokedEvent {
+        federation_address: self.federation_id().to_address(),
+        entity_id: *entity_id,
+        permission_id: *permission_id,
+        revoker: ctx.sender().to_id(),
+    });
 }
 
 /// Revokes accreditation rights from an entity
@@ -494,8 +596,8 @@ public fun revoke_accreditation_to_accredit(
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
     let remover_permissions = self.get_accreditations_to_accredit(&ctx.sender().to_id());
 
-    let entitys_accredit_permissions = self.get_accreditations_to_accredit(entity_id);
-    let mut accreditation_to_revoke_idx = entitys_accredit_permissions.find_accredited_statement_id(
+    let entities_accredit_permissions = self.get_accreditations_to_accredit(entity_id);
+    let mut accreditation_to_revoke_idx = entities_accredit_permissions.find_accredited_statement_id(
         permission_id,
     );
     assert!(accreditation_to_revoke_idx.is_some(), EAccreditationNotFound);
@@ -503,7 +605,7 @@ public fun revoke_accreditation_to_accredit(
     // Check revocation permissions
     if (!self.is_root_authority(&ctx.sender().to_id())) {
         let accreditation_to_revoke =
-            &entitys_accredit_permissions.accredited_statements()[
+            &entities_accredit_permissions.accredited_statements()[
                 accreditation_to_revoke_idx.extract(),
             ];
         let current_time_ms = ctx.epoch_timestamp_ms();
@@ -515,11 +617,19 @@ public fun revoke_accreditation_to_accredit(
     };
 
     // Remove the permission
-    let entitys_accredit_permissions = self
+    let entities_accredit_permissions = self
         .governance
         .accreditations_to_accredit
         .get_mut(entity_id);
-    entitys_accredit_permissions.remove_accredited_statement(permission_id);
+    entities_accredit_permissions.remove_accredited_statement(permission_id);
+
+    // Emit accreditation to accredit revoked event
+    event::emit(AccreditationToAccreditRevokedEvent {
+        federation_address: self.federation_id().to_address(),
+        entity_id: *entity_id,
+        permission_id: *permission_id,
+        revoker: ctx.sender().to_id(),
+    });
 }
 
 // ===== Validation Functions =====

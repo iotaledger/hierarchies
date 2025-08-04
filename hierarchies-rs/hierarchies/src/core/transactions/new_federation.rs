@@ -24,7 +24,8 @@ use tokio::sync::OnceCell;
 
 use crate::core::operations::{HierarchiesImpl, HierarchiesOperations};
 use crate::core::transactions::TransactionError;
-use crate::core::types::{Event, Federation, FederationCreatedEvent};
+use crate::core::types::events::FederationCreatedEvent;
+use crate::core::types::Federation;
 
 /// A transaction that creates a new federation.
 #[derive(Debug, Clone)]
@@ -92,16 +93,16 @@ impl Transaction for CreateFederation {
             .parsed_json
             .clone();
 
-        let event: Event<FederationCreatedEvent> =
+        let event: FederationCreatedEvent =
             serde_json::from_value(events).map_err(|_e| TransactionError::EventProcessingFailed {
                 event_type: "FederationCreatedEvent".to_string(),
             })?;
 
-        let federation_id = event.data.federation_address;
+        let federation_address = event.federation_address;
 
         let federation =
             client
-                .get_object_by_id(federation_id)
+                .get_object_by_id(federation_address)
                 .await
                 .map_err(|e| TransactionError::ExecutionFailed {
                     reason: format!("Failed to retrieve federation object: {e}"),

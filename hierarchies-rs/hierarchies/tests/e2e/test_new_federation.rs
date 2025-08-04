@@ -1,7 +1,8 @@
 // Copyright 2020-2025 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use hierarchies::core::types::{Event, Federation, FederationCreatedEvent};
+use hierarchies::core::types::events::FederationCreatedEvent;
+use hierarchies::core::types::Federation;
 use iota_interaction::types::base_types::ObjectID;
 use product_common::core_client::CoreClient;
 
@@ -34,9 +35,9 @@ async fn test_creation_of_federation() -> anyhow::Result<()> {
     let events = tx_response.events.unwrap();
     let event = events.data.first().unwrap();
 
-    let event: Event<FederationCreatedEvent> = bcs::from_bytes(event.bcs.bytes()).unwrap();
+    let event: FederationCreatedEvent = bcs::from_bytes(event.bcs.bytes()).unwrap();
 
-    assert_eq!(event.data.federation_address, *federation.id.object_id());
+    assert_eq!(event.federation_address, *federation.id.object_id());
 
     Ok(())
 }

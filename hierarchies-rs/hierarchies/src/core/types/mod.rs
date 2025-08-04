@@ -5,7 +5,7 @@
 
 mod accreditation;
 mod cap;
-mod event;
+pub mod events;
 pub mod statements;
 pub mod timespan;
 
@@ -13,7 +13,6 @@ use std::collections::HashMap;
 
 pub use accreditation::*;
 pub use cap::*;
-pub use event::*;
 use iota_interaction::types::base_types::ObjectID;
 use iota_interaction::types::id::UID;
 use serde::{Deserialize, Serialize};
