@@ -170,6 +170,23 @@ impl WasmHierarchiesClientReadOnly {
         Ok(federation.into())
     }
 
+    /// Check if root authority is in the federation.
+
+    /// # Arguments
+    ///
+    /// * `federation_id`: The [`ObjectID`] of the federation.
+    /// * `user_id`: The [`ObjectID`] of the user.
+    ///
+    /// # Returns
+    /// A `Result` containing a boolean indicating if the user is a root authority or an [`Error`].
+    #[wasm_bindgen(js_name = isRootAuthority)]
+    pub async fn is_root_authority(&self, federation_id: WasmObjectID, user_id: WasmObjectID) -> Result<bool> {
+        let federation_id = parse_wasm_object_id(&federation_id)?;
+        let user_id = parse_wasm_object_id(&user_id)?;
+        let is_root_authority = self.0.is_root_authority(federation_id, user_id).await.map_err(wasm_error)?;
+        Ok(is_root_authority)
+    }
+
     /// Retrieves all statement names registered in the federation.
     ///
     /// # Arguments

@@ -1,11 +1,11 @@
 module hierarchies::statement;
 
-use iota::{vec_map::{Self, VecMap}, vec_set::VecSet};
 use hierarchies::{
     statement_condition::StatementValueCondition,
     statement_name::StatementName,
     statement_value::StatementValue
 };
+use iota::{vec_map::{Self, VecMap}, vec_set::VecSet};
 
 // Statements is a struct that contains a map of StatementName to Statement
 public struct Statements has store {

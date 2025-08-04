@@ -1,11 +1,11 @@
 module hierarchies::statement_tests;
 
-use iota::{vec_map, vec_set};
 use hierarchies::{
     statement::{Self, Statement},
     statement_name::{Self, StatementName},
     statement_value::{Self, StatementValue}
 };
+use iota::{vec_map, vec_set};
 use std::string;
 
 // ======= Helper Functions =======

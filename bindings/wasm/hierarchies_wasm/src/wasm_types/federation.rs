@@ -51,6 +51,19 @@ impl WasmFederation {
     pub fn root_authorities(&self) -> Vec<WasmRootAuthority> {
         self.0.root_authorities.iter().map(|ra| ra.clone().into()).collect()
     }
+
+    /// Retrieves the revoked root authorities of the federation.
+    ///
+    /// # Returns
+    /// An array of revoked root authorities.
+    #[wasm_bindgen(getter, js_name = revokedRootAuthorities)]
+    pub fn revoked_root_authorities(&self) -> Vec<WasmObjectID> {
+        self.0
+            .revoked_root_authorities
+            .iter()
+            .map(|ra| ra.to_string())
+            .collect()
+    }
 }
 
 /// Represents the governance of a federation

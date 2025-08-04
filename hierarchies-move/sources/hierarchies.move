@@ -2,13 +2,13 @@
 /// trust and attestation rights to other entities within a federation.
 module hierarchies::main;
 
-use iota::{clock::Clock, event, vec_map::{Self, VecMap}, vec_set::VecSet};
 use hierarchies::{
     accreditation::{Self, Accreditations},
     statement::{Self, Statements, Statement},
     statement_name::StatementName,
     statement_value::StatementValue
 };
+use iota::{clock::Clock, event, vec_map::{Self, VecMap}, vec_set::VecSet};
 
 // ===== Errors =====
 /// Error when operation is performed with wrong federation
@@ -25,6 +25,17 @@ const EAccreditationNotFound: u64 = 5;
 const ETimestampMustBeInTheFuture: u64 = 6;
 /// Error when trying to create accreditation for statement not in federation
 const EStatementNotInFederation: u64 = 7;
+/// Error when trying to revoke non-existent root authority
+const ERootAuthorityNotFound: u64 = 8;
+/// Error when trying to revoke the last root authority
+const ECannotRevokeLastRootAuthority: u64 = 9;
+/// Error when using a revoked root authority capability
+const ERevokedRootAuthority: u64 = 10;
+/// Empty allowed values list without allow_any flag
+const EEmptyAllowedValuesWithoutAllowAny: u64 = 11;
+
+// ===== Constants =====
+const TIME_BUFFER_MS: u64 = 5000;
 
 // ===== Core Data Structures =====
 
@@ -34,6 +45,7 @@ public struct Federation has key, store {
     id: UID,
     governance: Governance,
     root_authorities: vector<RootAuthority>,
+    revoked_root_authorities: vector<ID>,
 }
 
 /// Root authority with the highest trust level in the system.
@@ -96,6 +108,7 @@ public fun new_federation(ctx: &mut TxContext) {
     let mut federation = Federation {
         id: federation_id,
         root_authorities: vector::empty(),
+        revoked_root_authorities: vector::empty(),
         governance: Governance {
             id: object::new(ctx),
             statements: statement::new_statements(),
@@ -220,10 +233,12 @@ public fun add_statement(
     statement_name: StatementName,
     allowed_values: VecSet<StatementValue>,
     allow_any: bool,
-    _ctx: &mut TxContext,
+    ctx: &mut TxContext,
 ) {
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
+    assert!(!self.is_revoked_root_authority(&ctx.sender().to_id()), ERevokedRootAuthority);
     assert!(!(allow_any && allowed_values.keys().length() > 0), EInvalidStatementValueCondition);
+    assert!(allow_any || allowed_values.keys().length() > 0, EEmptyAllowedValuesWithoutAllowAny);
 
     let statement = statement::new_statement(
         statement_name,
@@ -241,9 +256,10 @@ public fun revoke_statement(
     cap: &RootAuthorityCap,
     statement_name: StatementName,
     clock: &Clock,
-    _: &mut TxContext,
+    ctx: &mut TxContext,
 ) {
     assert!(cap.federation_id == federation.federation_id(), EUnauthorizedWrongFederation);
+    assert!(!federation.is_revoked_root_authority(&ctx.sender().to_id()), ERevokedRootAuthority);
     let statement = federation.governance.statements.data_mut().get_mut(&statement_name);
     statement.revoke(clock.timestamp_ms());
 }
@@ -255,10 +271,11 @@ public fun revoke_statement_at(
     statement_name: StatementName,
     valid_to_ms: u64,
     clock: &Clock,
-    _: &mut TxContext,
+    ctx: &mut TxContext,
 ) {
     assert!(cap.federation_id == federation.federation_id(), EUnauthorizedWrongFederation);
-    assert!(valid_to_ms > clock.timestamp_ms(), ETimestampMustBeInTheFuture);
+    assert!(!federation.is_revoked_root_authority(&ctx.sender().to_id()), ERevokedRootAuthority);
+    assert!(valid_to_ms > clock.timestamp_ms() + TIME_BUFFER_MS, ETimestampMustBeInTheFuture);
     let statement = federation.governance.statements.data_mut().get_mut(&statement_name);
     statement.revoke(valid_to_ms);
 }
@@ -271,15 +288,54 @@ public fun add_root_authority(
     account_id: ID,
     ctx: &mut TxContext,
 ) {
-    if (cap.federation_id != self.federation_id()) {
-        abort EUnauthorizedWrongFederation
-    };
+    assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
+    assert!(!self.is_revoked_root_authority(&ctx.sender().to_id()), ERevokedRootAuthority);
 
     let root_authority = new_root_authority(account_id, ctx);
     vector::push_back(&mut self.root_authorities, root_authority);
 
     let cap = new_root_authority_cap(self, ctx);
     transfer::transfer(cap, account_id.to_address());
+}
+
+/// Revokes a root authority from the federation.
+/// Only root authorities can perform this operation.
+/// Cannot revoke the last root authority to prevent lockout.
+public fun revoke_root_authority(
+    self: &mut Federation,
+    cap: &RootAuthorityCap,
+    account_id: ID,
+    _: &mut TxContext,
+) {
+    assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
+
+    // Check if the root authority is in the federation
+    assert!(self.is_root_authority(&account_id), ERootAuthorityNotFound);
+
+    // Ensure we're not revoking the last root authority
+    assert!(self.root_authorities.length() > 1, ECannotRevokeLastRootAuthority);
+
+    // Find and revoke the root authority
+    let mut idx = 0;
+    let mut found = false;
+    while (idx < self.root_authorities.length()) {
+        if (self.root_authorities[idx].account_id == account_id) {
+            let RootAuthority { id, account_id: removed_id } = vector::remove(
+                &mut self.root_authorities,
+                idx,
+            );
+            object::delete(id);
+
+            // Add to revocation list
+            vector::push_back(&mut self.revoked_root_authorities, removed_id);
+
+            found = true;
+            break
+        };
+        idx = idx + 1;
+    };
+
+    assert!(found, ERootAuthorityNotFound);
 }
 
 /// Grants accreditation rights to another entity.
@@ -523,11 +579,13 @@ public fun validate_statements(
     true
 }
 
-// ===== Helper Functions =====
-
 /// Checks if an entity is a root authority in the federation
-fun is_root_authority(self: &Federation, id: &ID): bool {
+public fun is_root_authority(self: &Federation, id: &ID): bool {
     let mut idx = 0;
+    if (self.is_revoked_root_authority(id)) {
+        return false
+    };
+
     while (idx < self.root_authorities.length()) {
         if (self.root_authorities[idx].account_id == *id) {
             return true
@@ -535,4 +593,9 @@ fun is_root_authority(self: &Federation, id: &ID): bool {
         idx = idx + 1;
     };
     false
+}
+
+/// Checks if an entity is a revoked root authority
+fun is_revoked_root_authority(self: &Federation, id: &ID): bool {
+    vector::contains(&self.revoked_root_authorities, id)
 }

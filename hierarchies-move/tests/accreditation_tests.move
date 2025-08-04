@@ -1,13 +1,13 @@
 #[test_only]
 module hierarchies::accreditation_tests;
 
-use iota::{test_scenario::{Self, Scenario}, vec_map, vec_set};
 use hierarchies::{
     accreditation::{Self, Accreditation},
     statement::{Self, Statement},
     statement_name,
     statement_value
 };
+use iota::{test_scenario::{Self, Scenario}, vec_map, vec_set};
 use std::string;
 
 fun create_test_statement_simple(name: vector<u8>, value: vector<u8>): Statement {

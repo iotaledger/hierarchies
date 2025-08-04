@@ -1,12 +1,12 @@
 module hierarchies::accreditation;
 
-use iota::vec_map::VecMap;
 use hierarchies::{
     statement::{Self, Statement},
     statement_name::StatementName,
     statement_value::StatementValue,
     utils
 };
+use iota::vec_map::VecMap;
 use std::string::String;
 
 public struct Accreditations has store {
