@@ -16,7 +16,6 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Capability {
     RootAuthority,
-    Attest,
     Accredit,
 }
 
@@ -24,7 +23,6 @@ impl Display for Capability {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Capability::RootAuthority => write!(f, "RootAuthorityCap"),
-            Capability::Attest => write!(f, "AttestCap"),
             Capability::Accredit => write!(f, "AccreditCap"),
         }
     }

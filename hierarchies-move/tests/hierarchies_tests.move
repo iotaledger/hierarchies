@@ -7,7 +7,6 @@ use hierarchies::{
         RootAuthorityCap,
         Federation,
         AccreditCap,
-        AttestCap,
         add_statement,
         revoke_accreditation_to_attest,
         revoke_accreditation_to_accredit,
@@ -165,7 +164,7 @@ fun test_create_attestation() {
 
     let mut fed: Federation = scenario.take_shared();
     let cap: RootAuthorityCap = scenario.take_from_address(alice);
-    let attest_cap: AttestCap = scenario.take_from_address(alice);
+    let accredit_cap: AccreditCap = scenario.take_from_address(alice);
     // Add a Statement
 
     scenario.next_tx(alice);
@@ -175,7 +174,7 @@ fun test_create_attestation() {
 
     // Issue permission to accredit
     let statements = vector::empty();
-    fed.create_accreditation_to_attest(&attest_cap, bob, statements, scenario.ctx());
+    fed.create_accreditation_to_attest(&accredit_cap, bob, statements, scenario.ctx());
     scenario.next_tx(alice);
 
     // Check if the permission was issued
@@ -183,7 +182,7 @@ fun test_create_attestation() {
 
     // Return the cap to the alice
     test_scenario::return_to_address(alice, cap);
-    test_scenario::return_to_address(alice, attest_cap);
+    test_scenario::return_to_address(alice, accredit_cap);
     test_scenario::return_shared(fed);
 
     new_id.delete();
@@ -203,7 +202,6 @@ fun test_revoke_accreditation_to_attest_and_accredit() {
     let mut fed: Federation = scenario.take_shared();
     let cap: RootAuthorityCap = scenario.take_from_address(alice);
     let accredit_cap: AccreditCap = scenario.take_from_address(alice);
-    let attest_cap: AttestCap = scenario.take_from_address(alice);
 
     scenario.next_tx(alice);
 
@@ -216,7 +214,7 @@ fun test_revoke_accreditation_to_attest_and_accredit() {
     scenario.next_tx(alice);
 
     // Issue permission to attest
-    fed.create_accreditation_to_attest(&attest_cap, bob, statements, scenario.ctx());
+    fed.create_accreditation_to_attest(&accredit_cap, bob, statements, scenario.ctx());
     scenario.next_tx(alice);
 
     // Revoke permission to attest
@@ -225,7 +223,7 @@ fun test_revoke_accreditation_to_attest_and_accredit() {
         .accredited_statements()[0]
         .id()
         .uid_to_inner();
-    fed.revoke_accreditation_to_attest(&attest_cap, &bob, &permission_id, scenario.ctx());
+    fed.revoke_accreditation_to_attest(&accredit_cap, &bob, &permission_id, scenario.ctx());
     scenario.next_tx(alice);
 
     // Revoke permission to accredit
@@ -246,7 +244,6 @@ fun test_revoke_accreditation_to_attest_and_accredit() {
     // Return the cap to the alice
     test_scenario::return_to_address(alice, cap);
     test_scenario::return_to_address(alice, accredit_cap);
-    test_scenario::return_to_address(alice, attest_cap);
     test_scenario::return_shared(fed);
 
     new_id.delete();
@@ -308,7 +305,7 @@ fun test_create_accreditation_to_attest_fails_for_nonexistent_statement() {
 
     let mut fed: Federation = scenario.take_shared();
     let cap: RootAuthorityCap = scenario.take_from_address(alice);
-    let attest_cap: AttestCap = scenario.take_from_address(alice);
+    let accredit_cap: AccreditCap = scenario.take_from_address(alice);
 
     scenario.next_tx(alice);
 
@@ -328,11 +325,11 @@ fun test_create_accreditation_to_attest_fails_for_nonexistent_statement() {
     let statements = vector[nonexistent_statement];
 
     // This should fail because the statement name doesn't exist in the federation
-    fed.create_accreditation_to_attest(&attest_cap, bob, statements, scenario.ctx());
+    fed.create_accreditation_to_attest(&accredit_cap, bob, statements, scenario.ctx());
 
     // Cleanup - this won't be reached due to expected failure
     test_scenario::return_to_address(alice, cap);
-    test_scenario::return_to_address(alice, attest_cap);
+    test_scenario::return_to_address(alice, accredit_cap);
     test_scenario::return_shared(fed);
     new_id.delete();
     let _ = scenario.end();
@@ -399,7 +396,7 @@ fun test_create_accreditation_to_attest_succeeds_for_existing_statement() {
 
     let mut fed: Federation = scenario.take_shared();
     let cap: RootAuthorityCap = scenario.take_from_address(alice);
-    let attest_cap: AttestCap = scenario.take_from_address(alice);
+    let accredit_cap: AccreditCap = scenario.take_from_address(alice);
 
     // First add a statement to the federation
     let statement_name = new_statement_name(utf8(b"role"));
@@ -424,7 +421,7 @@ fun test_create_accreditation_to_attest_succeeds_for_existing_statement() {
     let statements = vector[statement_for_accreditation];
 
     // This should succeed because the statement name exists in the federation
-    fed.create_accreditation_to_attest(&attest_cap, bob, statements, scenario.ctx());
+    fed.create_accreditation_to_attest(&accredit_cap, bob, statements, scenario.ctx());
     scenario.next_tx(alice);
 
     // Verify the accreditation was created
@@ -432,7 +429,7 @@ fun test_create_accreditation_to_attest_succeeds_for_existing_statement() {
 
     // Cleanup
     test_scenario::return_to_address(alice, cap);
-    test_scenario::return_to_address(alice, attest_cap);
+    test_scenario::return_to_address(alice, accredit_cap);
     test_scenario::return_shared(fed);
     new_id.delete();
     let _ = scenario.end();

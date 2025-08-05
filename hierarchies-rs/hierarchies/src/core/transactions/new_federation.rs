@@ -10,8 +10,8 @@
 //! ## Overview
 //!
 //! The `CreateFederation` transaction creates a new shared federation object on the
-//! IOTA network and grants the transaction sender all three initial capability types:
-//! `RootAuthorityCap`, `AccreditCap`, and `AttestCap`. This establishes the sender
+//! IOTA network and grants the transaction sender two initial capability types:
+//! `RootAuthorityCap` and `AccreditCap`. This establishes the sender
 //! as the federation's root authority with full control over the trust hierarchy.
 
 use async_trait::async_trait;
