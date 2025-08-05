@@ -12,8 +12,22 @@ use crate::utils::deserialize_vec_map;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Accreditations {
-    // TODO change to accreditations
-    pub statements: Vec<Accreditation>,
+    pub accreditations: Vec<Accreditation>,
+}
+
+impl Accreditations {
+    pub fn new(accreditations: Vec<Accreditation>) -> Self {
+        Self { accreditations }
+    }
+    pub fn iter(&self) -> std::slice::Iter<'_, Accreditation> {
+        self.accreditations.iter()
+    }
+    pub fn len(&self) -> usize {
+        self.accreditations.len()
+    }
+    pub fn is_empty(&self) -> bool {
+        self.accreditations.is_empty()
+    }
 }
 
 /// Represents a statement that can be granted to an account. A statement
