@@ -1,14 +1,14 @@
 #[test_only]
 module hierarchies::accreditation_tests;
 
-use iota::{test_scenario::{Self, Scenario}, vec_map, vec_set::{Self, VecSet}};
 use hierarchies::{
     accreditation::{Self, Accreditation},
     statement::{Self, Statement},
+    statement_condition,
     statement_name,
-    statement_value::{Self, StatementValue},
-    statement_condition
+    statement_value::{Self, StatementValue}
 };
+use iota::{test_scenario::{Self, Scenario}, vec_map, vec_set::{Self, VecSet}};
 use std::string;
 
 fun create_test_statement_simple(name: vector<u8>, value: vector<u8>): Statement {
@@ -126,7 +126,7 @@ fun test_are_statements_allowed_some_fail() {
     let mut statements = vec_map::empty();
     vec_map::insert(
         &mut statements,
-       statement_name::new_statement_name(string::utf8(b"role")),
+        statement_name::new_statement_name(string::utf8(b"role")),
         statement_value::new_statement_value_string(string::utf8(b"user")), // Not allowed
     );
 
@@ -276,7 +276,10 @@ fun test_remove_accredited_statement_not_found() {
 
 // ===== Tests for is_statement_compliant function =====
 
-fun create_test_statement_with_multiple_values(name: vector<u8>, values: vector<vector<u8>>): Statement {
+fun create_test_statement_with_multiple_values(
+    name: vector<u8>,
+    values: vector<vector<u8>>,
+): Statement {
     let statement_name = statement_name::new_statement_name(string::utf8(name));
     let mut value_set = vec_set::empty();
     let mut idx = 0;
@@ -290,7 +293,10 @@ fun create_test_statement_with_multiple_values(name: vector<u8>, values: vector<
     statement::new_statement(statement_name, value_set, false, option::none())
 }
 
-fun create_test_statement_with_condition(name: vector<u8>, condition: statement_condition::StatementValueCondition): Statement {
+fun create_test_statement_with_condition(
+    name: vector<u8>,
+    condition: statement_condition::StatementValueCondition,
+): Statement {
     let statement_name = statement_name::new_statement_name(string::utf8(name));
     let value_set: VecSet<StatementValue> = vec_set::empty();
     statement::new_statement(statement_name, value_set, false, option::some(condition))
@@ -301,13 +307,19 @@ fun test_is_statement_compliant_multiple_values_all_covered() {
     let mut scenario = test_scenario::begin(@0x1);
 
     // Create accreditation with multiple values
-    let stmt = create_test_statement_with_multiple_values(b"role", vector[b"admin", b"user", b"guest"]);
+    let stmt = create_test_statement_with_multiple_values(
+        b"role",
+        vector[b"admin", b"user", b"guest"],
+    );
     let accreditation = accreditation::new_accreditation(vector[stmt], scenario.ctx());
     let mut accreditations = accreditation::new_empty_accreditations();
     accreditation::add_accreditation(&mut accreditations, accreditation);
 
     // Create a statement that requires all values
-    let test_statement = create_test_statement_with_multiple_values(b"role", vector[b"admin", b"user", b"guest"]);
+    let test_statement = create_test_statement_with_multiple_values(
+        b"role",
+        vector[b"admin", b"user", b"guest"],
+    );
 
     assert!(accreditation::is_statement_compliant(&accreditations, &test_statement, 1000), 0);
     accreditation::destroy_accreditations(accreditations);
@@ -325,7 +337,10 @@ fun test_is_statement_compliant_multiple_values_partial_covered() {
     accreditation::add_accreditation(&mut accreditations, accreditation);
 
     // Create a statement that requires more values than available
-    let test_statement = create_test_statement_with_multiple_values(b"role", vector[b"admin", b"user", b"guest"]);
+    let test_statement = create_test_statement_with_multiple_values(
+        b"role",
+        vector[b"admin", b"user", b"guest"],
+    );
 
     assert!(!accreditation::is_statement_compliant(&accreditations, &test_statement, 1000), 0);
     accreditation::destroy_accreditations(accreditations);
@@ -337,13 +352,19 @@ fun test_is_statement_compliant_multiple_values_subset_covered() {
     let mut scenario = test_scenario::begin(@0x1);
 
     // Create accreditation with multiple values
-    let stmt = create_test_statement_with_multiple_values(b"role", vector[b"admin", b"user", b"guest"]);
+    let stmt = create_test_statement_with_multiple_values(
+        b"role",
+        vector[b"admin", b"user", b"guest"],
+    );
     let accreditation = accreditation::new_accreditation(vector[stmt], scenario.ctx());
     let mut accreditations = accreditation::new_empty_accreditations();
     accreditation::add_accreditation(&mut accreditations, accreditation);
 
     // Create a statement that requires only a subset
-    let test_statement = create_test_statement_with_multiple_values(b"role", vector[b"admin", b"user"]);
+    let test_statement = create_test_statement_with_multiple_values(
+        b"role",
+        vector[b"admin", b"user"],
+    );
 
     assert!(accreditation::is_statement_compliant(&accreditations, &test_statement, 1000), 0);
     accreditation::destroy_accreditations(accreditations);
@@ -388,10 +409,6 @@ fun test_is_statement_compliant_with_condition_no_match() {
     scenario.end();
 }
 
-
-
-
-
 #[test]
 fun test_is_statement_compliant_empty_statement_values() {
     let (scenario, accreditation) = test_accreditation_creation();
@@ -401,7 +418,12 @@ fun test_is_statement_compliant_empty_statement_values() {
     // Create a statement with no values
     let statement_name = statement_name::new_statement_name(string::utf8(b"role"));
     let empty_value_set = vec_set::empty();
-    let test_statement = statement::new_statement(statement_name, empty_value_set, false, option::none());
+    let test_statement = statement::new_statement(
+        statement_name,
+        empty_value_set,
+        false,
+        option::none(),
+    );
 
     assert!(accreditation::is_statement_compliant(&accreditations, &test_statement, 1000), 0);
     accreditation::destroy_accreditations(accreditations);
@@ -415,7 +437,10 @@ fun test_is_statement_compliant_name_matching_fix() {
     // Create accreditation with hierarchical name "role.admin"
     let role_admin_name = statement_name::new_statement_name(string::utf8(b"role.admin"));
     let mut value_set = vec_set::empty();
-    vec_set::insert(&mut value_set, statement_value::new_statement_value_string(string::utf8(b"superuser")));
+    vec_set::insert(
+        &mut value_set,
+        statement_value::new_statement_value_string(string::utf8(b"superuser")),
+    );
     let stmt = statement::new_statement(role_admin_name, value_set, false, option::none());
     let accreditation = accreditation::new_accreditation(vector[stmt], scenario.ctx());
     let mut accreditations = accreditation::new_empty_accreditations();
@@ -436,7 +461,10 @@ fun test_is_statement_compliant_name_matching_success() {
     // Create accreditation with hierarchical name "role.admin"
     let role_admin_name = statement_name::new_statement_name(string::utf8(b"role.admin"));
     let mut value_set = vec_set::empty();
-    vec_set::insert(&mut value_set, statement_value::new_statement_value_string(string::utf8(b"superuser")));
+    vec_set::insert(
+        &mut value_set,
+        statement_value::new_statement_value_string(string::utf8(b"superuser")),
+    );
     let stmt = statement::new_statement(role_admin_name, value_set, false, option::none());
     let accreditation = accreditation::new_accreditation(vector[stmt], scenario.ctx());
     let mut accreditations = accreditation::new_empty_accreditations();

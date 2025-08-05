@@ -75,7 +75,6 @@ public struct RootAuthorityCap has key {
     federation_id: ID,
 }
 
-
 /// Capability for accreditation operations
 public struct AccreditCap has key {
     id: UID,
@@ -214,7 +213,6 @@ fun new_cap_accredit(self: &Federation, ctx: &mut TxContext): AccreditCap {
         federation_id: self.federation_id(),
     }
 }
-
 
 // ===== Read Functions =====
 
