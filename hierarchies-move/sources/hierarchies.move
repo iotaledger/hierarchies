@@ -512,8 +512,6 @@ public fun create_accreditation_to_attest(
         let mut accreditations_to_attest = accreditation::new_empty_accreditations();
         accreditations_to_attest.add_accreditation(accredited_statement);
         self.governance.accreditations_to_attest.insert(receiver, accreditations_to_attest);
-
-        // Note: Attesters don't need a capability since they only use public validation functions
     };
 
     // Emit accreditation to attest created event
