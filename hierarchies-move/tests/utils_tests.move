@@ -161,8 +161,6 @@ fun test_create_vec_set_no_duplicates() {
     assert!(vec_set::contains(&set, &3), 3);
 }
 
-
-
 // ===== Tests for contains_one_of function bug fix =====
 
 #[test]

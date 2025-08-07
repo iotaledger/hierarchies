@@ -60,8 +60,6 @@ fun test_ends_with_no_match() {
     assert!(!statement_condition::condition_matches(&condition, &value), 0);
 }
 
-
-
 #[test]
 fun test_contains_match() {
     let condition = statement_condition::new_condition_contains(string::utf8(b"lo wo"));
@@ -141,5 +139,3 @@ fun test_contains_empty_string() {
 
     assert!(statement_condition::condition_matches(&condition, &value), 0);
 }
-
-

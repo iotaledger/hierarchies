@@ -218,8 +218,8 @@ pub(crate) trait HierarchiesOperations {
     /// Creates a new federation with the caller as the initial root authority.
     ///
     /// The federation is a shared object that manages trust hierarchies.
-    /// The creator receives all three capability types: `RootAuthorityCap`,
-    /// `AccreditCap`, and `AttestCap`, granting full control over the federation.
+    /// The creator receives two capability types: `RootAuthorityCap`
+    /// and `AccreditCap`, granting full control over the federation.
     ///
     /// [`ProgrammableTransaction`] A transaction that when executed creates a
     /// new federation and grants
@@ -315,7 +315,7 @@ pub(crate) trait HierarchiesOperations {
     {
         let mut ptb = ProgrammableTransactionBuilder::new();
 
-        let cap = HierarchiesImpl::get_cap(client, Capability::Attest, owner).await?;
+        let cap = HierarchiesImpl::get_cap(client, Capability::Accredit, owner).await?;
 
         let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
 
@@ -432,7 +432,7 @@ pub(crate) trait HierarchiesOperations {
     ///
     /// # Errors
     ///
-    /// Returns an error if the owner doesn't have `AttestCap`.
+    /// Returns an error if the owner doesn't have `AccreditCap`.
     async fn create_accreditation_to_attest<C>(
         federation_id: ObjectID,
         receiver: ObjectID,
@@ -445,7 +445,7 @@ pub(crate) trait HierarchiesOperations {
     {
         let mut ptb = ProgrammableTransactionBuilder::new();
 
-        let cap = HierarchiesImpl::get_cap(client, Capability::Attest, owner).await?;
+        let cap = HierarchiesImpl::get_cap(client, Capability::Accredit, owner).await?;
 
         let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
 

@@ -75,12 +75,6 @@ public struct RootAuthorityCap has key {
     federation_id: ID,
 }
 
-/// Capability for attestation operations
-public struct AttestCap has key {
-    id: UID,
-    federation_id: ID,
-}
-
 /// Capability for accreditation operations
 public struct AccreditCap has key {
     id: UID,
@@ -181,7 +175,6 @@ public fun new_federation(ctx: &mut TxContext) {
     federation.governance.accreditations_to_attest.insert(ctx.sender().to_id(), permission);
 
     // Create and transfer capabilities
-    let attest_cap = new_cap_attest(&federation, ctx);
     let accredit_cap = new_cap_accredit(&federation, ctx);
 
     // Emit federation created event
@@ -192,7 +185,6 @@ public fun new_federation(ctx: &mut TxContext) {
     // Transfer capabilities to creator
     transfer::transfer(root_auth_cap, ctx.sender());
     transfer::transfer(accredit_cap, ctx.sender());
-    transfer::transfer(attest_cap, ctx.sender());
 
     // Share the federation object
     transfer::share_object(federation)
@@ -217,14 +209,6 @@ fun new_root_authority_cap(self: &Federation, ctx: &mut TxContext): RootAuthorit
 /// Creates a new accreditation capability
 fun new_cap_accredit(self: &Federation, ctx: &mut TxContext): AccreditCap {
     AccreditCap {
-        id: object::new(ctx),
-        federation_id: self.federation_id(),
-    }
-}
-
-/// Creates a new attestation capability
-fun new_cap_attest(self: &Federation, ctx: &mut TxContext): AttestCap {
-    AttestCap {
         id: object::new(ctx),
         federation_id: self.federation_id(),
     }
@@ -483,7 +467,7 @@ public fun create_accreditation_to_accredit(
 /// Allows the receiver to create trusted attestations.
 public fun create_accreditation_to_attest(
     self: &mut Federation,
-    cap: &AttestCap,
+    cap: &AccreditCap,
     receiver: ID,
     wanted_statements: vector<Statement>,
     ctx: &mut TxContext,
@@ -528,9 +512,6 @@ public fun create_accreditation_to_attest(
         let mut accreditations_to_attest = accreditation::new_empty_accreditations();
         accreditations_to_attest.add_accreditation(accredited_statement);
         self.governance.accreditations_to_attest.insert(receiver, accreditations_to_attest);
-
-        // Create and transfer capability
-        transfer::transfer(self.new_cap_attest(ctx), receiver.to_address());
     };
 
     // Emit accreditation to attest created event
@@ -544,7 +525,7 @@ public fun create_accreditation_to_attest(
 /// Revokes attestation rights from an entity
 public fun revoke_accreditation_to_attest(
     self: &mut Federation,
-    cap: &AttestCap,
+    cap: &AccreditCap,
     entity_id: &ID,
     permission_id: &ID,
     ctx: &mut TxContext,
