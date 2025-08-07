@@ -10,8 +10,6 @@ authors = [
 ]
 
 [dependencies]
-MoveStdlib = { git = "https://github.com/iotaledger/iota.git", subdir = "crates/iota-framework/packages/move-stdlib", rev = "v0.1.4" }
-Iota = { git = "https://github.com/iotaledger/iota.git", subdir = "crates/iota-framework/packages/iota-framework", rev = "v0.1.4" }
 
 [addresses]
 ith = "0x0"
