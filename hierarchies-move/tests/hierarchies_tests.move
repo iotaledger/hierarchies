@@ -722,3 +722,30 @@ fun test_add_statement_with_allowed_values_and_allow_any_false() {
     test_scenario::return_shared(fed);
     let _ = scenario.end();
 }
+
+#[test]
+#[expected_failure(abort_code = hierarchies::main::EAlreadyRootAuthority)]
+fun test_add_already_existing_root_authority() {
+    let alice = @0x1;
+    let bob = @0x2;
+
+    let mut scenario = test_scenario::begin(alice);
+
+    // Create a new federation
+    new_federation(scenario.ctx());
+    scenario.next_tx(alice);
+
+    let mut fed: Federation = scenario.take_shared();
+    let cap: RootAuthorityCap = scenario.take_from_address(alice);
+
+    // Add Bob as root authority
+    fed.add_root_authority(&cap, bob.to_id(), scenario.ctx());
+
+    // Try to add Bob again - should fail
+    fed.add_root_authority(&cap, bob.to_id(), scenario.ctx());
+
+    // Cleanup - won't be reached due to expected failure
+    test_scenario::return_to_address(alice, cap);
+    test_scenario::return_shared(fed);
+    let _ = scenario.end();
+}
