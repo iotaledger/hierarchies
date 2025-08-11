@@ -345,7 +345,6 @@ public fun add_root_authority(
     ctx: &mut TxContext,
 ) {
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
-    assert!(!self.is_revoked_root_authority(&ctx.sender().to_id()), ERevokedRootAuthority);
 
     // Check if the root authority is already in the federation
     assert!(!self.is_root_authority(&account_id), EAlreadyRootAuthority);
