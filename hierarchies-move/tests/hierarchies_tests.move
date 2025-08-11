@@ -236,8 +236,6 @@ fun test_revoke_accreditation_to_attest_and_accredit() {
     scenario.next_tx(alice);
 
     // Check if the permission was revoked
-    // TODO::@itsyaasir: This should be fixed since the user has no permissions
-    // and should not be able to attest/accredit
     assert!(fed.is_attester(&bob), 0);
     assert!(fed.is_accreditor(&bob), 0);
 
@@ -719,6 +717,99 @@ fun test_add_statement_with_allowed_values_and_allow_any_false() {
 
     // Cleanup
     test_scenario::return_to_address(alice, cap);
+    test_scenario::return_shared(fed);
+    let _ = scenario.end();
+}
+
+#[test]
+#[
+    expected_failure(
+        abort_code = hierarchies::main::EUnauthorizedInsufficientAccreditationToAccredit,
+    ),
+]
+fun test_attester_cannot_revoke_attestation_rights() {
+    let alice = @0x1;
+    let bob = @0x2;
+    let charlie = @0x3;
+
+    let mut scenario = test_scenario::begin(alice);
+
+    // Create a new federation
+    new_federation(scenario.ctx());
+    scenario.next_tx(alice);
+
+    let mut fed: Federation = scenario.take_shared();
+    let root_cap: RootAuthorityCap = scenario.take_from_address(alice);
+    let alice_accredit_cap: AccreditCap = scenario.take_from_address(alice);
+
+    // First add two different statements to the federation
+    let statement_name_1 = new_statement_name(utf8(b"role1"));
+    let statement_name_2 = new_statement_name(utf8(b"role2"));
+    let property_value = new_statement_value_number(10);
+    let mut allowed_values = vec_set::empty();
+    allowed_values.insert(property_value);
+
+    fed.add_statement(&root_cap, statement_name_1, allowed_values, false, scenario.ctx());
+    fed.add_statement(&root_cap, statement_name_2, allowed_values, false, scenario.ctx());
+    scenario.next_tx(alice);
+
+    // Create statements for permissions
+    let statement_1 = statement::new_statement(
+        statement_name_1,
+        allowed_values,
+        false,
+        option::none(),
+    );
+    let statement_2 = statement::new_statement(
+        statement_name_2,
+        allowed_values,
+        false,
+        option::none(),
+    );
+
+    // Alice grants Charlie attestation rights for statement_2
+    let charlie_statements = vector[statement_2];
+    fed.create_accreditation_to_attest(
+        &alice_accredit_cap,
+        charlie.to_id(),
+        charlie_statements,
+        scenario.ctx(),
+    );
+    scenario.next_tx(alice);
+
+    // Alice grants Bob accreditation rights only for statement_1 (not statement_2)
+    let bob_statements = vector[statement_1];
+    fed.create_accreditation_to_accredit(
+        &alice_accredit_cap,
+        bob.to_id(),
+        bob_statements,
+        scenario.ctx(),
+    );
+    scenario.next_tx(bob);
+
+    // Bob receives his AccreditCap
+    let bob_accredit_cap: AccreditCap = scenario.take_from_address(bob);
+
+    // Get Charlie's attestation permission ID (for statement_2)
+    let charlie_permission_id = fed
+        .get_accreditations_to_attest(&charlie.to_id())
+        .accredited_statements()[0]
+        .id()
+        .uid_to_inner();
+
+    // Bob (who only has accreditation rights for statement_1, not statement_2)
+    // tries to revoke Charlie's attestation rights for statement_2 - this should fail
+    fed.revoke_accreditation_to_attest(
+        &bob_accredit_cap,
+        &charlie.to_id(),
+        &charlie_permission_id,
+        scenario.ctx(),
+    );
+
+    // Cleanup - won't be reached due to expected failure
+    test_scenario::return_to_address(alice, root_cap);
+    test_scenario::return_to_address(alice, alice_accredit_cap);
+    test_scenario::return_to_address(bob, bob_accredit_cap);
     test_scenario::return_shared(fed);
     let _ = scenario.end();
 }

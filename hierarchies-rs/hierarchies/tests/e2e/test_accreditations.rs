@@ -471,7 +471,7 @@ async fn test_create_accreditation_to_accredit_fails_for_nonexistent_statement()
 
     let error_msg = format!("{:?}", result.err().unwrap());
     assert!(
-        error_msg.contains("7"), // EStatementNotInFederation
+        error_msg.contains("6"), // EStatementNotInFederation
         "Expected EStatementNotInFederation error, got: {error_msg}"
     );
 
@@ -511,7 +511,7 @@ async fn test_create_accreditation_to_attest_fails_for_nonexistent_statement() -
 
     let error_msg = format!("{:?}", result.err().unwrap());
     assert!(
-        error_msg.contains("7"), // EStatementNotInFederation
+        error_msg.contains("6"), // EStatementNotInFederation
         "Expected EStatementNotInFederation error, got: {error_msg}"
     );
 
@@ -626,7 +626,7 @@ async fn test_create_accreditation_with_multiple_statements_partial_exist() -> a
     // Check that the error contains the expected error message
     let error_msg = format!("{:?}", result.err().unwrap());
     assert!(
-        error_msg.contains("7"), // EStatementNotInFederation
+        error_msg.contains("6"), // EStatementNotInFederation
         "Expected EStatementNotInFederation error, got: {error_msg}"
     );
 

@@ -105,7 +105,7 @@ async fn test_revoke_root_authority_not_found() -> anyhow::Result<()> {
     assert!(result.is_err());
     // Check that the error message contains expected content
     let error_msg = result.unwrap_err().to_string();
-    assert!(error_msg.contains("8"));
+    assert!(error_msg.contains("7")); // ERootAuthorityNotFound
 
     Ok(())
 }
@@ -134,7 +134,7 @@ async fn test_cannot_revoke_last_root_authority() -> anyhow::Result<()> {
     assert!(result.is_err());
     // Check that the error message contains expected content
     let error_msg = result.unwrap_err().to_string();
-    assert!(error_msg.contains("9"));
+    assert!(error_msg.contains("8")); // ECannotRevokeLastRootAuthority
 
     Ok(())
 }
