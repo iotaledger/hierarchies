@@ -8,10 +8,9 @@
 //!
 //! ## Trust Hierarchy Model
 //!
-//! Hierarchies operates on a three-tier capability system:
+//! Hierarchies operates on a two-tier capability system:
 //! - **`RootAuthority`**: Full administrative control over federations
-//! - **`Accredit`**: Permission to delegate accreditation rights to others
-//! - **`Attest`**: Permission to create attestations for specific statements
+//! - **`Accredit`**: Permission to delegate both accreditation and attestation rights to others
 //!
 //! Capabilities are represented as owned objects in the IOTA network, ensuring
 //! secure and verifiable permission management.
@@ -68,10 +67,9 @@ pub mod move_names {
 ///
 /// ## Trust Hierarchy Model
 ///
-/// Hierarchies operates on a three-tier capability system:
+/// Hierarchies operates on a two-tier capability system:
 /// - **`RootAuthority`**: Full administrative control over federations
-/// - **`Accredit`**: Permission to delegate accreditation rights to others
-/// - **`Attest`**: Permission to create attestations for specific statements
+/// - **`Accredit`**: Permission to delegate both accreditation and attestation rights to others
 ///
 /// Capabilities are represented as owned objects in the IOTA network, ensuring
 /// secure and verifiable permission management.
@@ -83,8 +81,7 @@ impl HierarchiesImpl {
     ///
     /// Capabilities grant permissions within the Hierarchies system:
     /// - `RootAuthority`: Full administrative access
-    /// - `Accredit`: Permission to delegate accreditation rights
-    /// - `Attest`: Permission to create attestations
+    /// - `Accredit`: Permission to delegate both accreditation and attestation rights
     ///
     /// # Errors
     ///

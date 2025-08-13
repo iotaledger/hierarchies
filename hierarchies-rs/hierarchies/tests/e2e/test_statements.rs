@@ -226,8 +226,8 @@ async fn test_add_statement_with_empty_allowed_values_and_allow_any_false_fails(
 
     let error_msg = result.unwrap_err().to_string();
     assert!(
-        error_msg.contains("11"),
-        "Expected error code 11 for EEmptyAllowedValuesWithoutAllowAny, got: {error_msg}"
+        error_msg.contains("10"),
+        "Expected error code 10 for EEmptyAllowedValuesWithoutAllowAny, got: {error_msg}"
     );
 
     Ok(())

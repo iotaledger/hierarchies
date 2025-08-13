@@ -15,26 +15,24 @@ use iota::{clock::Clock, event, vec_map::{Self, VecMap}, vec_set::VecSet};
 const EUnauthorizedWrongFederation: u64 = 1;
 /// Error when entity lacks sufficient accreditation permissions
 const EUnauthorizedInsufficientAccreditationToAccredit: u64 = 2;
-/// Error when entity lacks sufficient attestation permissions
-const EUnauthorizedInsufficientAccreditationToAttest: u64 = 3;
 /// Error when Value Condition for Statement is invalid (e.g., allow_any=true with specific values)
-const EInvalidStatementValueCondition: u64 = 4;
+const EInvalidStatementValueCondition: u64 = 3;
 /// Error when trying to access non-existent accreditation
-const EAccreditationNotFound: u64 = 5;
+const EAccreditationNotFound: u64 = 4;
 /// Error when timestamp is in the past
-const ETimestampMustBeInTheFuture: u64 = 6;
+const ETimestampMustBeInTheFuture: u64 = 5;
 /// Error when trying to create accreditation for statement not in federation
-const EStatementNotInFederation: u64 = 7;
+const EStatementNotInFederation: u64 = 6;
 /// Error when trying to revoke non-existent root authority
-const ERootAuthorityNotFound: u64 = 8;
+const ERootAuthorityNotFound: u64 = 7;
 /// Error when trying to revoke the last root authority
-const ECannotRevokeLastRootAuthority: u64 = 9;
+const ECannotRevokeLastRootAuthority: u64 = 8;
 /// Error when using a revoked root authority capability
-const ERevokedRootAuthority: u64 = 10;
+const ERevokedRootAuthority: u64 = 9;
 /// Empty allowed values list without allow_any flag
-const EEmptyAllowedValuesWithoutAllowAny: u64 = 11;
+const EEmptyAllowedValuesWithoutAllowAny: u64 = 10;
 /// Error when trying to add an already existing root authority
-const EAlreadyRootAuthority: u64 = 12;
+const EAlreadyRootAuthority: u64 = 11;
 
 // ===== Constants =====
 const TIME_BUFFER_MS: u64 = 5000;
@@ -537,7 +535,7 @@ public fun revoke_accreditation_to_attest(
     let current_time_ms = ctx.epoch_timestamp_ms();
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
 
-    let remover_accreditations = self.get_accreditations_to_attest(&ctx.sender().to_id());
+    let remover_accreditations = self.get_accreditations_to_accredit(&ctx.sender().to_id());
     let entities_attest_permissions = self.get_accreditations_to_attest(entity_id);
     let mut accreditation_to_revoke_idx = entities_attest_permissions.find_accredited_statement_id(
         permission_id,
@@ -553,7 +551,7 @@ public fun revoke_accreditation_to_attest(
         let (_, statements) = (*accreditation_to_revoke.statements()).into_keys_values();
         assert!(
             remover_accreditations.are_statements_compliant(&statements, current_time_ms),
-            EUnauthorizedInsufficientAccreditationToAttest,
+            EUnauthorizedInsufficientAccreditationToAccredit,
         );
     };
 
