@@ -174,3 +174,145 @@ async fn test_is_root_authority() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[tokio::test]
+async fn test_reinstate_root_authority_success() -> anyhow::Result<()> {
+    let client = get_funded_test_client().await?;
+
+    // Create a new federation
+    let federation = client
+        .create_new_federation()
+        .build_and_execute(&client)
+        .await
+        .unwrap()
+        .output
+        .id;
+
+    let bob_id = ObjectID::random();
+
+    client
+        .add_root_authority(*federation.object_id(), bob_id)
+        .build_and_execute(&client)
+        .await?;
+
+    assert!(client.is_root_authority(*federation.object_id(), bob_id).await?);
+
+    client
+        .revoke_root_authority(*federation.object_id(), bob_id)
+        .build_and_execute(&client)
+        .await?;
+
+    assert!(!client.is_root_authority(*federation.object_id(), bob_id).await?);
+
+    client
+        .reinstate_root_authority(*federation.object_id(), bob_id)
+        .build_and_execute(&client)
+        .await?;
+
+    assert!(client.is_root_authority(*federation.object_id(), bob_id).await?);
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_reinstate_root_authority_not_revoked() -> anyhow::Result<()> {
+    let client = get_funded_test_client().await?;
+
+    // Create a new federation
+    let federation = client
+        .create_new_federation()
+        .build_and_execute(&client)
+        .await
+        .unwrap()
+        .output
+        .id;
+
+    let bob_id = ObjectID::random();
+
+    let result = client
+        .reinstate_root_authority(*federation.object_id(), bob_id)
+        .build_and_execute(&client)
+        .await;
+
+    assert!(result.is_err());
+    let error_msg = result.unwrap_err().to_string();
+    assert!(error_msg.contains("12")); // ENotRevokedRootAuthority
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_reinstate_root_authority_already_active() -> anyhow::Result<()> {
+    let client = get_funded_test_client().await?;
+
+    // Create a new federation
+    let federation = client
+        .create_new_federation()
+        .build_and_execute(&client)
+        .await
+        .unwrap()
+        .output
+        .id;
+
+    let bob_id = ObjectID::random();
+
+    client
+        .add_root_authority(*federation.object_id(), bob_id)
+        .build_and_execute(&client)
+        .await?;
+
+    let result = client
+        .reinstate_root_authority(*federation.object_id(), bob_id)
+        .build_and_execute(&client)
+        .await;
+
+    assert!(result.is_err());
+    let error_msg = result.unwrap_err().to_string();
+    assert!(error_msg.contains("11")); // EAlreadyRootAuthority
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_reinstated_authority_can_perform_actions() -> anyhow::Result<()> {
+    let client = get_funded_test_client().await?;
+
+    // Create a new federation
+    let federation = client
+        .create_new_federation()
+        .build_and_execute(&client)
+        .await
+        .unwrap()
+        .output
+        .id;
+
+    let bob_id = ObjectID::random();
+
+    client
+        .add_root_authority(*federation.object_id(), bob_id)
+        .build_and_execute(&client)
+        .await?;
+
+    client
+        .revoke_root_authority(*federation.object_id(), bob_id)
+        .build_and_execute(&client)
+        .await?;
+
+    client
+        .reinstate_root_authority(*federation.object_id(), bob_id)
+        .build_and_execute(&client)
+        .await?;
+
+    // Verify Bob can perform root authority actions by adding another root authority
+    let charlie_id = ObjectID::random();
+
+    client
+        .add_root_authority(*federation.object_id(), charlie_id)
+        .build_and_execute(&client)
+        .await?;
+
+    // Verify Charlie was added successfully
+    assert!(client.is_root_authority(*federation.object_id(), charlie_id).await?);
+
+    Ok(())
+}

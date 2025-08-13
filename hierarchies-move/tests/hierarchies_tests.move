@@ -840,3 +840,146 @@ fun test_add_already_existing_root_authority() {
     test_scenario::return_shared(fed);
     let _ = scenario.end();
 }
+
+#[test]
+fun test_reinstate_root_authority_success() {
+    let alice = @0x1;
+    let bob = @0x2;
+
+    let mut scenario = test_scenario::begin(alice);
+
+    // Create a new federation
+    new_federation(scenario.ctx());
+    scenario.next_tx(alice);
+
+    let mut fed: Federation = scenario.take_shared();
+    let alice_cap: RootAuthorityCap = scenario.take_from_address(alice);
+
+    // Add Bob as root authority
+    fed.add_root_authority(&alice_cap, bob.to_id(), scenario.ctx());
+    
+    scenario.next_tx(bob);
+    let bob_cap: RootAuthorityCap = scenario.take_from_address(bob);
+    
+    scenario.next_tx(alice);
+
+    // Alice revokes Bob
+    fed.revoke_root_authority(&alice_cap, bob.to_id(), scenario.ctx());
+
+    // Verify Bob is no longer a root authority
+    assert!(!fed.is_root_authority(&bob.to_id()), 0);
+
+    // Alice reinstates Bob
+    fed.reinstate_root_authority(&alice_cap, bob.to_id(), scenario.ctx());
+
+    // Verify Bob is now a root authority again
+    assert!(fed.is_root_authority(&bob.to_id()), 0);
+
+    // Cleanup
+    test_scenario::return_to_address(alice, alice_cap);
+    test_scenario::return_to_address(bob, bob_cap);
+    test_scenario::return_shared(fed);
+    let _ = scenario.end();
+}
+
+#[test]
+#[expected_failure(abort_code = hierarchies::main::ENotRevokedRootAuthority)]
+fun test_reinstate_non_revoked_authority() {
+    let alice = @0x1;
+    let bob = @0x2;
+
+    let mut scenario = test_scenario::begin(alice);
+
+    // Create a new federation
+    new_federation(scenario.ctx());
+    scenario.next_tx(alice);
+
+    let mut fed: Federation = scenario.take_shared();
+    let alice_cap: RootAuthorityCap = scenario.take_from_address(alice);
+
+    // Try to reinstate Bob who was never revoked - should fail
+    fed.reinstate_root_authority(&alice_cap, bob.to_id(), scenario.ctx());
+
+    // Cleanup - won't be reached due to expected failure
+    test_scenario::return_to_address(alice, alice_cap);
+    test_scenario::return_shared(fed);
+    let _ = scenario.end();
+}
+
+#[test]
+#[expected_failure(abort_code = hierarchies::main::EAlreadyRootAuthority)]
+fun test_reinstate_already_active_authority() {
+    let alice = @0x1;
+    let bob = @0x2;
+
+    let mut scenario = test_scenario::begin(alice);
+
+    // Create a new federation
+    new_federation(scenario.ctx());
+    scenario.next_tx(alice);
+
+    let mut fed: Federation = scenario.take_shared();
+    let alice_cap: RootAuthorityCap = scenario.take_from_address(alice);
+
+    // Add Bob as root authority
+    fed.add_root_authority(&alice_cap, bob.to_id(), scenario.ctx());
+    
+    scenario.next_tx(bob);
+    let bob_cap: RootAuthorityCap = scenario.take_from_address(bob);
+    
+    scenario.next_tx(alice);
+
+    // Try to reinstate Bob who is already active - should fail
+    fed.reinstate_root_authority(&alice_cap, bob.to_id(), scenario.ctx());
+
+    // Cleanup - won't be reached due to expected failure
+    test_scenario::return_to_address(alice, alice_cap);
+    test_scenario::return_to_address(bob, bob_cap);
+    test_scenario::return_shared(fed);
+    let _ = scenario.end();
+}
+
+#[test]
+fun test_reinstated_authority_can_perform_actions() {
+    let alice = @0x1;
+    let bob = @0x2;
+
+    let mut scenario = test_scenario::begin(alice);
+
+    // Create a new federation
+    new_federation(scenario.ctx());
+    scenario.next_tx(alice);
+
+    let mut fed: Federation = scenario.take_shared();
+    let alice_cap: RootAuthorityCap = scenario.take_from_address(alice);
+
+    // Add Bob as root authority
+    fed.add_root_authority(&alice_cap, bob.to_id(), scenario.ctx());
+    
+    scenario.next_tx(bob);
+    let bob_cap: RootAuthorityCap = scenario.take_from_address(bob);
+    
+    scenario.next_tx(alice);
+
+    // Alice revokes Bob
+    fed.revoke_root_authority(&alice_cap, bob.to_id(), scenario.ctx());
+
+    // Alice reinstates Bob
+    fed.reinstate_root_authority(&alice_cap, bob.to_id(), scenario.ctx());
+
+    scenario.next_tx(bob);
+
+    // Bob should be able to add a statement with his reinstated authority
+    let statement_name = new_statement_name(utf8(b"test_statement"));
+    let allowed_values = vec_set::empty();
+    fed.add_statement(&bob_cap, statement_name, allowed_values, true, scenario.ctx());
+
+    // Verify the statement was added
+    assert!(fed.is_statement_in_federation(statement_name), 0);
+
+    // Cleanup
+    test_scenario::return_to_address(alice, alice_cap);
+    test_scenario::return_to_address(bob, bob_cap);
+    test_scenario::return_shared(fed);
+    let _ = scenario.end();
+}
