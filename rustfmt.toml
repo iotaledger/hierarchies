@@ -1,0 +1,9 @@
+imports_granularity = "Module"
+group_imports = "StdExternalCrate"
+comment_width = 120
+format_code_in_doc_comments = true
+max_width = 120
+normalize_comments = false
+normalize_doc_attributes = false
+tab_spaces = 4
+wrap_comments = true

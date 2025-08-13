@@ -1,0 +1,18 @@
+[package]
+name = "Hierarchies"
+license = "Apache-2.0"
+version = "0.1.0"
+edition = "2024.beta"
+authors = [
+  "Pawel Ivan (pawel.ivan@iota.org)",
+  "Yasir Shariff (yasir.shariff@iota.org)",
+]
+
+[dependencies]
+
+[addresses]
+hierarchies = "0x0"
+
+[dev-dependencies]
+
+[dev-addresses]

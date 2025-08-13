@@ -1,5 +1,15 @@
-build
-node_modules
-package.json
-package-lock.json
-.log
+/target
+/Cargo.lock
+/.history
+
+.vscode
+*.code-workspace
+
+.idea
+.DS_Store
+/hierarchies-move/build/*
+/bindings/wasm/hierarchies_wasm/docs/*
+
+# ignore folder created in CI for downloaded iota binaries
+/iota/
+/toml-cli/

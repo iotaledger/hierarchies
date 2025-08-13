@@ -1,0 +1,100 @@
+name: Shared / Build Wasm
+
+# This workflow builds and optionally unit tests the wasm bindings.
+# It outputs build artifacts used for publishing and building in the 'shared-build-and-test-stronghold-nodejs' workflow and for testing in 'build-and-test' workflow.
+
+on:
+  workflow_call:
+    inputs:
+      run-unit-tests:
+        description: "Should tests be run"
+        required: false
+        type: boolean
+        default: true
+      ref:
+        description: "ref to checkout"
+        required: false
+        type: string
+      output-artifact-name:
+        description: "Name used for the output build artifact"
+        required: true
+        type: string
+jobs:
+  build-wasm:
+    defaults:
+      run:
+        working-directory: bindings/wasm/
+        shell: bash
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        include:
+          - os: ubuntu-latest
+            sccache-path: /home/runner/.cache/sccache
+    env:
+      SCCACHE_DIR: ${{ matrix.sccache-path }}
+      RUSTC_WRAPPER: sccache
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.ref }}
+      - name: Setup Rust and cache
+        uses: "./.github/actions/rust/setup"
+        with:
+          os: ${{ runner.os }}
+          job: ${{ github.job }}
+          target: wasm32-unknown-unknown
+          cargo-cache-enabled: true
+          target-cache-enabled: true
+          sccache-enabled: true
+          sccache-path: ${{ matrix.sccache-path }}
+          target-cache-path: bindings/wasm/target
+
+      # Download a pre-compiled wasm-bindgen binary.
+      - name: Install wasm-bindgen-cli
+        uses: jetli/wasm-bindgen-action@24ba6f9fff570246106ac3f80f35185600c3f6c9
+        with:
+          version: "0.2.100"
+
+      - name: Setup sccache
+        uses: "./.github/actions/rust/sccache/setup"
+        with:
+          os: ${{matrix.os}}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: 20.x
+
+      - name: Install JS dependencies
+        run: npm ci
+        working-directory: bindings/wasm/hierarchies_wasm
+
+      - name: Build WASM bindings
+        run: npm run build
+        working-directory: bindings/wasm/hierarchies_wasm
+
+      - name: Run Node unit tests
+        if: ${{ inputs.run-unit-tests }}
+        run: npm run test:unit:node
+        working-directory: bindings/wasm/hierarchies_wasm
+
+      - name: Stop sccache
+        uses: "./.github/actions/rust/sccache/stop"
+        with:
+          os: ${{matrix.os}}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.output-artifact-name }}
+          path: |
+            bindings/wasm/hierarchies_wasm/node
+            bindings/wasm/hierarchies_wasm/web
+            bindings/wasm/hierarchies_wasm/examples/dist
+            bindings/wasm/hierarchies_wasm/docs
+          if-no-files-found: error
+          retention-days: 1

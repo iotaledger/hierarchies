@@ -1,0 +1,51 @@
+name: Clippy
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+      - "feat/**"
+      - "support/**"
+    paths:
+      - ".github/workflows/clippy.yml"
+      - "**.rs"
+      - "**.toml"
+
+jobs:
+  clippy:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Rust
+        uses: "./.github/actions/rust/setup"
+        with:
+          os: ${{ runner.os }}
+          job: ${{ github.job }}
+          target: wasm32-unknown-unknown
+          components: clippy
+
+      # Download a pre-compiled wasm-bindgen binary.
+      - name: Install wasm-bindgen-cli
+        uses: jetli/wasm-bindgen-action@24ba6f9fff570246106ac3f80f35185600c3f6c9
+        with:
+          version: "0.2.100"
+
+      - name: core clippy check
+        uses: actions-rs-plus/clippy-check@b09a9c37c9df7db8b1a5d52e8fe8e0b6e3d574c4
+        with:
+          args: --all-targets --all-features -- -D warnings
+
+      - name: Wasm clippy check hierarchies_wasm
+        uses: actions-rs-plus/clippy-check@b09a9c37c9df7db8b1a5d52e8fe8e0b6e3d574c4
+        if: ${{ false }}
+        with:
+          args: --manifest-path ./bindings/wasm/hierarchies_wasm/Cargo.toml --target wasm32-unknown-unknown --all-targets --all-features -- -D warnings
