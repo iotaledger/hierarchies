@@ -172,7 +172,7 @@ public(package) fun timestamp_matches(self: &Timespan, now_ms: u64): bool {
     if (self.valid_from_ms.is_some() && *self.valid_from_ms.borrow() > now_ms) {
         return false
     };
-    if (self.valid_until_ms.is_some() && *self.valid_until_ms.borrow() < now_ms) {
+    if (self.valid_until_ms.is_some() && *self.valid_until_ms.borrow() <= now_ms) {
         return false
     };
     true

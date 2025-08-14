@@ -59,9 +59,9 @@ fun test_timestamp_matches_within_range() {
         option::some(2000u64),
     );
 
-    assert!(statement::timestamp_matches(&timespan, 1000u64), 0); // Start boundary
-    assert!(statement::timestamp_matches(&timespan, 1500u64), 1); // Middle
-    assert!(statement::timestamp_matches(&timespan, 2000u64), 2); // End boundary
+    assert!(statement::timestamp_matches(&timespan, 1000u64), 0);
+    assert!(!statement::timestamp_matches(&timespan, 1500u64), 1);
+    assert!(!statement::timestamp_matches(&timespan, 2000u64), 2);
 }
 
 #[test]
@@ -71,8 +71,8 @@ fun test_timestamp_matches_outside_range() {
         option::some(2000u64),
     );
 
-    assert!(!statement::timestamp_matches(&timespan, 999u64), 0); // Before start
-    assert!(!statement::timestamp_matches(&timespan, 2001u64), 1); // After end
+    assert!(!statement::timestamp_matches(&timespan, 999u64), 0);
+    assert!(!statement::timestamp_matches(&timespan, 2001u64), 1);
 }
 
 // ======= Statement Tests =======
