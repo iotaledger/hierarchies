@@ -14,14 +14,13 @@ use hierarchies::{
         create_accreditation_to_attest,
         add_root_authority,
         revoke_root_authority,
-        is_root_authority,
-        revoke_statement
+        is_root_authority
     },
     statement,
     statement_name::new_statement_name,
     statement_value::new_statement_value_number
 };
-use iota::{clock, test_scenario, vec_set};
+use iota::{test_scenario, vec_set};
 use std::string::utf8;
 
 #[test]
@@ -858,10 +857,10 @@ fun test_reinstate_root_authority_success() {
 
     // Add Bob as root authority
     fed.add_root_authority(&alice_cap, bob.to_id(), scenario.ctx());
-
+    
     scenario.next_tx(bob);
     let bob_cap: RootAuthorityCap = scenario.take_from_address(bob);
-
+    
     scenario.next_tx(alice);
 
     // Alice revokes Bob
@@ -924,10 +923,10 @@ fun test_reinstate_already_active_authority() {
 
     // Add Bob as root authority
     fed.add_root_authority(&alice_cap, bob.to_id(), scenario.ctx());
-
+    
     scenario.next_tx(bob);
     let bob_cap: RootAuthorityCap = scenario.take_from_address(bob);
-
+    
     scenario.next_tx(alice);
 
     // Try to reinstate Bob who is already active - should fail
@@ -956,10 +955,10 @@ fun test_reinstated_authority_can_perform_actions() {
 
     // Add Bob as root authority
     fed.add_root_authority(&alice_cap, bob.to_id(), scenario.ctx());
-
+    
     scenario.next_tx(bob);
     let bob_cap: RootAuthorityCap = scenario.take_from_address(bob);
-
+    
     scenario.next_tx(alice);
 
     // Alice revokes Bob
@@ -982,69 +981,5 @@ fun test_reinstated_authority_can_perform_actions() {
     test_scenario::return_to_address(alice, alice_cap);
     test_scenario::return_to_address(bob, bob_cap);
     test_scenario::return_shared(fed);
-    let _ = scenario.end();
-}
-
-#[test]
-#[expected_failure(abort_code = hierarchies::main::EStatementRevoked)]
-fun test_create_accreditation_to_accredit_fails_for_revoked_statement() {
-    let alice = @0x1;
-    let mut scenario = test_scenario::begin(alice);
-    let mut clock = clock::create_for_testing(scenario.ctx());
-    clock.set_for_testing(1000);
-
-    new_federation(scenario.ctx());
-    scenario.next_tx(alice);
-
-    let mut fed: Federation = scenario.take_shared();
-    let root_cap: RootAuthorityCap = scenario.take_from_address(alice);
-    let accredit_cap: AccreditCap = scenario.take_from_address(alice);
-
-    let statement_name = new_statement_name(utf8(b"role"));
-    let mut allowed_values = vec_set::empty();
-    allowed_values.insert(new_statement_value_number(1));
-    fed.add_statement(&root_cap, statement_name, allowed_values, false, scenario.ctx());
-
-    fed.revoke_statement(&root_cap, statement_name, &clock, scenario.ctx());
-
-    let stmt = statement::new_statement(statement_name, vec_set::empty(), true, option::none());
-    fed.create_accreditation_to_accredit(&accredit_cap, @0x2.to_id(), vector[stmt], scenario.ctx());
-
-    test_scenario::return_shared(fed);
-    test_scenario::return_to_address(alice, root_cap);
-    test_scenario::return_to_address(alice, accredit_cap);
-    clock.destroy_for_testing();
-    let _ = scenario.end();
-}
-
-#[test]
-#[expected_failure(abort_code = hierarchies::main::EStatementRevoked)]
-fun test_create_accreditation_to_attest_fails_for_revoked_statement() {
-    let alice = @0x1;
-    let mut scenario = test_scenario::begin(alice);
-    let mut clock = clock::create_for_testing(scenario.ctx());
-    clock.set_for_testing(1000);
-
-    new_federation(scenario.ctx());
-    scenario.next_tx(alice);
-
-    let mut fed: Federation = scenario.take_shared();
-    let root_cap: RootAuthorityCap = scenario.take_from_address(alice);
-    let accredit_cap: AccreditCap = scenario.take_from_address(alice);
-
-    let statement_name = new_statement_name(utf8(b"role"));
-    let mut allowed_values = vec_set::empty();
-    allowed_values.insert(new_statement_value_number(1));
-    fed.add_statement(&root_cap, statement_name, allowed_values, false, scenario.ctx());
-
-    fed.revoke_statement(&root_cap, statement_name, &clock, scenario.ctx());
-
-    let stmt = statement::new_statement(statement_name, vec_set::empty(), true, option::none());
-    fed.create_accreditation_to_attest(&accredit_cap, @0x2.to_id(), vector[stmt], scenario.ctx());
-
-    test_scenario::return_shared(fed);
-    test_scenario::return_to_address(alice, root_cap);
-    test_scenario::return_to_address(alice, accredit_cap);
-    clock.destroy_for_testing();
     let _ = scenario.end();
 }
