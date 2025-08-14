@@ -75,6 +75,7 @@ public struct Governance has key, store {
 public struct RootAuthorityCap has key {
     id: UID,
     federation_id: ID,
+    account_id: ID,
 }
 
 /// Capability for accreditation operations
@@ -172,7 +173,7 @@ public fun new_federation(ctx: &mut TxContext) {
     };
 
     // Create root authority and capabilities
-    let root_auth_cap = new_root_authority_cap(&federation, ctx);
+    let root_auth_cap = new_root_authority_cap(&federation, ctx.sender().to_id(), ctx);
     let root_authority = new_root_authority(ctx.sender().to_id(), ctx);
     vector::push_back(&mut federation.root_authorities, root_authority);
 
@@ -208,10 +209,15 @@ public(package) fun new_root_authority(account_id: ID, ctx: &mut TxContext): Roo
 }
 
 /// Creates a new root authority capability
-fun new_root_authority_cap(self: &Federation, ctx: &mut TxContext): RootAuthorityCap {
+fun new_root_authority_cap(
+    self: &Federation,
+    account_id: ID,
+    ctx: &mut TxContext,
+): RootAuthorityCap {
     RootAuthorityCap {
         id: object::new(ctx),
         federation_id: self.federation_id(),
+        account_id,
     }
 }
 
@@ -275,10 +281,10 @@ public fun add_statement(
     statement_name: StatementName,
     allowed_values: VecSet<StatementValue>,
     allow_any: bool,
-    ctx: &mut TxContext,
+    _: &mut TxContext,
 ) {
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
-    assert!(!self.is_revoked_root_authority(&ctx.sender().to_id()), ERevokedRootAuthority);
+    assert!(!self.is_revoked_root_authority(&cap.account_id), ERevokedRootAuthority);
     assert!(!(allow_any && allowed_values.keys().length() > 0), EInvalidStatementValueCondition);
     assert!(allow_any || allowed_values.keys().length() > 0, EEmptyAllowedValuesWithoutAllowAny);
 
@@ -305,10 +311,10 @@ public fun revoke_statement(
     cap: &RootAuthorityCap,
     statement_name: StatementName,
     clock: &Clock,
-    ctx: &mut TxContext,
+    _: &mut TxContext,
 ) {
     assert!(cap.federation_id == federation.federation_id(), EUnauthorizedWrongFederation);
-    assert!(!federation.is_revoked_root_authority(&ctx.sender().to_id()), ERevokedRootAuthority);
+    assert!(!federation.is_revoked_root_authority(&cap.account_id), ERevokedRootAuthority);
     let statement = federation.governance.statements.data_mut().get_mut(&statement_name);
     statement.revoke(clock.timestamp_ms());
 
@@ -327,10 +333,10 @@ public fun revoke_statement_at(
     statement_name: StatementName,
     valid_to_ms: u64,
     clock: &Clock,
-    ctx: &mut TxContext,
+    _: &mut TxContext,
 ) {
     assert!(cap.federation_id == federation.federation_id(), EUnauthorizedWrongFederation);
-    assert!(!federation.is_revoked_root_authority(&ctx.sender().to_id()), ERevokedRootAuthority);
+    assert!(!federation.is_revoked_root_authority(&cap.account_id), ERevokedRootAuthority);
     assert!(valid_to_ms > clock.timestamp_ms() + TIME_BUFFER_MS, ETimestampMustBeInTheFuture);
     let statement = federation.governance.statements.data_mut().get_mut(&statement_name);
     statement.revoke(valid_to_ms);
@@ -354,12 +360,12 @@ public fun add_root_authority(
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
 
     assert!(!self.is_root_authority(&account_id), EAlreadyRootAuthority);
-    assert!(!self.is_revoked_root_authority(&ctx.sender().to_id()), ERevokedRootAuthority);
+    assert!(!self.is_revoked_root_authority(&cap.account_id), ERevokedRootAuthority);
 
     let root_authority = new_root_authority(account_id, ctx);
     vector::push_back(&mut self.root_authorities, root_authority);
 
-    let cap = new_root_authority_cap(self, ctx);
+    let cap = new_root_authority_cap(self, account_id, ctx);
     transfer::transfer(cap, account_id.to_address());
 
     event::emit(RootAuthorityAddedEvent {
@@ -731,4 +737,18 @@ public fun is_root_authority(self: &Federation, id: &ID): bool {
 /// Checks if an entity is a revoked root authority
 fun is_revoked_root_authority(self: &Federation, id: &ID): bool {
     vector::contains(&self.revoked_root_authorities, id)
+}
+
+// ===== Test Functions =====
+#[test_only]
+public(package) fun transfer_root_authority_cap(
+    self: &Federation,
+    cap: RootAuthorityCap,
+    account_id: ID,
+    _: &mut TxContext,
+) {
+    assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
+    assert!(!self.is_revoked_root_authority(&cap.account_id), ERevokedRootAuthority);
+
+    transfer::transfer(cap, account_id.to_address());
 }
