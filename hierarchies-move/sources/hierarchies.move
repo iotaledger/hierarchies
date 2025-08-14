@@ -35,6 +35,8 @@ const EEmptyAllowedValuesWithoutAllowAny: u64 = 10;
 const EAlreadyRootAuthority: u64 = 11;
 /// Error when trying to reinstate a root authority that is not revoked
 const ENotRevokedRootAuthority: u64 = 12;
+/// Error when trying to create accreditation for a revoked statement
+const EStatementRevoked: u64 = 13;
 
 // ===== Constants =====
 const TIME_BUFFER_MS: u64 = 5000;
@@ -466,7 +468,7 @@ public fun create_accreditation_to_accredit(
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
     let current_time_ms = clock.timestamp_ms();
 
-    // Validate that all statement names exist in federation
+    // Validate that all statement names exist in federation and are not revoked
     let mut idx = 0;
     while (idx < want_statements.length()) {
         let statement = &want_statements[idx];
@@ -474,6 +476,15 @@ public fun create_accreditation_to_accredit(
             self.is_statement_in_federation(*statement.statement_name()),
             EStatementNotInFederation,
         );
+
+        // Check if statement is revoked
+        let federation_statement = self
+            .governance
+            .statements
+            .data()
+            .get(statement.statement_name());
+        assert!(federation_statement.is_valid_at_time(current_time_ms), EStatementRevoked);
+
         idx = idx + 1;
     };
 
@@ -526,7 +537,7 @@ public fun create_accreditation_to_attest(
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
     let current_time_ms = clock.timestamp_ms();
 
-    // Validate that all statement names exist in federation
+    // Validate that all statement names exist in federation and are not revoked
     let mut idx = 0;
     while (idx < wanted_statements.length()) {
         let statement = &wanted_statements[idx];
@@ -534,6 +545,15 @@ public fun create_accreditation_to_attest(
             self.is_statement_in_federation(*statement.statement_name()),
             EStatementNotInFederation,
         );
+
+        // Check if statement is revoked
+        let federation_statement = self
+            .governance
+            .statements
+            .data()
+            .get(statement.statement_name());
+        assert!(federation_statement.is_valid_at_time(current_time_ms), EStatementRevoked);
+
         idx = idx + 1;
     };
 

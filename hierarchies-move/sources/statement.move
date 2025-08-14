@@ -126,6 +126,11 @@ public(package) fun revoke(self: &mut Statement, valid_to_ms: u64) {
     self.timespan.valid_until_ms = option::some(valid_to_ms)
 }
 
+/// Checks if a statement is valid (not revoked) at the given time
+public(package) fun is_valid_at_time(self: &Statement, current_time_ms: u64): bool {
+    self.timespan.timestamp_matches(current_time_ms)
+}
+
 public(package) fun to_map_of_statements(
     statements: vector<Statement>,
 ): VecMap<StatementName, Statement> {
@@ -167,7 +172,7 @@ public(package) fun timestamp_matches(self: &Timespan, now_ms: u64): bool {
     if (self.valid_from_ms.is_some() && *self.valid_from_ms.borrow() > now_ms) {
         return false
     };
-    if (self.valid_until_ms.is_some() && *self.valid_until_ms.borrow() < now_ms) {
+    if (self.valid_until_ms.is_some() && *self.valid_until_ms.borrow() <= now_ms) {
         return false
     };
     true
