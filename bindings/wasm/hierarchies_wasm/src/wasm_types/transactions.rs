@@ -10,7 +10,7 @@ use hierarchies::core::transactions::statements::add_statement::AddStatement;
 use hierarchies::core::transactions::statements::revoke_statement::RevokeStatement;
 use hierarchies::core::transactions::{
     AddRootAuthority, CreateAccreditation, CreateAccreditationToAttest, CreateFederation,
-    RevokeAccreditationToAccredit, RevokeAccreditationToAttest, RevokeRootAuthority,
+    ReinstateRootAuthority, RevokeAccreditationToAccredit, RevokeAccreditationToAttest, RevokeRootAuthority,
 };
 use product_common::bindings::utils::{
     apply_with_events, build_programmable_transaction, parse_wasm_iota_address, parse_wasm_object_id,
@@ -172,6 +172,66 @@ impl WasmRevokeRootAuthority {
     }
 
     /// Applies transaction effects and events to this revoke root authority operation.
+    ///
+    /// # Arguments
+    ///
+    /// * `effects` - The transaction block effects to apply.
+    /// * `events` - The transaction block events to apply.
+    /// * `client` - A read-only client for blockchain interaction.
+    #[wasm_bindgen(js_name = applyWithEvents)]
+    pub async fn apply_with_events(
+        self,
+        wasm_effects: &WasmIotaTransactionBlockEffects,
+        wasm_events: &WasmIotaTransactionBlockEvents,
+        client: &WasmCoreClientReadOnly,
+    ) -> Result<()> {
+        apply_with_events(self.0, wasm_effects, wasm_events, client)
+            .await
+            .map_err(wasm_error)
+    }
+}
+
+/// A wrapper for the `ReinstateRootAuthority` transaction.
+#[wasm_bindgen(js_name = ReinstateRootAuthority, inspectable)]
+pub struct WasmReinstateRootAuthority(pub(crate) ReinstateRootAuthority);
+
+#[wasm_bindgen(js_class = ReinstateRootAuthority)]
+impl WasmReinstateRootAuthority {
+    /// Creates a new instance of `WasmReinstateRootAuthority`.
+    ///
+    /// # Arguments
+    ///
+    /// * `federation_id` - The ID of the federation.
+    /// * `account_id` - The ID of the account to reinstate as a root authority.
+    /// * `signer_address` - The address of the transaction signer.
+    #[wasm_bindgen(constructor)]
+    pub fn new(federation_id: WasmObjectID, account_id: WasmObjectID, signer_address: WasmIotaAddress) -> Result<Self> {
+        let federation_id = parse_wasm_object_id(&federation_id)?;
+        let account_id = parse_wasm_object_id(&account_id)?;
+        let signer_address = parse_wasm_iota_address(&signer_address)?;
+
+        Ok(Self(ReinstateRootAuthority::new(federation_id, account_id, signer_address)))
+    }
+
+    /// Builds and returns a programmable transaction for reinstating a root authority.
+    ///
+    /// # Arguments
+    ///
+    /// * `client` - A read-only client for blockchain interaction.
+    ///
+    /// # Returns
+    ///
+    /// The binary BCS serialization of the programmable transaction.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the transaction cannot be built.
+    #[wasm_bindgen(js_name = buildProgrammableTransaction)]
+    pub async fn build_programmable_transaction(&self, client: &WasmCoreClientReadOnly) -> Result<Vec<u8>> {
+        build_programmable_transaction(&self.0, client).await
+    }
+
+    /// Applies transaction effects and events to this reinstate root authority operation.
     ///
     /// # Arguments
     ///

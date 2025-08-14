@@ -27,6 +27,7 @@ examples=(
     "06_create_accreditation_to_accredit"
     "07_revoke_accreditation_to_accredit"
     "08_revoke_root_authority"
+    "09_reinstate_root_authority"
 
 )
 

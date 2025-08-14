@@ -1021,6 +1021,52 @@ pub(crate) trait HierarchiesOperations {
 
         Ok(tx)
     }
+
+    /// Reinstates a previously revoked root authority to the federation.
+    ///
+    /// This operation allows an existing root authority to restore a revoked root authority
+    /// back to active status. The target account must be in the federation's revoked list
+    /// and cannot already be an active root authority.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - The owner doesn't have `RootAuthorityCap`
+    /// - The account is not in the revoked root authorities list
+    /// - The account is already an active root authority
+    /// - Network communication fails
+    async fn reinstate_root_authority<C>(
+        federation_id: ObjectID,
+        account_id: ObjectID,
+        owner: IotaAddress,
+        client: &C,
+    ) -> Result<ProgrammableTransaction, OperationError>
+    where
+        C: CoreClientReadOnly + OptionalSync,
+    {
+        let mut ptb = ProgrammableTransactionBuilder::new();
+
+        let cap = HierarchiesImpl::get_cap(client, Capability::RootAuthority, owner).await?;
+
+        let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
+
+        let fed_ref = HierarchiesImpl::get_fed_ref(client, federation_id).await?;
+        let fed_ref = ptb.obj(fed_ref)?;
+
+        let account_id_arg = ptb.pure(account_id)?;
+
+        ptb.programmable_move_call(
+            client.package_id(),
+            ident_str!(move_names::MODULE_MAIN).into(),
+            ident_str!("reinstate_root_authority").into(),
+            vec![],
+            vec![fed_ref, cap, account_id_arg],
+        );
+
+        let tx = ptb.finish();
+
+        Ok(tx)
+    }
 }
 
 impl HierarchiesOperations for HierarchiesImpl {}

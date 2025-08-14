@@ -87,8 +87,8 @@ use crate::core::transactions::revoke_root_authority::RevokeRootAuthority;
 use crate::core::transactions::statements::add_statement::AddStatement;
 use crate::core::transactions::statements::revoke_statement::RevokeStatement;
 use crate::core::transactions::{
-    CreateAccreditation, CreateAccreditationToAttest, CreateFederation, RevokeAccreditationToAccredit,
-    RevokeAccreditationToAttest,
+    CreateAccreditation, CreateAccreditationToAttest, CreateFederation, ReinstateRootAuthority,
+    RevokeAccreditationToAccredit, RevokeAccreditationToAttest,
 };
 use crate::core::types::statements::name::StatementName;
 use crate::core::types::statements::value::StatementValue;
@@ -172,6 +172,22 @@ where
         account_id: ObjectID,
     ) -> TransactionBuilder<RevokeRootAuthority> {
         TransactionBuilder::new(RevokeRootAuthority::new(
+            federation_id,
+            account_id,
+            self.sender_address(),
+        ))
+    }
+
+    /// Creates a [`TransactionBuilder`] for reinstating a revoked root authority to a federation.
+    ///
+    /// Only existing root authorities can reinstate revoked root authorities.
+    /// The target account must be in the revoked list to be reinstated.
+    pub fn reinstate_root_authority(
+        &self,
+        federation_id: ObjectID,
+        account_id: ObjectID,
+    ) -> TransactionBuilder<ReinstateRootAuthority> {
+        TransactionBuilder::new(ReinstateRootAuthority::new(
             federation_id,
             account_id,
             self.sender_address(),

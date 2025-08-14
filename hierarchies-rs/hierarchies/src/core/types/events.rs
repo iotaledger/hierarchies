@@ -46,6 +46,14 @@ pub struct RootAuthorityRevokedEvent {
     pub account_id: ObjectID,
 }
 
+/// Event emitted when a root authority is reinstated
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct RootAuthorityReinstatedEvent {
+    pub federation_address: ObjectID,
+    pub account_id: ObjectID,
+    pub reinstated_by: ObjectID,
+}
+
 /// Event emitted when accreditation to accredit is created
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AccreditationToAccreditCreatedEvent {
