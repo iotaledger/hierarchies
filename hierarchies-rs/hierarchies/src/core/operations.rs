@@ -321,13 +321,13 @@ pub(crate) trait HierarchiesOperations {
 
         let user_id_arg = ptb.pure(user_id)?;
         let permission_id = ptb.pure(permission_id)?;
-
+        let clock = get_clock_ref(&mut ptb);
         ptb.programmable_move_call(
             client.package_id(),
             ident_str!(move_names::MODULE_MAIN).into(),
             ident_str!("revoke_accreditation_to_attest").into(),
             vec![],
-            vec![fed_ref, cap, user_id_arg, permission_id],
+            vec![fed_ref, cap, user_id_arg, permission_id, clock],
         );
 
         let tx = ptb.finish();
