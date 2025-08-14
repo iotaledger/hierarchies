@@ -20,7 +20,7 @@ use hierarchies::{
     statement_name::new_statement_name,
     statement_value::new_statement_value_number
 };
-use iota::{test_scenario, vec_set};
+use iota::{clock, test_scenario, vec_set};
 use std::string::utf8;
 
 #[test]
@@ -903,10 +903,10 @@ fun test_reinstate_root_authority_success() {
 
     // Add Bob as root authority
     fed.add_root_authority(&alice_cap, bob.to_id(), scenario.ctx());
-    
+
     scenario.next_tx(bob);
     let bob_cap: RootAuthorityCap = scenario.take_from_address(bob);
-    
+
     scenario.next_tx(alice);
 
     // Alice revokes Bob
@@ -969,10 +969,10 @@ fun test_reinstate_already_active_authority() {
 
     // Add Bob as root authority
     fed.add_root_authority(&alice_cap, bob.to_id(), scenario.ctx());
-    
+
     scenario.next_tx(bob);
     let bob_cap: RootAuthorityCap = scenario.take_from_address(bob);
-    
+
     scenario.next_tx(alice);
 
     // Try to reinstate Bob who is already active - should fail
@@ -1001,10 +1001,10 @@ fun test_reinstated_authority_can_perform_actions() {
 
     // Add Bob as root authority
     fed.add_root_authority(&alice_cap, bob.to_id(), scenario.ctx());
-    
+
     scenario.next_tx(bob);
     let bob_cap: RootAuthorityCap = scenario.take_from_address(bob);
-    
+
     scenario.next_tx(alice);
 
     // Alice revokes Bob
