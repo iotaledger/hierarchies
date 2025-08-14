@@ -456,10 +456,11 @@ public fun create_accreditation_to_accredit(
     cap: &AccreditCap,
     receiver: ID,
     want_statements: vector<Statement>,
+    clock: &Clock,
     ctx: &mut TxContext,
 ) {
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
-    let current_time_ms = ctx.epoch_timestamp_ms();
+    let current_time_ms = clock.timestamp_ms();
 
     // Validate that all statement names exist in federation and are not revoked
     let mut idx = 0;
@@ -524,10 +525,11 @@ public fun create_accreditation_to_attest(
     cap: &AccreditCap,
     receiver: ID,
     wanted_statements: vector<Statement>,
+    clock: &Clock,
     ctx: &mut TxContext,
 ) {
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
-    let current_time_ms = ctx.epoch_timestamp_ms();
+    let current_time_ms = clock.timestamp_ms();
 
     // Validate that all statement names exist in federation and are not revoked
     let mut idx = 0;
@@ -590,9 +592,10 @@ public fun revoke_accreditation_to_attest(
     cap: &AccreditCap,
     entity_id: &ID,
     permission_id: &ID,
+    clock: &Clock,
     ctx: &mut TxContext,
 ) {
-    let current_time_ms = ctx.epoch_timestamp_ms();
+    let current_time_ms = clock.timestamp_ms();
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
 
     let remover_accreditations = self.get_accreditations_to_accredit(&ctx.sender().to_id());
@@ -632,6 +635,7 @@ public fun revoke_accreditation_to_accredit(
     cap: &AccreditCap,
     entity_id: &ID,
     permission_id: &ID,
+    clock: &Clock,
     ctx: &mut TxContext,
 ) {
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
@@ -649,7 +653,7 @@ public fun revoke_accreditation_to_accredit(
             &entities_accredit_permissions.accredited_statements()[
                 accreditation_to_revoke_idx.extract(),
             ];
-        let current_time_ms = ctx.epoch_timestamp_ms();
+        let current_time_ms = clock.timestamp_ms();
         let (_, statements) = (*accreditation_to_revoke.statements()).into_keys_values();
         assert!(
             remover_permissions.are_statements_compliant(&statements, current_time_ms),

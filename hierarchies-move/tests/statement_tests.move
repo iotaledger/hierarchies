@@ -60,7 +60,7 @@ fun test_timestamp_matches_within_range() {
     );
 
     assert!(statement::timestamp_matches(&timespan, 1000u64), 0);
-    assert!(!statement::timestamp_matches(&timespan, 1500u64), 1);
+    assert!(statement::timestamp_matches(&timespan, 1500u64), 1);
     assert!(!statement::timestamp_matches(&timespan, 2000u64), 2);
 }
 

@@ -261,8 +261,7 @@ jobs:
         working-directory: bindings/wasm/hierarchies_wasm
 
       - name: Run Wasm examples
-        #run: npm run test:readme && npm run test:node
-        run: npm run test:node
+        run: npm run example:node -- all
         working-directory: bindings/wasm/hierarchies_wasm
 #  test-wasm-browser:
 #    needs: build-wasm
