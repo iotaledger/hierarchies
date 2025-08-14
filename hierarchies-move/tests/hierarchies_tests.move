@@ -1054,7 +1054,13 @@ fun test_create_accreditation_to_accredit_fails_for_revoked_statement() {
     fed.revoke_statement(&root_cap, statement_name, &clock, scenario.ctx());
 
     let stmt = statement::new_statement(statement_name, vec_set::empty(), true, option::none());
-    fed.create_accreditation_to_accredit(&accredit_cap, @0x2.to_id(), vector[stmt], scenario.ctx());
+    fed.create_accreditation_to_accredit(
+        &accredit_cap,
+        @0x2.to_id(),
+        vector[stmt],
+        &clock,
+        scenario.ctx(),
+    );
 
     test_scenario::return_shared(fed);
     test_scenario::return_to_address(alice, root_cap);
@@ -1086,7 +1092,13 @@ fun test_create_accreditation_to_attest_fails_for_revoked_statement() {
     fed.revoke_statement(&root_cap, statement_name, &clock, scenario.ctx());
 
     let stmt = statement::new_statement(statement_name, vec_set::empty(), true, option::none());
-    fed.create_accreditation_to_attest(&accredit_cap, @0x2.to_id(), vector[stmt], scenario.ctx());
+    fed.create_accreditation_to_attest(
+        &accredit_cap,
+        @0x2.to_id(),
+        vector[stmt],
+        &clock,
+        scenario.ctx(),
+    );
 
     test_scenario::return_shared(fed);
     test_scenario::return_to_address(alice, root_cap);
@@ -1094,4 +1106,3 @@ fun test_create_accreditation_to_attest_fails_for_revoked_statement() {
     clock.destroy_for_testing();
     let _ = scenario.end();
 }
-
