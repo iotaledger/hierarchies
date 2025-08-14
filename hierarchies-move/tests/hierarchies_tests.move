@@ -123,6 +123,9 @@ fun test_create_accreditation() {
     let alice = @0x1;
     let mut scenario = test_scenario::begin(alice);
 
+    let mut clock = clock::create_for_testing(scenario.ctx());
+    clock.set_for_testing(1000);
+
     // Create a new federation
     new_federation(scenario.ctx());
     scenario.next_tx(alice);
@@ -138,7 +141,13 @@ fun test_create_accreditation() {
 
     // Issue permission to accredit
     let statements = vector::empty();
-    fed.create_accreditation_to_accredit(&accredit_cap, bob, statements, scenario.ctx());
+    fed.create_accreditation_to_accredit(
+        &accredit_cap,
+        bob,
+        statements,
+        &clock,
+        scenario.ctx(),
+    );
     scenario.next_tx(alice);
 
     // Check if the permission was issued
@@ -148,7 +157,7 @@ fun test_create_accreditation() {
     test_scenario::return_to_address(alice, cap);
     test_scenario::return_to_address(alice, accredit_cap);
     test_scenario::return_shared(fed);
-
+    clock.destroy_for_testing();
     new_id.delete();
 
     let _ = scenario.end();
@@ -158,6 +167,9 @@ fun test_create_accreditation() {
 fun test_create_attestation() {
     let alice = @0x1;
     let mut scenario = test_scenario::begin(alice);
+
+    let mut clock = clock::create_for_testing(scenario.ctx());
+    clock.set_for_testing(1000);
 
     // Create a new federation
     new_federation(scenario.ctx());
@@ -175,7 +187,7 @@ fun test_create_attestation() {
 
     // Issue permission to accredit
     let statements = vector::empty();
-    fed.create_accreditation_to_attest(&accredit_cap, bob, statements, scenario.ctx());
+    fed.create_accreditation_to_attest(&accredit_cap, bob, statements, &clock, scenario.ctx());
     scenario.next_tx(alice);
 
     // Check if the permission was issued
@@ -185,7 +197,7 @@ fun test_create_attestation() {
     test_scenario::return_to_address(alice, cap);
     test_scenario::return_to_address(alice, accredit_cap);
     test_scenario::return_shared(fed);
-
+    clock.destroy_for_testing();
     new_id.delete();
 
     let _ = scenario.end();
@@ -195,6 +207,9 @@ fun test_create_attestation() {
 fun test_revoke_accreditation_to_attest_and_accredit() {
     let alice = @0x1;
     let mut scenario = test_scenario::begin(alice);
+
+    let mut clock = clock::create_for_testing(scenario.ctx());
+    clock.set_for_testing(1000);
 
     // Create a new federation
     new_federation(scenario.ctx());
@@ -211,11 +226,11 @@ fun test_revoke_accreditation_to_attest_and_accredit() {
 
     // Issue permission to accredit
     let statements = vector::empty();
-    fed.create_accreditation_to_accredit(&accredit_cap, bob, statements, scenario.ctx());
+    fed.create_accreditation_to_accredit(&accredit_cap, bob, statements, &clock, scenario.ctx());
     scenario.next_tx(alice);
 
     // Issue permission to attest
-    fed.create_accreditation_to_attest(&accredit_cap, bob, statements, scenario.ctx());
+    fed.create_accreditation_to_attest(&accredit_cap, bob, statements, &clock, scenario.ctx());
     scenario.next_tx(alice);
 
     // Revoke permission to attest
@@ -224,7 +239,7 @@ fun test_revoke_accreditation_to_attest_and_accredit() {
         .accredited_statements()[0]
         .id()
         .uid_to_inner();
-    fed.revoke_accreditation_to_attest(&accredit_cap, &bob, &permission_id, scenario.ctx());
+    fed.revoke_accreditation_to_attest(&accredit_cap, &bob, &permission_id, &clock, scenario.ctx());
     scenario.next_tx(alice);
 
     // Revoke permission to accredit
@@ -233,7 +248,13 @@ fun test_revoke_accreditation_to_attest_and_accredit() {
         .accredited_statements()[0]
         .id()
         .uid_to_inner();
-    fed.revoke_accreditation_to_accredit(&accredit_cap, &bob, &permission_id, scenario.ctx());
+    fed.revoke_accreditation_to_accredit(
+        &accredit_cap,
+        &bob,
+        &permission_id,
+        &clock,
+        scenario.ctx(),
+    );
     scenario.next_tx(alice);
 
     // Check if the permission was revoked
@@ -244,7 +265,7 @@ fun test_revoke_accreditation_to_attest_and_accredit() {
     test_scenario::return_to_address(alice, cap);
     test_scenario::return_to_address(alice, accredit_cap);
     test_scenario::return_shared(fed);
-
+    clock.destroy_for_testing();
     new_id.delete();
 
     let _ = scenario.end();
@@ -256,6 +277,9 @@ fun test_create_accreditation_to_accredit_fails_for_nonexistent_statement() {
     let alice = @0x1;
     let mut scenario = test_scenario::begin(alice);
 
+    let mut clock = clock::create_for_testing(scenario.ctx());
+    clock.set_for_testing(1000);
+
     // Create a new federation
     new_federation(scenario.ctx());
     scenario.next_tx(alice);
@@ -282,13 +306,14 @@ fun test_create_accreditation_to_accredit_fails_for_nonexistent_statement() {
     let statements = vector[nonexistent_statement];
 
     // This should fail because the statement name doesn't exist in the federation
-    fed.create_accreditation_to_accredit(&accredit_cap, bob, statements, scenario.ctx());
+    fed.create_accreditation_to_accredit(&accredit_cap, bob, statements, &clock, scenario.ctx());
 
     // Cleanup - this won't be reached due to expected failure
     test_scenario::return_to_address(alice, cap);
     test_scenario::return_to_address(alice, accredit_cap);
     test_scenario::return_shared(fed);
     new_id.delete();
+    clock.destroy_for_testing();
     let _ = scenario.end();
 }
 
@@ -298,6 +323,9 @@ fun test_create_accreditation_to_attest_fails_for_nonexistent_statement() {
     let alice = @0x1;
     let mut scenario = test_scenario::begin(alice);
 
+    let mut clock = clock::create_for_testing(scenario.ctx());
+    clock.set_for_testing(1000);
+
     // Create a new federation
     new_federation(scenario.ctx());
     scenario.next_tx(alice);
@@ -324,12 +352,13 @@ fun test_create_accreditation_to_attest_fails_for_nonexistent_statement() {
     let statements = vector[nonexistent_statement];
 
     // This should fail because the statement name doesn't exist in the federation
-    fed.create_accreditation_to_attest(&accredit_cap, bob, statements, scenario.ctx());
+    fed.create_accreditation_to_attest(&accredit_cap, bob, statements, &clock, scenario.ctx());
 
     // Cleanup - this won't be reached due to expected failure
     test_scenario::return_to_address(alice, cap);
     test_scenario::return_to_address(alice, accredit_cap);
     test_scenario::return_shared(fed);
+    clock.destroy_for_testing();
     new_id.delete();
     let _ = scenario.end();
 }
@@ -338,6 +367,9 @@ fun test_create_accreditation_to_attest_fails_for_nonexistent_statement() {
 fun test_create_accreditation_to_accredit_succeeds_for_existing_statement() {
     let alice = @0x1;
     let mut scenario = test_scenario::begin(alice);
+
+    let mut clock = clock::create_for_testing(scenario.ctx());
+    clock.set_for_testing(1000);
 
     // Create a new federation
     new_federation(scenario.ctx());
@@ -370,7 +402,8 @@ fun test_create_accreditation_to_accredit_succeeds_for_existing_statement() {
     let statements = vector[statement_for_accreditation];
 
     // This should succeed because the statement name exists in the federation
-    fed.create_accreditation_to_accredit(&accredit_cap, bob, statements, scenario.ctx());
+    fed.create_accreditation_to_accredit(&accredit_cap, bob, statements, &clock, scenario.ctx());
+
     scenario.next_tx(alice);
 
     // Verify the accreditation was created
@@ -381,6 +414,7 @@ fun test_create_accreditation_to_accredit_succeeds_for_existing_statement() {
     test_scenario::return_to_address(alice, accredit_cap);
     test_scenario::return_shared(fed);
     new_id.delete();
+    clock.destroy_for_testing();
     let _ = scenario.end();
 }
 
@@ -388,6 +422,9 @@ fun test_create_accreditation_to_accredit_succeeds_for_existing_statement() {
 fun test_create_accreditation_to_attest_succeeds_for_existing_statement() {
     let alice = @0x1;
     let mut scenario = test_scenario::begin(alice);
+
+    let mut clock = clock::create_for_testing(scenario.ctx());
+    clock.set_for_testing(1000);
 
     // Create a new federation
     new_federation(scenario.ctx());
@@ -420,7 +457,7 @@ fun test_create_accreditation_to_attest_succeeds_for_existing_statement() {
     let statements = vector[statement_for_accreditation];
 
     // This should succeed because the statement name exists in the federation
-    fed.create_accreditation_to_attest(&accredit_cap, bob, statements, scenario.ctx());
+    fed.create_accreditation_to_attest(&accredit_cap, bob, statements, &clock, scenario.ctx());
     scenario.next_tx(alice);
 
     // Verify the accreditation was created
@@ -431,6 +468,7 @@ fun test_create_accreditation_to_attest_succeeds_for_existing_statement() {
     test_scenario::return_to_address(alice, accredit_cap);
     test_scenario::return_shared(fed);
     new_id.delete();
+    clock.destroy_for_testing();
     let _ = scenario.end();
 }
 
@@ -735,6 +773,9 @@ fun test_attester_cannot_revoke_attestation_rights() {
 
     let mut scenario = test_scenario::begin(alice);
 
+    let mut clock = clock::create_for_testing(scenario.ctx());
+    clock.set_for_testing(1000);
+
     // Create a new federation
     new_federation(scenario.ctx());
     scenario.next_tx(alice);
@@ -770,10 +811,12 @@ fun test_attester_cannot_revoke_attestation_rights() {
 
     // Alice grants Charlie attestation rights for statement_2
     let charlie_statements = vector[statement_2];
+
     fed.create_accreditation_to_attest(
         &alice_accredit_cap,
         charlie.to_id(),
         charlie_statements,
+        &clock,
         scenario.ctx(),
     );
     scenario.next_tx(alice);
@@ -784,6 +827,7 @@ fun test_attester_cannot_revoke_attestation_rights() {
         &alice_accredit_cap,
         bob.to_id(),
         bob_statements,
+        &clock,
         scenario.ctx(),
     );
     scenario.next_tx(bob);
@@ -804,6 +848,7 @@ fun test_attester_cannot_revoke_attestation_rights() {
         &bob_accredit_cap,
         &charlie.to_id(),
         &charlie_permission_id,
+        &clock,
         scenario.ctx(),
     );
 
@@ -812,6 +857,7 @@ fun test_attester_cannot_revoke_attestation_rights() {
     test_scenario::return_to_address(alice, alice_accredit_cap);
     test_scenario::return_to_address(bob, bob_accredit_cap);
     test_scenario::return_shared(fed);
+    clock.destroy_for_testing();
     let _ = scenario.end();
 }
 
@@ -1048,3 +1094,4 @@ fun test_create_accreditation_to_attest_fails_for_revoked_statement() {
     clock.destroy_for_testing();
     let _ = scenario.end();
 }
+
