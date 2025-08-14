@@ -42,7 +42,7 @@
         "CYPRESS_VERIFY_TIMEOUT": 100000
     },
     "bugs": {
-        "url": "https://github.com/iotaledger/hierarchies.rs/issues"
+        "url": "https://github.com/iotaledger/hierarchies/issues"
     },
     "publishConfig": {
         "access": "public"
