@@ -9,6 +9,7 @@ import { revokeAccreditationToAttest } from "./05_revoke_accreditation_to_attest
 import { createAccreditationToAccredit } from "./06_create_accreditation_to_accredit";
 import { revokeAccreditationToAccredit } from "./07_revoke_accreditation_to_accredit";
 import { revokeRootAuthority } from "./08_revoke_root_authority";
+import { reinstateRootAuthority } from "./09_reinstate_root_authority";
 import { getAccreditations } from "./validation/01_get_accreditations";
 import { validateStatements } from "./validation/02_validate_statements";
 import { getStatements } from "./validation/03_get_statements";
@@ -30,6 +31,7 @@ export async function main(example?: string) {
             await createAccreditationToAccredit();
             await revokeAccreditationToAccredit();
             await revokeRootAuthority();
+            await reinstateRootAuthority();
             await getAccreditations();
             await validateStatements();
             return await getStatements();
@@ -49,6 +51,8 @@ export async function main(example?: string) {
             return await revokeAccreditationToAccredit();
         case "08_revoke_root_authority":
             return await revokeRootAuthority();
+        case "09_reinstate_root_authority":
+            return await reinstateRootAuthority();
         case "01_get_accreditations":
             return await getAccreditations();
         case "02_validate_statements":
