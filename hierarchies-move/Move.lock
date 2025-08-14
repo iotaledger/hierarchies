@@ -2,27 +2,47 @@
 
 [move]
 version = 3
-manifest_digest = "A338B4056B871E55FC54AC28BCE76536E3AC6AD181279A68F71425C42C75A02F"
-deps_digest = "3C4103934B1E040BB6B23F1D610B4EF9F2F1166A50A104EADCF77467C004C600"
+manifest_digest = "001E83D5E1082F939DB3A9E553CB9F8F1C533F9B20A2CCB41E97D07A8DB698E3"
+deps_digest = "F9B494B64F0615AED0E98FC12A85B85ECD2BC5185C22D30E7F67786BB52E507C"
+dependencies = [
+  { id = "Iota", name = "Iota" },
+  { id = "IotaSystem", name = "IotaSystem" },
+  { id = "MoveStdlib", name = "MoveStdlib" },
+  { id = "Stardust", name = "Stardust" },
+]
+
+[[move.package]]
+id = "Iota"
+source = { git = "https://github.com/iotaledger/iota.git", rev = "e3c45c9370f14b8137fd1bb9d109d3563d416223", subdir = "crates/iota-framework/packages/iota-framework" }
+
+dependencies = [
+  { id = "MoveStdlib", name = "MoveStdlib" },
+]
+
+[[move.package]]
+id = "IotaSystem"
+source = { git = "https://github.com/iotaledger/iota.git", rev = "e3c45c9370f14b8137fd1bb9d109d3563d416223", subdir = "crates/iota-framework/packages/iota-system" }
+
 dependencies = [
   { id = "Iota", name = "Iota" },
   { id = "MoveStdlib", name = "MoveStdlib" },
 ]
 
 [[move.package]]
-id = "Iota"
-source = { git = "https://github.com/iotaledger/iota.git", rev = "v0.11.6-rc", subdir = "crates/iota-framework/packages/iota-framework" }
+id = "MoveStdlib"
+source = { git = "https://github.com/iotaledger/iota.git", rev = "e3c45c9370f14b8137fd1bb9d109d3563d416223", subdir = "crates/iota-framework/packages/move-stdlib" }
+
+[[move.package]]
+id = "Stardust"
+source = { git = "https://github.com/iotaledger/iota.git", rev = "e3c45c9370f14b8137fd1bb9d109d3563d416223", subdir = "crates/iota-framework/packages/stardust" }
 
 dependencies = [
+  { id = "Iota", name = "Iota" },
   { id = "MoveStdlib", name = "MoveStdlib" },
 ]
 
-[[move.package]]
-id = "MoveStdlib"
-source = { git = "https://github.com/iotaledger/iota.git", rev = "v0.11.6-rc", subdir = "crates/iota-framework/packages/move-stdlib" }
-
 [move.toolchain-version]
-compiler-version = "1.3.1"
+compiler-version = "1.4.1"
 edition = "2024.beta"
 flavor = "iota"
 
@@ -41,7 +61,7 @@ latest-published-id = "0x2319aae93cbe97ef111290154a571effb10989bca0ea8804e7804e8
 published-version = "1"
 
 [env.localnet]
-chain-id = "3ebe6f82"
-original-published-id = "0xb5749fb5cb10da4f79405c89e69bfe1231ad4be0a0793cd7997794bb8896a983"
-latest-published-id = "0xb5749fb5cb10da4f79405c89e69bfe1231ad4be0a0793cd7997794bb8896a983"
+chain-id = "0699ecec"
+original-published-id = "0x6798d6837a5286dad7a9028172d3ce588f53e597669a300d0d0c9c615dd63362"
+latest-published-id = "0x6798d6837a5286dad7a9028172d3ce588f53e597669a300d0d0c9c615dd63362"
 published-version = "1"

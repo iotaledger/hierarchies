@@ -33,7 +33,7 @@ use crate::core::types::statements::name::StatementName;
 use crate::core::types::statements::value::StatementValue;
 use crate::core::types::statements::{new_property_statement, Statement};
 use crate::core::types::Capability;
-use crate::core::CapabilityError;
+use crate::core::{get_clock_ref, CapabilityError};
 use crate::error::{NetworkError, ObjectError};
 use crate::utils::{self};
 
@@ -321,13 +321,13 @@ pub(crate) trait HierarchiesOperations {
 
         let user_id_arg = ptb.pure(user_id)?;
         let permission_id = ptb.pure(permission_id)?;
-
+        let clock = get_clock_ref(&mut ptb);
         ptb.programmable_move_call(
             client.package_id(),
             ident_str!(move_names::MODULE_MAIN).into(),
             ident_str!("revoke_accreditation_to_attest").into(),
             vec![],
-            vec![fed_ref, cap, user_id_arg, permission_id],
+            vec![fed_ref, cap, user_id_arg, permission_id, clock],
         );
 
         let tx = ptb.finish();
@@ -399,6 +399,7 @@ pub(crate) trait HierarchiesOperations {
         let mut ptb = ProgrammableTransactionBuilder::new();
 
         let cap = HierarchiesImpl::get_cap(client, Capability::Accredit, owner).await?;
+        let clock = get_clock_ref(&mut ptb);
 
         let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
 
@@ -414,7 +415,7 @@ pub(crate) trait HierarchiesOperations {
             ident_str!(move_names::MODULE_MAIN).into(),
             ident_str!("create_accreditation_to_accredit").into(),
             vec![],
-            vec![fed_ref, cap, receiver_arg, want_statements],
+            vec![fed_ref, cap, receiver_arg, want_statements, clock],
         );
 
         let tx = ptb.finish();
@@ -443,7 +444,7 @@ pub(crate) trait HierarchiesOperations {
         let mut ptb = ProgrammableTransactionBuilder::new();
 
         let cap = HierarchiesImpl::get_cap(client, Capability::Accredit, owner).await?;
-
+        let clock = get_clock_ref(&mut ptb);
         let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
 
         let fed_ref = HierarchiesImpl::get_fed_ref(client, federation_id).await?;
@@ -458,7 +459,7 @@ pub(crate) trait HierarchiesOperations {
             ident_str!(move_names::MODULE_MAIN).into(),
             ident_str!("create_accreditation_to_attest").into(),
             vec![],
-            vec![fed_ref, cap, receiver_arg, want_statements],
+            vec![fed_ref, cap, receiver_arg, want_statements, clock],
         );
 
         let tx = ptb.finish();
@@ -487,7 +488,7 @@ pub(crate) trait HierarchiesOperations {
         let mut ptb = ProgrammableTransactionBuilder::new();
 
         let cap = HierarchiesImpl::get_cap(client, Capability::Accredit, owner).await?;
-
+        let clock = get_clock_ref(&mut ptb);
         let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
 
         let fed_ref = HierarchiesImpl::get_fed_ref(client, federation_id).await?;
@@ -501,7 +502,7 @@ pub(crate) trait HierarchiesOperations {
             ident_str!(move_names::MODULE_MAIN).into(),
             ident_str!("revoke_accreditation_to_accredit").into(),
             vec![],
-            vec![fed_ref, cap, user_id_arg, permission_id],
+            vec![fed_ref, cap, user_id_arg, permission_id, clock],
         );
 
         let tx = ptb.finish();
@@ -758,7 +759,7 @@ pub(crate) trait HierarchiesOperations {
 
         let statement_name = statement_name.to_ptb(&mut ptb, client.package_id())?;
 
-        let clock = super::get_clock_ref(&mut ptb);
+        let clock = get_clock_ref(&mut ptb);
 
         ptb.programmable_move_call(
             client.package_id(),
@@ -810,7 +811,7 @@ pub(crate) trait HierarchiesOperations {
         let statement_name = statement_name.to_ptb(&mut ptb, client.package_id())?;
 
         let valid_to_ms = ptb.pure(valid_to_ms)?;
-        let clock = super::get_clock_ref(&mut ptb);
+        let clock = get_clock_ref(&mut ptb);
 
         ptb.programmable_move_call(
             client.package_id(),
@@ -861,7 +862,7 @@ pub(crate) trait HierarchiesOperations {
 
         let statement_value = statement_value.to_ptb(&mut ptb, client.package_id())?;
 
-        let clock = super::get_clock_ref(&mut ptb);
+        let clock = get_clock_ref(&mut ptb);
 
         ptb.programmable_move_call(
             client.package_id(),
@@ -934,7 +935,7 @@ pub(crate) trait HierarchiesOperations {
         );
 
         let entity_id = ptb.pure(entity_id)?;
-        let clock = super::get_clock_ref(&mut ptb);
+        let clock = get_clock_ref(&mut ptb);
 
         ptb.programmable_move_call(
             client.package_id(),
