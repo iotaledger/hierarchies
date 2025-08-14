@@ -857,10 +857,10 @@ fun test_reinstate_root_authority_success() {
 
     // Add Bob as root authority
     fed.add_root_authority(&alice_cap, bob.to_id(), scenario.ctx());
-    
+
     scenario.next_tx(bob);
     let bob_cap: RootAuthorityCap = scenario.take_from_address(bob);
-    
+
     scenario.next_tx(alice);
 
     // Alice revokes Bob
@@ -923,10 +923,10 @@ fun test_reinstate_already_active_authority() {
 
     // Add Bob as root authority
     fed.add_root_authority(&alice_cap, bob.to_id(), scenario.ctx());
-    
+
     scenario.next_tx(bob);
     let bob_cap: RootAuthorityCap = scenario.take_from_address(bob);
-    
+
     scenario.next_tx(alice);
 
     // Try to reinstate Bob who is already active - should fail
@@ -955,10 +955,10 @@ fun test_reinstated_authority_can_perform_actions() {
 
     // Add Bob as root authority
     fed.add_root_authority(&alice_cap, bob.to_id(), scenario.ctx());
-    
+
     scenario.next_tx(bob);
     let bob_cap: RootAuthorityCap = scenario.take_from_address(bob);
-    
+
     scenario.next_tx(alice);
 
     // Alice revokes Bob
@@ -980,6 +980,52 @@ fun test_reinstated_authority_can_perform_actions() {
     // Cleanup
     test_scenario::return_to_address(alice, alice_cap);
     test_scenario::return_to_address(bob, bob_cap);
+    test_scenario::return_shared(fed);
+    let _ = scenario.end();
+}
+
+#[test]
+#[expected_failure(abort_code = hierarchies::main::ERevokedRootAuthority)]
+fun test_transferred_capability_from_revoked_authority_fails() {
+    let alice = @0x1;
+    let bob = @0x2;
+    let charlie = @0x3;
+
+    let mut scenario = test_scenario::begin(alice);
+
+    new_federation(scenario.ctx());
+    scenario.next_tx(alice);
+
+    let mut fed: Federation = scenario.take_shared();
+    let alice_cap: RootAuthorityCap = scenario.take_from_address(alice);
+
+    // Add Bob as root authority
+    fed.add_root_authority(&alice_cap, bob.to_id(), scenario.ctx());
+
+    scenario.next_tx(bob);
+    let bob_cap: RootAuthorityCap = scenario.take_from_address(bob);
+
+    scenario.next_tx(alice);
+
+    // Alice revokes Bob
+    fed.revoke_root_authority(&alice_cap, bob.to_id(), scenario.ctx());
+
+    scenario.next_tx(bob);
+
+    // Bob transfers his capability to Charlie
+    fed.transfer_root_authority_cap(bob_cap, charlie.to_id(), scenario.ctx());
+
+    scenario.next_tx(charlie);
+    let transferred_cap: RootAuthorityCap = scenario.take_from_address(charlie);
+
+    // Charlie tries to use Bob's (revoked) capability - should fail
+    let statement_name = new_statement_name(utf8(b"test_statement"));
+    let allowed_values = vec_set::empty();
+    fed.add_statement(&transferred_cap, statement_name, allowed_values, true, scenario.ctx());
+
+    // Cleanup - won't be reached due to expected failure
+    test_scenario::return_to_address(alice, alice_cap);
+    test_scenario::return_to_address(charlie, transferred_cap);
     test_scenario::return_shared(fed);
     let _ = scenario.end();
 }
