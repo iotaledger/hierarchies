@@ -19,6 +19,7 @@ on:
         description: "Name used for the output build artifact"
         required: true
         type: string
+
 jobs:
   build-wasm:
     defaults:

@@ -28,6 +28,10 @@ on:
     - cron: "5 0 * * *" # everyday, 00:05, used for testnet scheduled test
     - cron: "10 0 * * *" # everyday, 00:10 used for devnet scheduled test
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 env:
   RUST_BACKTRACE: full
   CARGO_INCREMENTAL: 0 # disabled to reduce target cache size and improve sccache (https://github.com/mozilla/sccache#known-caveats)

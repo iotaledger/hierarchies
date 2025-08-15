@@ -44,7 +44,7 @@ pub async fn get_object_ref_by_id_with_bcs<T: DeserializeOwned>(
     client: &impl CoreClientReadOnly,
     object_id: &ObjectID,
 ) -> Result<T, ObjectError> {
-    let notarization = client
+    let hierarchies_client = client
         .client_adapter()
         .read_api()
         .get_object_with_options(*object_id, IotaObjectDataOptions::bcs_lossless())
@@ -68,5 +68,5 @@ pub async fn get_object_ref_by_id_with_bcs<T: DeserializeOwned>(
         .deserialize()
         .map_err(|err| ObjectError::RetrievalFailed { source: err.into() })?;
 
-    Ok(notarization)
+    Ok(hierarchies_client)
 }

@@ -44,7 +44,7 @@
 //! - `with_sender(address)` - Override transaction sender
 //! - `with_sponsor(callback)` - Have another party pay for gas
 //!
-//! ## Example: Complete Notarization Workflow
+//! ## Example: Complete Hierarchies Workflow
 //!
 //! ```rust,ignore
 //! # use hierarchies::core::builder::HierarchiesBuilder;
@@ -148,7 +148,7 @@ impl<S> HierarchiesClient<S>
 where
     S: Signer<IotaKeySignature> + OptionalSync,
 {
-    /// Creates a builder for a locked notarization.
+    /// Creates a builder for a Hierarchies federation.
     pub fn create_new_federation(&self) -> TransactionBuilder<CreateFederation> {
         TransactionBuilder::new(CreateFederation::new())
     }
