@@ -10,7 +10,7 @@ use iota_interaction::types::base_types::{ObjectID, STD_OPTION_MODULE_NAME};
 use iota_interaction::types::collection_types::{VecMap, VecSet};
 use iota_interaction::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 use iota_interaction::types::transaction::{Argument, Command};
-use iota_interaction::types::{TypeTag, MOVE_STDLIB_PACKAGE_ID};
+use iota_interaction::types::{MOVE_STDLIB_PACKAGE_ID, TypeTag};
 use serde::{Deserialize, Deserializer, Serialize};
 
 /// Deserialize a [`VecMap`] into a [`HashMap`]
@@ -73,7 +73,7 @@ pub(crate) fn create_vec_set_from_move_values(
     ptb: &mut ProgrammableTransactionBuilder,
     package_id: ObjectID,
 ) -> Argument {
-    let values = ptb.command(Command::MakeMoveVec(Some(tag.clone()), values));
+    let values = ptb.command(Command::MakeMoveVec(Some(tag.clone().into()), values));
 
     ptb.programmable_move_call(
         package_id,

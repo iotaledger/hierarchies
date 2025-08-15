@@ -25,15 +25,15 @@ use iota_interaction::types::base_types::{IotaAddress, ObjectID, ObjectRef, Sequ
 use iota_interaction::types::object::Owner;
 use iota_interaction::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 use iota_interaction::types::transaction::{CallArg, Command, ObjectArg, ProgrammableTransaction};
-use iota_interaction::{ident_str, IotaClientTrait, MoveType, OptionalSync};
+use iota_interaction::{IotaClientTrait, MoveType, OptionalSync, ident_str};
 use product_common::core_client::CoreClientReadOnly;
 
 use crate::core::error::OperationError;
+use crate::core::types::Capability;
 use crate::core::types::statements::name::StatementName;
 use crate::core::types::statements::value::StatementValue;
-use crate::core::types::statements::{new_property_statement, Statement};
-use crate::core::types::Capability;
-use crate::core::{get_clock_ref, CapabilityError};
+use crate::core::types::statements::{Statement, new_property_statement};
+use crate::core::{CapabilityError, get_clock_ref};
 use crate::error::{NetworkError, ObjectError};
 use crate::utils::{self};
 
@@ -920,9 +920,12 @@ pub(crate) trait HierarchiesOperations {
         let statement_name_tag = StatementName::move_type(client.package_id());
         let statement_value_tag = StatementValue::move_type(client.package_id());
 
-        let statement_names = ptb.command(Command::MakeMoveVec(Some(statement_name_tag.clone()), statement_names));
+        let statement_names = ptb.command(Command::MakeMoveVec(
+            Some(statement_name_tag.clone().into()),
+            statement_names,
+        ));
         let statement_values = ptb.command(Command::MakeMoveVec(
-            Some(statement_value_tag.clone()),
+            Some(statement_value_tag.clone().into()),
             statement_values,
         ));
 

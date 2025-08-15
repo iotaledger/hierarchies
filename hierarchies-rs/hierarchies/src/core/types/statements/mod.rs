@@ -8,11 +8,11 @@ pub mod value;
 use std::collections::{HashMap, HashSet};
 use std::str::FromStr;
 
+use iota_interaction::types::TypeTag;
 use iota_interaction::types::base_types::ObjectID;
 use iota_interaction::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 use iota_interaction::types::transaction::{Argument, Command};
-use iota_interaction::types::TypeTag;
-use iota_interaction::{ident_str, MoveType};
+use iota_interaction::{MoveType, ident_str};
 use serde::{Deserialize, Serialize};
 
 use crate::core::types::statements::condition::StatementValueCondition;
@@ -126,7 +126,7 @@ pub(crate) fn new_property_statement(
     }
 
     Ok(ptb.command(Command::MakeMoveVec(
-        Some(Statement::move_type(package_id)),
+        Some(Statement::move_type(package_id).into()),
         statement_args,
     )))
 }
