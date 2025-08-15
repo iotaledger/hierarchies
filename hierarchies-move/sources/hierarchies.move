@@ -699,6 +699,12 @@ public fun validate_statement(
         return false
     };
 
+    // Check if the federation's statement is still valid (not revoked)
+    let federation_statement = self.governance.statements.data().get(&statement_name);
+    if (!federation_statement.is_valid_at_time(current_time_ms)) {
+        return false
+    };
+
     // Check if attester has permissions for the statement
     let accreditations = self.get_accreditations_to_attest(attester_id);
     if (!accreditations.is_statement_allowed(&statement_name, &statement_value, current_time_ms)) {
@@ -719,13 +725,20 @@ public fun validate_statements(
     let current_time_ms = clock.timestamp_ms();
     let statement_names = statements.keys();
 
-    // First check if all statements are trusted by the federation
+    // First check if all statements are trusted by the federation and still valid
     let mut idx = 0;
     while (idx < statement_names.length()) {
         let statement_name = statement_names[idx];
         if (!self.is_statement_in_federation(statement_name)) {
             return false
         };
+
+        // Check if the federation's statement is still valid (not revoked)
+        let federation_statement = self.governance.statements.data().get(&statement_name);
+        if (!federation_statement.is_valid_at_time(current_time_ms)) {
+            return false
+        };
+
         idx = idx + 1;
     };
 
