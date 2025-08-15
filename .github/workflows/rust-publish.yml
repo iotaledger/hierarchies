@@ -4,20 +4,16 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to publish Rust under (e.g. `1.2.3-dev.1`)"
+        description: 'Version to publish Rust under (e.g. `1.2.3-dev.1`)'
         required: true
       branch:
-        description: "Branch to run publish from"
+        description: 'Branch to run publish from'
         required: true
       dry-run:
-        description: "Run in dry-run mode"
+        description: 'Run in dry-run mode'
         type: boolean
         required: false
         default: true
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
-  cancel-in-progress: true
 
 jobs:
   publish-rust:
@@ -28,7 +24,7 @@ jobs:
         with:
           ref: ${{ github.event.inputs.branch }}
       - name: Publish to crates.io
-        uses: "./.github/actions/publish/rust"
+        uses: './.github/actions/publish/rust'
         with:
           version: ${{ github.event.inputs.version }}
           crates-token: ${{ secrets.CRATES_IO_TOKEN }}

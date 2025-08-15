@@ -4,24 +4,20 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Tag to publish Wasm under (e.g. e.g. `dev`, will default to `latest`)"
+        description: 'Tag to publish Wasm under (e.g. e.g. `dev`, will default to `latest`)'
         required: true
       branch:
-        description: "Branch to run publish from"
+        description: 'Branch to run publish from'
         required: true
       dry-run:
-        description: "Run in dry-run mode"
+        description: 'Run in dry-run mode'
         type: boolean
         required: false
         default: true
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
-  cancel-in-progress: true
-
 jobs:
   build-wasm:
-    uses: "./.github/workflows/shared-build-wasm.yml"
+    uses: './.github/workflows/shared-build-wasm.yml'
     with:
       run-unit-tests: false
       ref: ${{ github.event.inputs.branch }}
@@ -37,7 +33,7 @@ jobs:
         with:
           ref: ${{ github.event.inputs.branch }}
       - name: Release to npm
-        uses: "./.github/actions/publish/wasm"
+        uses: './.github/actions/publish/wasm'
         with:
           dry-run: ${{ github.event.inputs.dry-run }}
           input-artifact-name: hierarchies-wasm-bindings-build

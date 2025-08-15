@@ -4,15 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Tag to set"
+        description: 'Tag to set'
         required: true
       version:
-        description: "version to set"
+        description: 'version to set'
         required: true
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
-  cancel-in-progress: true
 
 jobs:
   release-wasm:
@@ -22,8 +18,8 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: "20.x"
-          registry-url: "https://registry.npmjs.org"
+          node-version: '20.x'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Run dist-tag
         shell: sh

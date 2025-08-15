@@ -4,28 +4,24 @@ on:
   workflow_dispatch:
     inputs:
       branch:
-        description: "Name of branch to checkout"
+        description: 'Name of branch to checkout'
         required: true
       network:
-        description: "Network to deploy to (devnet, testnet, mainnet)"
+        description: 'Network to deploy to (devnet, testnet, mainnet)'
         required: true
       faucet:
-        description: "Whether to faucet"
+        description: 'Whether to faucet'
         type: boolean
         required: true
         default: true
       script-path:
-        description: "Script to run"
+        description: 'Script to run'
         required: true
       dry-run:
-        description: "Run in dry-run mode"
+        description: 'Run in dry-run mode'
         type: boolean
         required: false
         default: true
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
-  cancel-in-progress: true
 
 jobs:
   deploy-move-package:
@@ -39,14 +35,14 @@ jobs:
           ref: ${{ github.event.inputs.branch }}
 
       - name: Start iota sandbox
-        uses: "./.github/actions/iota/setup"
+        uses: './.github/actions/iota/setup'
         with:
-          platform: "linux"
+          platform: 'linux'
           iota-version: ${{ github.event.inputs.network }}
           start-sandbox: false
 
       - name: Setup Keytool
-        uses: "./.github/actions/iota/keytool"
+        uses: './.github/actions/iota/keytool'
         with:
           network: ${{ github.event.inputs.network }}
           pk: ${{secrets.TRUST_FRAMEWORK_PRODUCTS_PRIVATE_KEY}}
@@ -85,7 +81,7 @@ jobs:
           author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
           branch: chore/deploy-${{ github.event.inputs.network }}
           delete-branch: true
-          title: "Deploy ${{ github.event.inputs.network }}"
+          title: 'Deploy ${{ github.event.inputs.network }}'
           body: |
             This PR contains changes running ${{ github.event.inputs.script-path }} on branch:${{ github.event.inputs.branch }} and network:${{ github.event.inputs.network }}
           labels: |
