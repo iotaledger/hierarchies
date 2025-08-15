@@ -6,7 +6,7 @@ edition.workspace = true
 [dependencies]
 anyhow.workspace = true
 hierarchies = { path = "../hierarchies" }
-iota-sdk = { git = "https://github.com/iotaledger/iota.git", tag = "v1.2.3", package = "iota-sdk" }
+iota-sdk = { workspace = true }
 product_common = { workspace = true, features = ["test-utils"] }
 tokio.workspace = true
 
