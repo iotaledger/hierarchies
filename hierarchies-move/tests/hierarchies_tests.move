@@ -21,7 +21,7 @@ use hierarchies::{
     statement_name::new_statement_name,
     statement_value::new_statement_value_number
 };
-use iota::{clock, test_scenario, vec_set};
+use iota::{clock, test_scenario, vec_map, vec_set};
 use std::string::utf8;
 
 #[test]
@@ -1150,5 +1150,117 @@ fun test_transferred_capability_from_revoked_authority_fails() {
     test_scenario::return_to_address(alice, alice_cap);
     test_scenario::return_to_address(charlie, transferred_cap);
     test_scenario::return_shared(fed);
+    let _ = scenario.end();
+}
+
+#[test]
+fun test_validate_statement_fails_for_revoked_statement() {
+    let alice = @0x1;
+    let mut scenario = test_scenario::begin(alice);
+    let mut clock = clock::create_for_testing(scenario.ctx());
+    clock.set_for_testing(1000);
+
+    new_federation(scenario.ctx());
+    scenario.next_tx(alice);
+
+    let mut fed: Federation = scenario.take_shared();
+    let root_cap: RootAuthorityCap = scenario.take_from_address(alice);
+    let accredit_cap: AccreditCap = scenario.take_from_address(alice);
+
+    // Add a statement to the federation
+    let statement_name = new_statement_name(utf8(b"role"));
+    let statement_value = new_statement_value_number(1);
+    let mut allowed_values = vec_set::empty();
+    allowed_values.insert(statement_value);
+    fed.add_statement(&root_cap, statement_name, allowed_values, false, scenario.ctx());
+
+    // Create accreditation for Bob to attest this statement
+    let bob_id = @0x2.to_id();
+    let stmt = statement::new_statement(statement_name, allowed_values, false, option::none());
+    fed.create_accreditation_to_attest(&accredit_cap, bob_id, vector[stmt], &clock, scenario.ctx());
+
+    // Initially validation should pass
+    assert!(fed.validate_statement(&bob_id, statement_name, statement_value, &clock), 0);
+
+    // Revoke the statement
+    fed.revoke_statement(&root_cap, statement_name, &clock, scenario.ctx());
+
+    // Now validation should fail because the statement is revoked
+    assert!(!fed.validate_statement(&bob_id, statement_name, statement_value, &clock), 1);
+
+    test_scenario::return_shared(fed);
+    test_scenario::return_to_address(alice, root_cap);
+    test_scenario::return_to_address(alice, accredit_cap);
+    clock.destroy_for_testing();
+    let _ = scenario.end();
+}
+
+#[test]
+fun test_validate_statements_fails_for_revoked_statement() {
+    let alice = @0x1;
+    let mut scenario = test_scenario::begin(alice);
+    let mut clock = clock::create_for_testing(scenario.ctx());
+    clock.set_for_testing(1000);
+
+    new_federation(scenario.ctx());
+    scenario.next_tx(alice);
+
+    let mut fed: Federation = scenario.take_shared();
+    let root_cap: RootAuthorityCap = scenario.take_from_address(alice);
+    let accredit_cap: AccreditCap = scenario.take_from_address(alice);
+
+    // Add two statements to the federation
+    let statement_name_1 = new_statement_name(utf8(b"role1"));
+    let statement_name_2 = new_statement_name(utf8(b"role2"));
+    let statement_value_1 = new_statement_value_number(1);
+    let statement_value_2 = new_statement_value_number(2);
+    let mut allowed_values_1 = vec_set::empty();
+    let mut allowed_values_2 = vec_set::empty();
+    allowed_values_1.insert(statement_value_1);
+    allowed_values_2.insert(statement_value_2);
+
+    fed.add_statement(&root_cap, statement_name_1, allowed_values_1, false, scenario.ctx());
+    fed.add_statement(&root_cap, statement_name_2, allowed_values_2, false, scenario.ctx());
+
+    // Create accreditation for Bob to attest both statements
+    let bob_id = @0x2.to_id();
+    let stmt_1 = statement::new_statement(
+        statement_name_1,
+        allowed_values_1,
+        false,
+        option::none(),
+    );
+    let stmt_2 = statement::new_statement(
+        statement_name_2,
+        allowed_values_2,
+        false,
+        option::none(),
+    );
+    fed.create_accreditation_to_attest(
+        &accredit_cap,
+        bob_id,
+        vector[stmt_1, stmt_2],
+        &clock,
+        scenario.ctx(),
+    );
+
+    // Create statement map for validation
+    let mut statements = vec_map::empty();
+    statements.insert(statement_name_1, statement_value_1);
+    statements.insert(statement_name_2, statement_value_2);
+
+    // Initially validation should pass
+    assert!(fed.validate_statements(&bob_id, statements, &clock), 0);
+
+    // Revoke the first statement
+    fed.revoke_statement(&root_cap, statement_name_1, &clock, scenario.ctx());
+
+    // Now validation should fail because one of the statements is revoked
+    assert!(!fed.validate_statements(&bob_id, statements, &clock), 1);
+
+    test_scenario::return_shared(fed);
+    test_scenario::return_to_address(alice, root_cap);
+    test_scenario::return_to_address(alice, accredit_cap);
+    clock.destroy_for_testing();
     let _ = scenario.end();
 }
