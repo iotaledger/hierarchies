@@ -10,70 +10,70 @@
 use std::collections::HashSet;
 
 use async_trait::async_trait;
+use iota_interaction::OptionalSync;
 use iota_interaction::rpc_types::IotaTransactionBlockEffects;
 use iota_interaction::types::base_types::{IotaAddress, ObjectID};
 use iota_interaction::types::transaction::ProgrammableTransaction;
-use iota_interaction::OptionalSync;
 use product_common::core_client::CoreClientReadOnly;
 use product_common::transaction::transaction_builder::Transaction;
 use tokio::sync::OnceCell;
 
-use crate::core::operations::{HierarchiesImpl, HierarchiesOperations};
-use crate::core::types::statements::name::StatementName;
-use crate::core::types::statements::value::StatementValue;
 use crate::core::OperationError;
+use crate::core::operations::{HierarchiesImpl, HierarchiesOperations};
+use crate::core::types::property_name::PropertyName;
+use crate::core::types::value::PropertyValue;
 
-/// Transaction for adding new statement types to federations.
-pub mod add_statement {
+/// Transaction for adding new property types to federations.
+pub mod add_property {
     use super::*;
 
-    /// A transaction that adds a new statement type to a federation.
+    /// A transaction that adds a new property type to a federation.
     ///
-    /// This transaction allows root authorities to define new types of claims
+    /// This transaction allows root authorities to define new types of properties
     /// that can be attested within their federation. You can either restrict
     /// the allowed values to a specific set or allow any values.
     ///
     /// ## Requirements
     ///
     /// - The owner must possess `RootAuthorityCap` for the federation
-    /// - The statement name must be unique within the federation
+    /// - The property name must be unique within the federation
     #[derive(Debug, Clone)]
-    pub struct AddStatement {
+    pub struct AddProperty {
         federation_id: ObjectID,
-        statement_name: StatementName,
-        allowed_statement_values: HashSet<StatementValue>,
+        name: PropertyName,
+        allowed_values: HashSet<PropertyValue>,
         allow_any: bool,
         owner: IotaAddress,
         cached_ptb: OnceCell<ProgrammableTransaction>,
     }
 
-    impl AddStatement {
-        /// Creates a new [`AddStatement`] instance.
+    impl AddProperty {
+        /// Creates a new [`AddProperty`] instance.
         ///
         /// # Returns
         ///
-        /// A new `AddStatement` transaction instance ready for execution.
+        /// A new `AddProperty` transaction instance ready for execution.
         pub fn new(
             federation_id: ObjectID,
-            statement_name: StatementName,
-            allowed_statement_values: HashSet<StatementValue>,
+            property_name: PropertyName,
+            allowed_values: HashSet<PropertyValue>,
             allow_any: bool,
             owner: IotaAddress,
         ) -> Self {
             Self {
                 federation_id,
-                statement_name,
-                allowed_statement_values,
+                name: property_name,
+                allowed_values,
                 allow_any,
                 owner,
                 cached_ptb: OnceCell::new(),
             }
         }
 
-        /// Builds the programmable transaction for adding a statement.
+        /// Builds the programmable transaction for adding a property.
         ///
         /// This method creates the underlying Move transaction that will add
-        /// the new statement type to the federation with the specified constraints.
+        /// the new property type to the federation with the specified constraints.
         ///
         /// # Returns
         ///
@@ -82,15 +82,15 @@ pub mod add_statement {
         /// # Errors
         ///
         /// Returns an error if the owner doesn't have `RootAuthorityCap` or if
-        /// the statement name already exists in the federation.
+        /// the property name already exists in the federation.
         async fn make_ptb<C>(&self, client: &C) -> Result<ProgrammableTransaction, OperationError>
         where
             C: CoreClientReadOnly + OptionalSync,
         {
-            let ptb = HierarchiesImpl::add_statement(
+            let ptb = HierarchiesImpl::add_property(
                 self.federation_id,
-                self.statement_name.clone(),
-                self.allowed_statement_values.clone(),
+                self.name.clone(),
+                self.allowed_values.clone(),
                 self.allow_any,
                 self.owner,
                 client,
@@ -103,7 +103,7 @@ pub mod add_statement {
 
     #[cfg_attr(not(feature = "send-sync"), async_trait(?Send))]
     #[cfg_attr(feature = "send-sync", async_trait)]
-    impl Transaction for AddStatement {
+    impl Transaction for AddProperty {
         type Error = OperationError;
 
         type Output = ();
@@ -125,37 +125,37 @@ pub mod add_statement {
 }
 
 /// Transaction for revoking statement types from federations.
-pub mod revoke_statement {
+pub mod revoke_property {
     use super::*;
 
-    /// A transaction that revokes a statement type from a federation.
+    /// A transaction that revokes a property type from a federation.
     ///
-    /// This transaction allows root authorities to revoke statement types,
+    /// This transaction allows root authorities to revoke property types,
     /// preventing future attestations of that type. You can either revoke
     /// immediately or schedule the revocation for a specific future time.
     ///
     /// ## Requirements
     ///
     /// - The owner must possess `RootAuthorityCap` for the federation
-    /// - The statement must exist in the federation
+    /// - The property must exist in the federation
     #[derive(Debug, Clone)]
-    pub struct RevokeStatement {
+    pub struct RevokeProperty {
         federation_id: ObjectID,
-        statement_name: StatementName,
+        statement_name: PropertyName,
         valid_to_ms: Option<u64>,
         owner: IotaAddress,
         cached_ptb: OnceCell<ProgrammableTransaction>,
     }
 
-    impl RevokeStatement {
-        /// Creates a new [`RevokeStatement`] instance.
+    impl RevokeProperty {
+        /// Creates a new [`RevokeProperty`] instance.
         ///
         /// # Returns
         ///
-        /// A new `RevokeStatement` transaction instance ready for execution.
+        /// A new `RevokeProperty` transaction instance ready for execution.
         pub fn new(
             federation_id: ObjectID,
-            statement_name: StatementName,
+            statement_name: PropertyName,
             valid_to_ms: Option<u64>,
             owner: IotaAddress,
         ) -> Self {
@@ -168,10 +168,10 @@ pub mod revoke_statement {
             }
         }
 
-        /// Builds the programmable transaction for revoking a statement.
+        /// Builds the programmable transaction for revoking a property.
         ///
         /// This method creates the underlying Move transaction that will revoke
-        /// the statement type, either immediately or at a scheduled time.
+        /// the property type, either immediately or at a scheduled time.
         ///
         /// # Returns
         ///
@@ -180,14 +180,14 @@ pub mod revoke_statement {
         /// # Errors
         ///
         /// Returns an error if the owner doesn't have `RootAuthorityCap` or if
-        /// the statement doesn't exist in the federation.
+        /// the property doesn't exist in the federation.
         async fn make_ptb<C>(&self, client: &C) -> Result<ProgrammableTransaction, OperationError>
         where
             C: CoreClientReadOnly + OptionalSync,
         {
             let ptb = match self.valid_to_ms {
                 Some(valid_to_ms) => {
-                    HierarchiesImpl::revoke_statement_at(
+                    HierarchiesImpl::revoke_property_at(
                         self.federation_id,
                         self.statement_name.clone(),
                         valid_to_ms,
@@ -197,7 +197,7 @@ pub mod revoke_statement {
                     .await?
                 }
                 None => {
-                    HierarchiesImpl::revoke_statement(
+                    HierarchiesImpl::revoke_property(
                         self.federation_id,
                         self.statement_name.clone(),
                         self.owner,
@@ -213,7 +213,7 @@ pub mod revoke_statement {
 
     #[cfg_attr(not(feature = "send-sync"), async_trait(?Send))]
     #[cfg_attr(feature = "send-sync", async_trait)]
-    impl Transaction for RevokeStatement {
+    impl Transaction for RevokeProperty {
         type Error = OperationError;
 
         type Output = ();

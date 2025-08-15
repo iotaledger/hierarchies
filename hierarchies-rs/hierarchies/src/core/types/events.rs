@@ -8,7 +8,7 @@
 use iota_interaction::types::base_types::ObjectID;
 use serde::{Deserialize, Serialize};
 
-use crate::core::types::statements::name::StatementName;
+use crate::core::types::property_name::PropertyName;
 
 /// Event emitted when a new federation is created
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -20,7 +20,7 @@ pub struct FederationCreatedEvent {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct StatementAddedEvent {
     pub federation_address: ObjectID,
-    pub statement_name: StatementName,
+    pub statement_name: PropertyName,
     pub allow_any: bool,
 }
 
@@ -28,7 +28,7 @@ pub struct StatementAddedEvent {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct StatementRevokedEvent {
     pub federation_address: ObjectID,
-    pub statement_name: StatementName,
+    pub statement_name: PropertyName,
     pub valid_to_ms: u64,
 }
 

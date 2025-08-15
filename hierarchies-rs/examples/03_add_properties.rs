@@ -1,12 +1,9 @@
-// Copyright 2025 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use std::collections::HashSet;
 
 use anyhow::Context;
-use hierarchies::core::types::statements::name::StatementName;
-use hierarchies::core::types::statements::value::StatementValue;
 use hierarchies::core::types::Federation;
+use hierarchies::core::types::property_name::PropertyName;
+use hierarchies::core::types::value::PropertyValue;
 use hierarchies_examples::get_funded_client;
 
 /// Demonstrate how to add a Statement to a federation.
@@ -32,33 +29,33 @@ async fn main() -> anyhow::Result<()> {
     // Federation ID
     let federation_id = *federation.output.id.object_id();
 
-    // Trusted property name
-    let statement_name = StatementName::from("Example LTD");
+    // Federation property name
+    let property_name = PropertyName::from("Example LTD");
 
-    // Trusted property value
-    let value = StatementValue::Text("Hello".to_owned());
-    let another_value = StatementValue::Text("World".to_owned());
+    // Federation property value
+    let value = PropertyValue::Text("Hello".to_owned());
+    let another_value = PropertyValue::Text("World".to_owned());
     let allowed_values = HashSet::from([value, another_value]);
 
-    // Add the Statement to the federation
+    // Add the Property to the federation
     {
         hierarchies_client
-            .add_statement(federation_id, statement_name.clone(), allowed_values, false)
+            .add_property(federation_id, property_name.clone(), allowed_values, false)
             .build_and_execute(&hierarchies_client)
             .await
-            .context("Failed to add Statement")?;
+            .context("Failed to add Property")?;
     }
 
     // Get the updated federation and print it
     let federation: Federation = hierarchies_client.get_federation_by_id(federation_id).await?;
 
-    // Check if the Statement was added
-    let trusted_statements = federation.governance.statements.data.contains_key(&statement_name);
+    // Check if the Property was added
+    let federation_properties = federation.governance.properties.data.contains_key(&property_name);
 
-    assert!(trusted_statements);
+    assert!(federation_properties);
 
-    if let Some(statement) = federation.governance.statements.data.get(&statement_name) {
-        println!("Trusted Property: {statement:#?}")
+    if let Some(property) = federation.governance.properties.data.get(&property_name) {
+        println!("Trusted Property: {property:#?}")
     }
 
     Ok(())

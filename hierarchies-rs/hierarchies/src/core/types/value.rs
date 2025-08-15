@@ -3,37 +3,37 @@
 
 use std::str::FromStr;
 
+use iota_interaction::types::TypeTag;
 use iota_interaction::types::base_types::ObjectID;
 use iota_interaction::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 use iota_interaction::types::transaction::Argument;
-use iota_interaction::types::TypeTag;
-use iota_interaction::{ident_str, MoveType};
+use iota_interaction::{MoveType, ident_str};
 use serde::{Deserialize, Serialize};
 
-/// StatementValue represents the value of a Statement
+/// PropertyValue represents the value of a Property
 /// It can be either a text or a number
 #[derive(Debug, Clone, PartialEq, Hash, Eq, Serialize, Deserialize)]
-pub enum StatementValue {
+pub enum PropertyValue {
     Text(String),
     Number(u64),
 }
 
-impl StatementValue {
-    /// Converts the StatementValue to a ProgrammableTransactionBuilder argument
+impl PropertyValue {
+    /// Converts the PropertyValue to a ProgrammableTransactionBuilder argument
     pub(crate) fn to_ptb(
         &self,
         ptb: &mut ProgrammableTransactionBuilder,
         package_id: ObjectID,
     ) -> anyhow::Result<Argument> {
         match self.clone() {
-            StatementValue::Text(text) => new_statement_value_string(text, ptb, package_id),
-            StatementValue::Number(number) => new_statement_value_number(number, ptb, package_id),
+            PropertyValue::Text(text) => new_property_value_string(text, ptb, package_id),
+            PropertyValue::Number(number) => new_property_value_number(number, ptb, package_id),
         }
     }
 }
 
-/// Creates a new move type for a Statement value string
-pub(crate) fn new_statement_value_string(
+/// Creates a new move type for a Property value string
+pub(crate) fn new_property_value_string(
     value: String,
     ptb: &mut ProgrammableTransactionBuilder,
     package_id: ObjectID,
@@ -41,15 +41,15 @@ pub(crate) fn new_statement_value_string(
     let v = ptb.pure(value)?;
     Ok(ptb.programmable_move_call(
         package_id,
-        ident_str!("statement_value").into(),
-        ident_str!("new_statement_value_string").into(),
+        ident_str!("property_value").into(),
+        ident_str!("new_property_value_string").into(),
         vec![],
         vec![v],
     ))
 }
 
-/// Creates a new move type for a Statement value number
-pub(crate) fn new_statement_value_number(
+/// Creates a new move type for a Property value number
+pub(crate) fn new_property_value_number(
     value: u64,
     ptb: &mut ProgrammableTransactionBuilder,
     package_id: ObjectID,
@@ -57,16 +57,16 @@ pub(crate) fn new_statement_value_number(
     let v = ptb.pure(value)?;
     Ok(ptb.programmable_move_call(
         package_id,
-        ident_str!("statement_value").into(),
-        ident_str!("new_statement_value_number").into(),
+        ident_str!("property_value").into(),
+        ident_str!("new_property_value_number").into(),
         vec![],
         vec![v],
     ))
 }
 
-impl MoveType for StatementValue {
+impl MoveType for PropertyValue {
     fn move_type(package: ObjectID) -> TypeTag {
-        TypeTag::from_str(format!("{package}::statement_value::StatementValue").as_str())
+        TypeTag::from_str(format!("{package}::property_value::PropertyValue").as_str())
             .expect("Failed to create type tag")
     }
 }

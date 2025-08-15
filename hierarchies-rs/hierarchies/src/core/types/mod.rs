@@ -6,8 +6,11 @@
 mod accreditation;
 mod cap;
 pub mod events;
-pub mod statements;
+pub mod property;
+pub mod property_name;
+pub mod property_shape;
 pub mod timespan;
+pub mod value;
 
 use std::collections::HashMap;
 
@@ -17,8 +20,7 @@ use iota_interaction::types::base_types::ObjectID;
 use iota_interaction::types::id::UID;
 use serde::{Deserialize, Serialize};
 
-use crate::core::types::statements::Statements;
-use crate::utils::deserialize_vec_map;
+use crate::{core::types::property::FederationProperties, utils::deserialize_vec_map};
 
 /// Represents a federation. A federation is a group of entities that have agreed to work together
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -40,7 +42,7 @@ pub struct RootAuthority {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Governance {
     pub id: UID,
-    pub statements: Statements,
+    pub properties: FederationProperties,
     #[serde(deserialize_with = "deserialize_vec_map")]
     pub accreditations_to_accredit: HashMap<ObjectID, Accreditations>,
     #[serde(deserialize_with = "deserialize_vec_map")]

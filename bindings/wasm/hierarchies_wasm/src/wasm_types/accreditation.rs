@@ -6,9 +6,9 @@ use product_common::bindings::WasmObjectID;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
-use crate::wasm_types::WasmStatement;
+use crate::wasm_types::WasmProperty;
 
-/// Represents an accreditation, which is a collection of statements granted by an accreditor.
+/// Represents an accreditation, which is a collection of properties granted by an accreditor.
 #[wasm_bindgen(js_name = Accreditation, inspectable)]
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Eq)]
 pub struct WasmAccreditation(pub(crate) Accreditation);
@@ -27,13 +27,13 @@ impl WasmAccreditation {
         self.0.accredited_by.clone()
     }
 
-    /// Returns the statements associated with this accreditation as a map.
+    /// Returns the properties associated with this accreditation as a map.
     #[wasm_bindgen(getter)]
-    pub fn statements(&self) -> Box<[WasmStatement]> {
+    pub fn properties(&self) -> Box<[WasmProperty]> {
         self.0
-            .statements
+            .properties
             .iter()
-            .map(|(_, statement)| WasmStatement::from(statement.clone()))
+            .map(|(_, property)| WasmProperty::from(property.clone()))
             .collect::<Vec<_>>()
             .into_boxed_slice()
     }

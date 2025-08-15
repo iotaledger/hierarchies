@@ -11,29 +11,29 @@
 //! to create trusted attestations for the specified statements.
 
 use async_trait::async_trait;
+use iota_interaction::OptionalSync;
 use iota_interaction::rpc_types::IotaTransactionBlockEffects;
 use iota_interaction::types::base_types::{IotaAddress, ObjectID};
 use iota_interaction::types::transaction::ProgrammableTransaction;
-use iota_interaction::OptionalSync;
 use product_common::core_client::CoreClientReadOnly;
 use product_common::transaction::transaction_builder::Transaction;
 use tokio::sync::OnceCell;
 
-use crate::core::operations::{HierarchiesImpl, HierarchiesOperations};
-use crate::core::types::statements::Statement;
 use crate::core::OperationError;
+use crate::core::operations::{HierarchiesImpl, HierarchiesOperations};
+use crate::core::types::property::FederationProperty;
 
-/// Transaction for creating accreditation to attest permissions.
+/// Transaction for creating accreditation to attest.
 ///
 /// This transaction allows a user with sufficient permissions to grant another user
-/// the ability to create attestations for specific statements.
+/// the ability to create attestations for specific properties.
 pub struct CreateAccreditationToAttest {
     /// The ID of the federation where the accreditation will be granted
     federation_id: ObjectID,
-    /// The ID of the user who will receive the attestation permissions
+    /// The ID of the user who will receive the attestation
     receiver: ObjectID,
-    /// The statements for which attestation permissions are being granted
-    want_statements: Vec<Statement>,
+    /// The properties for which attestation is being granted
+    want_properties: Vec<FederationProperty>,
     /// The address of the signer (used for capability verification)
     signer_address: IotaAddress,
     /// Cached programmable transaction
@@ -45,13 +45,13 @@ impl CreateAccreditationToAttest {
     pub fn new(
         federation_id: ObjectID,
         receiver: ObjectID,
-        want_statements: impl IntoIterator<Item = Statement>,
+        want_properties: impl IntoIterator<Item = FederationProperty>,
         signer_address: IotaAddress,
     ) -> Self {
         Self {
             federation_id,
             receiver,
-            want_statements: want_statements.into_iter().collect(),
+            want_properties: want_properties.into_iter().collect(),
             signer_address,
             cached_ptb: OnceCell::new(),
         }
@@ -65,7 +65,7 @@ impl CreateAccreditationToAttest {
         let ptb = HierarchiesImpl::create_accreditation_to_attest(
             self.federation_id,
             self.receiver,
-            self.want_statements.clone(),
+            self.want_properties.clone(),
             self.signer_address,
             client,
         )

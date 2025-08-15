@@ -11,28 +11,28 @@
 //! ability to create trusted attestations for specific statements.
 
 use async_trait::async_trait;
+use iota_interaction::OptionalSync;
 use iota_interaction::rpc_types::IotaTransactionBlockEffects;
 use iota_interaction::types::base_types::{IotaAddress, ObjectID};
 use iota_interaction::types::transaction::ProgrammableTransaction;
-use iota_interaction::OptionalSync;
 use product_common::core_client::CoreClientReadOnly;
 use product_common::transaction::transaction_builder::Transaction;
 use tokio::sync::OnceCell;
 
-use crate::core::operations::{HierarchiesImpl, HierarchiesOperations};
 use crate::core::OperationError;
+use crate::core::operations::{HierarchiesImpl, HierarchiesOperations};
 
-/// Transaction for revoking accreditation to attest permissions.
+/// Transaction for revoking accreditation to attest.
 ///
 /// This transaction allows a user with sufficient permissions to revoke another user's
-/// ability to create attestations for specific statements.
+/// ability to create attestations for specific properties.
 pub struct RevokeAccreditationToAttest {
     /// The ID of the federation where the accreditation will be revoked
     federation_id: ObjectID,
     /// The ID of the user whose attestation permissions will be revoked
     entity_id: ObjectID,
-    /// The ID of the specific permission/accreditation to revoke
-    permission_id: ObjectID,
+    /// The ID of the specific accreditation to revoke
+    accreditation_id: ObjectID,
     /// The address of the signer (used for capability verification)
     signer_address: IotaAddress,
     /// Cached programmable transaction
@@ -44,13 +44,13 @@ impl RevokeAccreditationToAttest {
     pub fn new(
         federation_id: ObjectID,
         entity_id: ObjectID,
-        permission_id: ObjectID,
+        accreditation_id: ObjectID,
         signer_address: IotaAddress,
     ) -> Self {
         Self {
             federation_id,
             entity_id,
-            permission_id,
+            accreditation_id,
             signer_address,
             cached_ptb: OnceCell::new(),
         }
@@ -64,7 +64,7 @@ impl RevokeAccreditationToAttest {
         let ptb = HierarchiesImpl::revoke_accreditation_to_attest(
             self.federation_id,
             self.entity_id,
-            self.permission_id,
+            self.accreditation_id,
             self.signer_address,
             client,
         )

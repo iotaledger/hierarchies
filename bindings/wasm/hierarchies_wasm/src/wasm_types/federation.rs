@@ -3,14 +3,14 @@
 
 use std::collections::HashSet;
 
-use hierarchies::core::types::statements::{Statement, Statements};
+use hierarchies::core::types::property::{FederationProperties, FederationProperty};
 use hierarchies::core::types::timespan::Timespan;
 use hierarchies::core::types::{Federation, Governance, RootAuthority};
 use product_common::bindings::WasmObjectID;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::wasm_bindgen;
 
-use crate::wasm_types::{WasmAccreditations, WasmStatementCondition, WasmStatementName, WasmStatementValue};
+use crate::wasm_types::{WasmAccreditations, WasmPropertyName, WasmPropertyShape, WasmPropertyValue};
 
 /// Represents a federation. A federation is a group of entities that have agreed to work together
 #[wasm_bindgen(js_name = Federation, inspectable)]
@@ -88,13 +88,13 @@ impl WasmGovernance {
         self.0.id.object_id().to_string()
     }
 
-    /// Retrieves the statements in the governance.
+    /// Retrieves the properties in the governance.
     ///
     /// # Returns
-    /// The statements object.
+    /// The properties object.
     #[wasm_bindgen(getter)]
-    pub fn statements(&self) -> WasmStatements {
-        self.0.statements.clone().into()
+    pub fn properties(&self) -> WasmProperties {
+        self.0.properties.clone().into()
     }
 
     /// Retrieves the accreditations to accredit mapping.
@@ -162,83 +162,83 @@ impl WasmRootAuthority {
     }
 }
 
-/// Statements is a struct that contains a map of StatementName to Statement
-#[wasm_bindgen(js_name = Statements, inspectable)]
+/// Properties is a struct that contains a map of PropertyName to Property
+#[wasm_bindgen(js_name = Properties, inspectable)]
 #[derive(Deserialize, Serialize, Clone)]
-pub struct WasmStatements(pub(crate) Statements);
+pub struct WasmProperties(pub(crate) FederationProperties);
 
-impl From<Statements> for WasmStatements {
-    fn from(value: Statements) -> Self {
-        WasmStatements(value)
+impl From<FederationProperties> for WasmProperties {
+    fn from(value: FederationProperties) -> Self {
+        WasmProperties(value)
     }
 }
 
-#[wasm_bindgen(js_class = Statements)]
-impl WasmStatements {
-    /// Retrieves all statement names and their corresponding statement data as a JavaScript Map.
+#[wasm_bindgen(js_class = Properties)]
+impl WasmProperties {
+    /// Retrieves all property names and their corresponding property data as a JavaScript Map.
     ///
     /// # Returns
-    /// A list of Statement objects.
+    /// A list of Property objects.
     #[wasm_bindgen(getter)]
-    pub fn data(&self) -> Vec<WasmStatement> {
+    pub fn data(&self) -> Vec<WasmProperty> {
         self.0
             .data
             .iter()
-            .map(|(_, v)| WasmStatement::from(v.clone()))
+            .map(|(_, v)| WasmProperty::from(v.clone()))
             .collect::<Vec<_>>()
     }
 
-    /// Adds a new statement to the statements list
-    pub fn add_statement(&mut self, statement: WasmStatement) {
-        self.0.data.insert(statement.statement_name().0.clone(), statement.0);
+    /// Adds a new property to the properties list
+    pub fn add_property(&mut self, property: WasmProperty) {
+        self.0.data.insert(property.property_name().0.clone(), property.0);
     }
 }
 
-/// Represents a statement that can be granted to an account. A statement
-/// consists of a set of statements that must be satisfied by the account
-/// in order to be granted the statement.
+/// Represents a property that can be granted to an account. A property
+/// consists of a set of properties that must be satisfied by the account
+/// in order to be granted the property.
 ///
-/// The evaluation order: allow_any => condition => allowed_values
+/// The evaluation order: allow_any => shape => allowed_values
 /// The evaluation order is determined by the possible size of the set of values
-/// that match the condition.
-#[wasm_bindgen(js_name = Statement, inspectable)]
+/// that match the shape.
+#[wasm_bindgen(js_name = FederationProperty, inspectable)]
 #[derive(Deserialize, Serialize, Clone)]
-pub struct WasmStatement(pub(crate) Statement);
+pub struct WasmProperty(pub(crate) FederationProperty);
 
-impl From<Statement> for WasmStatement {
-    fn from(value: Statement) -> Self {
-        WasmStatement(value)
+impl From<FederationProperty> for WasmProperty {
+    fn from(value: FederationProperty) -> Self {
+        WasmProperty(value)
     }
 }
 
-impl From<WasmStatement> for Statement {
-    fn from(value: WasmStatement) -> Self {
+impl From<WasmProperty> for FederationProperty {
+    fn from(value: WasmProperty) -> Self {
         value.0
     }
 }
 
-#[wasm_bindgen(js_class = Statement)]
-impl WasmStatement {
+#[wasm_bindgen(js_class = FederationProperty)]
+impl WasmProperty {
     #[wasm_bindgen(constructor)]
-    pub fn new(statement_name: &WasmStatementName) -> Self {
-        WasmStatement(Statement {
-            statement_name: statement_name.clone().into(),
+    pub fn new(property_name: &WasmPropertyName) -> Self {
+        WasmProperty(FederationProperty {
+            name: property_name.clone().into(),
             allowed_values: HashSet::new(),
-            condition: None,
+            shape: None,
             allow_any: false,
             timespan: Timespan::default(),
         })
     }
 
     #[wasm_bindgen(js_name=withAllowedValues)]
-    pub fn with_allowed_values(mut self, allowed_values: Box<[WasmStatementValue]>) -> Self {
+    pub fn with_allowed_values(mut self, allowed_values: Box<[WasmPropertyValue]>) -> Self {
         self.0.allowed_values = allowed_values.iter().cloned().map(|v| v.0).collect();
         self
     }
 
     #[wasm_bindgen(js_name=withCondition)]
-    pub fn with_condition(mut self, condition: WasmStatementCondition) -> Self {
-        self.0.condition = Some(condition.0);
+    pub fn with_condition(mut self, condition: WasmPropertyShape) -> Self {
+        self.0.shape = Some(condition.0);
         self
     }
 
@@ -248,52 +248,52 @@ impl WasmStatement {
         self
     }
 
-    /// Retrieves the statement name.
+    /// Retrieves the property name.
     ///
     /// # Returns
-    /// The statement name.
-    #[wasm_bindgen(getter, js_name = statementName)]
-    pub fn statement_name(&self) -> WasmStatementName {
-        self.0.statement_name.clone().into()
+    /// The property name.
+    #[wasm_bindgen(getter, js_name = propertyName)]
+    pub fn property_name(&self) -> WasmPropertyName {
+        self.0.name.clone().into()
     }
 
-    /// Sets the statement name.
-    #[wasm_bindgen(setter, js_name = statementName)]
-    pub fn set_statement_name(&mut self, statement_name: WasmStatementName) {
-        self.0.statement_name = statement_name.0;
+    /// Sets the property name.
+    #[wasm_bindgen(setter, js_name = propertyName)]
+    pub fn set_property_name(&mut self, property_name: WasmPropertyName) {
+        self.0.name = property_name.0;
     }
 
-    /// Retrieves the allowed values for this statement.
+    /// Retrieves the allowed values for this property.
     ///
     /// # Returns
-    /// An array of allowed statement values.
+    /// An array of allowed property values.
     #[wasm_bindgen(getter, js_name = allowedValues)]
-    pub fn allowed_values(&self) -> Box<[WasmStatementValue]> {
+    pub fn allowed_values(&self) -> Box<[WasmPropertyValue]> {
         self.0.allowed_values.iter().map(|v| v.clone().into()).collect()
     }
 
-    /// Sets the allowed values for this statement.
+    /// Sets the allowed values for this property.
     #[wasm_bindgen(setter, js_name = allowedValues)]
-    pub fn set_allowed_values(&mut self, allowed_values: Box<[WasmStatementValue]>) {
+    pub fn set_allowed_values(&mut self, allowed_values: Box<[WasmPropertyValue]>) {
         self.0.allowed_values = allowed_values.iter().cloned().map(|v| v.0).collect();
     }
 
-    /// Retrieves the condition for this statement.
+    /// Retrieves the condition for this property.
     ///
     /// # Returns
-    /// The statement value condition if present.
+    /// The property value condition if present.
     #[wasm_bindgen(getter)]
-    pub fn condition(&self) -> Option<WasmStatementCondition> {
-        self.0.condition.as_ref().map(|c| c.clone().into())
+    pub fn condition(&self) -> Option<WasmPropertyShape> {
+        self.0.shape.as_ref().map(|c| c.clone().into())
     }
 
-    /// Sets the condition for this statement.
+    /// Sets the condition for this property.
     #[wasm_bindgen(setter, js_name = condition)]
-    pub fn set_condition(&mut self, condition: WasmStatementCondition) {
-        self.0.condition = Some(condition.0);
+    pub fn set_condition(&mut self, condition: WasmPropertyShape) {
+        self.0.shape = Some(condition.0);
     }
 
-    /// Checks if any value is allowed for this statement.
+    /// Checks if any value is allowed for this property.
     ///
     /// # Returns
     /// A boolean indicating if any value is allowed.
@@ -302,13 +302,13 @@ impl WasmStatement {
         self.0.allow_any
     }
 
-    /// Sets whether any value is allowed for this statement.
+    /// Sets whether any value is allowed for this property.
     #[wasm_bindgen(setter, js_name = allowAny)]
     pub fn set_allow_any(&mut self, allow_any: bool) {
         self.0.allow_any = allow_any;
     }
 
-    /// Retrieves the timespan for this statement.
+    /// Retrieves the timespan for this property.
     ///
     /// # Returns
     /// The timespan object.
@@ -317,14 +317,14 @@ impl WasmStatement {
         self.0.timespan.clone().into()
     }
 
-    /// Sets the timespan for this statement.
+    /// Sets the timespan for this property.
     #[wasm_bindgen(setter, js_name = timespan)]
     pub fn set_timespan(&mut self, timespan: WasmTimespan) {
         self.0.timespan = timespan.0;
     }
 }
 
-/// Represents the time span of validity for a statement
+/// Represents the time span of validity for a property
 #[wasm_bindgen(js_name = Timespan, inspectable)]
 #[derive(Deserialize, Serialize, Clone)]
 pub struct WasmTimespan(pub(crate) Timespan);

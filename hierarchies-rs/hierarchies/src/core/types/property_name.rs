@@ -7,20 +7,20 @@
 
 use std::str::FromStr;
 
+use iota_interaction::types::TypeTag;
 use iota_interaction::types::base_types::ObjectID;
 use iota_interaction::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 use iota_interaction::types::transaction::Argument;
-use iota_interaction::types::TypeTag;
-use iota_interaction::{ident_str, MoveType};
+use iota_interaction::{MoveType, ident_str};
 use serde::{Deserialize, Serialize};
 
-/// StatementName represents the name of a Statement
+/// PropertyName represents the name of a Property
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, PartialOrd, Ord)]
-pub struct StatementName {
+pub struct PropertyName {
     names: Vec<String>,
 }
 
-impl<D> From<D> for StatementName
+impl<D> From<D> for PropertyName
 where
     D: Into<String>,
 {
@@ -31,8 +31,8 @@ where
     }
 }
 
-impl StatementName {
-    /// Create a new StatementName
+impl PropertyName {
+    /// Create a new PropertyName
     pub fn new<D>(names: impl IntoIterator<Item = D>) -> Self
     where
         D: Into<String>,
@@ -47,33 +47,33 @@ impl StatementName {
     }
 
     pub fn to_ptb(&self, ptb: &mut ProgrammableTransactionBuilder, package_id: ObjectID) -> anyhow::Result<Argument> {
-        new_statement_name(self, ptb, package_id)
+        new_property_name(self, ptb, package_id)
     }
 }
 
-impl MoveType for StatementName {
+impl MoveType for PropertyName {
     fn move_type(package: ObjectID) -> TypeTag {
-        TypeTag::from_str(format!("{package}::statement_name::StatementName").as_str())
+        TypeTag::from_str(format!("{package}::property_name::PropertyName").as_str())
             .expect("Failed to create type tag")
     }
 }
 
-/// Creates a new move type for a Statement name
-pub(crate) fn new_statement_name(
-    name: &StatementName,
+/// Creates a new move type for a Property name
+pub(crate) fn new_property_name(
+    name: &PropertyName,
     ptb: &mut ProgrammableTransactionBuilder,
     package_id: ObjectID,
 ) -> anyhow::Result<Argument> {
     let names = ptb.pure(name.names())?;
-    let statement_names: Argument = ptb.programmable_move_call(
+    let property_names: Argument = ptb.programmable_move_call(
         package_id,
-        ident_str!("statement_name").into(),
-        ident_str!("new_statement_name_from_vector").into(),
+        ident_str!("property_name").into(),
+        ident_str!("new_property_name_from_vector").into(),
         vec![],
         vec![names],
     );
 
-    Ok(statement_names)
+    Ok(property_names)
 }
 
 #[cfg(test)]
@@ -84,13 +84,13 @@ mod tests {
 
     #[test]
     fn test_trusted_statement_name() {
-        let name = StatementName::new(["name", "name2"]);
+        let name = PropertyName::new(["name", "name2"]);
 
         let json = json!({
           "names": ["name", "name2"]
         });
 
         assert_eq!(serde_json::to_value(&name).unwrap(), json);
-        assert_eq!(serde_json::from_value::<StatementName>(json).unwrap(), name);
+        assert_eq!(serde_json::from_value::<PropertyName>(json).unwrap(), name);
     }
 }

@@ -83,16 +83,16 @@ use secret_storage::Signer;
 use super::HierarchiesClientReadOnly;
 use crate::client::error::ClientError;
 use crate::core::transactions::add_root_authority::AddRootAuthority;
+use crate::core::transactions::properties::add_property::AddProperty;
+use crate::core::transactions::properties::revoke_property::RevokeProperty;
 use crate::core::transactions::revoke_root_authority::RevokeRootAuthority;
-use crate::core::transactions::statements::add_statement::AddStatement;
-use crate::core::transactions::statements::revoke_statement::RevokeStatement;
 use crate::core::transactions::{
     CreateAccreditation, CreateAccreditationToAttest, CreateFederation, ReinstateRootAuthority,
     RevokeAccreditationToAccredit, RevokeAccreditationToAttest,
 };
-use crate::core::types::statements::name::StatementName;
-use crate::core::types::statements::value::StatementValue;
-use crate::core::types::statements::Statement;
+use crate::core::types::property::FederationProperty;
+use crate::core::types::property_name::PropertyName;
+use crate::core::types::value::PropertyValue;
 use crate::iota_interaction_adapter::IotaClientAdapter;
 
 /// The `HierarchiesClient` struct is responsible for managing the connection to the
@@ -194,31 +194,31 @@ where
         ))
     }
 
-    /// Creates a new [`AddStatement`] transaction builder.
-    pub fn add_statement(
+    /// Creates a new [`AddProperty`] transaction builder.
+    pub fn add_property(
         &self,
         federation_id: ObjectID,
-        statement_name: StatementName,
-        allowed_statement_values: HashSet<StatementValue>,
+        property_name: PropertyName,
+        allowed_property_values: HashSet<PropertyValue>,
         allow_any: bool,
-    ) -> TransactionBuilder<AddStatement> {
-        TransactionBuilder::new(AddStatement::new(
+    ) -> TransactionBuilder<AddProperty> {
+        TransactionBuilder::new(AddProperty::new(
             federation_id,
-            statement_name,
-            allowed_statement_values,
+            property_name,
+            allowed_property_values,
             allow_any,
             self.sender_address(),
         ))
     }
 
-    /// Creates a new [`RevokeStatement`] transaction builder.
-    pub fn revoke_statement(
+    /// Creates a new [`RevokeProperty`] transaction builder.
+    pub fn revoke_property(
         &self,
         federation_id: ObjectID,
-        statement_name: StatementName,
+        statement_name: PropertyName,
         valid_to_ms: Option<u64>,
-    ) -> TransactionBuilder<RevokeStatement> {
-        TransactionBuilder::new(RevokeStatement::new(
+    ) -> TransactionBuilder<RevokeProperty> {
+        TransactionBuilder::new(RevokeProperty::new(
             federation_id,
             statement_name,
             valid_to_ms,
@@ -231,7 +231,7 @@ where
         &self,
         federation_id: ObjectID,
         receiver: ObjectID,
-        want_statements: impl IntoIterator<Item = Statement>,
+        want_statements: impl IntoIterator<Item = FederationProperty>,
     ) -> TransactionBuilder<CreateAccreditationToAttest> {
         TransactionBuilder::new(CreateAccreditationToAttest::new(
             federation_id,
@@ -261,12 +261,12 @@ where
         &self,
         federation_id: ObjectID,
         receiver: ObjectID,
-        statements: impl IntoIterator<Item = Statement>,
+        properties: impl IntoIterator<Item = FederationProperty>,
     ) -> TransactionBuilder<CreateAccreditation> {
         TransactionBuilder::new(CreateAccreditation::new(
             federation_id,
             receiver,
-            statements.into_iter().collect(),
+            properties.into_iter().collect(),
             self.sender_address(),
         ))
     }

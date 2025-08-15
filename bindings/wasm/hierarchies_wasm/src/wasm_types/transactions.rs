@@ -3,22 +3,23 @@
 
 use std::collections::HashSet;
 
+use hierarchies::core::transactions::properties::add_property::AddProperty;
+use hierarchies::core::transactions::properties::revoke_property::RevokeProperty;
+use hierarchies::core::transactions::{
+    AddRootAuthority, CreateAccreditation as CreateAccreditationToAccredit, CreateAccreditationToAttest,
+    CreateFederation, ReinstateRootAuthority, RevokeAccreditationToAccredit, RevokeAccreditationToAttest,
+    RevokeRootAuthority,
+};
 use iota_interaction_ts::bindings::{WasmIotaTransactionBlockEffects, WasmIotaTransactionBlockEvents};
 use iota_interaction_ts::core_client::WasmCoreClientReadOnly;
-use iota_interaction_ts::wasm_error::{wasm_error, Result};
-use hierarchies::core::transactions::statements::add_statement::AddStatement;
-use hierarchies::core::transactions::statements::revoke_statement::RevokeStatement;
-use hierarchies::core::transactions::{
-    AddRootAuthority, CreateAccreditation, CreateAccreditationToAttest, CreateFederation,
-    ReinstateRootAuthority, RevokeAccreditationToAccredit, RevokeAccreditationToAttest, RevokeRootAuthority,
-};
+use iota_interaction_ts::wasm_error::{Result, wasm_error};
 use product_common::bindings::utils::{
     apply_with_events, build_programmable_transaction, parse_wasm_iota_address, parse_wasm_object_id,
 };
 use product_common::bindings::{WasmIotaAddress, WasmObjectID};
 use wasm_bindgen::prelude::*;
 
-use crate::wasm_types::{WasmFederation, WasmStatement, WasmStatementName, WasmStatementValue};
+use crate::wasm_types::{WasmFederation, WasmProperty, WasmPropertyName, WasmPropertyValue};
 
 /// A wrapper for the `CreateFederation` transaction.
 #[wasm_bindgen (js_name=CreateFederation, inspectable)]
@@ -150,7 +151,11 @@ impl WasmRevokeRootAuthority {
         let account_id = parse_wasm_object_id(&account_id)?;
         let signer_address = parse_wasm_iota_address(&signer_address)?;
 
-        Ok(Self(RevokeRootAuthority::new(federation_id, account_id, signer_address)))
+        Ok(Self(RevokeRootAuthority::new(
+            federation_id,
+            account_id,
+            signer_address,
+        )))
     }
 
     /// Builds and returns a programmable transaction for revoking a root authority.
@@ -210,7 +215,11 @@ impl WasmReinstateRootAuthority {
         let account_id = parse_wasm_object_id(&account_id)?;
         let signer_address = parse_wasm_iota_address(&signer_address)?;
 
-        Ok(Self(ReinstateRootAuthority::new(federation_id, account_id, signer_address)))
+        Ok(Self(ReinstateRootAuthority::new(
+            federation_id,
+            account_id,
+            signer_address,
+        )))
     }
 
     /// Builds and returns a programmable transaction for reinstating a root authority.
@@ -251,44 +260,44 @@ impl WasmReinstateRootAuthority {
     }
 }
 
-/// A wrapper for the `AddStatement` transaction.
-#[wasm_bindgen(js_name = AddStatement, inspectable)]
-pub struct WasmAddStatement(pub(crate) AddStatement);
+/// A wrapper for the `AddProperty` transaction.
+#[wasm_bindgen(js_name = AddProperty, inspectable)]
+pub struct WasmAddProperty(pub(crate) AddProperty);
 
-#[wasm_bindgen(js_class = AddStatement)]
-impl WasmAddStatement {
-    /// Creates a new instance of `WasmAddStatement`.
+#[wasm_bindgen(js_class = AddProperty)]
+impl WasmAddProperty {
+    /// Creates a new instance of `WasmAddProperty`.
     ///
     /// # Arguments
     ///
     /// * `federation_id` - The ID of the federation.
-    /// * `statement_name` - The name of the statement.
-    /// * `allowed_values` - The allowed values for the statement.
-    /// * `allow_any` - A flag indicating if any value is allowed.
+    /// * `property_name` - The name of the property.
+    /// * `property_shape` - The shape of the property.
+    /// * `property_values` - The values of the property.
     /// * `owner` - The address of the transaction signer.
     #[wasm_bindgen(constructor)]
     pub fn new(
         federation_id: WasmObjectID,
-        statement_name: WasmStatementName,
-        allowed_values: Vec<WasmStatementValue>,
+        property_name: WasmPropertyName,
+        property_values: Vec<WasmPropertyValue>,
         allow_any: bool,
         owner: WasmIotaAddress,
     ) -> Result<Self> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
-        let statement_name = statement_name.into();
-        let allowed_values = allowed_values.into_iter().map(|v| v.into()).collect::<HashSet<_>>();
+        let property_name = property_name.into();
+        let property_values = property_values.into_iter().map(|v| v.into()).collect::<HashSet<_>>();
         let signer_address = parse_wasm_iota_address(&owner)?;
 
-        Ok(Self(AddStatement::new(
+        Ok(Self(AddProperty::new(
             federation_id,
-            statement_name,
-            allowed_values,
+            property_name,
+            property_values,
             allow_any,
             signer_address,
         )))
     }
 
-    /// Builds and returns a programmable transaction for adding a statement.
+    /// Builds and returns a programmable transaction for adding a property.
     ///
     /// # Arguments
     ///
@@ -306,7 +315,7 @@ impl WasmAddStatement {
         build_programmable_transaction(&self.0, client).await
     }
 
-    /// Applies transaction effects and events to this add statement operation.
+    /// Applies transaction effects and events to this add property operation.
     ///
     /// # Arguments
     ///
@@ -326,39 +335,39 @@ impl WasmAddStatement {
     }
 }
 
-/// A wrapper for the `RevokeStatement` transaction.
-#[wasm_bindgen(js_name = RevokeStatement, inspectable)]
-pub struct WasmRevokeStatement(pub(crate) RevokeStatement);
+/// A wrapper for the `RevokeProperty` transaction.
+#[wasm_bindgen(js_name = RevokeProperty, inspectable)]
+pub struct WasmRevokeProperty(pub(crate) RevokeProperty);
 
-#[wasm_bindgen(js_class = RevokeStatement)]
-impl WasmRevokeStatement {
-    /// Creates a new instance of `WasmRevokeStatement`.
+#[wasm_bindgen(js_class = RevokeProperty)]
+impl WasmRevokeProperty {
+    /// Creates a new instance of `WasmRevokeProperty`.
     ///
     /// # Arguments
     ///
     /// * `federation_id` - The ID of the federation.
-    /// * `statement_name` - The name of the statement to revoke.
-    /// * `valid_to_ms` - The timestamp until which the statement is valid.
+    /// * `property_name` - The name of the property to revoke.
+    /// * `valid_to_ms` - The timestamp until which the property is valid.
     /// * `owner` - The address of the transaction signer.
     #[wasm_bindgen(constructor)]
     pub fn new(
         federation_id: WasmObjectID,
-        statement_name: WasmStatementName,
+        property_name: WasmPropertyName,
         valid_to_ms: Option<u64>,
         owner: WasmIotaAddress,
     ) -> Result<Self> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
-        let statement_name = statement_name.into();
+        let property_name = property_name.into();
         let signer_address = parse_wasm_iota_address(&owner)?;
-        Ok(Self(RevokeStatement::new(
+        Ok(Self(RevokeProperty::new(
             federation_id,
-            statement_name,
+            property_name,
             valid_to_ms,
             signer_address,
         )))
     }
 
-    /// Builds and returns a programmable transaction for revoking a statement.
+    /// Builds and returns a programmable transaction for revoking a property.
     ///
     /// # Arguments
     ///
@@ -376,7 +385,7 @@ impl WasmRevokeStatement {
         build_programmable_transaction(&self.0, client).await
     }
 
-    /// Applies transaction effects and events to this revoke statement operation.
+    /// Applies transaction effects and events to this revoke property operation.
     ///
     /// # Arguments
     ///
@@ -408,31 +417,31 @@ impl WasmCreateAccreditationToAttest {
     ///
     /// * `federation_id` - The ID of the federation.
     /// * `receiver` - The ID of the receiver of the accreditation.
-    /// * `want_statements` - The statements for which permissions are being granted.
+    /// * `want_properties` - The properties for which permissions are being granted.
     /// * `owner` - The address of the transaction signer.
     #[wasm_bindgen(constructor)]
     pub fn new(
         federation_id: WasmObjectID,
         receiver: WasmObjectID,
-        want_statements: js_sys::Array,
+        want_properties: js_sys::Array,
         owner: WasmIotaAddress,
     ) -> Result<Self> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         let receiver = parse_wasm_object_id(&receiver)?;
-        let want_statements = want_statements
+        let want_properties = want_properties
             .iter()
-            .map(|v| serde_wasm_bindgen::from_value::<WasmStatement>(v).map_err(wasm_error))
+            .map(|v| serde_wasm_bindgen::from_value::<WasmProperty>(v).map_err(wasm_error))
             .collect::<Result<Vec<_>>>()?;
         let signer_address = parse_wasm_iota_address(&owner)?;
         Ok(Self(CreateAccreditationToAttest::new(
             federation_id,
             receiver,
-            want_statements.into_iter().map(|s| s.into()),
+            want_properties.into_iter().map(|s| s.into()),
             signer_address,
         )))
     }
 
-    /// Builds and returns a programmable transaction for creating an accreditation to attest.
+    /// Builds and returns a programmable transaction for creating an accreditation to accredit.
     ///
     /// # Arguments
     ///
@@ -450,7 +459,7 @@ impl WasmCreateAccreditationToAttest {
         build_programmable_transaction(&self.0, client).await
     }
 
-    /// Applies transaction effects and events to this create accreditation to attest operation.
+    /// Applies transaction effects and events to this create accreditation to accredit operation.
     ///
     /// # Arguments
     ///
@@ -470,7 +479,7 @@ impl WasmCreateAccreditationToAttest {
     }
 }
 
-/// A wrapper for the `RevokeAccreditationToAttest` transaction.
+/// A wrapper for the `RevokeAccreditationToAccredit` transaction.
 #[wasm_bindgen(js_name = RevokeAccreditationToAttest, inspectable)]
 pub struct WasmRevokeAccreditationToAttest(pub(crate) RevokeAccreditationToAttest);
 
@@ -481,23 +490,23 @@ impl WasmRevokeAccreditationToAttest {
     /// # Arguments
     ///
     /// * `federation_id` - The ID of the federation.
-    /// * `receiver` - The ID of the receiver of the accreditation.
+    /// * `entity_id` - The ID of the user whose accreditation is being revoked.
     /// * `accreditation_id` - The ID of the accreditation to revoke.
     /// * `owner` - The address of the transaction signer.
     #[wasm_bindgen(constructor)]
     pub fn new(
         federation_id: WasmObjectID,
-        receiver: WasmObjectID,
+        entity_id: WasmObjectID,
         accreditation_id: WasmObjectID,
         owner: WasmIotaAddress,
     ) -> Result<Self> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
-        let receiver = parse_wasm_object_id(&receiver)?;
+        let entity_id = parse_wasm_object_id(&entity_id)?;
         let accreditation_id = parse_wasm_object_id(&accreditation_id)?;
         let signer_address = parse_wasm_iota_address(&owner)?;
         Ok(Self(RevokeAccreditationToAttest::new(
             federation_id,
-            receiver,
+            entity_id,
             accreditation_id,
             signer_address,
         )))
@@ -543,7 +552,7 @@ impl WasmRevokeAccreditationToAttest {
 
 /// A wrapper for the `CreateAccreditationToAccredit` transaction.
 #[wasm_bindgen(js_name = CreateAccreditationToAccredit, inspectable)]
-pub struct WasmCreateAccreditationToAccredit(pub(crate) CreateAccreditation);
+pub struct WasmCreateAccreditationToAccredit(pub(crate) CreateAccreditationToAccredit);
 
 #[wasm_bindgen(js_class = CreateAccreditationToAccredit)]
 impl WasmCreateAccreditationToAccredit {
@@ -552,27 +561,27 @@ impl WasmCreateAccreditationToAccredit {
     /// # Arguments
     ///
     /// * `federation_id` - The ID of the federation.
-    /// * `receiver` - The ID of the receiver of the accreditation.
-    /// * `want_statements` - The statements for which permissions are being granted.
+    /// * `receiver_id` - The ID of the receiver of the accreditation.
+    /// * `want_properties` - The properties for which permissions are being granted.
     /// * `owner` - The address of the transaction signer.
     #[wasm_bindgen(constructor)]
     pub fn new(
         federation_id: WasmObjectID,
-        receiver: WasmObjectID,
-        want_statements: js_sys::Array,
+        receiver_id: WasmObjectID,
+        want_properties: js_sys::Array,
         owner: WasmIotaAddress,
     ) -> Result<Self> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
-        let receiver = parse_wasm_object_id(&receiver)?;
-        let want_statements = want_statements
+        let receiver_id = parse_wasm_object_id(&receiver_id)?;
+        let want_properties = want_properties
             .iter()
-            .map(|v| serde_wasm_bindgen::from_value::<WasmStatement>(v).map_err(wasm_error))
+            .map(|v| serde_wasm_bindgen::from_value::<WasmProperty>(v).map_err(wasm_error))
             .collect::<Result<Vec<_>>>()?;
         let signer_address = parse_wasm_iota_address(&owner)?;
-        Ok(Self(CreateAccreditation::new(
+        Ok(Self(CreateAccreditationToAccredit::new(
             federation_id,
-            receiver,
-            want_statements.into_iter().map(|s| s.into()).collect(),
+            receiver_id,
+            want_properties.into_iter().map(|s| s.into()).collect(),
             signer_address,
         )))
     }
@@ -626,24 +635,24 @@ impl WasmRevokeAccreditationToAccredit {
     /// # Arguments
     ///
     /// * `federation_id` - The ID of the federation.
-    /// * `user_id` - The ID of the user whose accreditation is being revoked.
-    /// * `permission_id` - The ID of the permission to revoke.
+    /// * `entity_id` - The ID of entity whose accreditation is being revoked.
+    /// * `accreditation_id` - The ID of the accreditation to revoke.
     /// * `owner` - The address of the transaction signer.
     #[wasm_bindgen(constructor)]
     pub fn new(
         federation_id: WasmObjectID,
-        user_id: WasmObjectID,
-        permission_id: WasmObjectID,
+        entity_id: WasmObjectID,
+        accreditation_id: WasmObjectID,
         owner: WasmIotaAddress,
     ) -> Result<Self> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
-        let user_id = parse_wasm_object_id(&user_id)?;
-        let permission_id = parse_wasm_object_id(&permission_id)?;
+        let entity_id = parse_wasm_object_id(&entity_id)?;
+        let accreditation_id = parse_wasm_object_id(&accreditation_id)?;
         let signer_address = parse_wasm_iota_address(&owner)?;
         Ok(Self(RevokeAccreditationToAccredit::new(
             federation_id,
-            user_id,
-            permission_id,
+            entity_id,
+            accreditation_id,
             signer_address,
         )))
     }

@@ -6,7 +6,7 @@ use hierarchies::core::types::Accreditations;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
-/// Represents a collection of accreditation statements
+/// Represents a collection of accreditations
 #[wasm_bindgen(js_name = Accreditations, inspectable)]
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Eq)]
 pub struct WasmAccreditations(pub(crate) Accreditations);

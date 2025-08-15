@@ -183,7 +183,7 @@ fun test_new_accreditation() {
     let (mut scenario, accreditation) = test_accreditation_creation();
 
     assert!(accreditation::accredited_by(&accreditation) == scenario.ctx().sender().to_string(), 0);
-    assert!(!vec_map::is_empty(accreditation::statements(&accreditation)), 1);
+    assert!(!vec_map::is_empty(accreditation::(&accreditation)), 1);
     accreditation::destroy_accreditation(accreditation);
     scenario.end();
 }
@@ -202,7 +202,7 @@ fun test_accreditation_accredited_by_getter() {
 fun test_accreditation_statements_getter() {
     let (scenario, accreditation) = test_accreditation_creation();
 
-    let statements = accreditation::statements(&accreditation);
+    let statements = accreditation::(&accreditation);
     assert!(vec_map::size(statements) == 1, 0);
 
     let role_name = statement_name::new_statement_name(string::utf8(b"role"));
