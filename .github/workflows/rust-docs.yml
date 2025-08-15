@@ -4,10 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       branch:
-        description: 'Branch to run publish from (defaults to repo default)'
+        description: "Branch to run publish from (defaults to repo default)"
         required: false
       dry-run:
-        description: 'Run in dry-run mode'
+        description: "Run in dry-run mode"
         type: boolean
         required: false
         default: true

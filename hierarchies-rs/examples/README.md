@@ -19,10 +19,10 @@ In case of running the examples against an existing network, this network needs 
 
 You'll need one or more of the following environment variables depending on your setup:
 
-| Name                     | Required for local node | Required for testnet | Required for other node |
-| ------------------------ | :---------------------: | :------------------: | :---------------------: |
+| Name                    | Required for local node | Required for testnet | Required for other node |
+| ----------------------- | :---------------------: | :------------------: | :---------------------: |
 | IOTA_HIERARCHIES_PKG_ID |            x            |          x           |            x            |
-| API_ENDPOINT             |                         |          x           |            x            |
+| API_ENDPOINT            |                         |          x           |            x            |
 
 ## Running Examples
 
@@ -42,33 +42,33 @@ IOTA_HIERARCHIES_PKG_ID=0x... cargo run --release --example 01_create_federation
 
 The following examples demonstrate the core hierarchies workflow:
 
-| Name                                                                                          | Information                                                                        |
-| :-------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------- |
-| [01_create_federation](01_create_federation.rs)                                               | Demonstrates how to create a new federation as the root authority.                |
-| [02_add_root_authority](02_add_root_authority.rs)                                             | Shows how to add additional root authorities to a federation.                     |
-| [03_add_statements](03_add_statements.rs)                                                     | Demonstrates adding trusted statements/properties to a federation.                |
-| [04_create_accreditation_to_attest](04_create_accreditation_to_attest.rs)                     | Shows how to grant attestation rights to entities for specific statements.        |
-| [05_revoke_accreditation_to_attest](05_revoke_accreditation_to_attest.rs)                     | Demonstrates revoking attestation rights from entities.                           |
-| [06_create_accreditation_to_accredit](06_create_accreditation_to_accredit.rs)                 | Shows how to delegate accreditation rights to other entities.                     |
-| [07_revoke_accreditation_to_accredit](07_revoke_accreditation_to_accredit.rs)                 | Demonstrates revoking accreditation rights from entities.                         |
-| [08_revoke_root_authority](08_revoke_root_authority.rs)                                       | Shows how to revoke root authority status from an entity.                         |
-| [09_reinstate_root_authority](09_reinstate_root_authority.rs)                                 | Demonstrates reinstating a previously revoked root authority.                      |
+| Name                                                                          | Information                                                                |
+| :---------------------------------------------------------------------------- | :------------------------------------------------------------------------- |
+| [01_create_federation](01_create_federation.rs)                               | Demonstrates how to create a new federation as the root authority.         |
+| [02_add_root_authority](02_add_root_authority.rs)                             | Shows how to add additional root authorities to a federation.              |
+| [03_add_statements](03_add_statements.rs)                                     | Demonstrates adding trusted statements/properties to a federation.         |
+| [04_create_accreditation_to_attest](04_create_accreditation_to_attest.rs)     | Shows how to grant attestation rights to entities for specific statements. |
+| [05_revoke_accreditation_to_attest](05_revoke_accreditation_to_attest.rs)     | Demonstrates revoking attestation rights from entities.                    |
+| [06_create_accreditation_to_accredit](06_create_accreditation_to_accredit.rs) | Shows how to delegate accreditation rights to other entities.              |
+| [07_revoke_accreditation_to_accredit](07_revoke_accreditation_to_accredit.rs) | Demonstrates revoking accreditation rights from entities.                  |
+| [08_revoke_root_authority](08_revoke_root_authority.rs)                       | Shows how to revoke root authority status from an entity.                  |
+| [09_reinstate_root_authority](09_reinstate_root_authority.rs)                 | Demonstrates reinstating a previously revoked root authority.              |
 
 ## Validation Examples
 
 The validation examples show how to verify trust relationships and validate statements:
 
-| Name                                                                                          | Information                                                                        |
-| :-------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------- |
-| [01_get_attestations_and_accreditations](validation/01_get_attestations_and_accreditations.rs) | Demonstrates retrieving attestation and accreditation data from federations.    |
-| [02_validate_statements](validation/02_validate_statements.rs)                                | Shows how to validate if an entity can attest to specific statements.             |
-| [03_get_statements](validation/03_get_statements.rs)                                          | Demonstrates retrieving statements from federations.                              |
+| Name                                                                                           | Information                                                                  |
+| :--------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------- |
+| [01_get_attestations_and_accreditations](validation/01_get_attestations_and_accreditations.rs) | Demonstrates retrieving attestation and accreditation data from federations. |
+| [02_validate_statements](validation/02_validate_statements.rs)                                 | Shows how to validate if an entity can attest to specific statements.        |
+| [03_get_statements](validation/03_get_statements.rs)                                           | Demonstrates retrieving statements from federations.                         |
 
 ## Getting Started Example
 
-| Name                                                                                          | Information                                                                        |
-| :-------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------- |
-| [getting_started](getting_started/getting_started.rs)                                        | Comprehensive walkthrough of the main hierarchies operations.                     |
+| Name                                                  | Information                                                   |
+| :---------------------------------------------------- | :------------------------------------------------------------ |
+| [getting_started](getting_started/getting_started.rs) | Comprehensive walkthrough of the main hierarchies operations. |
 
 ## Key Concepts
 
