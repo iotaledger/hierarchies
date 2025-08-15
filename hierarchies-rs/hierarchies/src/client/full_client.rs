@@ -44,7 +44,7 @@
 //! - `with_sender(address)` - Override transaction sender
 //! - `with_sponsor(callback)` - Have another party pay for gas
 //!
-//! ## Example: Complete Notarization Workflow
+//! ## Example: Complete Hierarchies Workflow
 //!
 //! ```rust,ignore
 //! # use hierarchies::core::builder::HierarchiesBuilder;

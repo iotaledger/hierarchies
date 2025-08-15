@@ -1,4 +1,4 @@
-![banner](./github/hierarchies.png)
+![banner](https://github.com/iotaledger/hierarchies/raw/HEAD/.github/hierarchies.svg)
 
 <p align="center">
   <a href="https://iota.stackexchange.com/" style="text-decoration:none;"><img src="https://img.shields.io/badge/StackExchange-9cf.svg?logo=stackexchange" alt="StackExchange"></a>
