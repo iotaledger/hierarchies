@@ -15,6 +15,10 @@ env:
 permissions:
   actions: "write"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   build-wasm:
     uses: "./.github/workflows/shared-build-wasm.yml"
@@ -42,7 +46,7 @@ jobs:
           echo VERSION=$VERSION >> $GITHUB_OUTPUT
       - name: Compress generated docs
         run: |
-          tar czvf wasm.tar.gz bindings/wasm/hierarchies_wasm/docs/*
+          tar czvf wasm.tar.gz hierarchies/docs/*
 
       - name: Upload docs to AWS S3
         env:
