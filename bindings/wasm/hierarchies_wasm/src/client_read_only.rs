@@ -214,7 +214,7 @@ impl WasmHierarchiesClientReadOnly {
     /// }
     /// ```
     #[wasm_bindgen(js_name = getProperties)]
-    pub async fn get_properties(&self, federation_id: WasmObjectID) -> Result<Vec<WasmProperty>> {
+    pub async fn get_properties(&self, federation_id: WasmObjectID) -> Result<Vec<WasmPropertyName>> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         let properties = self.0.get_properties(federation_id).await.map_err(wasm_error)?;
         Ok(properties.into_iter().map(|property| property.into()).collect())

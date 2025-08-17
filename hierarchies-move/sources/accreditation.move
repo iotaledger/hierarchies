@@ -1,9 +1,9 @@
 module hierarchies::accreditation;
 
 use hierarchies::{
-    statement::{Self, Statement},
-    statement_name::StatementName,
-    statement_value::StatementValue,
+    property::{Self, Property},
+    property_name::PropertyName,
+    property_value::PropertyValue,
     utils
 };
 use iota::vec_map::VecMap;
@@ -27,7 +27,7 @@ public fun new_accreditations(statements: vector<Accreditation>): Accreditations
     }
 }
 
-/// Adds an accredited Statement to the list of accreditations.
+/// Adds an accredited property to the list of accreditations.
 public(package) fun add_accreditation(
     self: &mut Accreditations,
     accredited_statement: Accreditation,
@@ -35,67 +35,67 @@ public(package) fun add_accreditation(
     self.accreditations.push_back(accredited_statement);
 }
 
-/// Check if the statements are allowed by any of the accredited statements.
-/// The statements are allowed if the accredited statement is not expired and the statement value matches the condition.
-public(package) fun are_statements_allowed(
+/// Check if the properties are allowed by any of the accredited properties.
+/// The properties are allowed if the accredited property is not expired and the property value matches the condition.
+public(package) fun are_properties_allowed(
     self: &Accreditations,
-    statements: &VecMap<StatementName, StatementValue>,
+    properties: &VecMap<PropertyName, PropertyValue>,
     current_time_ms: u64,
 ): bool {
-    let statement_names = statements.keys();
-    let mut idx_statement_names = 0;
+    let property_names = properties.keys();
+    let mut idx_property_names = 0;
 
-    while (idx_statement_names < statement_names.length()) {
-        let statement_name = statement_names[idx_statement_names];
-        let statement_value = statements.get(&statement_name);
+    while (idx_property_names < property_names.length()) {
+        let property_name = property_names[idx_property_names];
+        let property_value = properties.get(&property_name);
 
-        if (!self.is_statement_allowed(&statement_name, statement_value, current_time_ms)) {
+        if (!self.is_property_allowed(&property_name, property_value, current_time_ms)) {
             return false
         };
-        idx_statement_names = idx_statement_names + 1;
+        idx_property_names = idx_property_names + 1;
     };
     return true
 }
 
-/// Check if the statement is allowed by any of the accredited statements.
-public(package) fun is_statement_allowed(
+/// Check if the property is allowed by any of the accredited properties.
+public(package) fun is_property_allowed(
     self: &Accreditations,
-    statement_name: &StatementName,
-    statement_value: &StatementValue,
+    property_name: &PropertyName,
+    property_value: &PropertyValue,
     current_time_ms: u64,
 ): bool {
-    let len_statements_to_attest = self.accreditations.length();
-    let mut idx_statements_to_attest = 0;
+    let len_properties_to_attest = self.accreditations.length();
+    let mut idx_properties_to_attest = 0;
 
-    while (idx_statements_to_attest < len_statements_to_attest) {
-        let accreditation = &self.accreditations[idx_statements_to_attest];
-        let maybe_statement = accreditation.statements.try_get(statement_name);
+    while (idx_properties_to_attest < len_properties_to_attest) {
+        let accreditation = &self.accreditations[idx_properties_to_attest];
+        let maybe_property = accreditation.properties.try_get(property_name);
 
-        if (maybe_statement.is_none()) {
+        if (maybe_property.is_none()) {
             continue
         };
         if (
-            maybe_statement
+            maybe_property
                 .borrow()
-                .matches_name_value(statement_name, statement_value, current_time_ms)
+                .matches_name_value(property_name, property_value, current_time_ms)
         ) {
             return true
         };
-        idx_statements_to_attest = idx_statements_to_attest + 1;
+        idx_properties_to_attest = idx_properties_to_attest + 1;
     };
     return false
 }
 
-/// Check the compliance of the statements. The compliance is met if all set of statements names and values is at most the set of accredited statements.
-public(package) fun are_statements_compliant(
+/// Check the compliance of the properties. The compliance is met if all set of properties names and values is at most the set of accredited properties.
+public(package) fun are_properties_compliant(
     self: &Accreditations,
-    statements: &vector<Statement>,
+    properties: &vector<Property>,
     current_time_ms: u64,
 ): bool {
     let mut idx = 0;
-    while (idx < statements.length()) {
-        let statement = statements[idx];
-        if (!self.is_statement_compliant(&statement, current_time_ms)) {
+    while (idx < properties.length()) {
+        let property = properties[idx];
+        if (!self.is_property_compliant(&property, current_time_ms)) {
             return false
         };
         idx = idx + 1;
@@ -103,22 +103,22 @@ public(package) fun are_statements_compliant(
     return true
 }
 
-/// Check the compliance of the statement. The compliance is met if all set of statement names and values is at most the set of accredited statements.
-public(package) fun is_statement_compliant(
+/// Check the compliance of the property. The compliance is met if all set of property names and values is at most the set of accredited properties.
+public(package) fun is_property_compliant(
     self: &Accreditations,
-    statement: &Statement,
+    property: &Property,
     current_time_ms: u64,
 ): bool {
     let len_statements = self.accreditations.length();
     let mut idx_statements = 0;
-    let mut want_statements: vector<StatementValue> = utils::copy_vector(statement
+    let mut want_properties: vector<PropertyValue> = utils::copy_vector(property
         .allowed_values()
         .keys());
 
     while (idx_statements < len_statements) {
         let accredited_statement = &self.accreditations[idx_statements];
 
-        let value_condition = accredited_statement.statements.try_get(statement.statement_name());
+        let value_condition = accredited_statement.properties.try_get(property.property_name());
         if (value_condition.is_none()) {
             idx_statements = idx_statements + 1;
             continue
@@ -127,53 +127,53 @@ public(package) fun is_statement_compliant(
         // TODO
         // This is make sure the names are checked when we remove VecMap to store the Statements in the Accreditation.
         // Check if the accredited statement matches the statement name
-        if (!value_condition.borrow().matches_name(statement.statement_name())) {
+        if (!value_condition.borrow().matches_name(property.property_name())) {
             idx_statements = idx_statements + 1;
             continue
         };
 
         // Check each required value against the accredited statement
-        let mut len_want_statements = want_statements.length();
-        let mut idx_want_statements = 0;
-        while (idx_want_statements < len_want_statements) {
-            let statement_value = want_statements[idx_want_statements];
-            if (value_condition.borrow().matches_value(&statement_value, current_time_ms)) {
+        let mut len_want_properties = want_properties.length();
+        let mut idx_want_properties = 0;
+        while (idx_want_properties < len_want_properties) {
+            let property_value = want_properties[idx_want_properties];
+            if (value_condition.borrow().matches_value(&property_value, current_time_ms)) {
                 // Remove the matched value from the want list
-                want_statements.remove(idx_want_statements);
-                len_want_statements = len_want_statements - 1;
-                // Don't increment idx_want_statements because the next element now has the same index
+                want_properties.remove(idx_want_properties);
+                len_want_properties = len_want_properties - 1;
+                // Don't increment idx_want_properties because the next element now has the same index
             } else {
-                idx_want_statements = idx_want_statements + 1;
+                idx_want_properties = idx_want_properties + 1;
             };
         };
         idx_statements = idx_statements + 1;
     };
 
-    // All wanted statements have been found
-    if (want_statements.length() == 0) {
+    // All wanted properties have been found
+    if (want_properties.length() == 0) {
         return true
     };
     return false
 }
 
-public(package) fun accredited_statements(self: &Accreditations): &vector<Accreditation> {
+public(package) fun accredited_properties(self: &Accreditations): &vector<Accreditation> {
     &self.accreditations
 }
 
-public(package) fun remove_accredited_statement(self: &mut Accreditations, accreditation_id: &ID) {
-    let mut idx = self.find_accredited_statement_id(accreditation_id);
+public(package) fun remove_accredited_property(self: &mut Accreditations, accreditation_id: &ID) {
+    let mut idx = self.find_accredited_property_id(accreditation_id);
     if (idx.is_none()) {
         return
     };
     let Accreditation {
         id: uid,
-        statements: _,
+        properties: _,
         accredited_by: _,
     } = self.accreditations.remove(idx.extract());
     object::delete(uid);
 }
 
-public(package) fun find_accredited_statement_id(self: &Accreditations, id: &ID): Option<u64> {
+public(package) fun find_accredited_property_id(self: &Accreditations, id: &ID): Option<u64> {
     let mut idx = 0;
     while (idx < self.accreditations.length()) {
         if (self.accreditations[idx].id.to_inner() == *id) {
@@ -188,16 +188,16 @@ public(package) fun find_accredited_statement_id(self: &Accreditations, id: &ID)
 public struct Accreditation has key, store {
     id: UID,
     accredited_by: String,
-    statements: VecMap<StatementName, Statement>,
+    properties: VecMap<PropertyName, Property>,
 }
 
-public fun new_accreditation(statements: vector<Statement>, ctx: &mut TxContext): Accreditation {
-    let statements_map = statement::to_map_of_statements(statements);
+public fun new_accreditation(properties: vector<Property>, ctx: &mut TxContext): Accreditation {
+    let properties_map = property::to_map_of_properties(properties);
 
     Accreditation {
         id: object::new(ctx),
         accredited_by: ctx.sender().to_string(),
-        statements: statements_map,
+        properties: properties_map,
     }
 }
 
@@ -209,8 +209,8 @@ public(package) fun accredited_by(self: &Accreditation): &String {
     &self.accredited_by
 }
 
-public(package) fun statements(self: &Accreditation): &VecMap<StatementName, Statement> {
-    &self.statements
+public(package) fun properties(self: &Accreditation): &VecMap<PropertyName, Property> {
+    &self.properties
 }
 
 // ===== Test-only Functions =====
@@ -220,7 +220,7 @@ public(package) fun destroy_accreditation(self: Accreditation) {
     let Accreditation {
         id: id,
         accredited_by: _,
-        statements: _,
+        properties: _,
     } = self;
 
     object::delete(id);

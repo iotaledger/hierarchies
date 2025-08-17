@@ -170,7 +170,7 @@ impl HierarchiesClientReadOnly {
     }
 
     /// Retrieves all property names registered in the federation.
-    pub async fn get_properties(&self, federation_id: ObjectID) -> Result<Vec<FederationProperty>, ClientError> {
+    pub async fn get_properties(&self, federation_id: ObjectID) -> Result<Vec<PropertyName>, ClientError> {
         let tx = HierarchiesImpl::get_properties(federation_id, self).await?;
         let result = self.execute_read_only_transaction(tx).await?;
         Ok(result)

@@ -4,9 +4,9 @@ module hierarchies::main;
 
 use hierarchies::{
     accreditation::{Self, Accreditations},
-    statement::{Self, Statements, Statement},
-    statement_name::StatementName,
-    statement_value::StatementValue
+    property::{Self, Properties, Property},
+    property_name::PropertyName,
+    property_value::PropertyValue
 };
 use iota::{clock::Clock, event, vec_map::{Self, VecMap}, vec_set::VecSet};
 
@@ -15,14 +15,14 @@ use iota::{clock::Clock, event, vec_map::{Self, VecMap}, vec_set::VecSet};
 const EUnauthorizedWrongFederation: u64 = 1;
 /// Error when entity lacks sufficient accreditation permissions
 const EUnauthorizedInsufficientAccreditationToAccredit: u64 = 2;
-/// Error when Value Condition for Statement is invalid (e.g., allow_any=true with specific values)
-const EInvalidStatementValueCondition: u64 = 3;
+/// Error when Value Condition for Property is invalid (e.g., allow_any=true with specific values)
+const EInvalidPropertyValueCondition: u64 = 3;
 /// Error when trying to access non-existent accreditation
 const EAccreditationNotFound: u64 = 4;
 /// Error when timestamp is in the past
 const ETimestampMustBeInTheFuture: u64 = 5;
-/// Error when trying to create accreditation for statement not in federation
-const EStatementNotInFederation: u64 = 6;
+/// Error when trying to create accreditation for property not in federation
+const EPropertyNotInFederation: u64 = 6;
 /// Error when trying to revoke non-existent root authority
 const ERootAuthorityNotFound: u64 = 7;
 /// Error when trying to revoke the last root authority
@@ -35,8 +35,8 @@ const EEmptyAllowedValuesWithoutAllowAny: u64 = 10;
 const EAlreadyRootAuthority: u64 = 11;
 /// Error when trying to reinstate a root authority that is not revoked
 const ENotRevokedRootAuthority: u64 = 12;
-/// Error when trying to create accreditation for a revoked statement
-const EStatementRevoked: u64 = 13;
+/// Error when trying to create accreditation for a revoked property
+const EPropertyRevoked: u64 = 13;
 
 // ===== Constants =====
 const TIME_BUFFER_MS: u64 = 5000;
@@ -59,12 +59,12 @@ public struct RootAuthority has key, store {
     account_id: ID,
 }
 
-/// Governance structure containing trusted statements and accreditation tracking.
-/// Manages what statements are trusted and who can attest/accredit.
+/// Governance structure containing federation properties and accreditation tracking.
+/// Manages what properties are trusted and who can attest/accredit.
 public struct Governance has key, store {
     id: UID,
-    /// Statements that are trusted by the federation
-    statements: Statements,
+    /// Properties that are trusted by the Federation
+    properties: Properties,
     /// Rights to delegate accreditation
     accreditations_to_accredit: VecMap<ID, Accreditations>,
     /// Rights for creating attestations
@@ -93,17 +93,17 @@ public struct FederationCreatedEvent has copy, drop {
     federation_address: address,
 }
 
-/// Event emitted when a statement is added to the federation
-public struct StatementAddedEvent has copy, drop {
+/// Event emitted when a property is added to the federation
+public struct PropertyAddedEvent has copy, drop {
     federation_address: address,
-    statement_name: StatementName,
+    property_name: PropertyName,
     allow_any: bool,
 }
 
-/// Event emitted when a statement is revoked
-public struct StatementRevokedEvent has copy, drop {
+/// Event emitted when a property is revoked
+public struct PropertyRevokedEvent has copy, drop {
     federation_address: address,
-    statement_name: StatementName,
+    property_name: PropertyName,
     valid_to_ms: u64,
 }
 
@@ -168,7 +168,7 @@ public fun new_federation(ctx: &mut TxContext) {
         revoked_root_authorities: vector::empty(),
         governance: Governance {
             id: object::new(ctx),
-            statements: statement::new_statements(),
+            properties: property::new_properties(),
             accreditations_to_accredit: vec_map::empty(),
             accreditations_to_attest: vec_map::empty(),
         },
@@ -238,14 +238,14 @@ fun federation_id(self: &Federation): ID {
     self.id.to_inner()
 }
 
-/// Gets all statement names trusted by the federation
-public fun get_statements(self: &Federation): vector<StatementName> {
-    self.governance.statements.data().keys()
+/// Gets all property names trusted by the federation
+public fun get_properties(self: &Federation): vector<PropertyName> {
+    self.governance.properties.data().keys()
 }
 
-/// Checks if a statement is trusted by the federation
-public fun is_statement_in_federation(self: &Federation, statement_name: StatementName): bool {
-    self.governance.statements.data().contains(&statement_name)
+/// Checks if a property is trusted by the federation
+public fun is_property_in_federation(self: &Federation, property_name: PropertyName): bool {
+    self.governance.properties.data().contains(&property_name)
 }
 
 /// Gets accreditations for attestation for a specific entity
@@ -275,64 +275,64 @@ public(package) fun root_authorities(self: &Federation): &vector<RootAuthority> 
 
 // ===== Write Functions =====
 
-/// Adds a new trusted statement to the federation.
+/// Adds a new trusted property to the federation.
 /// Only root authorities can perform this operation.
-public fun add_statement(
+public fun add_property(
     self: &mut Federation,
     cap: &RootAuthorityCap,
-    statement_name: StatementName,
-    allowed_values: VecSet<StatementValue>,
+    property_name: PropertyName,
+    allowed_values: VecSet<PropertyValue>,
     allow_any: bool,
     _: &mut TxContext,
 ) {
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
     assert!(!self.is_revoked_root_authority(&cap.account_id), ERevokedRootAuthority);
-    assert!(!(allow_any && allowed_values.keys().length() > 0), EInvalidStatementValueCondition);
+    assert!(!(allow_any && allowed_values.keys().length() > 0), EInvalidPropertyValueCondition);
     assert!(allow_any || allowed_values.keys().length() > 0, EEmptyAllowedValuesWithoutAllowAny);
 
-    let statement = statement::new_statement(
-        statement_name,
+    let property = property::new_property(
+        property_name,
         allowed_values,
         allow_any,
         option::none(),
     );
 
-    self.governance.statements.add_statement(statement);
+    self.governance.properties.add_property(property);
 
-    // Emit statement added event
-    event::emit(StatementAddedEvent {
+    // Emit property added event
+    event::emit(PropertyAddedEvent {
         federation_address: self.federation_id().to_address(),
-        statement_name,
+        property_name,
         allow_any,
     });
 }
 
-/// Revokes a statement by setting its validity period
-public fun revoke_statement(
+/// Revokes a property by setting its validity period
+public fun revoke_property(
     federation: &mut Federation,
     cap: &RootAuthorityCap,
-    statement_name: StatementName,
+    property_name: PropertyName,
     clock: &Clock,
     _: &mut TxContext,
 ) {
     assert!(cap.federation_id == federation.federation_id(), EUnauthorizedWrongFederation);
     assert!(!federation.is_revoked_root_authority(&cap.account_id), ERevokedRootAuthority);
-    let statement = federation.governance.statements.data_mut().get_mut(&statement_name);
-    statement.revoke(clock.timestamp_ms());
+    let property = federation.governance.properties.data_mut().get_mut(&property_name);
+    property.revoke(clock.timestamp_ms());
 
-    // Emit statement revoked event
-    event::emit(StatementRevokedEvent {
+    // Emit property revoked event
+    event::emit(PropertyRevokedEvent {
         federation_address: federation.federation_id().to_address(),
-        statement_name,
+        property_name,
         valid_to_ms: clock.timestamp_ms(),
     });
 }
 
-/// Revokes a statement by setting its validity period
-public fun revoke_statement_at(
+/// Revokes a property by setting its validity period
+public fun revoke_property_at(
     federation: &mut Federation,
     cap: &RootAuthorityCap,
-    statement_name: StatementName,
+    property_name: PropertyName,
     valid_to_ms: u64,
     clock: &Clock,
     _: &mut TxContext,
@@ -340,13 +340,13 @@ public fun revoke_statement_at(
     assert!(cap.federation_id == federation.federation_id(), EUnauthorizedWrongFederation);
     assert!(!federation.is_revoked_root_authority(&cap.account_id), ERevokedRootAuthority);
     assert!(valid_to_ms > clock.timestamp_ms() + TIME_BUFFER_MS, ETimestampMustBeInTheFuture);
-    let statement = federation.governance.statements.data_mut().get_mut(&statement_name);
-    statement.revoke(valid_to_ms);
+    let property = federation.governance.properties.data_mut().get_mut(&property_name);
+    property.revoke(valid_to_ms);
 
-    // Emit statement revoked event
-    event::emit(StatementRevokedEvent {
+    // Emit property revoked event
+    event::emit(PropertyRevokedEvent {
         federation_address: federation.federation_id().to_address(),
-        statement_name,
+        property_name,
         valid_to_ms,
     });
 }
@@ -461,7 +461,7 @@ public fun create_accreditation_to_accredit(
     self: &mut Federation,
     cap: &AccreditCap,
     receiver: ID,
-    want_statements: vector<Statement>,
+    want_statements: vector<Property>,
     clock: &Clock,
     ctx: &mut TxContext,
 ) {
@@ -473,17 +473,17 @@ public fun create_accreditation_to_accredit(
     while (idx < want_statements.length()) {
         let statement = &want_statements[idx];
         assert!(
-            self.is_statement_in_federation(*statement.statement_name()),
-            EStatementNotInFederation,
+            self.is_property_in_federation(*statement.property_name()),
+            EPropertyNotInFederation,
         );
 
         // Check if statement is revoked
         let federation_statement = self
             .governance
-            .statements
+            .properties
             .data()
-            .get(statement.statement_name());
-        assert!(federation_statement.is_valid_at_time(current_time_ms), EStatementRevoked);
+            .get(statement.property_name());
+        assert!(federation_statement.is_valid_at_time(current_time_ms), EPropertyRevoked);
 
         idx = idx + 1;
     };
@@ -494,7 +494,7 @@ public fun create_accreditation_to_accredit(
             &ctx.sender().to_id(),
         );
         assert!(
-            accreditations_to_accredit.are_statements_compliant(
+            accreditations_to_accredit.are_properties_compliant(
                 &want_statements,
                 current_time_ms,
             ),
@@ -530,7 +530,7 @@ public fun create_accreditation_to_attest(
     self: &mut Federation,
     cap: &AccreditCap,
     receiver: ID,
-    wanted_statements: vector<Statement>,
+    wanted_statements: vector<Property>,
     clock: &Clock,
     ctx: &mut TxContext,
 ) {
@@ -542,17 +542,17 @@ public fun create_accreditation_to_attest(
     while (idx < wanted_statements.length()) {
         let statement = &wanted_statements[idx];
         assert!(
-            self.is_statement_in_federation(*statement.statement_name()),
-            EStatementNotInFederation,
+            self.is_property_in_federation(*statement.property_name()),
+            EPropertyNotInFederation,
         );
 
         // Check if statement is revoked
         let federation_statement = self
             .governance
-            .statements
+            .properties
             .data()
-            .get(statement.statement_name());
-        assert!(federation_statement.is_valid_at_time(current_time_ms), EStatementRevoked);
+            .get(statement.property_name());
+        assert!(federation_statement.is_valid_at_time(current_time_ms), EPropertyRevoked);
 
         idx = idx + 1;
     };
@@ -563,7 +563,7 @@ public fun create_accreditation_to_attest(
             &ctx.sender().to_id(),
         );
         assert!(
-            accreditations_to_accredit.are_statements_compliant(
+            accreditations_to_accredit.are_properties_compliant(
                 &wanted_statements,
                 current_time_ms,
             ),
@@ -606,7 +606,7 @@ public fun revoke_accreditation_to_attest(
 
     let remover_accreditations = self.get_accreditations_to_accredit(&ctx.sender().to_id());
     let entities_attest_permissions = self.get_accreditations_to_attest(entity_id);
-    let mut accreditation_to_revoke_idx = entities_attest_permissions.find_accredited_statement_id(
+    let mut accreditation_to_revoke_idx = entities_attest_permissions.find_accredited_property_id(
         permission_id,
     );
     assert!(accreditation_to_revoke_idx.is_some(), EAccreditationNotFound);
@@ -614,18 +614,18 @@ public fun revoke_accreditation_to_attest(
     // Check revocation permissions
     if (!self.is_root_authority(&ctx.sender().to_id())) {
         let accreditation_to_revoke =
-            &entities_attest_permissions.accredited_statements()[
+            &entities_attest_permissions.accredited_properties()[
                 accreditation_to_revoke_idx.extract(),
             ];
-        let (_, statements) = (*accreditation_to_revoke.statements()).into_keys_values();
+        let (_, properties) = (*accreditation_to_revoke.properties()).into_keys_values();
         assert!(
-            remover_accreditations.are_statements_compliant(&statements, current_time_ms),
+            remover_accreditations.are_properties_compliant(&properties, current_time_ms),
             EUnauthorizedInsufficientAccreditationToAccredit,
         );
     };
 
     let entities_attest_permissions = self.governance.accreditations_to_attest.get_mut(entity_id);
-    entities_attest_permissions.remove_accredited_statement(permission_id);
+    entities_attest_permissions.remove_accredited_property(permission_id);
 
     event::emit(AccreditationToAttestRevokedEvent {
         federation_address: self.federation_id().to_address(),
@@ -648,7 +648,7 @@ public fun revoke_accreditation_to_accredit(
     let remover_permissions = self.get_accreditations_to_accredit(&ctx.sender().to_id());
 
     let entities_accredit_permissions = self.get_accreditations_to_accredit(entity_id);
-    let mut accreditation_to_revoke_idx = entities_accredit_permissions.find_accredited_statement_id(
+    let mut accreditation_to_revoke_idx = entities_accredit_permissions.find_accredited_property_id(
         permission_id,
     );
     assert!(accreditation_to_revoke_idx.is_some(), EAccreditationNotFound);
@@ -656,13 +656,13 @@ public fun revoke_accreditation_to_accredit(
     // Check revocation permissions
     if (!self.is_root_authority(&ctx.sender().to_id())) {
         let accreditation_to_revoke =
-            &entities_accredit_permissions.accredited_statements()[
+            &entities_accredit_permissions.accredited_properties()[
                 accreditation_to_revoke_idx.extract(),
             ];
         let current_time_ms = clock.timestamp_ms();
-        let (_, statements) = (*accreditation_to_revoke.statements()).into_keys_values();
+        let (_, properties) = (*accreditation_to_revoke.properties()).into_keys_values();
         assert!(
-            remover_permissions.are_statements_compliant(&statements, current_time_ms),
+            remover_permissions.are_properties_compliant(&properties, current_time_ms),
             EUnauthorizedInsufficientAccreditationToAccredit,
         );
     };
@@ -671,7 +671,7 @@ public fun revoke_accreditation_to_accredit(
         .governance
         .accreditations_to_accredit
         .get_mut(entity_id);
-    entities_accredit_permissions.remove_accredited_statement(permission_id);
+    entities_accredit_permissions.remove_accredited_property(permission_id);
 
     event::emit(AccreditationToAccreditRevokedEvent {
         federation_address: self.federation_id().to_address(),
@@ -683,68 +683,68 @@ public fun revoke_accreditation_to_accredit(
 
 // ===== Validation Functions =====
 
-/// Validates a single statement from an attester
+/// Validates a single property from an attester
 /// Returns true if validation passes, false otherwise
-public fun validate_statement(
+public fun validate_property(
     self: &Federation,
     attester_id: &ID,
-    statement_name: StatementName,
-    statement_value: StatementValue,
+    property_name: PropertyName,
+    property_value: PropertyValue,
     clock: &Clock,
 ): bool {
     let current_time_ms = clock.timestamp_ms();
 
     // Check if statement is trusted by the federation
-    if (!self.is_statement_in_federation(statement_name)) {
+    if (!self.is_property_in_federation(property_name)) {
         return false
     };
 
-    // Check if the federation's statement is still valid (not revoked)
-    let federation_statement = self.governance.statements.data().get(&statement_name);
-    if (!federation_statement.is_valid_at_time(current_time_ms)) {
+    // Check if the federation's property is still valid (not revoked)
+    let federation_property = self.governance.properties.data().get(&property_name);
+    if (!federation_property.is_valid_at_time(current_time_ms)) {
         return false
     };
 
-    // Check if attester has permissions for the statement
+    // Check if attester has permissions for the property
     let accreditations = self.get_accreditations_to_attest(attester_id);
-    if (!accreditations.is_statement_allowed(&statement_name, &statement_value, current_time_ms)) {
+    if (!accreditations.is_property_allowed(&property_name, &property_value, current_time_ms)) {
         return false
     };
 
     true
 }
 
-/// Validates multiple statements from an issuer
+/// Validates multiple properties from an issuer
 /// Returns true if all validations pass, false otherwise
-public fun validate_statements(
+public fun validate_properties(
     self: &Federation,
     attester_id: &ID,
-    statements: VecMap<StatementName, StatementValue>,
+    properties: VecMap<PropertyName, PropertyValue>,
     clock: &Clock,
 ): bool {
     let current_time_ms = clock.timestamp_ms();
-    let statement_names = statements.keys();
+    let property_names = properties.keys();
 
-    // First check if all statements are trusted by the federation and still valid
+    // First check if all properties are trusted by the federation and still valid
     let mut idx = 0;
-    while (idx < statement_names.length()) {
-        let statement_name = statement_names[idx];
-        if (!self.is_statement_in_federation(statement_name)) {
+    while (idx < property_names.length()) {
+        let property_name = property_names[idx];
+        if (!self.is_property_in_federation(property_name)) {
             return false
         };
 
-        // Check if the federation's statement is still valid (not revoked)
-        let federation_statement = self.governance.statements.data().get(&statement_name);
-        if (!federation_statement.is_valid_at_time(current_time_ms)) {
+        // Check if the federation's property is still valid (not revoked)
+        let federation_property = self.governance.properties.data().get(&property_name);
+        if (!federation_property.is_valid_at_time(current_time_ms)) {
             return false
         };
 
         idx = idx + 1;
     };
 
-    // Then check if issuer has permissions for all statements
+    // Then check if issuer has permissions for all properties
     let accreditations = self.get_accreditations_to_attest(attester_id);
-    if (!accreditations.are_statements_allowed(&statements, current_time_ms)) {
+    if (!accreditations.are_properties_allowed(&properties, current_time_ms)) {
         return false
     };
 
