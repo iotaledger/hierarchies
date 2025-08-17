@@ -1,7 +1,7 @@
 module hierarchies::property_tests;
 
 use hierarchies::{
-    property::{Self, Property},
+    property::{Self, FederationProperty},
     property_name::{Self, PropertyName},
     property_value::{Self, PropertyValue}
 };
@@ -22,7 +22,7 @@ fun create_simple_property(
     name: vector<u8>,
     allowed_value: vector<u8>,
     allow_any: bool,
-): Property {
+): FederationProperty {
     let property_name = create_test_property_name_simple(name);
     let mut value_set = vec_set::empty<PropertyValue>();
     if (!allow_any) {

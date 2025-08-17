@@ -4,7 +4,7 @@ module hierarchies::main;
 
 use hierarchies::{
     accreditation::{Self, Accreditations},
-    property::{Self, Properties, Property},
+    property::{Self, Properties, FederationProperty},
     property_name::PropertyName,
     property_value::PropertyValue
 };
@@ -461,7 +461,7 @@ public fun create_accreditation_to_accredit(
     self: &mut Federation,
     cap: &AccreditCap,
     receiver: ID,
-    want_statements: vector<Property>,
+    want_statements: vector<FederationProperty>,
     clock: &Clock,
     ctx: &mut TxContext,
 ) {
@@ -530,7 +530,7 @@ public fun create_accreditation_to_attest(
     self: &mut Federation,
     cap: &AccreditCap,
     receiver: ID,
-    wanted_statements: vector<Property>,
+    wanted_statements: vector<FederationProperty>,
     clock: &Clock,
     ctx: &mut TxContext,
 ) {

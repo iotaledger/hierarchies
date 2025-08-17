@@ -3,7 +3,7 @@ module hierarchies::accreditation_tests;
 
 use hierarchies::{
     accreditation::{Self, Accreditation},
-    property::{Self, Property},
+    property::{Self, FederationProperty},
     property_shape,
     property_name,
     property_value::{Self, PropertyValue}
@@ -11,7 +11,7 @@ use hierarchies::{
 use iota::{test_scenario::{Self, Scenario}, vec_map, vec_set::{Self, VecSet}};
 use std::string;
 
-fun create_test_property_simple(name: vector<u8>, value: vector<u8>): Property {
+fun create_test_property_simple(name: vector<u8>, value: vector<u8>): FederationProperty {
     let property_name = property_name::new_property_name(string::utf8(name));
     let mut value_set = vec_set::empty();
     vec_set::insert(
@@ -279,7 +279,7 @@ fun test_remove_accredited_property_not_found() {
 fun create_test_property_with_multiple_values(
     name: vector<u8>,
     values: vector<vector<u8>>,
-): Property {
+): FederationProperty {
     let property_name = property_name::new_property_name(string::utf8(name));
     let mut value_set = vec_set::empty();
     let mut idx = 0;
@@ -296,7 +296,7 @@ fun create_test_property_with_multiple_values(
 fun create_test_property_with_condition(
     name: vector<u8>,
     condition: property_shape::PropertyShape,
-): Property {
+): FederationProperty {
     let property_name = property_name::new_property_name(string::utf8(name));
     let value_set: VecSet<PropertyValue> = vec_set::empty();
     property::new_property(property_name, value_set, false, option::some(condition))

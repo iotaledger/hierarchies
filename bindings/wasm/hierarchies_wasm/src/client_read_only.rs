@@ -14,7 +14,7 @@ use product_common::bindings::utils::parse_wasm_object_id;
 use product_common::core_client::CoreClientReadOnly;
 use wasm_bindgen::prelude::*;
 
-use crate::wasm_types::{WasmAccreditations, WasmFederation, WasmProperty, WasmPropertyName, WasmPropertyValue};
+use crate::wasm_types::{WasmAccreditations, WasmFederation, WasmPropertyName, WasmPropertyValue};
 
 /// A client to interact with Hierarchies objects on the IOTA ledger.
 ///

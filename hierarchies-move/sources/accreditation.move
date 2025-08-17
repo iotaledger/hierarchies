@@ -1,7 +1,7 @@
 module hierarchies::accreditation;
 
 use hierarchies::{
-    property::{Self, Property},
+    property::{Self, FederationProperty},
     property_name::PropertyName,
     property_value::PropertyValue,
     utils
@@ -89,7 +89,7 @@ public(package) fun is_property_allowed(
 /// Check the compliance of the properties. The compliance is met if all set of properties names and values is at most the set of accredited properties.
 public(package) fun are_properties_compliant(
     self: &Accreditations,
-    properties: &vector<Property>,
+    properties: &vector<FederationProperty>,
     current_time_ms: u64,
 ): bool {
     let mut idx = 0;
@@ -106,7 +106,7 @@ public(package) fun are_properties_compliant(
 /// Check the compliance of the property. The compliance is met if all set of property names and values is at most the set of accredited properties.
 public(package) fun is_property_compliant(
     self: &Accreditations,
-    property: &Property,
+    property: &FederationProperty,
     current_time_ms: u64,
 ): bool {
     let len_statements = self.accreditations.length();
@@ -188,10 +188,10 @@ public(package) fun find_accredited_property_id(self: &Accreditations, id: &ID):
 public struct Accreditation has key, store {
     id: UID,
     accredited_by: String,
-    properties: VecMap<PropertyName, Property>,
+    properties: VecMap<PropertyName, FederationProperty>,
 }
 
-public fun new_accreditation(properties: vector<Property>, ctx: &mut TxContext): Accreditation {
+public fun new_accreditation(properties: vector<FederationProperty>, ctx: &mut TxContext): Accreditation {
     let properties_map = property::to_map_of_properties(properties);
 
     Accreditation {
@@ -209,7 +209,7 @@ public(package) fun accredited_by(self: &Accreditation): &String {
     &self.accredited_by
 }
 
-public(package) fun properties(self: &Accreditation): &VecMap<PropertyName, Property> {
+public(package) fun properties(self: &Accreditation): &VecMap<PropertyName, FederationProperty> {
     &self.properties
 }
 

@@ -23,7 +23,6 @@ use serde::de::DeserializeOwned;
 use crate::client::error::ClientError;
 use crate::client::{get_object_ref_by_id_with_bcs, network_id};
 use crate::core::operations::{HierarchiesImpl, HierarchiesOperations};
-use crate::core::types::property::FederationProperty;
 use crate::core::types::property_name::PropertyName;
 use crate::core::types::value::PropertyValue;
 use crate::core::types::{Accreditations, Federation};
