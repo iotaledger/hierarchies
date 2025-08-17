@@ -51,8 +51,8 @@ name = "09_reinstate_root_authority"
 
 # Validation
 [[example]]
-path = "validation/01_get_attestations_and_accreditations.rs"
-name = "01_validation_get_attestations_and_accreditations"
+path = "validation/01_get_accreditations.rs"
+name = "01_validation_get_accreditations"
 
 [[example]]
 path = "validation/02_validate_properties.rs"
