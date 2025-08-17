@@ -15,7 +15,6 @@ echo "Package ID: $IOTA_HIERARCHIES_PKG_ID"
 echo "================================"
 
 examples=(
-    "getting_started"
     "01_validation_get_accreditations"
     "02_validation_validate_properties"
     "03_validation_get_properties"

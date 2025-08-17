@@ -61,8 +61,3 @@ name = "02_validation_validate_properties"
 [[example]]
 path = "validation/03_get_properties.rs"
 name = "03_validation_get_properties"
-
-# Demo
-[[example]]
-path = "getting_started/getting_started.rs"
-name = "getting_started"

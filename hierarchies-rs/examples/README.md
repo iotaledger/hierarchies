@@ -64,12 +64,6 @@ The validation examples show how to verify trust relationships and validate prop
 | [02_validate_properties](validation/02_validate_properties.rs)                                 | Shows how to validate if an entity can attest to specific properties.        |
 | [03_get_properties](validation/03_get_properties.rs)                                           | Demonstrates retrieving properties from federations.                         |
 
-## Getting Started Example
-
-| Name                                                  | Information                                                   |
-| :---------------------------------------------------- | :------------------------------------------------------------ |
-| [getting_started](getting_started/getting_started.rs) | Comprehensive walkthrough of the main hierarchies operations. |
-
 ## Key Concepts
 
 ### Federation Management
