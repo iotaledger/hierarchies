@@ -3,7 +3,7 @@
 
 import { createFederation } from "./01_create_federation";
 import { addRootAuthority } from "./02_add_root_authority";
-import { addProperty } from "./03_add_property";
+import { addProperties } from "./03_add_properties";
 import { createAccreditationToAttest } from "./04_create_accreditation_to_attest";
 import { revokeAccreditationToAttest } from "./05_revoke_accreditation_to_attest";
 import { createAccreditationToAccredit } from "./06_create_accreditation_to_accredit";
@@ -25,7 +25,7 @@ export async function main(example?: string) {
         case "all":
             await createFederation();
             await addRootAuthority();
-            await addProperty();
+            await addProperties();
             await createAccreditationToAttest();
             await revokeAccreditationToAttest();
             await createAccreditationToAccredit();
@@ -40,7 +40,7 @@ export async function main(example?: string) {
         case "02_add_root_authority":
             return await addRootAuthority();
         case "03_add_property":
-            return await addProperty();
+            return await addProperties();
         case "04_create_accreditation_to_attest":
             return await createAccreditationToAttest();
         case "05_revoke_accreditation_to_attest":

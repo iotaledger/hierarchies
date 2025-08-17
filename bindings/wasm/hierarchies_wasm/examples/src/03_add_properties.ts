@@ -6,9 +6,9 @@ import assert from "assert";
 import { getFundedClient } from "./util";
 
 /**
- * Demonstrates how to add a Property to a federation.
+ * Demonstrates how to add Properties to a federation.
  */
-export async function addProperty(): Promise<void> {
+export async function addProperties(): Promise<void> {
     // Get the client instance
     const hierarchies = await getFundedClient();
 

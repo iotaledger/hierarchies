@@ -6,7 +6,7 @@ use hierarchies::core::types::property_name::PropertyName;
 use hierarchies::core::types::property_value::PropertyValue;
 use hierarchies_examples::get_funded_client;
 
-/// Demonstrate how to add a Statement to a federation.
+/// Demonstrate how to add a Properties to a federation.
 ///
 /// In this example we connect to a locally running private network, but it can
 /// be adapted to run on any IOTA node by setting the network and faucet
