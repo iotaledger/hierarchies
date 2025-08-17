@@ -13,11 +13,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::core::types::property_name::PropertyName;
 use crate::core::types::property_shape::PropertyShape;
+use crate::core::types::property_value::PropertyValue;
 use crate::core::types::timespan::Timespan;
-use crate::core::types::value::PropertyValue;
 use crate::utils::{self, deserialize_vec_map, deserialize_vec_set};
 
-// Properties is a struct that contains a map of PropertyName to Property
+// FederationProperties is a struct that contains a map of PropertyName to FederationProperty
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct FederationProperties {
     #[serde(deserialize_with = "deserialize_vec_map")]

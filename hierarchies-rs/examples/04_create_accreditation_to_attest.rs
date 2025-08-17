@@ -7,8 +7,8 @@ use anyhow::Context;
 use hierarchies::core::types::Federation;
 use hierarchies::core::types::property::FederationProperty;
 use hierarchies::core::types::property_name::PropertyName;
+use hierarchies::core::types::property_value::PropertyValue;
 use hierarchies::core::types::timespan::Timespan;
-use hierarchies::core::types::value::PropertyValue;
 use hierarchies_examples::get_funded_client;
 use iota_sdk::types::base_types::ObjectID;
 

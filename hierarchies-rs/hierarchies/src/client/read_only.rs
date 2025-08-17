@@ -24,7 +24,7 @@ use crate::client::error::ClientError;
 use crate::client::{get_object_ref_by_id_with_bcs, network_id};
 use crate::core::operations::{HierarchiesImpl, HierarchiesOperations};
 use crate::core::types::property_name::PropertyName;
-use crate::core::types::value::PropertyValue;
+use crate::core::types::property_value::PropertyValue;
 use crate::core::types::{Accreditations, Federation};
 use crate::error::ConfigError;
 use crate::iota_interaction_adapter::IotaClientAdapter;

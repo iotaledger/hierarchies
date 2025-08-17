@@ -9,8 +9,8 @@ pub mod events;
 pub mod property;
 pub mod property_name;
 pub mod property_shape;
+pub mod property_value;
 pub mod timespan;
-pub mod value;
 
 use std::collections::HashMap;
 

@@ -4,7 +4,7 @@ module hierarchies::main;
 
 use hierarchies::{
     accreditation::{Self, Accreditations},
-    property::{Self, Properties, FederationProperty},
+    property::{Self, FederationProperties, FederationProperty},
     property_name::PropertyName,
     property_value::PropertyValue
 };
@@ -64,7 +64,7 @@ public struct RootAuthority has key, store {
 public struct Governance has key, store {
     id: UID,
     /// Properties that are trusted by the Federation
-    properties: Properties,
+    properties: FederationProperties,
     /// Rights to delegate accreditation
     accreditations_to_accredit: VecMap<ID, Accreditations>,
     /// Rights for creating attestations
@@ -461,29 +461,29 @@ public fun create_accreditation_to_accredit(
     self: &mut Federation,
     cap: &AccreditCap,
     receiver: ID,
-    want_statements: vector<FederationProperty>,
+    want_properties: vector<FederationProperty>,
     clock: &Clock,
     ctx: &mut TxContext,
 ) {
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
     let current_time_ms = clock.timestamp_ms();
 
-    // Validate that all statement names exist in federation and are not revoked
+    // Validate that all property names exist in federation and are not revoked
     let mut idx = 0;
-    while (idx < want_statements.length()) {
-        let statement = &want_statements[idx];
+    while (idx < want_properties.length()) {
+        let property = &want_properties[idx];
         assert!(
-            self.is_property_in_federation(*statement.property_name()),
+            self.is_property_in_federation(*property.property_name()),
             EPropertyNotInFederation,
         );
 
-        // Check if statement is revoked
-        let federation_statement = self
+        // Check if property is revoked
+        let federation_property = self
             .governance
             .properties
             .data()
-            .get(statement.property_name());
-        assert!(federation_statement.is_valid_at_time(current_time_ms), EPropertyRevoked);
+            .get(property.property_name());
+        assert!(federation_property.is_valid_at_time(current_time_ms), EPropertyRevoked);
 
         idx = idx + 1;
     };
@@ -495,23 +495,23 @@ public fun create_accreditation_to_accredit(
         );
         assert!(
             accreditations_to_accredit.are_properties_compliant(
-                &want_statements,
+                &want_properties,
                 current_time_ms,
             ),
             EUnauthorizedInsufficientAccreditationToAccredit,
         );
     };
 
-    let accreditation = accreditation::new_accreditation(want_statements, ctx);
+    let accredited_property = accreditation::new_accreditation(want_properties, ctx);
     if (self.governance.accreditations_to_accredit.contains(&receiver)) {
         self
             .governance
             .accreditations_to_accredit
             .get_mut(&receiver)
-            .add_accreditation(accreditation);
+            .add_accreditation(accredited_property);
     } else {
         let mut accreditations = accreditation::new_empty_accreditations();
-        accreditations.add_accreditation(accreditation);
+        accreditations.add_accreditation(accredited_property);
         self.governance.accreditations_to_accredit.insert(receiver, accreditations);
 
         // Create and transfer capability
@@ -530,29 +530,29 @@ public fun create_accreditation_to_attest(
     self: &mut Federation,
     cap: &AccreditCap,
     receiver: ID,
-    wanted_statements: vector<FederationProperty>,
+    wanted_properties: vector<FederationProperty>,
     clock: &Clock,
     ctx: &mut TxContext,
 ) {
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
     let current_time_ms = clock.timestamp_ms();
 
-    // Validate that all statement names exist in federation and are not revoked
+    // Validate that all property names exist in federation and are not revoked
     let mut idx = 0;
-    while (idx < wanted_statements.length()) {
-        let statement = &wanted_statements[idx];
+    while (idx < wanted_properties.length()) {
+        let property = &wanted_properties[idx];
         assert!(
-            self.is_property_in_federation(*statement.property_name()),
+            self.is_property_in_federation(*property.property_name()),
             EPropertyNotInFederation,
         );
 
-        // Check if statement is revoked
-        let federation_statement = self
+        // Check if property is revoked
+        let federation_property = self
             .governance
             .properties
             .data()
-            .get(statement.property_name());
-        assert!(federation_statement.is_valid_at_time(current_time_ms), EPropertyRevoked);
+            .get(property.property_name());
+        assert!(federation_property.is_valid_at_time(current_time_ms), EPropertyRevoked);
 
         idx = idx + 1;
     };
@@ -564,24 +564,24 @@ public fun create_accreditation_to_attest(
         );
         assert!(
             accreditations_to_accredit.are_properties_compliant(
-                &wanted_statements,
+                &wanted_properties,
                 current_time_ms,
             ),
             EUnauthorizedInsufficientAccreditationToAccredit,
         );
     };
 
-    let accredited_statement = accreditation::new_accreditation(wanted_statements, ctx);
+    let accredited_property = accreditation::new_accreditation(wanted_properties, ctx);
 
     if (self.governance.accreditations_to_attest.contains(&receiver)) {
         self
             .governance
             .accreditations_to_attest
             .get_mut(&receiver)
-            .add_accreditation(accredited_statement);
+            .add_accreditation(accredited_property);
     } else {
         let mut accreditations_to_attest = accreditation::new_empty_accreditations();
-        accreditations_to_attest.add_accreditation(accredited_statement);
+        accreditations_to_attest.add_accreditation(accredited_property);
         self.governance.accreditations_to_attest.insert(receiver, accreditations_to_attest);
     };
 
@@ -694,7 +694,7 @@ public fun validate_property(
 ): bool {
     let current_time_ms = clock.timestamp_ms();
 
-    // Check if statement is trusted by the federation
+    // Check if property is trusted by the federation
     if (!self.is_property_in_federation(property_name)) {
         return false
     };

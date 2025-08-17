@@ -92,7 +92,7 @@ use crate::core::transactions::{
 };
 use crate::core::types::property::FederationProperty;
 use crate::core::types::property_name::PropertyName;
-use crate::core::types::value::PropertyValue;
+use crate::core::types::property_value::PropertyValue;
 use crate::iota_interaction_adapter::IotaClientAdapter;
 
 /// The `HierarchiesClient` struct is responsible for managing the connection to the

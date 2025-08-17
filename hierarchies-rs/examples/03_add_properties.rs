@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use anyhow::Context;
 use hierarchies::core::types::Federation;
 use hierarchies::core::types::property_name::PropertyName;
-use hierarchies::core::types::value::PropertyValue;
+use hierarchies::core::types::property_value::PropertyValue;
 use hierarchies_examples::get_funded_client;
 
 /// Demonstrate how to add a Statement to a federation.

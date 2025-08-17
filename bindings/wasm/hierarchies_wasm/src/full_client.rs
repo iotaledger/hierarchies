@@ -5,7 +5,7 @@ use std::collections::HashSet;
 
 use hierarchies::client::HierarchiesClient;
 use hierarchies::core::types::property_name::PropertyName;
-use hierarchies::core::types::value::PropertyValue;
+use hierarchies::core::types::property_value::PropertyValue;
 use iota_interaction_ts::WasmPublicKey;
 use iota_interaction_ts::bindings::{WasmIotaClient, WasmTransactionSigner};
 use iota_interaction_ts::wasm_error::{Result, WasmResult};

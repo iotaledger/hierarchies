@@ -32,7 +32,7 @@ use crate::core::error::OperationError;
 use crate::core::types::Capability;
 use crate::core::types::property::{FederationProperty, new_property};
 use crate::core::types::property_name::PropertyName;
-use crate::core::types::value::PropertyValue;
+use crate::core::types::property_value::PropertyValue;
 use crate::core::{CapabilityError, get_clock_ref};
 use crate::error::{NetworkError, ObjectError};
 use crate::utils::{self};

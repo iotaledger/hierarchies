@@ -28,11 +28,11 @@ pub enum PropertyShape {
 impl PropertyShape {
     pub fn into_ptb(self, ptb: &mut ProgrammableTransactionBuilder, package_id: ObjectID) -> anyhow::Result<Argument> {
         match self {
-            PropertyShape::StartsWith(text) => new_condition_starts_with(text, ptb, package_id),
-            PropertyShape::EndsWith(text) => new_condition_ends_with(text, ptb, package_id),
-            PropertyShape::Contains(text) => new_condition_contains(text, ptb, package_id),
-            PropertyShape::GreaterThan(value) => new_condition_greater_than(value, ptb, package_id),
-            PropertyShape::LowerThan(value) => new_condition_lower_than(value, ptb, package_id),
+            PropertyShape::StartsWith(text) => new_property_shape_starts_with(text, ptb, package_id),
+            PropertyShape::EndsWith(text) => new_property_shape_ends_with(text, ptb, package_id),
+            PropertyShape::Contains(text) => new_property_shape_contains(text, ptb, package_id),
+            PropertyShape::GreaterThan(value) => new_property_shape_greater_than(value, ptb, package_id),
+            PropertyShape::LowerThan(value) => new_property_shape_lower_than(value, ptb, package_id),
         }
     }
 }
@@ -45,7 +45,7 @@ impl MoveType for PropertyShape {
 }
 
 /// Creates a new move type for a Property name
-pub(crate) fn new_condition_starts_with(
+pub(crate) fn new_property_shape_starts_with(
     text: String,
     ptb: &mut ProgrammableTransactionBuilder,
     package_id: ObjectID,
@@ -54,7 +54,7 @@ pub(crate) fn new_condition_starts_with(
     let condition: Argument = ptb.programmable_move_call(
         package_id,
         ident_str!("property_shape").into(),
-        ident_str!("new_condition_starts_with").into(),
+        ident_str!("new_property_shape_starts_with").into(),
         vec![],
         vec![names],
     );
@@ -62,7 +62,7 @@ pub(crate) fn new_condition_starts_with(
     Ok(condition)
 }
 
-fn new_condition_ends_with(
+fn new_property_shape_ends_with(
     text: String,
     ptb: &mut ProgrammableTransactionBuilder,
     package_id: ObjectID,
@@ -71,7 +71,7 @@ fn new_condition_ends_with(
     let condition: Argument = ptb.programmable_move_call(
         package_id,
         ident_str!("property_shape").into(),
-        ident_str!("new_condition_ends_with").into(),
+        ident_str!("new_property_shape_ends_with").into(),
         vec![],
         vec![names],
     );
@@ -79,7 +79,7 @@ fn new_condition_ends_with(
     Ok(condition)
 }
 
-fn new_condition_contains(
+fn new_property_shape_contains(
     text: String,
     ptb: &mut ProgrammableTransactionBuilder,
     package_id: ObjectID,
@@ -88,7 +88,7 @@ fn new_condition_contains(
     let condition: Argument = ptb.programmable_move_call(
         package_id,
         ident_str!("property_shape").into(),
-        ident_str!("new_condition_contains").into(),
+        ident_str!("new_property_shape_contains").into(),
         vec![],
         vec![names],
     );
@@ -96,7 +96,7 @@ fn new_condition_contains(
     Ok(condition)
 }
 
-fn new_condition_greater_than(
+fn new_property_shape_greater_than(
     value: u64,
     ptb: &mut ProgrammableTransactionBuilder,
     package_id: ObjectID,
@@ -105,14 +105,14 @@ fn new_condition_greater_than(
     let condition: Argument = ptb.programmable_move_call(
         package_id,
         ident_str!("property_shape").into(),
-        ident_str!("new_condition_greater_than").into(),
+        ident_str!("new_property_shape_greater_than").into(),
         vec![],
         vec![names],
     );
     Ok(condition)
 }
 
-fn new_condition_lower_than(
+fn new_property_shape_lower_than(
     value: u64,
     ptb: &mut ProgrammableTransactionBuilder,
     package_id: ObjectID,
@@ -121,7 +121,7 @@ fn new_condition_lower_than(
     let condition: Argument = ptb.programmable_move_call(
         package_id,
         ident_str!("property_shape").into(),
-        ident_str!("new_condition_lower_than").into(),
+        ident_str!("new_property_shape_lower_than").into(),
         vec![],
         vec![names],
     );

@@ -6,7 +6,7 @@ use std::collections::HashSet;
 use hierarchies::core::types::Federation;
 use hierarchies::core::types::property::FederationProperty;
 use hierarchies::core::types::property_name::PropertyName;
-use hierarchies::core::types::value::PropertyValue;
+use hierarchies::core::types::property_value::PropertyValue;
 use iota_interaction::types::base_types::ObjectID;
 
 use crate::client::get_funded_test_client;

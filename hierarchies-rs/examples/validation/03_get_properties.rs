@@ -5,7 +5,7 @@ use std::collections::HashSet;
 
 use anyhow::Context;
 use hierarchies::core::types::property_name::PropertyName;
-use hierarchies::core::types::value::PropertyValue;
+use hierarchies::core::types::property_value::PropertyValue;
 use hierarchies_examples::get_funded_client;
 
 /// Demonstrates how to use the offchain API to get federation properties.

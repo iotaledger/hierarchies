@@ -21,7 +21,7 @@ use tokio::sync::OnceCell;
 use crate::core::OperationError;
 use crate::core::operations::{HierarchiesImpl, HierarchiesOperations};
 use crate::core::types::property_name::PropertyName;
-use crate::core::types::value::PropertyValue;
+use crate::core::types::property_value::PropertyValue;
 
 /// Transaction for adding new property types to federations.
 pub mod add_property {

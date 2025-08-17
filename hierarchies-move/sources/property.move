@@ -7,8 +7,8 @@ use hierarchies::{
 };
 use iota::{vec_map::{Self, VecMap}, vec_set::VecSet};
 
-// Properties is a struct that contains a map of PropertyName to Property
-public struct Properties has store {
+// FederationProperties is a struct that contains a map of PropertyName to FederationProperty
+public struct FederationProperties has store {
     data: VecMap<PropertyName, FederationProperty>,
 }
 
@@ -43,21 +43,21 @@ public fun new_property(
     }
 }
 
-public(package) fun new_properties(): Properties {
-    Properties {
+public(package) fun new_properties(): FederationProperties {
+    FederationProperties {
         data: vec_map::empty(),
     }
 }
 
-public(package) fun data(self: &Properties): &VecMap<PropertyName, FederationProperty> {
+public(package) fun data(self: &FederationProperties): &VecMap<PropertyName, FederationProperty> {
     &self.data
 }
 
-public(package) fun data_mut(self: &mut Properties): &mut VecMap<PropertyName, FederationProperty> {
+public(package) fun data_mut(self: &mut FederationProperties): &mut VecMap<PropertyName, FederationProperty> {
     &mut self.data
 }
 
-public(package) fun add_property(self: &mut Properties, property: FederationProperty) {
+public(package) fun add_property(self: &mut FederationProperties, property: FederationProperty) {
     let name = property.name;
     self.data.insert(name, property)
 }
@@ -180,6 +180,6 @@ public(package) fun timestamp_matches(self: &Timespan, now_ms: u64): bool {
 
 // ===== Test-only Functions =====
 #[test_only]
-public(package) fun destroy_properties(properties: Properties) {
-    let Properties { data: _ } = properties;
+public(package) fun destroy_properties(properties: FederationProperties) {
+    let FederationProperties { data: _ } = properties;
 }
