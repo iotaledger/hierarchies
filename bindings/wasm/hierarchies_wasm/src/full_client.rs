@@ -127,16 +127,16 @@ impl WasmHierarchiesClient {
         Ok(into_transaction_builder(WasmReinstateRootAuthority(tx)))
     }
 
-    /// Creates a new [`WasmTransactionBuilder`] for adding a statement to a federation.
+    /// Creates a new [`WasmTransactionBuilder`] for adding a property to a federation.
     ///
     /// # Arguments
     ///
     /// * `federation_id` - The [`WasmObjectID`] of the federation.
-    /// * `statement_name` - The name of the statement.
-    /// * `allowed_values` - The allowed values for the statement.
+    /// * `property_name` - The name of the property.
+    /// * `allowed_values` - The allowed values for the property.
     /// * `allow_any` - Whether to allow any value.
-    #[wasm_bindgen(js_name = addStatement)]
-    pub fn add_statement(
+    #[wasm_bindgen(js_name = addProperty)]
+    pub fn add_property(
         &self,
         federation_id: WasmObjectID,
         property_name: &WasmPropertyName,
@@ -157,14 +157,14 @@ impl WasmHierarchiesClient {
         Ok(into_transaction_builder(WasmAddProperty(tx)))
     }
 
-    /// Creates a new [`WasmTransactionBuilder`] for revoking a statement from a federation.
+    /// Creates a new [`WasmTransactionBuilder`] for revoking a property from a federation.
     ///
     /// # Arguments
     ///
     /// * `federation_id` - The [`WasmObjectID`] of the federation.
-    /// * `statement_name` - The name of the statement to revoke.
-    /// * `valid_to_ms` - The timestamp in milliseconds until which the statement is valid.
-    pub fn revoke_statement(
+    /// * `property_name` - The name of the property to revoke.
+    /// * `valid_to_ms` - The timestamp in milliseconds until which the property is valid.
+    pub fn revoke_property(
         &self,
         federation_id: WasmObjectID,
         property_name: &WasmPropertyName,
@@ -185,7 +185,7 @@ impl WasmHierarchiesClient {
     ///
     /// * `federation_id` - The [`WasmObjectID`] of the federation.
     /// * `receiver` - The [`WasmObjectID`] of the receiver of the accreditation.
-    /// * `want_statements` - The statements for which permissions are being granted.
+    /// * `want_properties` - The properties for which permissions are being granted.
     #[wasm_bindgen(js_name = createAccreditationToAttest)]
     pub fn create_accreditation_to_attest(
         &self,

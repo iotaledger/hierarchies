@@ -1,4 +1,4 @@
-import { Federation, Statement, StatementName, StatementValue } from "@iota/hierarchies/node";
+import { Federation, FederationProperty, PropertyName, PropertyValue } from "@iota/hierarchies/node";
 import assert from "assert";
 import { randomBytes } from "crypto";
 import { getFundedClient } from "../util";
@@ -12,54 +12,54 @@ export async function getAccreditations(): Promise<void> {
     console.log("\n✅ Federation created successfully!");
     console.log("Federation ID: ", federation.id);
 
-    const statementName = new StatementName(["Example LTD"]);
-    const statementValue = StatementValue.newText("Hello");
-    const allowedValues = [statementValue];
+    const propertyName = new PropertyName(["Example LTD"]);
+    const propertyValue = PropertyValue.newText("Hello");
+    const allowedValues = [propertyValue];
 
-    await hierarchies.addStatement(federation.id, statementName, allowedValues, false)
+    await hierarchies.addProperty(federation.id, propertyName, allowedValues, false)
         .buildAndExecute(hierarchies);
-    console.log(`\n✅ Statement ${statementName.dotted()} added successfully`);
+    console.log(`\n✅ Property ${propertyName.dotted()} added successfully`);
 
     const receiver = "0x" + randomBytes(32).toString("hex");
 
     // Create and get the accreditation to attest
 
-    const statementToAttest = new Statement(statementName).withAllowedValues([StatementValue.newText("Hello")]);
+    const propertyToAttest = new FederationProperty(propertyName).withAllowedValues([PropertyValue.newText("Hello")]);
 
-    await hierarchies.createAccreditationToAttest(federation.id, receiver, [statementToAttest])
+    await hierarchies.createAccreditationToAttest(federation.id, receiver, [propertyToAttest])
         .buildAndExecute(hierarchies);
     console.log(`\n✅ Accreditation to attest created for ${receiver}`);
 
     const accreditationsToAttest = await hierarchies.readOnly().getAccreditationsToAttest(federation.id, receiver);
     assert(accreditationsToAttest.accreditations.length > 0, "No accreditations to attest found");
     assert(
-        accreditationsToAttest.accreditations[0].statements.length > 0,
-        "No statements found in accreditation to attest",
+        accreditationsToAttest.accreditations[0].properties.length > 0,
+        "No properties found in accreditation to attest",
     );
     assert(
-        accreditationsToAttest.accreditations[0].statements[0].statementName.dotted() === statementName.dotted(),
-        "Statement name does not match for accreditation to attest",
+        accreditationsToAttest.accreditations[0].properties[0].propertyName.dotted() === propertyName.dotted(),
+        "Property name does not match for accreditation to attest",
     );
 
     console.log("✅ Successfully retrieved accreditations to attest for the receiver:", receiver);
 
     // Create and get the accreditation to accredit
 
-    const statementToAccredit = new Statement(statementName).withAllowedValues([StatementValue.newText("Hello")]);
+    const propertyToAccredit = new FederationProperty(propertyName).withAllowedValues([PropertyValue.newText("Hello")]);
 
-    await hierarchies.createAccreditationToAccredit(federation.id, receiver, [statementToAccredit])
+    await hierarchies.createAccreditationToAccredit(federation.id, receiver, [propertyToAccredit])
         .buildAndExecute(hierarchies);
     console.log(`\n✅ Accreditation to accredit created for ${receiver}`);
 
     const accreditationsToAccredit = await hierarchies.readOnly().getAccreditationsToAccredit(federation.id, receiver);
     assert(accreditationsToAccredit.accreditations.length > 0, "No accreditations to accredit found");
     assert(
-        accreditationsToAccredit.accreditations[0].statements.length > 0,
-        "No statements found in accreditation to accredit",
+        accreditationsToAccredit.accreditations[0].properties.length > 0,
+        "No properties found in accreditation to accredit",
     );
     assert(
-        accreditationsToAccredit.accreditations[0].statements[0].statementName.dotted() === statementName.dotted(),
-        "Statement name does not match for accreditation to accredit",
+        accreditationsToAccredit.accreditations[0].properties[0].propertyName.dotted() === propertyName.dotted(),
+        "Property name does not match for accreditation to accredit",
     );
 
     console.log("✅ Successfully retrieved accreditations to accredit for the receiver:", receiver);
