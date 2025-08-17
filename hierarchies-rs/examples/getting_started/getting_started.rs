@@ -89,9 +89,9 @@ async fn main() -> anyhow::Result<()> {
 
     // println!("✅ Revoked attestation");
 
-    // // Validate Statements again - it should returned an error
+    // // Validate Properties again - it should returned an error
     // let expected_error = client
-    //     .validate_statements(
+    //     .validate_properties(
     //         federation_id,
     //         attester,
     //         [(property_name.clone(), value_physics.clone())],

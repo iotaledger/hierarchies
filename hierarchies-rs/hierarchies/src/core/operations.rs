@@ -515,8 +515,8 @@ pub(crate) trait HierarchiesOperations {
     /// Retrieves all property names registered in the federation.
     ///
     /// Returns a list of all property types that can be attested within the federation.
-    /// This includes both active and revoked statements, but validation functions
-    /// will check expiration times when validating attestations.
+    /// This includes both active and revoked properties, but validation functions
+    /// will check expiration times when validating properties.
     ///
     /// # Errors
     ///
@@ -546,13 +546,13 @@ pub(crate) trait HierarchiesOperations {
     /// Checks if a property is registered in the federation.
     ///
     /// Verifies whether a specific property type exists within the federation's
-    /// governance structure. This check is independent of the statement's
+    /// governance structure. This check is independent of the property's
     /// revocation status.
     ///
     ///
     /// # Returns
     ///
-    /// A transaction that when executed returns true if the statement exists
+    /// A transaction that when executed returns true if the property exists
     /// in the federation, false otherwise.
     ///
     /// # Errors
@@ -587,8 +587,8 @@ pub(crate) trait HierarchiesOperations {
 
     /// Retrieves attestation accreditations for a specific user.
     ///
-    /// Returns the set of statements a user is authorized to attest, along with
-    /// any value constraints. This shows what statements the user can create
+    /// Returns the set of properties a user is authorized to attest, along with
+    /// any value constraints. This shows what properties the user can create
     /// attestations for, but not what they can delegate to others.
     ///
     /// # Returns
@@ -661,6 +661,7 @@ pub(crate) trait HierarchiesOperations {
     /// Returns the set of properties a user is authorized to delegate to others
     /// for accreditation purposes. This shows what properties the user can
     /// grant others permission to further delegate (create_accreditation_to_accredit).
+    ///
     ///
     /// # Returns
     ///

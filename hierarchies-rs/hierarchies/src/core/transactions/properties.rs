@@ -1,10 +1,10 @@
 // Copyright 2020-2025 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! # Statement Management Transactions
+//! # Property Management Transactions
 //!
-//! This module provides transaction implementations for managing statements
-//! within Hierarchies federations. Statements define the types of claims that can
+//! This module provides transaction implementations for managing properties
+//! within Hierarchies federations. Properties define the types of claims that can
 //! be attested within a federation.
 
 use std::collections::HashSet;
@@ -124,7 +124,7 @@ pub mod add_property {
     }
 }
 
-/// Transaction for revoking statement types from federations.
+/// Transaction for revoking property types from federations.
 pub mod revoke_property {
     use super::*;
 
@@ -141,7 +141,7 @@ pub mod revoke_property {
     #[derive(Debug, Clone)]
     pub struct RevokeProperty {
         federation_id: ObjectID,
-        statement_name: PropertyName,
+        property_name: PropertyName,
         valid_to_ms: Option<u64>,
         owner: IotaAddress,
         cached_ptb: OnceCell<ProgrammableTransaction>,
@@ -155,13 +155,13 @@ pub mod revoke_property {
         /// A new `RevokeProperty` transaction instance ready for execution.
         pub fn new(
             federation_id: ObjectID,
-            statement_name: PropertyName,
+            property_name: PropertyName,
             valid_to_ms: Option<u64>,
             owner: IotaAddress,
         ) -> Self {
             Self {
                 federation_id,
-                statement_name,
+                property_name,
                 valid_to_ms,
                 owner,
                 cached_ptb: OnceCell::new(),
@@ -189,7 +189,7 @@ pub mod revoke_property {
                 Some(valid_to_ms) => {
                     HierarchiesImpl::revoke_property_at(
                         self.federation_id,
-                        self.statement_name.clone(),
+                        self.property_name.clone(),
                         valid_to_ms,
                         self.owner,
                         client,
@@ -197,13 +197,8 @@ pub mod revoke_property {
                     .await?
                 }
                 None => {
-                    HierarchiesImpl::revoke_property(
-                        self.federation_id,
-                        self.statement_name.clone(),
-                        self.owner,
-                        client,
-                    )
-                    .await?
+                    HierarchiesImpl::revoke_property(self.federation_id, self.property_name.clone(), self.owner, client)
+                        .await?
                 }
             };
 

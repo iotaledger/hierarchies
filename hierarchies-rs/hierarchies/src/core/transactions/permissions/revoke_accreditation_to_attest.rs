@@ -8,7 +8,7 @@
 //! ## Overview
 //!
 //! This transaction revokes attestation permissions from a user, removing their
-//! ability to create trusted attestations for specific statements.
+//! ability to create trusted attestations for specific properties.
 
 use async_trait::async_trait;
 use iota_interaction::OptionalSync;

@@ -117,7 +117,7 @@ async fn test_create_and_get_properties() -> anyhow::Result<()> {
         .build_and_execute(&client)
         .await?;
 
-    // Get statements
+    // Get properties
     let properties = client.get_properties(*federation.id.object_id()).await?;
 
     assert_eq!(properties.len(), 1);

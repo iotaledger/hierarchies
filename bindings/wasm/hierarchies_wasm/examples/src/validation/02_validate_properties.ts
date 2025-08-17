@@ -31,7 +31,7 @@ export async function validateProperties(): Promise<void> {
         .buildAndExecute(hierarchies);
     console.log(`\n✅ Accreditation to attest created for ${accreditationReceiver}`);
 
-    // Validate the properties
+    // Validate the attestation
     const properties = new Map<PropertyName, PropertyValue>([[propertyName, propertyValue]]);
     const validationResult = await hierarchies.readOnly().validateProperties(
         federation.id,

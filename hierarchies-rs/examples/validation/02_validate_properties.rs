@@ -60,7 +60,7 @@ async fn main() -> anyhow::Result<()> {
             .context("Failed to issue permission to attest")?;
     }
 
-    // Validate properties
+    // Validate if properties can be attested by the receiver
     let properties = [(property_name, value)];
 
     let validate = hierarchies_client
@@ -69,7 +69,7 @@ async fn main() -> anyhow::Result<()> {
 
     assert!(validate.is_ok());
 
-    println!("Validated properties");
+    println!("Validated attestations");
 
     Ok(())
 }

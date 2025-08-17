@@ -8,7 +8,7 @@
 //! ## Overview
 //!
 //! This transaction grants attestation permissions to another user, allowing them
-//! to create trusted attestations for the specified statements.
+//! to create trusted attestations for the specified properties.
 
 use async_trait::async_trait;
 use iota_interaction::OptionalSync;

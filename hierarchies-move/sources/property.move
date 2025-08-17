@@ -80,18 +80,18 @@ public(package) fun matches_name_value(
 }
 
 public(package) fun matches_name(self: &FederationProperty, name: &PropertyName): bool {
-    // considering the statement name is a.b.c
+    // considering the property name is a.b.c
     // the allowed name should be equal a.b.c or longer
-    let len_statement = self.name.names().length();
+    let len_property = self.name.names().length();
     let len_names = name.names().length();
 
     // if it's longer than the name, it's not possible to match
-    if (len_statement > len_names) {
+    if (len_property > len_names) {
         return false
     };
 
     let mut idx = 0;
-    while (idx < len_statement) {
+    while (idx < len_property) {
         if (self.name.names()[idx] != name.names()[idx]) {
             // if you have a.b.c and a.b.d, it is not possible to match
             return false

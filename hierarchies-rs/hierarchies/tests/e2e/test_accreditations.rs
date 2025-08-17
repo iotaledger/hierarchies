@@ -114,7 +114,7 @@ async fn test_create_accreditation_to_accredit() -> anyhow::Result<()> {
 }
 
 #[tokio::test]
-async fn test_multiple_statements_in_federation() -> anyhow::Result<()> {
+async fn test_multiple_properties_in_federation() -> anyhow::Result<()> {
     let client = get_funded_test_client().await?;
 
     // Create a new federation
@@ -204,10 +204,10 @@ async fn test_revoke_accreditation_to_attest() -> anyhow::Result<()> {
 
     // Create accreditation to attest
     let receiver_id = ObjectID::random();
-    let statement = FederationProperty::new(property_name).with_allowed_values(allowed_values);
+    let property = FederationProperty::new(property_name).with_allowed_values(allowed_values);
 
     client
-        .create_accreditation_to_attest(*federation_id.object_id(), receiver_id, vec![statement])
+        .create_accreditation_to_attest(*federation_id.object_id(), receiver_id, vec![property])
         .build_and_execute(&client)
         .await?;
 

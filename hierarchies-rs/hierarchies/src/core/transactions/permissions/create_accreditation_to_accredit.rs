@@ -8,7 +8,7 @@
 //! ## Overview
 //!
 //! This transaction grants accreditation permissions to another user, allowing them
-//! to further delegate accreditation rights for the specified statements.
+//! to further delegate accreditation rights for the specified properties.
 
 use async_trait::async_trait;
 use iota_interaction::OptionalSync;

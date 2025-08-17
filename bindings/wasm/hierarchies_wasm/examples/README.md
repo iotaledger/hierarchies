@@ -66,8 +66,8 @@ The following examples demonstrate the core hierarchies workflow in TypeScript:
 | :-------------------------------------------------------------------------------- | :------------------------------------------------------------------------- |
 | [01_create_federation](src/01_create_federation.ts)                               | Demonstrates how to create a new federation as the root authority.         |
 | [02_add_root_authority](src/02_add_root_authority.ts)                             | Shows how to add additional root authorities to a federation.              |
-| [03_add_statement](src/03_add_statement.ts)                                       | Demonstrates adding trusted statements/properties to a federation.         |
-| [04_create_accreditation_to_attest](src/04_create_accreditation_to_attest.ts)     | Shows how to grant attestation rights to entities for specific statements. |
+| [03_add_properties](src/03_add_properties.ts)                                     | Demonstrates adding properties to a federation.                            |
+| [04_create_accreditation_to_attest](src/04_create_accreditation_to_attest.ts)     | Shows how to grant attestation rights to entities for specific properties. |
 | [05_revoke_accreditation_to_attest](src/05_revoke_accreditation_to_attest.ts)     | Demonstrates revoking attestation rights from entities.                    |
 | [06_create_accreditation_to_accredit](src/06_create_accreditation_to_accredit.ts) | Shows how to delegate accreditation rights to other entities.              |
 | [07_revoke_accreditation_to_accredit](src/07_revoke_accreditation_to_accredit.ts) | Demonstrates revoking accreditation rights from entities.                  |
@@ -76,13 +76,13 @@ The following examples demonstrate the core hierarchies workflow in TypeScript:
 
 ## Validation Examples
 
-The validation examples show how to verify trust relationships and validate statements in TypeScript:
+The validation examples show how to verify trust relationships and validate properties in TypeScript:
 
-| Name                                                               | Information                                                                  |
-| :----------------------------------------------------------------- | :--------------------------------------------------------------------------- |
-| [01_get_accreditations](src/validation/01_get_accreditations.ts)   | Demonstrates retrieving attestation and accreditation data from federations. |
-| [02_validate_statements](src/validation/02_validate_statements.ts) | Shows how to validate if an entity can attest to specific statements.        |
-| [03_get_statements](src/validation/03_get_statements.ts)           | Demonstrates retrieving statements from federations.                         |
+| Name                                                                   | Information                                                                  |
+| :----------------------------------------------------------------------| :--------------------------------------------------------------------------- |
+| [01_get_accreditations](src/validation/01_get_accreditations.ts)       | Demonstrates retrieving attestation and accreditation data from federations. |
+| [02_validate_properties](src/validation/02_validate_properties.ts)     | Shows how to validate if an entity can attest to specific properties.        |
+| [03_get_properties](src/validation/03_get_properties.ts)               | Demonstrates retrieving properties from federations.                         |
 
 ## Utility Functions
 
@@ -150,10 +150,10 @@ const hierarchies = await HierarchiesClientReadOnly.createWithPkgId(
     "0x...",
 );
 
-// Validate statements
-const isValid = await hierarchies.validateStatements(
+// Validate attestations
+const isValid = await hierarchies.validateProperties(
     attesterId,
-    statements,
+    properties,
 );
 ```
 
@@ -169,13 +169,13 @@ const isValid = await hierarchies.validateStatements(
    - Delegate governance to multiple entities
    - Distribute control across trusted parties
 
-3. **Define Statements** (`03_add_statement`)
+3. **Define Properties** (`03_add_properties`)
    - Create trusted properties/credentials
    - Set validation rules and constraints
 
 4. **Grant Attestation Rights** (`04_create_accreditation_to_attest`)
    - Allow entities to provide attestations
-   - Control who can validate specific statements
+   - Control who can validate specific properties
 
 5. **Delegate Authority** (`06_create_accreditation_to_accredit`)
    - Enable hierarchical trust delegation
@@ -183,7 +183,7 @@ const isValid = await hierarchies.validateStatements(
 
 6. **Validate Operations** (`validation/*`)
    - Verify trust relationships
-   - Validate statement attestations
+   - Validate attested properties
 
 ### Lifecycle Management
 
@@ -206,7 +206,7 @@ const isValid = await hierarchies.validateStatements(
 ## Security Considerations for Web Apps
 
 - Store private keys securely (never in plain text)
-- Validate all user inputs before creating statements
+- Validate all user inputs before creating properties
 - Use HTTPS for all network communications
 - Implement proper CORS policies for API access
 - Consider using Web Workers for intensive operations

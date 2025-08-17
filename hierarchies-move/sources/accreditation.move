@@ -21,18 +21,18 @@ public fun new_empty_accreditations(): Accreditations {
 }
 
 /// Creates a collection of Accreditations.
-public fun new_accreditations(statements: vector<Accreditation>): Accreditations {
+public fun new_accreditations(accreditations: vector<Accreditation>): Accreditations {
     Accreditations {
-        accreditations: statements,
+        accreditations: accreditations,
     }
 }
 
 /// Adds an accredited property to the list of accreditations.
 public(package) fun add_accreditation(
     self: &mut Accreditations,
-    accredited_statement: Accreditation,
+    accreditation: Accreditation,
 ) {
-    self.accreditations.push_back(accredited_statement);
+    self.accreditations.push_back(accreditation);
 }
 
 /// Check if the properties are allowed by any of the accredited properties.
@@ -109,36 +109,36 @@ public(package) fun is_property_compliant(
     property: &FederationProperty,
     current_time_ms: u64,
 ): bool {
-    let len_statements = self.accreditations.length();
-    let mut idx_statements = 0;
+    let len_accreditations = self.accreditations.length();
+    let mut idx_accreditations = 0;
     let mut want_properties: vector<PropertyValue> = utils::copy_vector(property
         .allowed_values()
         .keys());
 
-    while (idx_statements < len_statements) {
-        let accredited_statement = &self.accreditations[idx_statements];
+    while (idx_accreditations < len_accreditations) {
+        let accreditation = &self.accreditations[idx_accreditations];
 
-        let value_condition = accredited_statement.properties.try_get(property.property_name());
+        let value_condition = accreditation.properties.try_get(property.property_name());
         if (value_condition.is_none()) {
-            idx_statements = idx_statements + 1;
+            idx_accreditations = idx_accreditations + 1;
             continue
         };
 
         // TODO
-        // This is make sure the names are checked when we remove VecMap to store the Statements in the Accreditation.
-        // Check if the accredited statement matches the statement name
+        // This is make sure the names are checked when we remove VecMap to store the Accreditations in the Accreditation.
+        // Check if the accredited accreditation matches the accreditation name
         if (!value_condition.borrow().matches_name(property.property_name())) {
-            idx_statements = idx_statements + 1;
+            idx_accreditations = idx_accreditations + 1;
             continue
         };
 
-        // Check each required value against the accredited statement
+        // Check each required value against the accredited accreditation
         let mut len_want_properties = want_properties.length();
         let mut idx_want_properties = 0;
         while (idx_want_properties < len_want_properties) {
             let property_value = want_properties[idx_want_properties];
             if (value_condition.borrow().matches_value(&property_value, current_time_ms)) {
-                // Remove the matched value from the want list
+                // Remove the matched value from the accredited list
                 want_properties.remove(idx_want_properties);
                 len_want_properties = len_want_properties - 1;
                 // Don't increment idx_want_properties because the next element now has the same index
@@ -146,10 +146,10 @@ public(package) fun is_property_compliant(
                 idx_want_properties = idx_want_properties + 1;
             };
         };
-        idx_statements = idx_statements + 1;
+        idx_accreditations = idx_accreditations + 1;
     };
 
-    // All wanted properties have been found
+    // All wanted properties have been accredited
     if (want_properties.length() == 0) {
         return true
     };
@@ -184,7 +184,7 @@ public(package) fun find_accredited_property_id(self: &Accreditations, id: &ID):
     option::none()
 }
 
-/// Accreditation represents statements that are accredited by a third party.
+/// Accreditation represents properties that are accredited by a third party.
 public struct Accreditation has key, store {
     id: UID,
     accredited_by: String,

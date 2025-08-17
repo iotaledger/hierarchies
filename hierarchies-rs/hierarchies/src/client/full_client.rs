@@ -215,12 +215,12 @@ where
     pub fn revoke_property(
         &self,
         federation_id: ObjectID,
-        statement_name: PropertyName,
+        property_name: PropertyName,
         valid_to_ms: Option<u64>,
     ) -> TransactionBuilder<RevokeProperty> {
         TransactionBuilder::new(RevokeProperty::new(
             federation_id,
-            statement_name,
+            property_name,
             valid_to_ms,
             self.sender_address(),
         ))
@@ -231,12 +231,12 @@ where
         &self,
         federation_id: ObjectID,
         receiver: ObjectID,
-        want_statements: impl IntoIterator<Item = FederationProperty>,
+        want_properties: impl IntoIterator<Item = FederationProperty>,
     ) -> TransactionBuilder<CreateAccreditationToAttest> {
         TransactionBuilder::new(CreateAccreditationToAttest::new(
             federation_id,
             receiver,
-            want_statements,
+            want_properties,
             self.sender_address(),
         ))
     }

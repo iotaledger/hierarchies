@@ -80,7 +80,7 @@ async fn main() -> anyhow::Result<()> {
 
     println!("Accreditations to attest: {accreditations:#?}");
 
-    // Issue Accredit accreditation
+    // Issue accreditation to accredit
     {
         hierarchies_client
             .create_accreditation_to_accredit(*federation_id, receiver, vec![properties])
@@ -93,7 +93,7 @@ async fn main() -> anyhow::Result<()> {
     let accreditations = hierarchies_client
         .get_accreditations_to_accredit(*federation_id, receiver)
         .await
-        .context("Failed to find permission to accredit")?;
+        .context("Failed to find accreditation to accredit")?;
 
     assert!(accreditations.accreditations.len() == 1);
 

@@ -23,7 +23,7 @@ impl WasmPropertyValue {
         Self(PropertyValue::Text(text))
     }
 
-    /// Creates a new `StatementValue` of type `Number`.
+    /// Creates a new `PropertyValue` of type `Number`.
     ///
     /// # Arguments
     ///
@@ -33,19 +33,19 @@ impl WasmPropertyValue {
         Self(PropertyValue::Number(number))
     }
 
-    /// Returns `true` if the `StatementValue` is of type `Text`.
+    /// Returns `true` if the `PropertyValue` is of type `Text`.
     #[wasm_bindgen(js_name = isText)]
     pub fn is_text(&self) -> bool {
         matches!(self.0, PropertyValue::Text(_))
     }
 
-    /// Returns `true` if the `StatementValue` is of type `Number`.
+    /// Returns `true` if the `PropertyValue` is of type `Number`.
     #[wasm_bindgen(js_name = isNumber)]
     pub fn is_number(&self) -> bool {
         matches!(self.0, PropertyValue::Number(_))
     }
 
-    /// Returns the `String` value if the `StatementValue` is of type `Text`.
+    /// Returns the `String` value if the `PropertyValue` is of type `Text`.
     ///
     /// # Returns
     ///
@@ -59,7 +59,7 @@ impl WasmPropertyValue {
         }
     }
 
-    /// Returns the `u64` value if the `StatementValue` is of type `Number`.
+    /// Returns the `u64` value if the `PropertyValue` is of type `Number`.
     ///
     /// # Returns
     ///

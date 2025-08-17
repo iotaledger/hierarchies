@@ -39,7 +39,7 @@ async fn main() -> anyhow::Result<()> {
             .context("Failed to add Property")?;
     }
 
-    // Add second Statement
+    // Add second Property
     {
         let property_name = PropertyName::new(["Example LTD 2", "Example LTD 3"]);
         let value = PropertyValue::Text("Hello 2".to_owned());

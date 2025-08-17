@@ -46,8 +46,8 @@ The following examples demonstrate the core hierarchies workflow:
 | :---------------------------------------------------------------------------- | :------------------------------------------------------------------------- |
 | [01_create_federation](01_create_federation.rs)                               | Demonstrates how to create a new federation as the root authority.         |
 | [02_add_root_authority](02_add_root_authority.rs)                             | Shows how to add additional root authorities to a federation.              |
-| [03_add_statements](03_add_statements.rs)                                     | Demonstrates adding trusted statements/properties to a federation.         |
-| [04_create_accreditation_to_attest](04_create_accreditation_to_attest.rs)     | Shows how to grant attestation rights to entities for specific statements. |
+| [03_add_properties](03_add_properties.rs)                                     | Demonstrates adding properties to a federation.                            |
+| [04_create_accreditation_to_attest](04_create_accreditation_to_attest.rs)     | Shows how to grant attestation rights to entities for specific properties. |
 | [05_revoke_accreditation_to_attest](05_revoke_accreditation_to_attest.rs)     | Demonstrates revoking attestation rights from entities.                    |
 | [06_create_accreditation_to_accredit](06_create_accreditation_to_accredit.rs) | Shows how to delegate accreditation rights to other entities.              |
 | [07_revoke_accreditation_to_accredit](07_revoke_accreditation_to_accredit.rs) | Demonstrates revoking accreditation rights from entities.                  |
@@ -56,13 +56,13 @@ The following examples demonstrate the core hierarchies workflow:
 
 ## Validation Examples
 
-The validation examples show how to verify trust relationships and validate statements:
+The validation examples show how to verify trust relationships and validate properties:
 
 | Name                                                                                           | Information                                                                  |
 | :--------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------- |
-| [01_get_attestations_and_accreditations](validation/01_get_attestations_and_accreditations.rs) | Demonstrates retrieving attestation and accreditation data from federations. |
-| [02_validate_statements](validation/02_validate_statements.rs)                                 | Shows how to validate if an entity can attest to specific statements.        |
-| [03_get_statements](validation/03_get_statements.rs)                                           | Demonstrates retrieving statements from federations.                         |
+| [01_get_accreditations](validation/01_get_attestations_and_accreditations.rs)                  | Demonstrates retrieving attestation and accreditation data from federations. |
+| [02_validate_properties](validation/02_validate_properties.rs)                                 | Shows how to validate if an entity can attest to specific properties.        |
+| [03_get_properties](validation/03_get_properties.rs)                                           | Demonstrates retrieving properties from federations.                         |
 
 ## Getting Started Example
 
@@ -80,13 +80,13 @@ The validation examples show how to verify trust relationships and validate stat
 
 ### Trust Delegation
 
-- **Accreditation to Attest**: Granting rights to provide attestations for specific statements
+- **Accreditation to Attest**: Granting rights to provide attestations for specific properties
 - **Accreditation to Accredit**: Delegating the ability to grant attestation rights to others
 - **Hierarchical Structure**: Creating multi-level trust chains
 
 ### Validation and Verification
 
-- **Statement Validation**: Verifying if entities can attest to specific properties
+- **Properties Validation**: Verifying if entities can attest to specific properties
 - **Trust Chain Verification**: Validating the complete chain of authority
 - **On-chain vs Off-chain**: Choosing appropriate validation methods for performance
 
@@ -111,9 +111,9 @@ The validation examples show how to verify trust relationships and validate stat
 The examples demonstrate proper error handling for common scenarios:
 
 - Attempting operations without proper authority
-- Validating statements for revoked entities
+- Validating properties for revoked entities
 - Network and transaction failures
-- Invalid statement configurations
+- Invalid properties configurations
 
 ## Security Considerations
 

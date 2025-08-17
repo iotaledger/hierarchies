@@ -274,7 +274,7 @@ fun test_remove_accredited_property_not_found() {
     scenario.end();
 }
 
-// ===== Tests for is_statement_compliant function =====
+// ===== Tests for is_property_compliant function =====
 
 fun create_test_property_with_multiple_values(
     name: vector<u8>,
@@ -315,7 +315,7 @@ fun test_is_property_compliant_multiple_values_all_covered() {
     let mut accreditations = accreditation::new_empty_accreditations();
     accreditation::add_accreditation(&mut accreditations, accreditation);
 
-    // Create a statement that requires all values
+    // Create a property that requires all values
     let test_property = create_test_property_with_multiple_values(
         b"role",
         vector[b"admin", b"user", b"guest"],
@@ -336,7 +336,7 @@ fun test_is_property_compliant_multiple_values_partial_covered() {
     let mut accreditations = accreditation::new_empty_accreditations();
     accreditation::add_accreditation(&mut accreditations, accreditation);
 
-    // Create a statement that requires more values than available
+    // Create a property that requires more values than available
     let test_property = create_test_property_with_multiple_values(
         b"role",
         vector[b"admin", b"user", b"guest"],
@@ -360,7 +360,7 @@ fun test_is_property_compliant_multiple_values_subset_covered() {
     let mut accreditations = accreditation::new_empty_accreditations();
     accreditation::add_accreditation(&mut accreditations, accreditation);
 
-    // Create a statement that requires only a subset
+    // Create a property that requires only a subset
     let test_property = create_test_property_with_multiple_values(
         b"role",
         vector[b"admin", b"user"],
@@ -382,7 +382,7 @@ fun test_is_property_compliant_with_condition() {
     let mut accreditations = accreditation::new_empty_accreditations();
     accreditation::add_accreditation(&mut accreditations, accreditation);
 
-    // Create a statement that matches the condition
+    // Create a property that matches the condition
     let test_property = create_test_property_simple(b"role", b"admin_user");
 
     assert!(accreditation::is_property_compliant(&accreditations, &test_property, 1000), 0);
@@ -401,7 +401,7 @@ fun test_is_property_compliant_with_condition_no_match() {
     let mut accreditations = accreditation::new_empty_accreditations();
     accreditation::add_accreditation(&mut accreditations, accreditation);
 
-    // Create a statement that doesn't match the condition
+    // Create a property that doesn't match the condition
     let test_property = create_test_property_simple(b"role", b"user");
 
     assert!(!accreditation::is_property_compliant(&accreditations, &test_property, 1000), 0);
@@ -415,7 +415,7 @@ fun test_is_property_compliant_empty_property_values() {
     let mut accreditations = accreditation::new_empty_accreditations();
     accreditation::add_accreditation(&mut accreditations, accreditation);
 
-    // Create a statement with no values
+    // Create a property with no values
     let property_name = property_name::new_property_name(string::utf8(b"role"));
     let empty_value_set = vec_set::empty();
     let test_property = property::new_property(
@@ -446,7 +446,7 @@ fun test_is_property_compliant_name_matching_fix() {
     let mut accreditations = accreditation::new_empty_accreditations();
     accreditation::add_accreditation(&mut accreditations, accreditation);
 
-    // Create a statement with name "role" (should not match due to name matching fix)
+    // Create a property with name "role" (should not match due to name matching fix)
     let test_property = create_test_property_simple(b"role", b"superuser");
 
     assert!(!accreditation::is_property_compliant(&accreditations, &test_property, 1000), 0);
@@ -470,7 +470,7 @@ fun test_is_property_compliant_name_matching_success() {
     let mut accreditations = accreditation::new_empty_accreditations();
     accreditation::add_accreditation(&mut accreditations, accreditation);
 
-    // Create a statement with name "role.admin" (should match)
+    // Create a property with name "role.admin" (should match)
     let test_property = create_test_property_simple(b"role.admin", b"superuser");
 
     assert!(accreditation::is_property_compliant(&accreditations, &test_property, 1000), 0);

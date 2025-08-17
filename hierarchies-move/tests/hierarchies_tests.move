@@ -293,7 +293,7 @@ fun test_create_accreditation_to_accredit_fails_for_nonexistent_property() {
     let new_id = scenario.new_object();
     let bob = new_id.uid_to_inner();
 
-    // Create a statement for a property that doesn't exist in the federation
+    // Create a property for a property that doesn't exist in the federation
     let nonexistent_property_name = new_property_name(utf8(b"nonexistent_role"));
     let allowed_values = vec_set::empty();
     let nonexistent_property = property::new_property(

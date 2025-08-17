@@ -11,7 +11,7 @@
 //! The `AddRootAuthority` transaction grants root authority capabilities to a new
 //! account within a federation. Root authorities have the highest level of trust
 //! and can perform all operations within the federation, including adding other
-//! root authorities and managing statements.
+//! root authorities and managing properties.
 
 use async_trait::async_trait;
 use iota_interaction::OptionalSync;

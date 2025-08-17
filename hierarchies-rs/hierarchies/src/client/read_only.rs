@@ -222,7 +222,7 @@ impl HierarchiesClientReadOnly {
         Ok(result)
     }
 
-    /// Validates a property for a specific user.
+    /// Validates an attestation
     pub async fn validate_property(
         &self,
         federation_id: ObjectID,
@@ -237,7 +237,7 @@ impl HierarchiesClientReadOnly {
         Ok(response)
     }
 
-    /// Validates multiple properties for a specific user.
+    /// Validates an attestations
     pub async fn validate_properties(
         &self,
         federation_id: ObjectID,

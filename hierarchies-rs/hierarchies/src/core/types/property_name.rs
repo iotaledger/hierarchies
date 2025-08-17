@@ -1,9 +1,9 @@
 // Copyright 2020-2025 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! # Hierarchies Statement Name
+//! # Hierarchies Property Name
 //!
-//! This module provides a struct for representing a statement name.
+//! This module provides a struct for representing a property name.
 
 use std::str::FromStr;
 
@@ -83,7 +83,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_trusted_statement_name() {
+    fn test_federation_property_name() {
         let name = PropertyName::new(["name", "name2"]);
 
         let json = json!({

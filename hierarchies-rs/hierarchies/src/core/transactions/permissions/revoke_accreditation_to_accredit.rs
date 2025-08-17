@@ -8,7 +8,7 @@
 //! ## Overview
 //!
 //! This transaction revokes accreditation permissions from a user, removing their
-//! ability to delegate accreditation rights for specific statements.
+//! ability to delegate accreditation rights for specific properties.
 
 use async_trait::async_trait;
 use iota_interaction::OptionalSync;
