@@ -70,7 +70,7 @@ The validation examples show how to verify trust relationships and validate prop
 
 - **Federation Creation**: Establishing the root trust authority
 - **Root Authority Management**: Adding, revoking, and reinstating root authorities
-- **Statement Definition**: Defining trusted properties within the federation
+- **Property Definition**: Defining trusted properties within the federation
 
 ### Trust Delegation
 

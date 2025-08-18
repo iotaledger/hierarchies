@@ -8,12 +8,12 @@ public enum PropertyValue has copy, drop, store {
     Number(u64),
 }
 
-/// Creates a new StatementValue from a String.
+/// Creates a new PropertyValue from a String.
 public fun new_property_value_string(v: String): PropertyValue {
     PropertyValue::String(v)
 }
 
-/// Creates a new StatementValue from a u64 number.
+/// Creates a new PropertyValue from a u64 number.
 public fun new_property_value_number(v: u64): PropertyValue {
     PropertyValue::Number(v)
 }

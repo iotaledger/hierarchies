@@ -65,13 +65,13 @@ impl WasmPropertyShape {
         matches!(self.0, PropertyShape::GreaterThan(_))
     }
 
-    /// Returns `true` if the `StatementValueCondition` is of type `LowerThan`.
+    /// Returns `true` if the `PropertyShape` is of type `LowerThan`.
     #[wasm_bindgen(js_name = isLowerThan)]
     pub fn is_lower_than(&self) -> bool {
         matches!(self.0, PropertyShape::LowerThan(_))
     }
 
-    /// Returns the `String` value if the `StatementValueCondition` is of type `StartsWith`.
+    /// Returns the `String` value if the `PropertyShape` is of type `StartsWith`.
     #[wasm_bindgen(js_name = asStartsWith)]
     pub fn as_starts_with(&self) -> Option<String> {
         if let PropertyShape::StartsWith(text) = &self.0 {
@@ -81,7 +81,7 @@ impl WasmPropertyShape {
         }
     }
 
-    /// Returns the `String` value if the `StatementValueCondition` is of type `EndsWith`.
+    /// Returns the `String` value if the `PropertyShape` is of type `EndsWith`.
     #[wasm_bindgen(js_name = asEndsWith)]
     pub fn as_ends_with(&self) -> Option<String> {
         if let PropertyShape::EndsWith(text) = &self.0 {
@@ -91,7 +91,7 @@ impl WasmPropertyShape {
         }
     }
 
-    /// Returns the `String` value if the `StatementValueCondition` is of type `Contains`.
+    /// Returns the `String` value if the `PropertyShape` is of type `Contains`.
     #[wasm_bindgen(js_name = asContains)]
     pub fn as_contains(&self) -> Option<String> {
         if let PropertyShape::Contains(text) = &self.0 {
@@ -101,7 +101,7 @@ impl WasmPropertyShape {
         }
     }
 
-    /// Returns the `u64` value if the `StatementValueCondition` is of type `GreaterThan`.
+    /// Returns the `u64` value if the `PropertyShape` is of type `GreaterThan`.
     #[wasm_bindgen(js_name = asGreaterThan)]
     pub fn as_greater_than(&self) -> Option<u64> {
         if let PropertyShape::GreaterThan(value) = self.0 {
@@ -111,7 +111,7 @@ impl WasmPropertyShape {
         }
     }
 
-    /// Returns the `u64` value if the `StatementValueCondition` is of type `LowerThan`.
+    /// Returns the `u64` value if the `PropertyShape` is of type `LowerThan`.
     #[wasm_bindgen(js_name = asLowerThan)]
     pub fn as_lower_than(&self) -> Option<u64> {
         if let PropertyShape::LowerThan(value) = self.0 {

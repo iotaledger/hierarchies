@@ -474,8 +474,8 @@ async fn test_create_accreditation_to_accredit_fails_for_nonexistent_property() 
 
     let error_msg = format!("{:?}", result.err().unwrap());
     assert!(
-        error_msg.contains("6"), // EStatementNotInFederation
-        "Expected EStatementNotInFederation error, got: {error_msg}"
+        error_msg.contains("6"), // EPropertyNotInFederation
+        "Expected EPropertyNotInFederation error, got: {error_msg}"
     );
 
     Ok(())

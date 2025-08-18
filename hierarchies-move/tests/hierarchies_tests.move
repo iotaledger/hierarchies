@@ -178,19 +178,19 @@ fun test_create_attestation() {
     let mut fed: Federation = scenario.take_shared();
     let cap: RootAuthorityCap = scenario.take_from_address(alice);
     let accredit_cap: AccreditCap = scenario.take_from_address(alice);
-    // Add a Statement
+    // Add a Property
 
     scenario.next_tx(alice);
 
     let new_id = scenario.new_object();
     let bob = new_id.uid_to_inner();
 
-    // Issue permission to accredit
+    // Issue accreditation to attest
     let properties = vector::empty();
     fed.create_accreditation_to_attest(&accredit_cap, bob, properties, &clock, scenario.ctx());
     scenario.next_tx(alice);
 
-    // Check if the permission was issued
+    // Check if the accreditation was issued
     assert!(fed.is_attester(&bob), 0);
 
     // Return the cap to the alice

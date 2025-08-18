@@ -1,9 +1,9 @@
 // Copyright 2020-2025 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! # Hierarchies Statement Value Condition
+//! # Hierarchies Property Shape
 //!
-//! This module provides a condition that can be applied to a StatementValue.
+//! This module provides a shape that can be applied to a PropertyValue.
 
 use std::str::FromStr;
 use std::string::String;
