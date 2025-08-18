@@ -3,7 +3,7 @@
 
 import { createFederation } from "./01_create_federation";
 import { addRootAuthority } from "./02_add_root_authority";
-import { addStatement } from "./03_add_statement";
+import { addProperties } from "./03_add_properties";
 import { createAccreditationToAttest } from "./04_create_accreditation_to_attest";
 import { revokeAccreditationToAttest } from "./05_revoke_accreditation_to_attest";
 import { createAccreditationToAccredit } from "./06_create_accreditation_to_accredit";
@@ -11,8 +11,8 @@ import { revokeAccreditationToAccredit } from "./07_revoke_accreditation_to_accr
 import { revokeRootAuthority } from "./08_revoke_root_authority";
 import { reinstateRootAuthority } from "./09_reinstate_root_authority";
 import { getAccreditations } from "./validation/01_get_accreditations";
-import { validateStatements } from "./validation/02_validate_statements";
-import { getStatements } from "./validation/03_get_statements";
+import { validateProperties } from "./validation/02_validate_properties";
+import { getProperties } from "./validation/03_get_properties";
 
 export async function main(example?: string) {
     // Extract example name.
@@ -25,7 +25,7 @@ export async function main(example?: string) {
         case "all":
             await createFederation();
             await addRootAuthority();
-            await addStatement();
+            await addProperties();
             await createAccreditationToAttest();
             await revokeAccreditationToAttest();
             await createAccreditationToAccredit();
@@ -33,14 +33,14 @@ export async function main(example?: string) {
             await revokeRootAuthority();
             await reinstateRootAuthority();
             await getAccreditations();
-            await validateStatements();
-            return await getStatements();
+            await validateProperties();
+            return await getProperties();
         case "01_create_federation":
             return await createFederation();
         case "02_add_root_authority":
             return await addRootAuthority();
-        case "03_add_statement":
-            return await addStatement();
+        case "03_add_property":
+            return await addProperties();
         case "04_create_accreditation_to_attest":
             return await createAccreditationToAttest();
         case "05_revoke_accreditation_to_attest":
@@ -55,10 +55,10 @@ export async function main(example?: string) {
             return await reinstateRootAuthority();
         case "01_get_accreditations":
             return await getAccreditations();
-        case "02_validate_statements":
-            return await validateStatements();
-        case "03_get_statements":
-            return await getStatements();
+        case "02_validate_properties":
+            return await validateProperties();
+        case "03_get_properties":
+            return await getProperties();
         default:
             throw "Unknown example name: '" + argument + "'";
     }

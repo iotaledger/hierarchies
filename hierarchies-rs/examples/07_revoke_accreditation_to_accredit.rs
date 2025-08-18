@@ -4,16 +4,16 @@
 use std::collections::HashSet;
 
 use anyhow::Context;
-use hierarchies::core::types::statements::name::StatementName;
-use hierarchies::core::types::statements::value::StatementValue;
-use hierarchies::core::types::statements::Statement;
-use hierarchies::core::types::timespan::Timespan;
 use hierarchies::core::types::Federation;
+use hierarchies::core::types::property::FederationProperty;
+use hierarchies::core::types::property_name::PropertyName;
+use hierarchies::core::types::property_value::PropertyValue;
+use hierarchies::core::types::timespan::Timespan;
 use hierarchies_examples::get_funded_client;
 use iota_sdk::types::base_types::ObjectID;
 use product_common::core_client::CoreClient;
 
-/// Demonstrate how to issue a permission to accredit to a Statement.
+/// Demonstrate how to issue an accreditation to accredit to a Property.
 ///
 /// In this example we connect to a locally running private network, but it can
 /// be adapted to run on any IOTA node by setting the network and faucet
@@ -37,81 +37,81 @@ async fn main() -> anyhow::Result<()> {
     let federation_id = *federation.output.id.object_id();
 
     // Trusted property name
-    let statement_name = StatementName::from("Example LTD");
+    let property_name = PropertyName::from("Example LTD");
 
     // Trusted property value
-    let value = StatementValue::Text("Hello".to_owned());
+    let value = PropertyValue::Text("Hello".to_owned());
 
     let allowed_values = HashSet::from_iter([value]);
 
-    println!("Adding Statement");
+    println!("Adding Property");
 
-    // Add the Statement to the federation
+    // Add the Property to the federation
     hierarchies_client
-        .add_statement(federation_id, statement_name.clone(), allowed_values.clone(), false)
+        .add_property(federation_id, property_name.clone(), allowed_values.clone(), false)
         .build_and_execute(&hierarchies_client)
         .await
-        .context("Failed to add Statement")?;
+        .context("Failed to add Property")?;
 
-    println!("Added Statement");
+    println!("Added Property");
 
     // A receiver is an account that will receive the accreditation
     let receiver = ObjectID::random();
 
-    // Statements
-    let statements = Statement {
-        statement_name,
+    // Properties
+    let properties = FederationProperty {
+        name: property_name.clone(),
         allowed_values,
-        condition: None,
+        shape: None,
         allow_any: false,
         timespan: Timespan::default(),
     };
 
-    // Let us issue a permission to accredit to the Statement
+    // Let us issue an accreditation to accredit to the Property
     hierarchies_client
-        .create_accreditation_to_accredit(federation_id, receiver, vec![statements.clone()])
+        .create_accreditation_to_accredit(federation_id, receiver, vec![properties.clone()])
         .build_and_execute(&hierarchies_client)
         .await
-        .context("Failed to issue permission to attest")?;
+        .context("Failed to issue accreditation to accredit")?;
 
-    // Issue permission to the original account
+    // Issue an accreditation to the original account
     hierarchies_client
         .create_accreditation_to_accredit(
             federation_id,
             hierarchies_client.sender_address().into(),
-            vec![statements],
+            vec![properties],
         )
         .build_and_execute(&hierarchies_client)
         .await
         .context("Failed to issue permission to attest")?;
 
-    println!("Issued permission to attest");
+    println!("Issued accreditation to accredit");
 
-    println!("Checking if the receiver has the permission to accredit");
+    println!("Checking if the receiver has the accreditation to accredit");
     // Check if the receiver has the permission to accredit
     let can_accredit = hierarchies_client.is_accreditor(federation_id, receiver).await?;
     assert!(can_accredit);
 
-    // Revoke the permission
-    let permissions = hierarchies_client
+    // Revoke the accreditation
+    let accreditations = hierarchies_client
         .get_accreditations_to_accredit(federation_id, receiver)
         .await
-        .context("Failed to find permission to accredit")?;
+        .context("Failed to find accreditation to accredit")?;
 
-    let permission_id = permissions.accreditations[0].id.object_id();
+    let accreditation_id = accreditations.accreditations[0].id.object_id();
 
     hierarchies_client
-        .revoke_accreditation_to_accredit(federation_id, receiver, *permission_id)
+        .revoke_accreditation_to_accredit(federation_id, receiver, *accreditation_id)
         .build_and_execute(&hierarchies_client)
         .await
-        .context("Failed to revoke permission to accredit")?;
+        .context("Failed to revoke accreditation to accredit")?;
 
-    // Check if the permission was revoked
+    // Check if the accreditation was revoked
     let federation: Federation = hierarchies_client.get_federation_by_id(federation_id).await?;
 
     println!("Federation: {federation:#?}");
 
-    // Check if the receiver has the permission to accredit
+    // Check if the receiver has the accreditation to accredit
     let can_accredit = federation.governance.accreditations_to_accredit.get(&receiver).unwrap();
 
     assert!(can_accredit.accreditations.is_empty());

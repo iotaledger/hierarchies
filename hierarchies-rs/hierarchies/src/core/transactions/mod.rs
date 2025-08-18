@@ -11,9 +11,9 @@ pub mod add_root_authority;
 pub mod error;
 mod new_federation;
 pub mod permissions;
+pub mod properties;
 pub mod reinstate_root_authority;
 pub mod revoke_root_authority;
-pub mod statements;
 
 // Re-export error types
 pub use add_root_authority::*;

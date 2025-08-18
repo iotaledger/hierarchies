@@ -7,7 +7,7 @@ use hierarchies::{
         RootAuthorityCap,
         Federation,
         AccreditCap,
-        add_statement,
+        add_property,
         revoke_accreditation_to_attest,
         revoke_accreditation_to_accredit,
         create_accreditation_to_accredit,
@@ -15,11 +15,11 @@ use hierarchies::{
         add_root_authority,
         revoke_root_authority,
         is_root_authority,
-        revoke_statement
+        revoke_property
     },
-    statement,
-    statement_name::new_statement_name,
-    statement_value::new_statement_value_number
+    property,
+    property_name::new_property_name,
+    property_value::new_property_value_number
 };
 use iota::{clock, test_scenario, vec_map, vec_set};
 use std::string::utf8;
@@ -88,7 +88,7 @@ fun test_adding_root_authority_to_the_federation() {
 }
 
 #[test]
-fun test_adding_trusted_statement() {
+fun test_adding_trusted_property() {
     let alice = @0x1;
     let mut scenario = test_scenario::begin(alice);
 
@@ -99,17 +99,17 @@ fun test_adding_trusted_statement() {
     let mut fed: Federation = scenario.take_shared();
     let cap: RootAuthorityCap = scenario.take_from_address(alice);
 
-    // Add a Statement
-    let statement_name = new_statement_name(utf8(b"statement_name"));
-    let property_value = new_statement_value_number(10);
+    // Add a Property
+    let property_name = new_property_name(utf8(b"property_name"));
+    let property_value = new_property_value_number(10);
     let mut allowed_values = vec_set::empty();
     allowed_values.insert(property_value);
 
-    fed.add_statement(&cap, statement_name, allowed_values, false, scenario.ctx());
+    fed.add_property(&cap, property_name, allowed_values, false, scenario.ctx());
     scenario.next_tx(alice);
 
     // Check if the property was added
-    assert!(fed.is_statement_in_federation(statement_name), 0);
+    assert!(fed.is_property_in_federation(property_name), 0);
 
     // Return the cap to the alice
     test_scenario::return_to_address(alice, cap);
@@ -140,11 +140,11 @@ fun test_create_accreditation() {
     let bob = new_id.uid_to_inner();
 
     // Issue permission to accredit
-    let statements = vector::empty();
+    let properties = vector::empty();
     fed.create_accreditation_to_accredit(
         &accredit_cap,
         bob,
-        statements,
+        properties,
         &clock,
         scenario.ctx(),
     );
@@ -178,19 +178,19 @@ fun test_create_attestation() {
     let mut fed: Federation = scenario.take_shared();
     let cap: RootAuthorityCap = scenario.take_from_address(alice);
     let accredit_cap: AccreditCap = scenario.take_from_address(alice);
-    // Add a Statement
+    // Add a Property
 
     scenario.next_tx(alice);
 
     let new_id = scenario.new_object();
     let bob = new_id.uid_to_inner();
 
-    // Issue permission to accredit
-    let statements = vector::empty();
-    fed.create_accreditation_to_attest(&accredit_cap, bob, statements, &clock, scenario.ctx());
+    // Issue accreditation to attest
+    let properties = vector::empty();
+    fed.create_accreditation_to_attest(&accredit_cap, bob, properties, &clock, scenario.ctx());
     scenario.next_tx(alice);
 
-    // Check if the permission was issued
+    // Check if the accreditation was issued
     assert!(fed.is_attester(&bob), 0);
 
     // Return the cap to the alice
@@ -225,18 +225,18 @@ fun test_revoke_accreditation_to_attest_and_accredit() {
     let bob = new_id.uid_to_inner();
 
     // Issue permission to accredit
-    let statements = vector::empty();
-    fed.create_accreditation_to_accredit(&accredit_cap, bob, statements, &clock, scenario.ctx());
+    let properties = vector::empty();
+    fed.create_accreditation_to_accredit(&accredit_cap, bob, properties, &clock, scenario.ctx());
     scenario.next_tx(alice);
 
     // Issue permission to attest
-    fed.create_accreditation_to_attest(&accredit_cap, bob, statements, &clock, scenario.ctx());
+    fed.create_accreditation_to_attest(&accredit_cap, bob, properties, &clock, scenario.ctx());
     scenario.next_tx(alice);
 
     // Revoke permission to attest
     let permission_id = fed
         .get_accreditations_to_attest(&bob)
-        .accredited_statements()[0]
+        .accredited_properties()[0]
         .id()
         .uid_to_inner();
     fed.revoke_accreditation_to_attest(&accredit_cap, &bob, &permission_id, &clock, scenario.ctx());
@@ -245,7 +245,7 @@ fun test_revoke_accreditation_to_attest_and_accredit() {
     // Revoke permission to accredit
     let permission_id = fed
         .get_accreditations_to_accredit(&bob)
-        .accredited_statements()[0]
+        .accredited_properties()[0]
         .id()
         .uid_to_inner();
     fed.revoke_accreditation_to_accredit(
@@ -272,8 +272,8 @@ fun test_revoke_accreditation_to_attest_and_accredit() {
 }
 
 #[test]
-#[expected_failure(abort_code = hierarchies::main::EStatementNotInFederation)]
-fun test_create_accreditation_to_accredit_fails_for_nonexistent_statement() {
+#[expected_failure(abort_code = hierarchies::main::EPropertyNotInFederation)]
+fun test_create_accreditation_to_accredit_fails_for_nonexistent_property() {
     let alice = @0x1;
     let mut scenario = test_scenario::begin(alice);
 
@@ -293,20 +293,20 @@ fun test_create_accreditation_to_accredit_fails_for_nonexistent_statement() {
     let new_id = scenario.new_object();
     let bob = new_id.uid_to_inner();
 
-    // Create a statement for a property that doesn't exist in the federation
-    let nonexistent_statement_name = new_statement_name(utf8(b"nonexistent_role"));
+    // Create a property for a property that doesn't exist in the federation
+    let nonexistent_property_name = new_property_name(utf8(b"nonexistent_role"));
     let allowed_values = vec_set::empty();
-    let nonexistent_statement = statement::new_statement(
-        nonexistent_statement_name,
+    let nonexistent_property = property::new_property(
+        nonexistent_property_name,
         allowed_values,
         true,
         option::none(),
     );
 
-    let statements = vector[nonexistent_statement];
+    let properties = vector[nonexistent_property];
 
-    // This should fail because the statement name doesn't exist in the federation
-    fed.create_accreditation_to_accredit(&accredit_cap, bob, statements, &clock, scenario.ctx());
+    // This should fail because the property name doesn't exist in the federation
+    fed.create_accreditation_to_accredit(&accredit_cap, bob, properties, &clock, scenario.ctx());
 
     // Cleanup - this won't be reached due to expected failure
     test_scenario::return_to_address(alice, cap);
@@ -318,8 +318,8 @@ fun test_create_accreditation_to_accredit_fails_for_nonexistent_statement() {
 }
 
 #[test]
-#[expected_failure(abort_code = hierarchies::main::EStatementNotInFederation)]
-fun test_create_accreditation_to_attest_fails_for_nonexistent_statement() {
+#[expected_failure(abort_code = hierarchies::main::EPropertyNotInFederation)]
+fun test_create_accreditation_to_attest_fails_for_nonexistent_property() {
     let alice = @0x1;
     let mut scenario = test_scenario::begin(alice);
 
@@ -339,20 +339,20 @@ fun test_create_accreditation_to_attest_fails_for_nonexistent_statement() {
     let new_id = scenario.new_object();
     let bob = new_id.uid_to_inner();
 
-    // Create a statement for a property that doesn't exist in the federation
-    let nonexistent_statement_name = new_statement_name(utf8(b"nonexistent_role"));
+    // Create a property for a property that doesn't exist in the federation
+    let nonexistent_property_name = new_property_name(utf8(b"nonexistent_role"));
     let allowed_values = vec_set::empty();
-    let nonexistent_statement = statement::new_statement(
-        nonexistent_statement_name,
+    let nonexistent_property = property::new_property(
+        nonexistent_property_name,
         allowed_values,
         true,
         option::none(),
     );
 
-    let statements = vector[nonexistent_statement];
+    let properties = vector[nonexistent_property];
 
-    // This should fail because the statement name doesn't exist in the federation
-    fed.create_accreditation_to_attest(&accredit_cap, bob, statements, &clock, scenario.ctx());
+    // This should fail because the property name doesn't exist in the federation
+    fed.create_accreditation_to_attest(&accredit_cap, bob, properties, &clock, scenario.ctx());
 
     // Cleanup - this won't be reached due to expected failure
     test_scenario::return_to_address(alice, cap);
@@ -364,7 +364,7 @@ fun test_create_accreditation_to_attest_fails_for_nonexistent_statement() {
 }
 
 #[test]
-fun test_create_accreditation_to_accredit_succeeds_for_existing_statement() {
+fun test_create_accreditation_to_accredit_succeeds_for_existing_property() {
     let alice = @0x1;
     let mut scenario = test_scenario::begin(alice);
 
@@ -379,30 +379,30 @@ fun test_create_accreditation_to_accredit_succeeds_for_existing_statement() {
     let cap: RootAuthorityCap = scenario.take_from_address(alice);
     let accredit_cap: AccreditCap = scenario.take_from_address(alice);
 
-    // First add a statement to the federation
-    let statement_name = new_statement_name(utf8(b"role"));
-    let property_value = new_statement_value_number(10);
+    // First add a property to the federation
+    let property_name = new_property_name(utf8(b"role"));
+    let property_value = new_property_value_number(10);
     let mut allowed_values = vec_set::empty();
     allowed_values.insert(property_value);
 
-    fed.add_statement(&cap, statement_name, allowed_values, false, scenario.ctx());
+    fed.add_property(&cap, property_name, allowed_values, false, scenario.ctx());
     scenario.next_tx(alice);
 
     let new_id = scenario.new_object();
     let bob = new_id.uid_to_inner();
 
-    // Create a statement that matches the one we added to the federation
-    let statement_for_accreditation = statement::new_statement(
-        statement_name,
+    // Create a property that matches the one we added to the federation
+    let property_for_accreditation = property::new_property(
+        property_name,
         allowed_values,
         false,
         option::none(),
     );
 
-    let statements = vector[statement_for_accreditation];
+    let properties = vector[property_for_accreditation];
 
-    // This should succeed because the statement name exists in the federation
-    fed.create_accreditation_to_accredit(&accredit_cap, bob, statements, &clock, scenario.ctx());
+    // This should succeed because the property name exists in the federation
+    fed.create_accreditation_to_accredit(&accredit_cap, bob, properties, &clock, scenario.ctx());
 
     scenario.next_tx(alice);
 
@@ -419,7 +419,7 @@ fun test_create_accreditation_to_accredit_succeeds_for_existing_statement() {
 }
 
 #[test]
-fun test_create_accreditation_to_attest_succeeds_for_existing_statement() {
+fun test_create_accreditation_to_attest_succeeds_for_existing_property() {
     let alice = @0x1;
     let mut scenario = test_scenario::begin(alice);
 
@@ -434,30 +434,30 @@ fun test_create_accreditation_to_attest_succeeds_for_existing_statement() {
     let cap: RootAuthorityCap = scenario.take_from_address(alice);
     let accredit_cap: AccreditCap = scenario.take_from_address(alice);
 
-    // First add a statement to the federation
-    let statement_name = new_statement_name(utf8(b"role"));
-    let property_value = new_statement_value_number(10);
+    // First add a property to the federation
+    let property_name = new_property_name(utf8(b"role"));
+    let property_value = new_property_value_number(10);
     let mut allowed_values = vec_set::empty();
     allowed_values.insert(property_value);
 
-    fed.add_statement(&cap, statement_name, allowed_values, false, scenario.ctx());
+    fed.add_property(&cap, property_name, allowed_values, false, scenario.ctx());
     scenario.next_tx(alice);
 
     let new_id = scenario.new_object();
     let bob = new_id.uid_to_inner();
 
-    // Create a statement that matches the one we added to the federation
-    let statement_for_accreditation = statement::new_statement(
-        statement_name,
+    // Create a property that matches the one we added to the federation
+    let property_for_accreditation = property::new_property(
+        property_name,
         allowed_values,
         false,
         option::none(),
     );
 
-    let statements = vector[statement_for_accreditation];
+    let properties = vector[property_for_accreditation];
 
-    // This should succeed because the statement name exists in the federation
-    fed.create_accreditation_to_attest(&accredit_cap, bob, statements, &clock, scenario.ctx());
+    // This should succeed because the property name exists in the federation
+    fed.create_accreditation_to_attest(&accredit_cap, bob, properties, &clock, scenario.ctx());
     scenario.next_tx(alice);
 
     // Verify the accreditation was created
@@ -563,7 +563,7 @@ fun test_cannot_revoke_last_root_authority() {
 
 #[test]
 #[expected_failure(abort_code = hierarchies::main::ERevokedRootAuthority)]
-fun test_revoked_authority_cannot_add_statement() {
+fun test_revoked_authority_cannot_add_property() {
     let alice = @0x1;
     let bob = @0x2;
 
@@ -591,10 +591,10 @@ fun test_revoked_authority_cannot_add_statement() {
 
     scenario.next_tx(bob);
 
-    // Bob tries to add a statement with his revoked cap - should fail
-    let statement_name = new_statement_name(utf8(b"test_statement"));
+    // Bob tries to add a property with his revoked cap - should fail
+    let property_name = new_property_name(utf8(b"test_property"));
     let allowed_values = vec_set::empty();
-    fed.add_statement(&bob_cap, statement_name, allowed_values, true, scenario.ctx());
+    fed.add_property(&bob_cap, property_name, allowed_values, true, scenario.ctx());
 
     // Cleanup - won't be reached due to expected failure
     test_scenario::return_to_address(alice, alice_cap);
@@ -680,7 +680,7 @@ fun test_is_root_authority() {
 
 #[test]
 #[expected_failure(abort_code = hierarchies::main::EEmptyAllowedValuesWithoutAllowAny)]
-fun test_add_statement_with_empty_allowed_values_and_allow_any_false() {
+fun test_add_property_with_empty_allowed_values_and_allow_any_false() {
     let alice = @0x1;
     let mut scenario = test_scenario::begin(alice);
 
@@ -691,12 +691,12 @@ fun test_add_statement_with_empty_allowed_values_and_allow_any_false() {
     let mut fed: Federation = scenario.take_shared();
     let cap: RootAuthorityCap = scenario.take_from_address(alice);
 
-    // Try to add a statement with empty allowed values and allow_any = false
-    let statement_name = new_statement_name(utf8(b"invalid_statement"));
+    // Try to add a property with empty allowed values and allow_any = false
+    let property_name = new_property_name(utf8(b"invalid_property"));
     let allowed_values = vec_set::empty();
 
     // This should fail with EEmptyAllowedValuesWithoutAllowAny
-    fed.add_statement(&cap, statement_name, allowed_values, false, scenario.ctx());
+    fed.add_property(&cap, property_name, allowed_values, false, scenario.ctx());
 
     // Cleanup - won't be reached due to expected failure
     test_scenario::return_to_address(alice, cap);
@@ -705,7 +705,7 @@ fun test_add_statement_with_empty_allowed_values_and_allow_any_false() {
 }
 
 #[test]
-fun test_add_statement_with_empty_allowed_values_and_allow_any_true() {
+fun test_add_property_with_empty_allowed_values_and_allow_any_true() {
     let alice = @0x1;
     let mut scenario = test_scenario::begin(alice);
 
@@ -716,14 +716,14 @@ fun test_add_statement_with_empty_allowed_values_and_allow_any_true() {
     let mut fed: Federation = scenario.take_shared();
     let cap: RootAuthorityCap = scenario.take_from_address(alice);
 
-    // Add a statement with empty allowed values and allow_any = true (should succeed)
-    let statement_name = new_statement_name(utf8(b"any_value_statement"));
+    // Add a property with empty allowed values and allow_any = true (should succeed)
+    let property_name = new_property_name(utf8(b"any_value_property"));
     let allowed_values = vec_set::empty();
 
-    fed.add_statement(&cap, statement_name, allowed_values, true, scenario.ctx());
+    fed.add_property(&cap, property_name, allowed_values, true, scenario.ctx());
 
-    // Verify the statement was added
-    assert!(fed.is_statement_in_federation(statement_name), 0);
+    // Verify the property was added
+    assert!(fed.is_property_in_federation(property_name), 0);
 
     // Cleanup
     test_scenario::return_to_address(alice, cap);
@@ -732,7 +732,7 @@ fun test_add_statement_with_empty_allowed_values_and_allow_any_true() {
 }
 
 #[test]
-fun test_add_statement_with_allowed_values_and_allow_any_false() {
+fun test_add_property_with_allowed_values_and_allow_any_false() {
     let alice = @0x1;
     let mut scenario = test_scenario::begin(alice);
 
@@ -743,16 +743,16 @@ fun test_add_statement_with_allowed_values_and_allow_any_false() {
     let mut fed: Federation = scenario.take_shared();
     let cap: RootAuthorityCap = scenario.take_from_address(alice);
 
-    // Add a statement with specific allowed values and allow_any = false (should succeed)
-    let statement_name = new_statement_name(utf8(b"restricted_statement"));
+    // Add a property with specific allowed values and allow_any = false (should succeed)
+    let property_name = new_property_name(utf8(b"restricted_property"));
     let mut allowed_values = vec_set::empty();
-    vec_set::insert(&mut allowed_values, new_statement_value_number(1));
-    vec_set::insert(&mut allowed_values, new_statement_value_number(2));
+    vec_set::insert(&mut allowed_values, new_property_value_number(1));
+    vec_set::insert(&mut allowed_values, new_property_value_number(2));
 
-    fed.add_statement(&cap, statement_name, allowed_values, false, scenario.ctx());
+    fed.add_property(&cap, property_name, allowed_values, false, scenario.ctx());
 
-    // Verify the statement was added
-    assert!(fed.is_statement_in_federation(statement_name), 0);
+    // Verify the property was added
+    assert!(fed.is_property_in_federation(property_name), 0);
 
     // Cleanup
     test_scenario::return_to_address(alice, cap);
@@ -784,49 +784,49 @@ fun test_attester_cannot_revoke_attestation_rights() {
     let root_cap: RootAuthorityCap = scenario.take_from_address(alice);
     let alice_accredit_cap: AccreditCap = scenario.take_from_address(alice);
 
-    // First add two different statements to the federation
-    let statement_name_1 = new_statement_name(utf8(b"role1"));
-    let statement_name_2 = new_statement_name(utf8(b"role2"));
-    let property_value = new_statement_value_number(10);
+    // First add two different properties to the federation
+    let property_name_1 = new_property_name(utf8(b"role1"));
+    let property_name_2 = new_property_name(utf8(b"role2"));
+    let property_value = new_property_value_number(10);
     let mut allowed_values = vec_set::empty();
     allowed_values.insert(property_value);
 
-    fed.add_statement(&root_cap, statement_name_1, allowed_values, false, scenario.ctx());
-    fed.add_statement(&root_cap, statement_name_2, allowed_values, false, scenario.ctx());
+    fed.add_property(&root_cap, property_name_1, allowed_values, false, scenario.ctx());
+    fed.add_property(&root_cap, property_name_2, allowed_values, false, scenario.ctx());
     scenario.next_tx(alice);
 
-    // Create statements for permissions
-    let statement_1 = statement::new_statement(
-        statement_name_1,
+    // Create properties for permissions
+    let property_1 = property::new_property(
+        property_name_1,
         allowed_values,
         false,
         option::none(),
     );
-    let statement_2 = statement::new_statement(
-        statement_name_2,
+    let property_2 = property::new_property(
+        property_name_2,
         allowed_values,
         false,
         option::none(),
     );
 
-    // Alice grants Charlie attestation rights for statement_2
-    let charlie_statements = vector[statement_2];
+    // Alice grants Charlie attestation rights for property_2
+    let charlie_properties = vector[property_2];
 
     fed.create_accreditation_to_attest(
         &alice_accredit_cap,
         charlie.to_id(),
-        charlie_statements,
+        charlie_properties,
         &clock,
         scenario.ctx(),
     );
     scenario.next_tx(alice);
 
-    // Alice grants Bob accreditation rights only for statement_1 (not statement_2)
-    let bob_statements = vector[statement_1];
+    // Alice grants Bob accreditation rights only for property_1 (not property_2)
+    let bob_properties = vector[property_1];
     fed.create_accreditation_to_accredit(
         &alice_accredit_cap,
         bob.to_id(),
-        bob_statements,
+        bob_properties,
         &clock,
         scenario.ctx(),
     );
@@ -835,15 +835,15 @@ fun test_attester_cannot_revoke_attestation_rights() {
     // Bob receives his AccreditCap
     let bob_accredit_cap: AccreditCap = scenario.take_from_address(bob);
 
-    // Get Charlie's attestation permission ID (for statement_2)
+    // Get Charlie's attestation permission ID (for property_2)
     let charlie_permission_id = fed
         .get_accreditations_to_attest(&charlie.to_id())
-        .accredited_statements()[0]
+        .accredited_properties()[0]
         .id()
         .uid_to_inner();
 
-    // Bob (who only has accreditation rights for statement_1, not statement_2)
-    // tries to revoke Charlie's attestation rights for statement_2 - this should fail
+    // Bob (who only has accreditation rights for property_1, not property_2)
+    // tries to revoke Charlie's attestation rights for property_2 - this should fail
     fed.revoke_accreditation_to_attest(
         &bob_accredit_cap,
         &charlie.to_id(),
@@ -1016,13 +1016,13 @@ fun test_reinstated_authority_can_perform_actions() {
 
     scenario.next_tx(bob);
 
-    // Bob should be able to add a statement with his reinstated authority
-    let statement_name = new_statement_name(utf8(b"test_statement"));
+    // Bob should be able to add a property with his reinstated authority
+    let property_name = new_property_name(utf8(b"test_property"));
     let allowed_values = vec_set::empty();
-    fed.add_statement(&bob_cap, statement_name, allowed_values, true, scenario.ctx());
+    fed.add_property(&bob_cap, property_name, allowed_values, true, scenario.ctx());
 
-    // Verify the statement was added
-    assert!(fed.is_statement_in_federation(statement_name), 0);
+    // Verify the property was added
+    assert!(fed.is_property_in_federation(property_name), 0);
 
     // Cleanup
     test_scenario::return_to_address(alice, alice_cap);
@@ -1032,8 +1032,8 @@ fun test_reinstated_authority_can_perform_actions() {
 }
 
 #[test]
-#[expected_failure(abort_code = hierarchies::main::EStatementRevoked)]
-fun test_create_accreditation_to_accredit_fails_for_revoked_statement() {
+#[expected_failure(abort_code = hierarchies::main::EPropertyRevoked)]
+fun test_create_accreditation_to_accredit_fails_for_revoked_property() {
     let alice = @0x1;
     let mut scenario = test_scenario::begin(alice);
     let mut clock = clock::create_for_testing(scenario.ctx());
@@ -1046,14 +1046,14 @@ fun test_create_accreditation_to_accredit_fails_for_revoked_statement() {
     let root_cap: RootAuthorityCap = scenario.take_from_address(alice);
     let accredit_cap: AccreditCap = scenario.take_from_address(alice);
 
-    let statement_name = new_statement_name(utf8(b"role"));
+    let property_name = new_property_name(utf8(b"role"));
     let mut allowed_values = vec_set::empty();
-    allowed_values.insert(new_statement_value_number(1));
-    fed.add_statement(&root_cap, statement_name, allowed_values, false, scenario.ctx());
+    allowed_values.insert(new_property_value_number(1));
+    fed.add_property(&root_cap, property_name, allowed_values, false, scenario.ctx());
 
-    fed.revoke_statement(&root_cap, statement_name, &clock, scenario.ctx());
+    fed.revoke_property(&root_cap, property_name, &clock, scenario.ctx());
 
-    let stmt = statement::new_statement(statement_name, vec_set::empty(), true, option::none());
+    let stmt = property::new_property(property_name, vec_set::empty(), true, option::none());
     fed.create_accreditation_to_accredit(
         &accredit_cap,
         @0x2.to_id(),
@@ -1070,8 +1070,8 @@ fun test_create_accreditation_to_accredit_fails_for_revoked_statement() {
 }
 
 #[test]
-#[expected_failure(abort_code = hierarchies::main::EStatementRevoked)]
-fun test_create_accreditation_to_attest_fails_for_revoked_statement() {
+#[expected_failure(abort_code = hierarchies::main::EPropertyRevoked)]
+fun test_create_accreditation_to_attest_fails_for_revoked_property() {
     let alice = @0x1;
     let mut scenario = test_scenario::begin(alice);
     let mut clock = clock::create_for_testing(scenario.ctx());
@@ -1084,18 +1084,18 @@ fun test_create_accreditation_to_attest_fails_for_revoked_statement() {
     let root_cap: RootAuthorityCap = scenario.take_from_address(alice);
     let accredit_cap: AccreditCap = scenario.take_from_address(alice);
 
-    let statement_name = new_statement_name(utf8(b"role"));
+    let property_name = new_property_name(utf8(b"role"));
     let mut allowed_values = vec_set::empty();
-    allowed_values.insert(new_statement_value_number(1));
-    fed.add_statement(&root_cap, statement_name, allowed_values, false, scenario.ctx());
+    allowed_values.insert(new_property_value_number(1));
+    fed.add_property(&root_cap, property_name, allowed_values, false, scenario.ctx());
 
-    fed.revoke_statement(&root_cap, statement_name, &clock, scenario.ctx());
+    fed.revoke_property(&root_cap, property_name, &clock, scenario.ctx());
 
-    let stmt = statement::new_statement(statement_name, vec_set::empty(), true, option::none());
+    let property = property::new_property(property_name, vec_set::empty(), true, option::none());
     fed.create_accreditation_to_attest(
         &accredit_cap,
         @0x2.to_id(),
-        vector[stmt],
+        vector[property],
         &clock,
         scenario.ctx(),
     );
@@ -1142,9 +1142,9 @@ fun test_transferred_capability_from_revoked_authority_fails() {
     let transferred_cap: RootAuthorityCap = scenario.take_from_address(charlie);
 
     // Charlie tries to use Bob's (revoked) capability - should fail
-    let statement_name = new_statement_name(utf8(b"test_statement"));
+    let property_name = new_property_name(utf8(b"test_property"));
     let allowed_values = vec_set::empty();
-    fed.add_statement(&transferred_cap, statement_name, allowed_values, true, scenario.ctx());
+    fed.add_property(&transferred_cap, property_name, allowed_values, true, scenario.ctx());
 
     // Cleanup - won't be reached due to expected failure
     test_scenario::return_to_address(alice, alice_cap);
@@ -1154,7 +1154,7 @@ fun test_transferred_capability_from_revoked_authority_fails() {
 }
 
 #[test]
-fun test_validate_statement_fails_for_revoked_statement() {
+fun test_validate_property_fails_for_revoked_property() {
     let alice = @0x1;
     let mut scenario = test_scenario::begin(alice);
     let mut clock = clock::create_for_testing(scenario.ctx());
@@ -1167,26 +1167,26 @@ fun test_validate_statement_fails_for_revoked_statement() {
     let root_cap: RootAuthorityCap = scenario.take_from_address(alice);
     let accredit_cap: AccreditCap = scenario.take_from_address(alice);
 
-    // Add a statement to the federation
-    let statement_name = new_statement_name(utf8(b"role"));
-    let statement_value = new_statement_value_number(1);
+    // Add a property to the federation
+    let property_name = new_property_name(utf8(b"role"));
+    let property_value = new_property_value_number(1);
     let mut allowed_values = vec_set::empty();
-    allowed_values.insert(statement_value);
-    fed.add_statement(&root_cap, statement_name, allowed_values, false, scenario.ctx());
+    allowed_values.insert(property_value);
+    fed.add_property(&root_cap, property_name, allowed_values, false, scenario.ctx());
 
-    // Create accreditation for Bob to attest this statement
+    // Create accreditation for Bob to attest this property
     let bob_id = @0x2.to_id();
-    let stmt = statement::new_statement(statement_name, allowed_values, false, option::none());
-    fed.create_accreditation_to_attest(&accredit_cap, bob_id, vector[stmt], &clock, scenario.ctx());
+    let property = property::new_property(property_name, allowed_values, false, option::none());
+    fed.create_accreditation_to_attest(&accredit_cap, bob_id, vector[property], &clock, scenario.ctx());
 
     // Initially validation should pass
-    assert!(fed.validate_statement(&bob_id, statement_name, statement_value, &clock), 0);
+    assert!(fed.validate_property(&bob_id, property_name, property_value, &clock), 0);
 
-    // Revoke the statement
-    fed.revoke_statement(&root_cap, statement_name, &clock, scenario.ctx());
+    // Revoke the property
+    fed.revoke_property(&root_cap, property_name, &clock, scenario.ctx());
 
-    // Now validation should fail because the statement is revoked
-    assert!(!fed.validate_statement(&bob_id, statement_name, statement_value, &clock), 1);
+    // Now validation should fail because the property is revoked
+    assert!(!fed.validate_property(&bob_id, property_name, property_value, &clock), 1);
 
     test_scenario::return_shared(fed);
     test_scenario::return_to_address(alice, root_cap);
@@ -1196,7 +1196,7 @@ fun test_validate_statement_fails_for_revoked_statement() {
 }
 
 #[test]
-fun test_validate_statements_fails_for_revoked_statement() {
+fun test_validate_properties_fails_for_revoked_property() {
     let alice = @0x1;
     let mut scenario = test_scenario::begin(alice);
     let mut clock = clock::create_for_testing(scenario.ctx());
@@ -1209,29 +1209,29 @@ fun test_validate_statements_fails_for_revoked_statement() {
     let root_cap: RootAuthorityCap = scenario.take_from_address(alice);
     let accredit_cap: AccreditCap = scenario.take_from_address(alice);
 
-    // Add two statements to the federation
-    let statement_name_1 = new_statement_name(utf8(b"role1"));
-    let statement_name_2 = new_statement_name(utf8(b"role2"));
-    let statement_value_1 = new_statement_value_number(1);
-    let statement_value_2 = new_statement_value_number(2);
+    // Add two properties to the federation
+    let property_name_1 = new_property_name(utf8(b"role1"));
+    let property_name_2 = new_property_name(utf8(b"role2"));
+    let property_value_1 = new_property_value_number(1);
+    let property_value_2 = new_property_value_number(2);
     let mut allowed_values_1 = vec_set::empty();
     let mut allowed_values_2 = vec_set::empty();
-    allowed_values_1.insert(statement_value_1);
-    allowed_values_2.insert(statement_value_2);
+    allowed_values_1.insert(property_value_1);
+    allowed_values_2.insert(property_value_2);
 
-    fed.add_statement(&root_cap, statement_name_1, allowed_values_1, false, scenario.ctx());
-    fed.add_statement(&root_cap, statement_name_2, allowed_values_2, false, scenario.ctx());
+    fed.add_property(&root_cap, property_name_1, allowed_values_1, false, scenario.ctx());
+    fed.add_property(&root_cap, property_name_2, allowed_values_2, false, scenario.ctx());
 
-    // Create accreditation for Bob to attest both statements
+    // Create accreditation for Bob to attest both properties
     let bob_id = @0x2.to_id();
-    let stmt_1 = statement::new_statement(
-        statement_name_1,
+    let property_1 = property::new_property(
+        property_name_1,
         allowed_values_1,
         false,
         option::none(),
     );
-    let stmt_2 = statement::new_statement(
-        statement_name_2,
+    let property_2 = property::new_property(
+        property_name_2,
         allowed_values_2,
         false,
         option::none(),
@@ -1239,24 +1239,24 @@ fun test_validate_statements_fails_for_revoked_statement() {
     fed.create_accreditation_to_attest(
         &accredit_cap,
         bob_id,
-        vector[stmt_1, stmt_2],
+        vector[property_1, property_2],
         &clock,
         scenario.ctx(),
     );
 
-    // Create statement map for validation
-    let mut statements = vec_map::empty();
-    statements.insert(statement_name_1, statement_value_1);
-    statements.insert(statement_name_2, statement_value_2);
+    // Create property map for validation
+    let mut properties = vec_map::empty();
+    properties.insert(property_name_1, property_value_1);
+    properties.insert(property_name_2, property_value_2);
 
     // Initially validation should pass
-    assert!(fed.validate_statements(&bob_id, statements, &clock), 0);
+    assert!(fed.validate_properties(&bob_id, properties, &clock), 0);
 
-    // Revoke the first statement
-    fed.revoke_statement(&root_cap, statement_name_1, &clock, scenario.ctx());
+    // Revoke the first property
+    fed.revoke_property(&root_cap, property_name_1, &clock, scenario.ctx());
 
-    // Now validation should fail because one of the statements is revoked
-    assert!(!fed.validate_statements(&bob_id, statements, &clock), 1);
+    // Now validation should fail because one of the properties is revoked
+    assert!(!fed.validate_properties(&bob_id, properties, &clock), 1);
 
     test_scenario::return_shared(fed);
     test_scenario::return_to_address(alice, root_cap);

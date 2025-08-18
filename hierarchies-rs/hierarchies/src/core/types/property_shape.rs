@@ -1,23 +1,23 @@
 // Copyright 2020-2025 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! # Hierarchies Statement Value Condition
+//! # Hierarchies Property Shape
 //!
-//! This module provides a condition that can be applied to a StatementValue.
+//! This module provides a shape that can be applied to a PropertyValue.
 
 use std::str::FromStr;
 use std::string::String;
 
+use iota_interaction::types::TypeTag;
 use iota_interaction::types::base_types::ObjectID;
 use iota_interaction::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 use iota_interaction::types::transaction::Argument;
-use iota_interaction::types::TypeTag;
-use iota_interaction::{ident_str, MoveType};
+use iota_interaction::{MoveType, ident_str};
 use serde::{Deserialize, Serialize};
 
-/// StatementValueCondition is a condition that can be applied to a StatementValue.
+/// PropertyShape is a shape that can be applied to a PropertyValue.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum StatementValueCondition {
+pub enum PropertyShape {
     StartsWith(String),
     EndsWith(String),
     Contains(String),
@@ -25,27 +25,27 @@ pub enum StatementValueCondition {
     LowerThan(u64),
 }
 
-impl StatementValueCondition {
+impl PropertyShape {
     pub fn into_ptb(self, ptb: &mut ProgrammableTransactionBuilder, package_id: ObjectID) -> anyhow::Result<Argument> {
         match self {
-            StatementValueCondition::StartsWith(text) => new_condition_starts_with(text, ptb, package_id),
-            StatementValueCondition::EndsWith(text) => new_condition_ends_with(text, ptb, package_id),
-            StatementValueCondition::Contains(text) => new_condition_contains(text, ptb, package_id),
-            StatementValueCondition::GreaterThan(value) => new_condition_greater_than(value, ptb, package_id),
-            StatementValueCondition::LowerThan(value) => new_condition_lower_than(value, ptb, package_id),
+            PropertyShape::StartsWith(text) => new_property_shape_starts_with(text, ptb, package_id),
+            PropertyShape::EndsWith(text) => new_property_shape_ends_with(text, ptb, package_id),
+            PropertyShape::Contains(text) => new_property_shape_contains(text, ptb, package_id),
+            PropertyShape::GreaterThan(value) => new_property_shape_greater_than(value, ptb, package_id),
+            PropertyShape::LowerThan(value) => new_property_shape_lower_than(value, ptb, package_id),
         }
     }
 }
 
-impl MoveType for StatementValueCondition {
+impl MoveType for PropertyShape {
     fn move_type(package: ObjectID) -> TypeTag {
-        TypeTag::from_str(format!("{package}::statement_condition::StatementValueCondition").as_str())
+        TypeTag::from_str(format!("{package}::property_shape::PropertyShape").as_str())
             .expect("Failed to create type tag")
     }
 }
 
-/// Creates a new move type for a Statement name
-pub(crate) fn new_condition_starts_with(
+/// Creates a new move type for a Property name
+pub(crate) fn new_property_shape_starts_with(
     text: String,
     ptb: &mut ProgrammableTransactionBuilder,
     package_id: ObjectID,
@@ -53,8 +53,8 @@ pub(crate) fn new_condition_starts_with(
     let names = ptb.pure(text)?;
     let condition: Argument = ptb.programmable_move_call(
         package_id,
-        ident_str!("statement_condition").into(),
-        ident_str!("new_condition_starts_with").into(),
+        ident_str!("property_shape").into(),
+        ident_str!("new_property_shape_starts_with").into(),
         vec![],
         vec![names],
     );
@@ -62,7 +62,7 @@ pub(crate) fn new_condition_starts_with(
     Ok(condition)
 }
 
-fn new_condition_ends_with(
+fn new_property_shape_ends_with(
     text: String,
     ptb: &mut ProgrammableTransactionBuilder,
     package_id: ObjectID,
@@ -70,8 +70,8 @@ fn new_condition_ends_with(
     let names = ptb.pure(text)?;
     let condition: Argument = ptb.programmable_move_call(
         package_id,
-        ident_str!("statement_condition").into(),
-        ident_str!("new_condition_ends_with").into(),
+        ident_str!("property_shape").into(),
+        ident_str!("new_property_shape_ends_with").into(),
         vec![],
         vec![names],
     );
@@ -79,7 +79,7 @@ fn new_condition_ends_with(
     Ok(condition)
 }
 
-fn new_condition_contains(
+fn new_property_shape_contains(
     text: String,
     ptb: &mut ProgrammableTransactionBuilder,
     package_id: ObjectID,
@@ -87,8 +87,8 @@ fn new_condition_contains(
     let names = ptb.pure(text)?;
     let condition: Argument = ptb.programmable_move_call(
         package_id,
-        ident_str!("statement_condition").into(),
-        ident_str!("new_condition_contains").into(),
+        ident_str!("property_shape").into(),
+        ident_str!("new_property_shape_contains").into(),
         vec![],
         vec![names],
     );
@@ -96,7 +96,7 @@ fn new_condition_contains(
     Ok(condition)
 }
 
-fn new_condition_greater_than(
+fn new_property_shape_greater_than(
     value: u64,
     ptb: &mut ProgrammableTransactionBuilder,
     package_id: ObjectID,
@@ -104,15 +104,15 @@ fn new_condition_greater_than(
     let names = ptb.pure(value)?;
     let condition: Argument = ptb.programmable_move_call(
         package_id,
-        ident_str!("statement_condition").into(),
-        ident_str!("new_condition_greater_than").into(),
+        ident_str!("property_shape").into(),
+        ident_str!("new_property_shape_greater_than").into(),
         vec![],
         vec![names],
     );
     Ok(condition)
 }
 
-fn new_condition_lower_than(
+fn new_property_shape_lower_than(
     value: u64,
     ptb: &mut ProgrammableTransactionBuilder,
     package_id: ObjectID,
@@ -120,8 +120,8 @@ fn new_condition_lower_than(
     let names = ptb.pure(value)?;
     let condition: Argument = ptb.programmable_move_call(
         package_id,
-        ident_str!("statement_condition").into(),
-        ident_str!("new_condition_lower_than").into(),
+        ident_str!("property_shape").into(),
+        ident_str!("new_property_shape_lower_than").into(),
         vec![],
         vec![names],
     );

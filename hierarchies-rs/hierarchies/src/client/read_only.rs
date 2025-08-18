@@ -8,11 +8,11 @@
 
 use std::ops::Deref;
 
-use iota_interaction::types::base_types::{IotaAddress, ObjectID};
-use iota_interaction::types::transaction::{ProgrammableTransaction, TransactionKind};
 #[cfg(not(target_arch = "wasm32"))]
 use iota_interaction::IotaClient;
 use iota_interaction::IotaClientTrait;
+use iota_interaction::types::base_types::{IotaAddress, ObjectID};
+use iota_interaction::types::transaction::{ProgrammableTransaction, TransactionKind};
 #[cfg(target_arch = "wasm32")]
 use iota_interaction_ts::bindings::WasmIotaClient;
 use product_common::core_client::CoreClientReadOnly;
@@ -23,8 +23,8 @@ use serde::de::DeserializeOwned;
 use crate::client::error::ClientError;
 use crate::client::{get_object_ref_by_id_with_bcs, network_id};
 use crate::core::operations::{HierarchiesImpl, HierarchiesOperations};
-use crate::core::types::statements::name::StatementName;
-use crate::core::types::statements::value::StatementValue;
+use crate::core::types::property_name::PropertyName;
+use crate::core::types::property_value::PropertyValue;
 use crate::core::types::{Accreditations, Federation};
 use crate::error::ConfigError;
 use crate::iota_interaction_adapter::IotaClientAdapter;
@@ -168,20 +168,20 @@ impl HierarchiesClientReadOnly {
         Ok(result)
     }
 
-    /// Retrieves all statement names registered in the federation.
-    pub async fn get_statements(&self, federation_id: ObjectID) -> Result<Vec<StatementName>, ClientError> {
-        let tx = HierarchiesImpl::get_statements(federation_id, self).await?;
+    /// Retrieves all property names registered in the federation.
+    pub async fn get_properties(&self, federation_id: ObjectID) -> Result<Vec<PropertyName>, ClientError> {
+        let tx = HierarchiesImpl::get_properties(federation_id, self).await?;
         let result = self.execute_read_only_transaction(tx).await?;
         Ok(result)
     }
 
-    /// Checks if a statement is registered in the federation.
-    pub async fn is_statement_in_federation(
+    /// Checks if a property is registered in the federation.
+    pub async fn is_property_in_federation(
         &self,
         federation_id: ObjectID,
-        statement_name: StatementName,
+        property_name: PropertyName,
     ) -> Result<bool, ClientError> {
-        let tx = HierarchiesImpl::is_statement_in_federation(federation_id, statement_name, self).await?;
+        let tx = HierarchiesImpl::is_property_in_federation(federation_id, property_name, self).await?;
         let result = self.execute_read_only_transaction(tx).await?;
         Ok(result)
     }
@@ -222,29 +222,29 @@ impl HierarchiesClientReadOnly {
         Ok(result)
     }
 
-    /// Validates a statement for a specific user.
-    pub async fn validate_statement(
+    /// Validates an attestation
+    pub async fn validate_property(
         &self,
         federation_id: ObjectID,
         attester_id: ObjectID,
-        statement_name: StatementName,
-        statement_value: StatementValue,
+        property_name: PropertyName,
+        property_value: PropertyValue,
     ) -> Result<bool, ClientError> {
-        let tx = HierarchiesImpl::validate_statement(federation_id, attester_id, statement_name, statement_value, self)
-            .await?;
+        let tx =
+            HierarchiesImpl::validate_property(federation_id, attester_id, property_name, property_value, self).await?;
 
         let response = self.execute_read_only_transaction(tx).await?;
         Ok(response)
     }
 
-    /// Validates multiple statements for a specific user.
-    pub async fn validate_statements(
+    /// Validates an attestations
+    pub async fn validate_properties(
         &self,
         federation_id: ObjectID,
         entity_id: ObjectID,
-        statements: impl IntoIterator<Item = (StatementName, StatementValue)>,
+        properties: impl IntoIterator<Item = (PropertyName, PropertyValue)>,
     ) -> Result<bool, ClientError> {
-        let tx = HierarchiesImpl::validate_statements(federation_id, entity_id, statements.into_iter().collect(), self)
+        let tx = HierarchiesImpl::validate_properties(federation_id, entity_id, properties.into_iter().collect(), self)
             .await?;
 
         let response = self.execute_read_only_transaction(tx).await?;

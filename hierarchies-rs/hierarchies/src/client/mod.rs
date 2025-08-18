@@ -3,7 +3,7 @@
 
 //! Client module provides the client interface for the Hierarchies service.
 //! Clients can be used to interact with the Hierarchies service, create new federations,
-//! add statements, create attestations, and accreditations.
+//! add properties, create attestations, and accreditations.
 //!
 //! There are two types of clients:
 //! - Client: A client that can perform both on-chain and off-chain operations. It requires a signer with a private key.
@@ -16,9 +16,9 @@ mod read_only;
 
 pub use error::ClientError;
 pub use full_client::*;
+use iota_interaction::IotaClientTrait;
 use iota_interaction::rpc_types::{IotaData, IotaObjectDataOptions};
 use iota_interaction::types::base_types::ObjectID;
-use iota_interaction::IotaClientTrait;
 use product_common::core_client::CoreClientReadOnly;
 use product_common::network_name::NetworkName;
 pub use read_only::*;

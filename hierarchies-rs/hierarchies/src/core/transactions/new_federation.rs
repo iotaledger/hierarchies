@@ -15,17 +15,17 @@
 //! as the federation's root authority with full control over the trust hierarchy.
 
 use async_trait::async_trait;
+use iota_interaction::OptionalSync;
 use iota_interaction::rpc_types::{IotaTransactionBlockEffects, IotaTransactionBlockEvents};
 use iota_interaction::types::transaction::ProgrammableTransaction;
-use iota_interaction::OptionalSync;
 use product_common::core_client::CoreClientReadOnly;
 use product_common::transaction::transaction_builder::Transaction;
 use tokio::sync::OnceCell;
 
 use crate::core::operations::{HierarchiesImpl, HierarchiesOperations};
 use crate::core::transactions::TransactionError;
-use crate::core::types::events::FederationCreatedEvent;
 use crate::core::types::Federation;
+use crate::core::types::events::FederationCreatedEvent;
 
 /// A transaction that creates a new federation.
 #[derive(Debug, Clone)]

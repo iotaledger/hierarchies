@@ -5,16 +5,16 @@ use std::collections::HashMap;
 use std::str::FromStr;
 
 use anyhow::anyhow;
+use hierarchies::client::HierarchiesClientReadOnly;
 use iota_interaction::types::base_types::ObjectID;
 use iota_interaction_ts::bindings::WasmIotaClient;
-use iota_interaction_ts::wasm_error::{wasm_error, Result, WasmResult};
-use hierarchies::client::HierarchiesClientReadOnly;
-use product_common::bindings::utils::parse_wasm_object_id;
+use iota_interaction_ts::wasm_error::{Result, WasmResult, wasm_error};
 use product_common::bindings::WasmObjectID;
+use product_common::bindings::utils::parse_wasm_object_id;
 use product_common::core_client::CoreClientReadOnly;
 use wasm_bindgen::prelude::*;
 
-use crate::wasm_types::{WasmAccreditations, WasmFederation, WasmStatementName, WasmStatementValue};
+use crate::wasm_types::{WasmAccreditations, WasmFederation, WasmPropertyName, WasmPropertyValue};
 
 /// A client to interact with Hierarchies objects on the IOTA ledger.
 ///
@@ -183,48 +183,52 @@ impl WasmHierarchiesClientReadOnly {
     pub async fn is_root_authority(&self, federation_id: WasmObjectID, user_id: WasmObjectID) -> Result<bool> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         let user_id = parse_wasm_object_id(&user_id)?;
-        let is_root_authority = self.0.is_root_authority(federation_id, user_id).await.map_err(wasm_error)?;
+        let is_root_authority = self
+            .0
+            .is_root_authority(federation_id, user_id)
+            .await
+            .map_err(wasm_error)?;
         Ok(is_root_authority)
     }
 
-    /// Retrieves all statement names registered in the federation.
+    /// Retrieves all property names registered in the federation.
     ///
     /// # Arguments
     ///
     /// * `federation_id`: The [`ObjectID`] of the federation.
     ///
     /// # Returns
-    /// A `Result` containing the list of statement names or an [`Error`].
+    /// A `Result` containing the list of property names or an [`Error`].
     ///
     /// # TypeScript Usage
     /// This method returns a `Promise` in TypeScript.
-    /// - On success, the promise resolves with `WasmStatementName[]`.
+    /// - On success, the promise resolves with `WasmProperty[]`.
     /// - On failure, the promise rejects with an `Error`.
     ///
     /// ```typescript
     /// try {
-    ///   const statements = await client.getStatements(federationId);
-    ///   console.log("Statements:", statements);
+    ///   const properties = await client.getProperties(federationId);
+    ///   console.log("Properties:", properties);
     /// } catch (error) {
-    ///   console.error("Failed to get statements:", error);
+    ///   console.error("Failed to get properties:", error);
     /// }
     /// ```
-    #[wasm_bindgen(js_name = getStatements)]
-    pub async fn get_statements(&self, federation_id: WasmObjectID) -> Result<Vec<WasmStatementName>> {
+    #[wasm_bindgen(js_name = getProperties)]
+    pub async fn get_properties(&self, federation_id: WasmObjectID) -> Result<Vec<WasmPropertyName>> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
-        let statements = self.0.get_statements(federation_id).await.map_err(wasm_error)?;
-        Ok(statements.into_iter().map(|statement| statement.into()).collect())
+        let properties = self.0.get_properties(federation_id).await.map_err(wasm_error)?;
+        Ok(properties.into_iter().map(|property| property.into()).collect())
     }
 
-    /// Checks if a statement is registered in the federation.
+    /// Checks if a property is registered in the federation.
     ///
     /// # Arguments
     ///
     /// * `federation_id`: The [`ObjectID`] of the federation.
-    /// * `statement_name`: The name of the statement to check.
+    /// * `property_name`: The name of the property to check.
     ///
     /// # Returns
-    /// A `Result` containing a boolean indicating if the statement is registered or an [`Error`].
+    /// A `Result` containing a boolean indicating if the property is registered or an [`Error`].
     ///
     /// # TypeScript Usage
     /// This method returns a `Promise` in TypeScript.
@@ -233,21 +237,21 @@ impl WasmHierarchiesClientReadOnly {
     ///
     /// ```typescript
     /// try {
-    ///   const isRegistered = await client.isStatementInFederation(federationId, statementName);
-    ///   console.log("Is statement registered:", isRegistered);
+    ///   const isRegistered = await client.isPropertyInFederation(federationId, propertyName);
+    ///   console.log("Is property registered:", isRegistered);
     /// } catch (error) {
-    ///   console.error("Failed to check statement registration:", error);
+    ///   console.error("Failed to check property registration:", error);
     /// }
     /// ```
-    #[wasm_bindgen(js_name = isStatementInFederation)]
-    pub async fn is_statement_in_federation(
+    #[wasm_bindgen(js_name = isPropertyInFederation)]
+    pub async fn is_property_in_federation(
         &self,
         federation_id: WasmObjectID,
-        statement_name: WasmStatementName,
+        property_name: WasmPropertyName,
     ) -> Result<bool> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         self.0
-            .is_statement_in_federation(federation_id, statement_name.into())
+            .is_property_in_federation(federation_id, property_name.into())
             .await
             .map_err(wasm_error)
             .wasm_result()
@@ -292,7 +296,7 @@ impl WasmHierarchiesClientReadOnly {
         Ok(accreditations.into())
     }
 
-    /// Checks if a user has attestation permissions.
+    /// Checks if a user has attestation accreditation.
     ///
     /// # Arguments
     ///
@@ -300,7 +304,7 @@ impl WasmHierarchiesClientReadOnly {
     /// * `user_id`: The [`ObjectID`] of the user.
     ///
     /// # Returns
-    /// A `Result` containing a boolean indicating if the user has attestation permissions or an [`Error`].
+    /// A `Result` containing a boolean indicating if the user has attestation accreditation or an [`Error`].
     ///
     /// # TypeScript Usage
     /// This method returns a `Promise` in TypeScript.
@@ -331,7 +335,7 @@ impl WasmHierarchiesClientReadOnly {
     /// * `user_id`: The [`ObjectID`] of the user.
     ///
     /// # Returns
-    /// A `Result` containing the accreditations to accredit or an [`Error`].
+    /// A `Result` containing the accreditations to accredit for the user or an [`Error`].
     ///
     /// # TypeScript Usage
     /// This method returns a `Promise` in TypeScript.
@@ -393,17 +397,17 @@ impl WasmHierarchiesClientReadOnly {
         Ok(is_accreditor)
     }
 
-    /// Validates a statement for a specific user.
+    /// Validates a property for a specific user.
     ///
     /// # Arguments
     ///
     /// * `federation_id`: The [`ObjectID`] of the federation.
     /// * `user_id`: The [`ObjectID`] of the user.
-    /// * `statement_name`: The name of the statement to validate.
-    /// * `statement_value`: The value of the statement to validate.
+    /// * `property_name`: The name of the property to validate.
+    /// * `property_value`: The value of the property to validate.
     ///
     /// # Returns
-    /// A `Result` containing a boolean indicating if the statement is valid or an [`Error`].
+    /// A `Result` containing a boolean indicating if the property is valid or an [`Error`].
     ///
     /// # TypeScript Usage
     /// This method returns a `Promise` in TypeScript.
@@ -412,42 +416,42 @@ impl WasmHierarchiesClientReadOnly {
     ///
     /// ```typescript
     /// try {
-    ///   const isValid = await client.validateStatement(federationId, userId, statementName, statementValue);
-    ///   console.log("Is statement valid:", isValid);
+    ///   const isValid = await client.validateProperty(federationId, userId, propertyName, propertyValue);
+    ///   console.log("Is property valid:", isValid);
     /// } catch (error) {
-    ///   console.error("Failed to validate statement:", error);
+    ///   console.error("Failed to validate property:", error);
     /// }
     /// ```
-    #[wasm_bindgen(js_name = validateStatement)]
-    pub async fn validate_statement(
+    #[wasm_bindgen(js_name = validateProperty)]
+    pub async fn validate_property(
         &self,
         federation_id: WasmObjectID,
         user_id: WasmObjectID,
-        statement_name: WasmStatementName,
-        statement_value: WasmStatementValue,
+        property_name: WasmPropertyName,
+        property_value: WasmPropertyValue,
     ) -> Result<bool> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         let user_id = parse_wasm_object_id(&user_id)?;
-        let statement_name = statement_name.into();
-        let statement_value = statement_value.into();
+        let property_name = property_name.into();
+        let property_value = property_value.into();
         let is_valid = self
             .0
-            .validate_statement(federation_id, user_id, statement_name, statement_value)
+            .validate_property(federation_id, user_id, property_name, property_value)
             .await
             .map_err(wasm_error)?;
         Ok(is_valid)
     }
 
-    /// Validates multiple statements for a specific user.
+    /// Validates multiple properties for a specific user.
     ///
     /// # Arguments
     ///
     /// * `federation_id`: The [`ObjectID`] of the federation.
     /// * `user_id`: The [`ObjectID`] of the user.
-    /// * `statements`: The statements to validate.
+    /// * `properties`: The properties to validate.
     ///
     /// # Returns
-    /// A `Result` containing a boolean indicating if the statements are valid or an [`Error`].
+    /// A `Result` containing a boolean indicating if the properties are valid or an [`Error`].
     ///
     /// # TypeScript Usage
     /// This method returns a `Promise` in TypeScript.
@@ -456,36 +460,36 @@ impl WasmHierarchiesClientReadOnly {
     ///
     /// ```typescript
     /// try {
-    ///   const areValid = await client.validateStatements(federationId, userId, statements);
-    ///   console.log("Are statements valid:", areValid);
+    ///   const areValid = await client.validateProperties(federationId, userId, properties);
+    ///   console.log("Are properties valid:", areValid);
     /// } catch (error) {
-    ///   console.error("Failed to validate statements:", error);
+    ///   console.error("Failed to validate properties:", error);
     /// }
     /// ```
-    #[wasm_bindgen(js_name = validateStatements)]
-    pub async fn validate_statements(
+    #[wasm_bindgen(js_name = validateProperties)]
+    pub async fn validate_properties(
         &self,
         federation_id: WasmObjectID,
         entity_id: WasmObjectID,
-        statements: js_sys::Map,
+        properties: js_sys::Map,
     ) -> Result<bool> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         let entity_id = parse_wasm_object_id(&entity_id)?;
 
-        let mut converted_statements = HashMap::new();
+        let mut converted_properties = HashMap::new();
 
-        statements.for_each(&mut |value, key| {
-            if let (Ok(statement_name), Ok(statement_value)) = (
-                serde_wasm_bindgen::from_value::<WasmStatementName>(key),
-                serde_wasm_bindgen::from_value::<WasmStatementValue>(value),
+        properties.for_each(&mut |value, key| {
+            if let (Ok(property_name), Ok(property_value)) = (
+                serde_wasm_bindgen::from_value::<WasmPropertyName>(key),
+                serde_wasm_bindgen::from_value::<WasmPropertyValue>(value),
             ) {
-                converted_statements.insert(statement_name.into(), statement_value.into());
+                converted_properties.insert(property_name.into(), property_value.into());
             }
         });
 
         let is_valid = self
             .0
-            .validate_statements(federation_id, entity_id, converted_statements)
+            .validate_properties(federation_id, entity_id, converted_properties)
             .await
             .map_err(wasm_error)?;
         Ok(is_valid)

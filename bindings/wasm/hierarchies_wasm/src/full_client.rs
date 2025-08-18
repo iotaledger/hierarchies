@@ -3,12 +3,12 @@
 
 use std::collections::HashSet;
 
+use hierarchies::client::HierarchiesClient;
+use hierarchies::core::types::property_name::PropertyName;
+use hierarchies::core::types::property_value::PropertyValue;
+use iota_interaction_ts::WasmPublicKey;
 use iota_interaction_ts::bindings::{WasmIotaClient, WasmTransactionSigner};
 use iota_interaction_ts::wasm_error::{Result, WasmResult};
-use iota_interaction_ts::WasmPublicKey;
-use hierarchies::client::HierarchiesClient;
-use hierarchies::core::types::statements::name::StatementName;
-use hierarchies::core::types::statements::value::StatementValue;
 use product_common::bindings::transaction::WasmTransactionBuilder;
 use product_common::bindings::utils::{into_transaction_builder, parse_wasm_object_id};
 use product_common::bindings::{WasmIotaAddress, WasmObjectID};
@@ -17,11 +17,11 @@ use wasm_bindgen::prelude::*;
 
 use crate::client_read_only::WasmHierarchiesClientReadOnly;
 use crate::wasm_types::transactions::{
-    WasmAddRootAuthority, WasmAddStatement, WasmCreateAccreditationToAccredit, WasmCreateAccreditationToAttest,
-    WasmCreateFederation, WasmRevokeAccreditationToAccredit, WasmRevokeAccreditationToAttest, WasmRevokeStatement,
-    WasmRevokeRootAuthority, WasmReinstateRootAuthority,
+    WasmAddProperty, WasmAddRootAuthority, WasmCreateAccreditationToAccredit, WasmCreateAccreditationToAttest,
+    WasmCreateFederation, WasmReinstateRootAuthority, WasmRevokeAccreditationToAccredit,
+    WasmRevokeAccreditationToAttest, WasmRevokeProperty, WasmRevokeRootAuthority,
 };
-use crate::wasm_types::{WasmStatement, WasmStatementName, WasmStatementValue};
+use crate::wasm_types::{WasmProperty, WasmPropertyName, WasmPropertyValue};
 
 /// A client to interact with Hierarchies objects on the IOTA ledger.
 ///
@@ -127,56 +127,56 @@ impl WasmHierarchiesClient {
         Ok(into_transaction_builder(WasmReinstateRootAuthority(tx)))
     }
 
-    /// Creates a new [`WasmTransactionBuilder`] for adding a statement to a federation.
+    /// Creates a new [`WasmTransactionBuilder`] for adding a property to a federation.
     ///
     /// # Arguments
     ///
     /// * `federation_id` - The [`WasmObjectID`] of the federation.
-    /// * `statement_name` - The name of the statement.
-    /// * `allowed_values` - The allowed values for the statement.
+    /// * `property_name` - The name of the property.
+    /// * `allowed_values` - The allowed values for the property.
     /// * `allow_any` - Whether to allow any value.
-    #[wasm_bindgen(js_name = addStatement)]
-    pub fn add_statement(
+    #[wasm_bindgen(js_name = addProperty)]
+    pub fn add_property(
         &self,
         federation_id: WasmObjectID,
-        statement_name: &WasmStatementName,
-        allowed_values: Box<[WasmStatementValue]>,
+        property_name: &WasmPropertyName,
+        allowed_values: Box<[WasmPropertyValue]>,
         allow_any: bool,
     ) -> Result<WasmTransactionBuilder> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
-        let statement_name = StatementName::from(statement_name.0.clone());
+        let property_name = PropertyName::from(property_name.0.clone());
 
-        let unique_allowed_values: HashSet<StatementValue> =
+        let unique_allowed_values: HashSet<PropertyValue> =
             HashSet::from_iter(allowed_values.iter().cloned().map(|v| v.0.clone()));
 
         let tx = self
             .0
-            .add_statement(federation_id, statement_name, unique_allowed_values, allow_any)
+            .add_property(federation_id, property_name, unique_allowed_values, allow_any)
             .into_inner();
 
-        Ok(into_transaction_builder(WasmAddStatement(tx)))
+        Ok(into_transaction_builder(WasmAddProperty(tx)))
     }
 
-    /// Creates a new [`WasmTransactionBuilder`] for revoking a statement from a federation.
+    /// Creates a new [`WasmTransactionBuilder`] for revoking a property from a federation.
     ///
     /// # Arguments
     ///
     /// * `federation_id` - The [`WasmObjectID`] of the federation.
-    /// * `statement_name` - The name of the statement to revoke.
-    /// * `valid_to_ms` - The timestamp in milliseconds until which the statement is valid.
-    pub fn revoke_statement(
+    /// * `property_name` - The name of the property to revoke.
+    /// * `valid_to_ms` - The timestamp in milliseconds until which the property is valid.
+    pub fn revoke_property(
         &self,
         federation_id: WasmObjectID,
-        statement_name: &WasmStatementName,
+        property_name: &WasmPropertyName,
         valid_to_ms: Option<u64>,
     ) -> Result<WasmTransactionBuilder> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
-        let statement_name = StatementName::from(statement_name.0.clone());
+        let property_name = PropertyName::from(property_name.0.clone());
         let tx = self
             .0
-            .revoke_statement(federation_id, statement_name, valid_to_ms)
+            .revoke_property(federation_id, property_name, valid_to_ms)
             .into_inner();
-        Ok(into_transaction_builder(WasmRevokeStatement(tx)))
+        Ok(into_transaction_builder(WasmRevokeProperty(tx)))
     }
 
     /// Creates a new [`WasmTransactionBuilder`] for creating an accreditation to attest.
@@ -185,13 +185,13 @@ impl WasmHierarchiesClient {
     ///
     /// * `federation_id` - The [`WasmObjectID`] of the federation.
     /// * `receiver` - The [`WasmObjectID`] of the receiver of the accreditation.
-    /// * `want_statements` - The statements for which permissions are being granted.
+    /// * `want_properties` - The properties for which permissions are being granted.
     #[wasm_bindgen(js_name = createAccreditationToAttest)]
     pub fn create_accreditation_to_attest(
         &self,
         federation_id: WasmObjectID,
         receiver: WasmObjectID,
-        want_statements: Box<[WasmStatement]>,
+        want_properties: Box<[WasmProperty]>,
     ) -> Result<WasmTransactionBuilder> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         let receiver = parse_wasm_object_id(&receiver)?;
@@ -201,7 +201,7 @@ impl WasmHierarchiesClient {
             .create_accreditation_to_attest(
                 federation_id,
                 receiver,
-                want_statements.iter().cloned().map(|s| s.into()),
+                want_properties.iter().cloned().map(|s| s.into()),
             )
             .into_inner();
 
@@ -240,13 +240,13 @@ impl WasmHierarchiesClient {
     ///
     /// * `federation_id` - The [`WasmObjectID`] of the federation.
     /// * `receiver` - The [`WasmObjectID`] of the receiver of the accreditation.
-    /// * `want_statements` - The statements for which permissions are being granted.
+    /// * `want_properties` - The properties for which permissions are being granted.
     #[wasm_bindgen(js_name = createAccreditationToAccredit)]
     pub fn create_accreditation_to_accredit(
         &self,
         federation_id: WasmObjectID,
         receiver: WasmObjectID,
-        want_statements: Box<[WasmStatement]>,
+        want_properties: Box<[WasmProperty]>,
     ) -> Result<WasmTransactionBuilder> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         let receiver = parse_wasm_object_id(&receiver)?;
@@ -256,7 +256,7 @@ impl WasmHierarchiesClient {
             .create_accreditation_to_accredit(
                 federation_id,
                 receiver,
-                want_statements.iter().cloned().map(|s| s.into()),
+                want_properties.iter().cloned().map(|s| s.into()),
             )
             .into_inner();
 

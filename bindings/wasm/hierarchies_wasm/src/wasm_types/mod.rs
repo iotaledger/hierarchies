@@ -4,14 +4,14 @@
 mod accreditation;
 mod accreditations;
 mod federation;
-mod statement_condition;
-mod statement_name;
-mod statement_value;
+mod property_name;
+mod property_shape;
+mod property_value;
 pub mod transactions;
 
 pub use accreditation::*;
 pub use accreditations::*;
 pub use federation::*;
-pub use statement_condition::*;
-pub use statement_name::*;
-pub use statement_value::*;
+pub use property_name::*;
+pub use property_shape::*;
+pub use property_value::*;

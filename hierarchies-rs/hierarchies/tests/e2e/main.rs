@@ -5,4 +5,4 @@ mod client;
 mod test_accreditations;
 mod test_authority;
 mod test_new_federation;
-mod test_statements;
+mod test_properties;

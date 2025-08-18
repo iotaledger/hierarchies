@@ -30,9 +30,9 @@ use product_common::core_client::CoreClientReadOnly;
 
 use crate::core::error::OperationError;
 use crate::core::types::Capability;
-use crate::core::types::statements::name::StatementName;
-use crate::core::types::statements::value::StatementValue;
-use crate::core::types::statements::{Statement, new_property_statement};
+use crate::core::types::property::{FederationProperty, new_property};
+use crate::core::types::property_name::PropertyName;
+use crate::core::types::property_value::PropertyValue;
 use crate::core::{CapabilityError, get_clock_ref};
 use crate::error::{NetworkError, ObjectError};
 use crate::utils::{self};
@@ -48,14 +48,14 @@ pub mod move_names {
     pub const PACKAGE_NAME: &str = "hierarchies";
     /// Main module containing federation and core operations
     pub const MODULE_MAIN: &str = "main";
-    /// Module for statement-related operations
-    pub const MODULE_STATEMENT: &str = "statement";
-    /// Module for statement value operations
-    pub const MODULE_VALUE: &str = "statement_value";
-    /// Module for statement name operations
-    pub const MODULE_NAME: &str = "statement_name";
-    /// Module for statement condition operations
-    pub const MODULE_CONDITION: &str = "statement_condition";
+    /// Module for property-related operations
+    pub const MODULE_PROPERTY: &str = "property";
+    /// Module for property value operations
+    pub const MODULE_VALUE: &str = "property_value";
+    /// Module for property name operations
+    pub const MODULE_NAME: &str = "property_name";
+    /// Module for property shape operations
+    pub const MODULE_SHAPE: &str = "property_shape";
     /// Utility module for common operations
     pub const MODULE_UTILS: &str = "utils";
 }
@@ -75,6 +75,8 @@ pub mod move_names {
 /// secure and verifiable permission management.
 #[derive(Debug, Clone)]
 pub(crate) struct HierarchiesImpl;
+
+impl HierarchiesOperations for HierarchiesImpl {}
 
 impl HierarchiesImpl {
     /// Retrieves a capability object for the specified sender.
@@ -196,16 +198,16 @@ impl HierarchiesImpl {
 
 /// High-level Hierarchies operations trait.
 ///
-/// Provides methods for managing federations, statements, and accreditations.
+/// Provides methods for managing federations, properties, and accreditations.
 /// Each method returns a `ProgrammableTransaction` that can be executed on-chain.
 ///
 /// ## Core Operations
 ///
 /// - **Federation Management**: Create and configure trust federations
-/// - **Statement Management**: Define and manage attestable statement types
+/// - **Property Management**: Define and manage attestable property types
 /// - **Accreditation**: Grant and revoke permission to delegate trust
 /// - **Attestation**: Grant and revoke permission to create attestations
-/// - **Validation**: Verify entity permissions for specific statements
+/// - **Validation**: Verify entity permissions for specific properties
 ///
 /// All operations require appropriate capabilities and return transactions
 /// ready for execution on the IOTA network.
@@ -237,21 +239,21 @@ pub(crate) trait HierarchiesOperations {
         Ok(tx)
     }
 
-    /// Adds a new statement type to the federation.
+    /// Adds a new property type to the federation.
     ///
-    /// Statements define the types of claims that can be attested within the federation.
+    /// Properties define the types of claims that can be attested within the federation.
     /// You can either restrict allowed values to a specific set or allow any values.
     ///
     /// # Errors
     ///
     /// Returns an error if:
     /// - The owner doesn't have `RootAuthorityCap`
-    /// - The statement name already exists in the federation
+    /// - The property name already exists in the federation
     /// - Network or transaction building fails
-    async fn add_statement<C>(
+    async fn add_property<C>(
         federation_id: ObjectID,
-        statement_name: StatementName,
-        allowed_statement_values: HashSet<StatementValue>,
+        property_name: PropertyName,
+        allowed_property_values: HashSet<PropertyValue>,
         allow_any: bool,
         owner: IotaAddress,
         client: &C,
@@ -270,12 +272,12 @@ pub(crate) trait HierarchiesOperations {
 
         let allow_any = ptb.pure(allow_any)?;
 
-        let statement_names = statement_name.to_ptb(&mut ptb, client.package_id())?;
+        let property_names = property_name.to_ptb(&mut ptb, client.package_id())?;
 
-        let value_tag = StatementValue::move_type(client.package_id());
+        let value_tag = PropertyValue::move_type(client.package_id());
 
         let mut values_of_property = vec![];
-        for property_value in allowed_statement_values {
+        for property_value in allowed_property_values {
             let value = property_value.to_ptb(&mut ptb, client.package_id())?;
             values_of_property.push(value);
         }
@@ -286,9 +288,9 @@ pub(crate) trait HierarchiesOperations {
         ptb.programmable_move_call(
             client.package_id(),
             ident_str!(move_names::MODULE_MAIN).into(),
-            ident_str!("add_statement").into(),
+            ident_str!("add_property").into(),
             vec![],
-            vec![fed_ref, cap, statement_names, tpv_vec_set, allow_any],
+            vec![fed_ref, cap, property_names, tpv_vec_set, allow_any],
         );
 
         let tx = ptb.finish();
@@ -298,12 +300,12 @@ pub(crate) trait HierarchiesOperations {
 
     /// Revokes a user's attestation accreditation.
     ///
-    /// Removes specific attestation permissions from a user. The revoker must have
-    /// sufficient permissions to revoke the target accreditation.
+    /// This function revokes specific attestation accreditations from a user.
+    /// The revoker must possess sufficient accreditation to revoke the target accreditation.
     async fn revoke_accreditation_to_attest<C>(
         federation_id: ObjectID,
         user_id: ObjectID,
-        permission_id: ObjectID,
+        accreditation_id: ObjectID,
         owner: IotaAddress,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>
@@ -320,7 +322,7 @@ pub(crate) trait HierarchiesOperations {
         let fed_ref = ptb.obj(fed_ref)?;
 
         let user_id_arg = ptb.pure(user_id)?;
-        let permission_id = ptb.pure(permission_id)?;
+        let permission_id = ptb.pure(accreditation_id)?;
         let clock = get_clock_ref(&mut ptb);
         ptb.programmable_move_call(
             client.package_id(),
@@ -380,8 +382,8 @@ pub(crate) trait HierarchiesOperations {
 
     /// Grants accreditation permissions to another user.
     ///
-    /// Allows the receiver to further delegate accreditation rights for the specified statements.
-    /// The granter must have sufficient permissions for all statements being delegated.
+    /// Allows the receiver to further delegate accreditation rights for the specified properties.
+    /// The granter must have sufficient permissions for all properties being delegated.
     ///
     /// # Errors
     ///
@@ -389,7 +391,7 @@ pub(crate) trait HierarchiesOperations {
     async fn create_accreditation_to_accredit<C>(
         federation_id: ObjectID,
         receiver: ObjectID,
-        want_statements: Vec<Statement>,
+        want_properties: Vec<FederationProperty>,
         owner: IotaAddress,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>
@@ -408,14 +410,14 @@ pub(crate) trait HierarchiesOperations {
 
         let receiver_arg = ptb.pure(receiver)?;
 
-        let want_statements = new_property_statement(client.package_id(), &mut ptb, want_statements)?;
+        let want_properties = new_property(client.package_id(), &mut ptb, want_properties)?;
 
         ptb.programmable_move_call(
             client.package_id(),
             ident_str!(move_names::MODULE_MAIN).into(),
             ident_str!("create_accreditation_to_accredit").into(),
             vec![],
-            vec![fed_ref, cap, receiver_arg, want_statements, clock],
+            vec![fed_ref, cap, receiver_arg, want_properties, clock],
         );
 
         let tx = ptb.finish();
@@ -425,8 +427,8 @@ pub(crate) trait HierarchiesOperations {
 
     /// Grants attestation permissions to another user.
     ///
-    /// Allows the receiver to create attestations for the specified statements.
-    /// The granter must have sufficient permissions for all statements being delegated.
+    /// Allows the receiver to create attestations for the specified properties.
+    /// The granter must have sufficient permissions for all properties being delegated.
     ///
     /// # Errors
     ///
@@ -434,7 +436,7 @@ pub(crate) trait HierarchiesOperations {
     async fn create_accreditation_to_attest<C>(
         federation_id: ObjectID,
         receiver: ObjectID,
-        want_statements: Vec<Statement>,
+        want_properties: Vec<FederationProperty>,
         owner: IotaAddress,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>
@@ -452,14 +454,14 @@ pub(crate) trait HierarchiesOperations {
 
         let receiver_arg = ptb.pure(receiver)?;
 
-        let want_statements = new_property_statement(client.package_id(), &mut ptb, want_statements)?;
+        let want_properties = new_property(client.package_id(), &mut ptb, want_properties)?;
 
         ptb.programmable_move_call(
             client.package_id(),
             ident_str!(move_names::MODULE_MAIN).into(),
             ident_str!("create_accreditation_to_attest").into(),
             vec![],
-            vec![fed_ref, cap, receiver_arg, want_statements, clock],
+            vec![fed_ref, cap, receiver_arg, want_properties, clock],
         );
 
         let tx = ptb.finish();
@@ -478,7 +480,7 @@ pub(crate) trait HierarchiesOperations {
     async fn revoke_accreditation_to_accredit<C>(
         federation_id: ObjectID,
         user_id: ObjectID,
-        permission_id: ObjectID,
+        accreditation_id: ObjectID,
         owner: IotaAddress,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>
@@ -495,14 +497,14 @@ pub(crate) trait HierarchiesOperations {
         let fed_ref = ptb.obj(fed_ref)?;
 
         let user_id_arg = ptb.pure(user_id)?;
-        let permission_id = ptb.pure(permission_id)?;
+        let accreditation_id = ptb.pure(accreditation_id)?;
 
         ptb.programmable_move_call(
             client.package_id(),
             ident_str!(move_names::MODULE_MAIN).into(),
             ident_str!("revoke_accreditation_to_accredit").into(),
             vec![],
-            vec![fed_ref, cap, user_id_arg, permission_id, clock],
+            vec![fed_ref, cap, user_id_arg, accreditation_id, clock],
         );
 
         let tx = ptb.finish();
@@ -510,16 +512,16 @@ pub(crate) trait HierarchiesOperations {
         Ok(tx)
     }
 
-    /// Retrieves all statement names registered in the federation.
+    /// Retrieves all property names registered in the federation.
     ///
-    /// Returns a list of all statement types that can be attested within the federation.
-    /// This includes both active and revoked statements, but validation functions
-    /// will check expiration times when validating attestations.
+    /// Returns a list of all property types that can be attested within the federation.
+    /// This includes both active and revoked properties, but validation functions
+    /// will check expiration times when validating properties.
     ///
     /// # Errors
     ///
     /// Returns an error if the federation object is not found or not shared.
-    async fn get_statements<C>(federation_id: ObjectID, client: &C) -> Result<ProgrammableTransaction, OperationError>
+    async fn get_properties<C>(federation_id: ObjectID, client: &C) -> Result<ProgrammableTransaction, OperationError>
     where
         C: CoreClientReadOnly + OptionalSync,
     {
@@ -531,7 +533,7 @@ pub(crate) trait HierarchiesOperations {
         ptb.move_call(
             client.package_id(),
             ident_str!(move_names::MODULE_MAIN).into(),
-            ident_str!("get_statements").into(),
+            ident_str!("get_properties").into(),
             vec![],
             vec![fed_ref],
         )?;
@@ -541,24 +543,24 @@ pub(crate) trait HierarchiesOperations {
         Ok(tx)
     }
 
-    /// Checks if a statement is registered in the federation.
+    /// Checks if a property is registered in the federation.
     ///
-    /// Verifies whether a specific statement type exists within the federation's
-    /// governance structure. This check is independent of the statement's
+    /// Verifies whether a specific property type exists within the federation's
+    /// governance structure. This check is independent of the property's
     /// revocation status.
     ///
     ///
     /// # Returns
     ///
-    /// A transaction that when executed returns true if the statement exists
+    /// A transaction that when executed returns true if the property exists
     /// in the federation, false otherwise.
     ///
     /// # Errors
     ///
     /// Returns an error if the federation object is not found or not shared.
-    async fn is_statement_in_federation<C>(
+    async fn is_property_in_federation<C>(
         federation_id: ObjectID,
-        statement_name: StatementName,
+        property_name: PropertyName,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>
     where
@@ -568,14 +570,14 @@ pub(crate) trait HierarchiesOperations {
 
         let fed_ref = HierarchiesImpl::get_fed_ref(client, federation_id).await?;
         let fed_ref = CallArg::Object(fed_ref);
-        let statement_name = CallArg::Pure(bcs::to_bytes(&statement_name)?);
+        let property_name = CallArg::Pure(bcs::to_bytes(&property_name)?);
 
         ptb.move_call(
             client.package_id(),
             ident_str!(move_names::MODULE_MAIN).into(),
-            ident_str!("is_statement_in_federation").into(),
+            ident_str!("is_property_in_federation").into(),
             vec![],
-            vec![fed_ref, statement_name],
+            vec![fed_ref, property_name],
         )?;
 
         let tx = ptb.finish();
@@ -585,8 +587,8 @@ pub(crate) trait HierarchiesOperations {
 
     /// Retrieves attestation accreditations for a specific user.
     ///
-    /// Returns the set of statements a user is authorized to attest, along with
-    /// any value constraints. This shows what statements the user can create
+    /// Returns the set of properties a user is authorized to attest, along with
+    /// any value constraints. This shows what properties the user can create
     /// attestations for, but not what they can delegate to others.
     ///
     /// # Returns
@@ -656,9 +658,10 @@ pub(crate) trait HierarchiesOperations {
 
     /// Retrieves accreditation permissions for a specific user.
     ///
-    /// Returns the set of statements a user is authorized to delegate to others
-    /// for accreditation purposes. This shows what statements the user can
+    /// Returns the set of properties a user is authorized to delegate to others
+    /// for accreditation purposes. This shows what properties the user can
     /// grant others permission to further delegate (create_accreditation_to_accredit).
+    ///
     ///
     /// # Returns
     ///
@@ -725,23 +728,23 @@ pub(crate) trait HierarchiesOperations {
         Ok(tx)
     }
 
-    /// Revokes a statement immediately using the current timestamp.
+    /// Revokes a property immediately using the current timestamp.
     ///
-    /// Sets the statement's validity expiration to the current time, effectively
-    /// revoking it immediately. After revocation, the statement can no longer be
+    /// Sets the property's validity expiration to the current time, effectively
+    /// revoking it immediately. After revocation, the property can no longer be
     /// attested. Requires `RootAuthorityCap`.
     ///
     /// # Returns
     ///
-    /// A transaction that when executed revokes the statement.
+    /// A transaction that when executed revokes the property.
     ///
     /// # Errors
     ///
     /// Returns an error if the owner doesn't have `RootAuthorityCap` or the
-    /// statement doesn't exist in the federation.
-    async fn revoke_statement<C>(
+    /// property doesn't exist in the federation.
+    async fn revoke_property<C>(
         federation_id: ObjectID,
-        statement_name: StatementName,
+        property_name: PropertyName,
         owner: IotaAddress,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>
@@ -757,16 +760,16 @@ pub(crate) trait HierarchiesOperations {
         let fed_ref = HierarchiesImpl::get_fed_ref(client, federation_id).await?;
         let fed_ref = ptb.obj(fed_ref)?;
 
-        let statement_name = statement_name.to_ptb(&mut ptb, client.package_id())?;
+        let property_name = property_name.to_ptb(&mut ptb, client.package_id())?;
 
         let clock = get_clock_ref(&mut ptb);
 
         ptb.programmable_move_call(
             client.package_id(),
             ident_str!(move_names::MODULE_MAIN).into(),
-            ident_str!("revoke_statement").into(),
+            ident_str!("revoke_property").into(),
             vec![],
-            vec![fed_ref, cap, statement_name, clock],
+            vec![fed_ref, cap, property_name, clock],
         );
 
         let tx = ptb.finish();
@@ -774,24 +777,24 @@ pub(crate) trait HierarchiesOperations {
         Ok(tx)
     }
 
-    /// Revokes a statement at a specific future timestamp.
+    /// Revokes a property at a specific future timestamp.
     ///
-    /// Sets a specific time limit on when a statement is considered valid. After
-    /// the specified time, the statement can no longer be attested. This allows
+    /// Sets a specific time limit on when a property is considered valid. After
+    /// the specified time, the property can no longer be attested. This allows
     /// for scheduled revocation. Requires `RootAuthorityCap`.
     ///
     ///
     /// # Returns
     ///
-    /// A transaction that when executed revokes the statement.
+    /// A transaction that when executed revokes the property.
     ///
     /// # Errors
     ///
     /// Returns an error if the owner doesn't have `RootAuthorityCap` or the
-    /// statement doesn't exist in the federation.
-    async fn revoke_statement_at<C>(
+    /// property doesn't exist in the federation.
+    async fn revoke_property_at<C>(
         federation_id: ObjectID,
-        statement_name: StatementName,
+        property_name: PropertyName,
         valid_to_ms: u64,
         owner: IotaAddress,
         client: &C,
@@ -808,7 +811,7 @@ pub(crate) trait HierarchiesOperations {
         let fed_ref = HierarchiesImpl::get_fed_ref(client, federation_id).await?;
         let fed_ref = ptb.obj(fed_ref)?;
 
-        let statement_name = statement_name.to_ptb(&mut ptb, client.package_id())?;
+        let property_name = property_name.to_ptb(&mut ptb, client.package_id())?;
 
         let valid_to_ms = ptb.pure(valid_to_ms)?;
         let clock = get_clock_ref(&mut ptb);
@@ -816,9 +819,9 @@ pub(crate) trait HierarchiesOperations {
         ptb.programmable_move_call(
             client.package_id(),
             ident_str!(move_names::MODULE_MAIN).into(),
-            ident_str!("revoke_statement_at").into(),
+            ident_str!("revoke_property_at").into(),
             vec![],
-            vec![fed_ref, cap, statement_name, valid_to_ms, clock],
+            vec![fed_ref, cap, property_name, valid_to_ms, clock],
         );
 
         let tx = ptb.finish();
@@ -826,12 +829,12 @@ pub(crate) trait HierarchiesOperations {
         Ok(tx)
     }
 
-    /// Validates a single statement against federation rules.
+    /// Validates a single property against federation rules.
     ///
     /// Checks if the specified attester has permission to attest the given
-    /// statement name and value combination according to their accreditations.
-    /// This creates a transaction that will return true if the attester can
-    /// make the attestation, false otherwise.
+    /// property name and value combination according to their accreditations.
+    /// This creates a transaction that will return true if the attester can make
+    /// the attestation, false otherwise.
     ///
     /// # Returns
     ///
@@ -841,11 +844,11 @@ pub(crate) trait HierarchiesOperations {
     /// # Errors
     ///
     /// Returns an error if the federation object is not found or not shared.
-    async fn validate_statement<C>(
+    async fn validate_property<C>(
         federation_id: ObjectID,
         attester_id: ObjectID,
-        statement_name: StatementName,
-        statement_value: StatementValue,
+        property_name: PropertyName,
+        property_value: PropertyValue,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>
     where
@@ -858,18 +861,18 @@ pub(crate) trait HierarchiesOperations {
 
         let attester_id = ptb.pure(attester_id)?;
 
-        let statement_name = statement_name.to_ptb(&mut ptb, client.package_id())?;
+        let property_name = property_name.to_ptb(&mut ptb, client.package_id())?;
 
-        let statement_value = statement_value.to_ptb(&mut ptb, client.package_id())?;
+        let property_value = property_value.to_ptb(&mut ptb, client.package_id())?;
 
         let clock = get_clock_ref(&mut ptb);
 
         ptb.programmable_move_call(
             client.package_id(),
             ident_str!(move_names::MODULE_MAIN).into(),
-            ident_str!("validate_statement").into(),
+            ident_str!("validate_property").into(),
             vec![],
-            vec![fed_ref, attester_id, statement_name, statement_value, clock],
+            vec![fed_ref, attester_id, property_name, property_value, clock],
         );
 
         let tx = ptb.finish();
@@ -877,25 +880,25 @@ pub(crate) trait HierarchiesOperations {
         Ok(tx)
     }
 
-    /// Validates multiple statements against federation rules.
+    /// Validates multiple properties against federation rules.
     ///
     /// Checks if the specified entity has permission to attest all provided
-    /// statement name-value pairs according to their accreditations.
-    /// This is more efficient than multiple single-statement validations.
+    /// property name-value pairs according to their accreditations.
+    /// This is more efficient than multiple single-property validations.
     ///
     ///
     /// # Returns
     ///
     /// A transaction that when executed returns true only if the entity
-    /// has permission to attest all provided statements.
+    /// has permission to attest all provided properties.
     ///
     /// # Errors
     ///
     /// Returns an error if the federation object is not found or not shared.
-    async fn validate_statements<C>(
+    async fn validate_properties<C>(
         federation_id: ObjectID,
         entity_id: ObjectID,
-        statements: HashMap<StatementName, StatementValue>,
+        properties: HashMap<PropertyName, PropertyValue>,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>
     where
@@ -906,35 +909,35 @@ pub(crate) trait HierarchiesOperations {
         let fed_ref = HierarchiesImpl::get_fed_ref(client, federation_id).await?;
         let fed_ref = ptb.obj(fed_ref)?;
 
-        let mut statement_names = vec![];
-        let mut statement_values = vec![];
+        let mut property_names = vec![];
+        let mut property_values = vec![];
 
-        for (statement_name, statement_value) in statements.iter() {
-            let statement_name = statement_name.to_ptb(&mut ptb, client.package_id())?;
-            statement_names.push(statement_name);
+        for (property_name, property_value) in properties.iter() {
+            let property_name = property_name.to_ptb(&mut ptb, client.package_id())?;
+            property_names.push(property_name);
 
-            let statement_value = statement_value.to_ptb(&mut ptb, client.package_id())?;
-            statement_values.push(statement_value);
+            let property_value = property_value.to_ptb(&mut ptb, client.package_id())?;
+            property_values.push(property_value);
         }
 
-        let statement_name_tag = StatementName::move_type(client.package_id());
-        let statement_value_tag = StatementValue::move_type(client.package_id());
+        let property_name_tag = PropertyName::move_type(client.package_id());
+        let property_value_tag = PropertyValue::move_type(client.package_id());
 
-        let statement_names = ptb.command(Command::MakeMoveVec(
-            Some(statement_name_tag.clone().into()),
-            statement_names,
+        let property_names_args = ptb.command(Command::MakeMoveVec(
+            Some(property_name_tag.clone().into()),
+            property_names,
         ));
-        let statement_values = ptb.command(Command::MakeMoveVec(
-            Some(statement_value_tag.clone().into()),
-            statement_values,
+        let property_values_args = ptb.command(Command::MakeMoveVec(
+            Some(property_value_tag.clone().into()),
+            property_values,
         ));
 
-        let statements = ptb.programmable_move_call(
+        let properties = ptb.programmable_move_call(
             client.package_id(),
             ident_str!("utils").into(),
             ident_str!("vec_map_from_keys_values").into(),
-            vec![statement_name_tag, statement_value_tag],
-            vec![statement_names, statement_values],
+            vec![property_name_tag, property_value_tag],
+            vec![property_names_args, property_values_args],
         );
 
         let entity_id = ptb.pure(entity_id)?;
@@ -943,9 +946,9 @@ pub(crate) trait HierarchiesOperations {
         ptb.programmable_move_call(
             client.package_id(),
             ident_str!(move_names::MODULE_MAIN).into(),
-            ident_str!("validate_statements").into(),
+            ident_str!("validate_properties").into(),
             vec![],
-            vec![fed_ref, entity_id, statements, clock],
+            vec![fed_ref, entity_id, properties, clock],
         );
 
         let tx = ptb.finish();
@@ -1072,5 +1075,3 @@ pub(crate) trait HierarchiesOperations {
         Ok(tx)
     }
 }
-
-impl HierarchiesOperations for HierarchiesImpl {}

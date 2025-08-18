@@ -8,32 +8,32 @@
 //! ## Overview
 //!
 //! This transaction grants accreditation permissions to another user, allowing them
-//! to further delegate accreditation rights for the specified statements.
+//! to further delegate accreditation rights for the specified properties.
 
 use async_trait::async_trait;
+use iota_interaction::OptionalSync;
 use iota_interaction::rpc_types::IotaTransactionBlockEffects;
 use iota_interaction::types::base_types::{IotaAddress, ObjectID};
 use iota_interaction::types::transaction::ProgrammableTransaction;
-use iota_interaction::OptionalSync;
 use product_common::core_client::CoreClientReadOnly;
 use product_common::transaction::transaction_builder::Transaction;
 use tokio::sync::OnceCell;
 
-use crate::core::operations::{HierarchiesImpl, HierarchiesOperations};
-use crate::core::types::statements::Statement;
 use crate::core::OperationError;
+use crate::core::operations::{HierarchiesImpl, HierarchiesOperations};
+use crate::core::types::property::FederationProperty;
 
-/// Transaction for creating accreditation to accredit permissions.
+/// Transaction for creating accreditation to accredit.
 ///
 /// This transaction allows a user with sufficient permissions to grant another user
-/// the ability to delegate accreditation rights for specific statements.
+/// the ability to delegate accreditation rights for specific properties.
 pub struct CreateAccreditation {
     /// The ID of the federation where the accreditation will be granted
     federation_id: ObjectID,
     /// The ID of the user who will receive the accreditation permissions
     receiver: ObjectID,
-    /// The statements for which accreditation permissions are being granted
-    want_statements: Vec<Statement>,
+    /// The properties for which accreditation permissions are being granted
+    want_properties: Vec<FederationProperty>,
     /// The address of the signer (used for capability verification)
     signer_address: IotaAddress,
     /// Cached programmable transaction
@@ -45,13 +45,13 @@ impl CreateAccreditation {
     pub fn new(
         federation_id: ObjectID,
         receiver: ObjectID,
-        want_statements: Vec<Statement>,
+        want_properties: Vec<FederationProperty>,
         signer_address: IotaAddress,
     ) -> Self {
         Self {
             federation_id,
             receiver,
-            want_statements,
+            want_properties,
             signer_address,
             cached_ptb: OnceCell::new(),
         }
@@ -65,7 +65,7 @@ impl CreateAccreditation {
         let ptb = HierarchiesImpl::create_accreditation_to_accredit(
             self.federation_id,
             self.receiver,
-            self.want_statements.clone(),
+            self.want_properties.clone(),
             self.signer_address,
             client,
         )
