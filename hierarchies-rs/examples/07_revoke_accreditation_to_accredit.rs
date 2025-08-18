@@ -48,7 +48,10 @@ async fn main() -> anyhow::Result<()> {
 
     // Add the Property to the federation
     hierarchies_client
-        .add_property(federation_id, property_name.clone(), allowed_values.clone(), false)
+        .add_property(
+            federation_id,
+            FederationProperty::new(property_name.clone()).with_allowed_values(allowed_values.clone()),
+        )
         .build_and_execute(&hierarchies_client)
         .await
         .context("Failed to add Property")?;

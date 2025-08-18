@@ -1,7 +1,7 @@
 // Copyright 2025 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { Federation, PropertyName, PropertyValue } from "@iota/hierarchies/node";
+import { Federation, FederationProperty, PropertyName, PropertyValue } from "@iota/hierarchies/node";
 import assert from "assert";
 import { getFundedClient } from "./util";
 
@@ -30,7 +30,7 @@ export async function addProperties(): Promise<void> {
 
     // Add the Property to the federation
     await hierarchies
-        .addProperty(federation.id, propertyName, allowedValues, false)
+        .addProperty(federation.id, new FederationProperty(propertyName).withAllowedValues(allowedValues))
         .buildAndExecute(hierarchies);
 
     console.log(`\n✅ Property: ${propertyName.dotted()} was added successfully.`);

@@ -33,11 +33,9 @@ export async function createAccreditationToAccredit(client?: HierarchiesClient) 
     // Federation property value
     const value = PropertyValue.newText("Hello");
 
-    const allowedValues = [value];
-
     // Add the Property to the federation
     await hierarchies
-        .addProperty(federation.id, propertyName, allowedValues, false)
+        .addProperty(federation.id, new FederationProperty(propertyName).withAllowedValues([value]))
         .buildAndExecute(hierarchies);
     console.log(`\n✅ Property ${propertyName.dotted()} added successfully`);
 

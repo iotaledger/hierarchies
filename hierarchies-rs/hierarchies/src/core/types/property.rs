@@ -64,6 +64,11 @@ impl FederationProperty {
         self.timespan = timespan;
         self
     }
+
+    pub fn with_allow_any(mut self, allow_any: bool) -> Self {
+        self.allow_any = allow_any;
+        self
+    }
 }
 
 impl MoveType for FederationProperty {
@@ -75,6 +80,52 @@ impl MoveType for FederationProperty {
 
 /// Creates a new move type for a Property
 pub(crate) fn new_property(
+    package_id: ObjectID,
+    ptb: &mut ProgrammableTransactionBuilder,
+    property: FederationProperty,
+) -> anyhow::Result<Argument> {
+    let value_tag = PropertyValue::move_type(package_id);
+
+    let property_names = property.name.to_ptb(ptb, package_id)?;
+
+    let allow_any = ptb.pure(property.allow_any)?;
+
+    let allowed_values = property
+        .allowed_values
+        .into_iter()
+        .map(|value| {
+            value
+                .to_ptb(ptb, package_id)
+                .expect("failed to create new property value")
+        })
+        .collect();
+
+    let allowed_values = utils::create_vec_set_from_move_values(allowed_values, value_tag, ptb, package_id);
+
+    let property_expression_tag = PropertyShape::move_type(package_id);
+
+    let expression = match property.shape {
+        Some(expression) => {
+            let expression = expression.into_ptb(ptb, package_id)?;
+            utils::option_to_move(Some(expression), property_expression_tag, ptb)?
+        }
+
+        None => utils::option_to_move::<FederationProperty>(None, property_expression_tag, ptb)?,
+    };
+
+    let property = ptb.programmable_move_call(
+        package_id,
+        ident_str!("property").into(),
+        ident_str!("new_property").into(),
+        vec![],
+        vec![property_names, allowed_values, allow_any, expression],
+    );
+
+    Ok(property)
+}
+
+/// Creates a new move type for a list of Properties
+pub(crate) fn new_properties(
     package_id: ObjectID,
     ptb: &mut ProgrammableTransactionBuilder,
     properties: Vec<FederationProperty>,

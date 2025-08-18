@@ -15,7 +15,7 @@
 //! Capabilities are represented as owned objects in the IOTA network, ensuring
 //! secure and verifiable permission management.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::str::FromStr;
 
 use async_trait::async_trait;
@@ -30,12 +30,11 @@ use product_common::core_client::CoreClientReadOnly;
 
 use crate::core::error::OperationError;
 use crate::core::types::Capability;
-use crate::core::types::property::{FederationProperty, new_property};
+use crate::core::types::property::{FederationProperty, new_properties, new_property};
 use crate::core::types::property_name::PropertyName;
 use crate::core::types::property_value::PropertyValue;
 use crate::core::{CapabilityError, get_clock_ref};
 use crate::error::{NetworkError, ObjectError};
-use crate::utils::{self};
 
 const MAIN_HIERARCHIES_MODULE: &str = move_names::MODULE_MAIN;
 
@@ -252,9 +251,7 @@ pub(crate) trait HierarchiesOperations {
     /// - Network or transaction building fails
     async fn add_property<C>(
         federation_id: ObjectID,
-        property_name: PropertyName,
-        allowed_property_values: HashSet<PropertyValue>,
-        allow_any: bool,
+        property: FederationProperty,
         owner: IotaAddress,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>
@@ -269,28 +266,14 @@ pub(crate) trait HierarchiesOperations {
 
         let fed_ref = HierarchiesImpl::get_fed_ref(client, federation_id).await?;
         let fed_ref = ptb.obj(fed_ref)?;
-
-        let allow_any = ptb.pure(allow_any)?;
-
-        let property_names = property_name.to_ptb(&mut ptb, client.package_id())?;
-
-        let value_tag = PropertyValue::move_type(client.package_id());
-
-        let mut values_of_property = vec![];
-        for property_value in allowed_property_values {
-            let value = property_value.to_ptb(&mut ptb, client.package_id())?;
-            values_of_property.push(value);
-        }
-
-        let tpv_vec_set =
-            utils::create_vec_set_from_move_values(values_of_property, value_tag, &mut ptb, client.package_id());
+        let property = new_property(client.package_id(), &mut ptb, property)?;
 
         ptb.programmable_move_call(
             client.package_id(),
             ident_str!(move_names::MODULE_MAIN).into(),
             ident_str!("add_property").into(),
             vec![],
-            vec![fed_ref, cap, property_names, tpv_vec_set, allow_any],
+            vec![fed_ref, cap, property],
         );
 
         let tx = ptb.finish();
@@ -410,7 +393,7 @@ pub(crate) trait HierarchiesOperations {
 
         let receiver_arg = ptb.pure(receiver)?;
 
-        let want_properties = new_property(client.package_id(), &mut ptb, want_properties)?;
+        let want_properties = new_properties(client.package_id(), &mut ptb, want_properties)?;
 
         ptb.programmable_move_call(
             client.package_id(),
@@ -454,7 +437,7 @@ pub(crate) trait HierarchiesOperations {
 
         let receiver_arg = ptb.pure(receiver)?;
 
-        let want_properties = new_property(client.package_id(), &mut ptb, want_properties)?;
+        let want_properties = new_properties(client.package_id(), &mut ptb, want_properties)?;
 
         ptb.programmable_move_call(
             client.package_id(),

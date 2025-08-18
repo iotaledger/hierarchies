@@ -1,8 +1,6 @@
 // Copyright 2025 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::HashSet;
-
 use hierarchies::core::transactions::properties::add_property::AddProperty;
 use hierarchies::core::transactions::properties::revoke_property::RevokeProperty;
 use hierarchies::core::transactions::{
@@ -19,7 +17,7 @@ use product_common::bindings::utils::{
 use product_common::bindings::{WasmIotaAddress, WasmObjectID};
 use wasm_bindgen::prelude::*;
 
-use crate::wasm_types::{WasmFederation, WasmProperty, WasmPropertyName, WasmPropertyValue};
+use crate::wasm_types::{WasmFederation, WasmProperty, WasmPropertyName};
 
 /// A wrapper for the `CreateFederation` transaction.
 #[wasm_bindgen (js_name=CreateFederation, inspectable)]
@@ -271,28 +269,16 @@ impl WasmAddProperty {
     /// # Arguments
     ///
     /// * `federation_id` - The ID of the federation.
-    /// * `property_name` - The name of the property.
-    /// * `property_shape` - The shape of the property.
-    /// * `property_values` - The values of the property.
+    /// * `property` - The property to add.
     /// * `owner` - The address of the transaction signer.
     #[wasm_bindgen(constructor)]
-    pub fn new(
-        federation_id: WasmObjectID,
-        property_name: WasmPropertyName,
-        property_values: Vec<WasmPropertyValue>,
-        allow_any: bool,
-        owner: WasmIotaAddress,
-    ) -> Result<Self> {
+    pub fn new(federation_id: WasmObjectID, property: &WasmProperty, owner: WasmIotaAddress) -> Result<Self> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
-        let property_name = property_name.into();
-        let property_values = property_values.into_iter().map(|v| v.into()).collect::<HashSet<_>>();
         let signer_address = parse_wasm_iota_address(&owner)?;
 
         Ok(Self(AddProperty::new(
             federation_id,
-            property_name,
-            property_values,
-            allow_any,
+            property.clone().into(),
             signer_address,
         )))
     }

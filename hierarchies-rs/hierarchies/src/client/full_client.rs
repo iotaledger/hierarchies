@@ -69,7 +69,6 @@
 //! # }
 //! ```
 
-use std::collections::HashSet;
 use std::ops::Deref;
 
 use iota_interaction::types::base_types::{IotaAddress, ObjectID};
@@ -92,7 +91,6 @@ use crate::core::transactions::{
 };
 use crate::core::types::property::FederationProperty;
 use crate::core::types::property_name::PropertyName;
-use crate::core::types::property_value::PropertyValue;
 use crate::iota_interaction_adapter::IotaClientAdapter;
 
 /// The `HierarchiesClient` struct is responsible for managing the connection to the
@@ -198,17 +196,9 @@ where
     pub fn add_property(
         &self,
         federation_id: ObjectID,
-        property_name: PropertyName,
-        allowed_property_values: HashSet<PropertyValue>,
-        allow_any: bool,
+        property: FederationProperty,
     ) -> TransactionBuilder<AddProperty> {
-        TransactionBuilder::new(AddProperty::new(
-            federation_id,
-            property_name,
-            allowed_property_values,
-            allow_any,
-            self.sender_address(),
-        ))
+        TransactionBuilder::new(AddProperty::new(federation_id, property, self.sender_address()))
     }
 
     /// Creates a new [`RevokeProperty`] transaction builder.

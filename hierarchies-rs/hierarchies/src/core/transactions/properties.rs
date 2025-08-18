@@ -7,8 +7,6 @@
 //! within Hierarchies federations. Properties define the types of claims that can
 //! be attested within a federation.
 
-use std::collections::HashSet;
-
 use async_trait::async_trait;
 use iota_interaction::OptionalSync;
 use iota_interaction::rpc_types::IotaTransactionBlockEffects;
@@ -21,10 +19,11 @@ use tokio::sync::OnceCell;
 use crate::core::OperationError;
 use crate::core::operations::{HierarchiesImpl, HierarchiesOperations};
 use crate::core::types::property_name::PropertyName;
-use crate::core::types::property_value::PropertyValue;
 
 /// Transaction for adding new property types to federations.
 pub mod add_property {
+    use crate::core::types::property::FederationProperty;
+
     use super::*;
 
     /// A transaction that adds a new property type to a federation.
@@ -40,9 +39,7 @@ pub mod add_property {
     #[derive(Debug, Clone)]
     pub struct AddProperty {
         federation_id: ObjectID,
-        name: PropertyName,
-        allowed_values: HashSet<PropertyValue>,
-        allow_any: bool,
+        property: FederationProperty,
         owner: IotaAddress,
         cached_ptb: OnceCell<ProgrammableTransaction>,
     }
@@ -53,18 +50,10 @@ pub mod add_property {
         /// # Returns
         ///
         /// A new `AddProperty` transaction instance ready for execution.
-        pub fn new(
-            federation_id: ObjectID,
-            property_name: PropertyName,
-            allowed_values: HashSet<PropertyValue>,
-            allow_any: bool,
-            owner: IotaAddress,
-        ) -> Self {
+        pub fn new(federation_id: ObjectID, property: FederationProperty, owner: IotaAddress) -> Self {
             Self {
                 federation_id,
-                name: property_name,
-                allowed_values,
-                allow_any,
+                property,
                 owner,
                 cached_ptb: OnceCell::new(),
             }
@@ -87,15 +76,8 @@ pub mod add_property {
         where
             C: CoreClientReadOnly + OptionalSync,
         {
-            let ptb = HierarchiesImpl::add_property(
-                self.federation_id,
-                self.name.clone(),
-                self.allowed_values.clone(),
-                self.allow_any,
-                self.owner,
-                client,
-            )
-            .await?;
+            let ptb =
+                HierarchiesImpl::add_property(self.federation_id, self.property.clone(), self.owner, client).await?;
 
             Ok(ptb)
         }

@@ -70,6 +70,18 @@ public(package) fun property_name(self: &FederationProperty): &PropertyName {
     &self.name
 }
 
+public(package) fun allow_any(self: &FederationProperty): bool {
+    self.allow_any
+}
+
+public(package) fun shape(self: &FederationProperty): &Option<PropertyShape> {
+    &self.shape
+}
+
+public(package) fun timespan(self: &FederationProperty): &Timespan {
+    &self.timespan
+}
+
 public(package) fun matches_name_value(
     self: &FederationProperty,
     name: &PropertyName,
