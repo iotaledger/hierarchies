@@ -175,7 +175,9 @@ async fn test_add_property_with_allow_any() -> anyhow::Result<()> {
     let result = client
         .add_property(
             *federation_id.object_id(),
-            FederationProperty::new(property_name.clone()).with_allowed_values(allowed_values),
+            FederationProperty::new(property_name.clone())
+                .with_allowed_values(allowed_values)
+                .with_allow_any(true),
         )
         .build_and_execute(&client)
         .await;
@@ -246,11 +248,12 @@ async fn test_add_property_with_empty_allowed_values_and_allow_any_true_succeeds
     // Add a property with empty allowed values and allow_any = true (should succeed)
     let property_name = PropertyName::from("test.any.value.property");
     let allowed_values: HashSet<PropertyValue> = HashSet::new(); // Empty set
-
     let result = client
         .add_property(
             *federation_id.object_id(),
-            FederationProperty::new(property_name.clone()).with_allowed_values(allowed_values),
+            FederationProperty::new(property_name.clone())
+                .with_allowed_values(allowed_values)
+                .with_allow_any(true),
         )
         .build_and_execute(&client)
         .await;
