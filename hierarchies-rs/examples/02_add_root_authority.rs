@@ -38,7 +38,7 @@ async fn main() -> anyhow::Result<()> {
         .add_root_authority(federation_id, new_root_authority)
         .build_and_execute(&hierarchies_client)
         .await
-        .context("Failed to add Statement")?;
+        .context("Failed to add Root Authority")?;
 
     // Get the updated federation and print it
     let federation: Federation = hierarchies_client.get_object_by_id(federation_id).await?;
