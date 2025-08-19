@@ -1,6 +1,6 @@
-# Contribute to project_title
+# Contribute to Hierarchies
 
-This document describes how to contribute to project_title.
+This document describes how to contribute to Hierarchies.
 We encourage everyone with knowledge and passion in IOTA technology to do so.
 
 Thanks! :heart:
