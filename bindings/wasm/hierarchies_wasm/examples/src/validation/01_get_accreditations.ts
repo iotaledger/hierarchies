@@ -14,16 +14,14 @@ export async function getAccreditations(): Promise<void> {
 
     const propertyName = new PropertyName(["Example LTD"]);
     const propertyValue = PropertyValue.newText("Hello");
-    const allowedValues = [propertyValue];
 
-    await hierarchies.addProperty(federation.id, propertyName, allowedValues, false)
+    await hierarchies.addProperty(federation.id, new FederationProperty(propertyName).withAllowedValues([propertyValue]))
         .buildAndExecute(hierarchies);
     console.log(`\n✅ Property ${propertyName.dotted()} added successfully`);
 
     const receiver = "0x" + randomBytes(32).toString("hex");
 
     // Create and get the accreditation to attest
-
     const propertyToAttest = new FederationProperty(propertyName).withAllowedValues([PropertyValue.newText("Hello")]);
 
     await hierarchies.createAccreditationToAttest(federation.id, receiver, [propertyToAttest])

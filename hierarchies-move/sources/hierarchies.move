@@ -8,7 +8,7 @@ use hierarchies::{
     property_name::PropertyName,
     property_value::PropertyValue
 };
-use iota::{clock::Clock, event, vec_map::{Self, VecMap}, vec_set::VecSet};
+use iota::{clock::Clock, event, vec_map::{Self, VecMap}};
 
 // ===== Errors =====
 /// Error when operation is performed with wrong federation
@@ -96,8 +96,7 @@ public struct FederationCreatedEvent has copy, drop {
 /// Event emitted when a property is added to the federation
 public struct PropertyAddedEvent has copy, drop {
     federation_address: address,
-    property_name: PropertyName,
-    allow_any: bool,
+    property: FederationProperty,
 }
 
 /// Event emitted when a property is revoked
@@ -280,30 +279,20 @@ public(package) fun root_authorities(self: &Federation): &vector<RootAuthority> 
 public fun add_property(
     self: &mut Federation,
     cap: &RootAuthorityCap,
-    property_name: PropertyName,
-    allowed_values: VecSet<PropertyValue>,
-    allow_any: bool,
+    property: FederationProperty,
     _: &mut TxContext,
 ) {
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
     assert!(!self.is_revoked_root_authority(&cap.account_id), ERevokedRootAuthority);
-    assert!(!(allow_any && allowed_values.keys().length() > 0), EInvalidPropertyValueCondition);
-    assert!(allow_any || allowed_values.keys().length() > 0, EEmptyAllowedValuesWithoutAllowAny);
-
-    let property = property::new_property(
-        property_name,
-        allowed_values,
-        allow_any,
-        option::none(),
-    );
+    assert!(!(property.allow_any() && property.allowed_values().keys().length() > 0), EInvalidPropertyValueCondition);
+    assert!(property.allow_any() || property.allowed_values().keys().length() > 0, EEmptyAllowedValuesWithoutAllowAny);
 
     self.governance.properties.add_property(property);
 
     // Emit property added event
     event::emit(PropertyAddedEvent {
         federation_address: self.federation_id().to_address(),
-        property_name,
-        allow_any,
+        property,
     });
 }
 

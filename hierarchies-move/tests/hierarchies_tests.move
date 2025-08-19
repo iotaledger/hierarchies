@@ -105,7 +105,8 @@ fun test_adding_trusted_property() {
     let mut allowed_values = vec_set::empty();
     allowed_values.insert(property_value);
 
-    fed.add_property(&cap, property_name, allowed_values, false, scenario.ctx());
+    let property = property::new_property(property_name, allowed_values, false, option::none());
+    fed.add_property(&cap, property, scenario.ctx());
     scenario.next_tx(alice);
 
     // Check if the property was added
@@ -385,7 +386,8 @@ fun test_create_accreditation_to_accredit_succeeds_for_existing_property() {
     let mut allowed_values = vec_set::empty();
     allowed_values.insert(property_value);
 
-    fed.add_property(&cap, property_name, allowed_values, false, scenario.ctx());
+    let property = property::new_property(property_name, allowed_values, false, option::none());
+    fed.add_property(&cap, property, scenario.ctx());
     scenario.next_tx(alice);
 
     let new_id = scenario.new_object();
@@ -440,7 +442,8 @@ fun test_create_accreditation_to_attest_succeeds_for_existing_property() {
     let mut allowed_values = vec_set::empty();
     allowed_values.insert(property_value);
 
-    fed.add_property(&cap, property_name, allowed_values, false, scenario.ctx());
+    let property = property::new_property(property_name, allowed_values, false, option::none());
+    fed.add_property(&cap, property, scenario.ctx());
     scenario.next_tx(alice);
 
     let new_id = scenario.new_object();
@@ -594,7 +597,8 @@ fun test_revoked_authority_cannot_add_property() {
     // Bob tries to add a property with his revoked cap - should fail
     let property_name = new_property_name(utf8(b"test_property"));
     let allowed_values = vec_set::empty();
-    fed.add_property(&bob_cap, property_name, allowed_values, true, scenario.ctx());
+    let property = property::new_property(property_name, allowed_values, true, option::none());
+    fed.add_property(&bob_cap, property, scenario.ctx());
 
     // Cleanup - won't be reached due to expected failure
     test_scenario::return_to_address(alice, alice_cap);
@@ -696,7 +700,8 @@ fun test_add_property_with_empty_allowed_values_and_allow_any_false() {
     let allowed_values = vec_set::empty();
 
     // This should fail with EEmptyAllowedValuesWithoutAllowAny
-    fed.add_property(&cap, property_name, allowed_values, false, scenario.ctx());
+    let property = property::new_property(property_name, allowed_values, false, option::none());
+    fed.add_property(&cap, property, scenario.ctx());
 
     // Cleanup - won't be reached due to expected failure
     test_scenario::return_to_address(alice, cap);
@@ -720,7 +725,8 @@ fun test_add_property_with_empty_allowed_values_and_allow_any_true() {
     let property_name = new_property_name(utf8(b"any_value_property"));
     let allowed_values = vec_set::empty();
 
-    fed.add_property(&cap, property_name, allowed_values, true, scenario.ctx());
+    let property = property::new_property(property_name, allowed_values, true, option::none());
+    fed.add_property(&cap, property, scenario.ctx());
 
     // Verify the property was added
     assert!(fed.is_property_in_federation(property_name), 0);
@@ -749,7 +755,8 @@ fun test_add_property_with_allowed_values_and_allow_any_false() {
     vec_set::insert(&mut allowed_values, new_property_value_number(1));
     vec_set::insert(&mut allowed_values, new_property_value_number(2));
 
-    fed.add_property(&cap, property_name, allowed_values, false, scenario.ctx());
+    let property = property::new_property(property_name, allowed_values, false, option::none());
+    fed.add_property(&cap, property, scenario.ctx());
 
     // Verify the property was added
     assert!(fed.is_property_in_federation(property_name), 0);
@@ -791,8 +798,10 @@ fun test_attester_cannot_revoke_attestation_rights() {
     let mut allowed_values = vec_set::empty();
     allowed_values.insert(property_value);
 
-    fed.add_property(&root_cap, property_name_1, allowed_values, false, scenario.ctx());
-    fed.add_property(&root_cap, property_name_2, allowed_values, false, scenario.ctx());
+    let property_1 = property::new_property(property_name_1, allowed_values, false, option::none());
+    let property_2 = property::new_property(property_name_2, allowed_values, false, option::none());
+    fed.add_property(&root_cap, property_1, scenario.ctx());
+    fed.add_property(&root_cap, property_2, scenario.ctx());
     scenario.next_tx(alice);
 
     // Create properties for permissions
@@ -1019,7 +1028,8 @@ fun test_reinstated_authority_can_perform_actions() {
     // Bob should be able to add a property with his reinstated authority
     let property_name = new_property_name(utf8(b"test_property"));
     let allowed_values = vec_set::empty();
-    fed.add_property(&bob_cap, property_name, allowed_values, true, scenario.ctx());
+    let property = property::new_property(property_name, allowed_values, true, option::none());
+    fed.add_property(&bob_cap, property, scenario.ctx());
 
     // Verify the property was added
     assert!(fed.is_property_in_federation(property_name), 0);
@@ -1049,7 +1059,8 @@ fun test_create_accreditation_to_accredit_fails_for_revoked_property() {
     let property_name = new_property_name(utf8(b"role"));
     let mut allowed_values = vec_set::empty();
     allowed_values.insert(new_property_value_number(1));
-    fed.add_property(&root_cap, property_name, allowed_values, false, scenario.ctx());
+    let property = property::new_property(property_name, allowed_values, false, option::none());
+    fed.add_property(&root_cap, property, scenario.ctx());
 
     fed.revoke_property(&root_cap, property_name, &clock, scenario.ctx());
 
@@ -1087,7 +1098,8 @@ fun test_create_accreditation_to_attest_fails_for_revoked_property() {
     let property_name = new_property_name(utf8(b"role"));
     let mut allowed_values = vec_set::empty();
     allowed_values.insert(new_property_value_number(1));
-    fed.add_property(&root_cap, property_name, allowed_values, false, scenario.ctx());
+    let property = property::new_property(property_name, allowed_values, false, option::none());
+    fed.add_property(&root_cap, property, scenario.ctx());
 
     fed.revoke_property(&root_cap, property_name, &clock, scenario.ctx());
 
@@ -1144,7 +1156,8 @@ fun test_transferred_capability_from_revoked_authority_fails() {
     // Charlie tries to use Bob's (revoked) capability - should fail
     let property_name = new_property_name(utf8(b"test_property"));
     let allowed_values = vec_set::empty();
-    fed.add_property(&transferred_cap, property_name, allowed_values, true, scenario.ctx());
+    let property = property::new_property(property_name, allowed_values, true, option::none());
+    fed.add_property(&transferred_cap, property, scenario.ctx());
 
     // Cleanup - won't be reached due to expected failure
     test_scenario::return_to_address(alice, alice_cap);
@@ -1172,7 +1185,8 @@ fun test_validate_property_fails_for_revoked_property() {
     let property_value = new_property_value_number(1);
     let mut allowed_values = vec_set::empty();
     allowed_values.insert(property_value);
-    fed.add_property(&root_cap, property_name, allowed_values, false, scenario.ctx());
+    let property = property::new_property(property_name, allowed_values, false, option::none());
+    fed.add_property(&root_cap, property, scenario.ctx());
 
     // Create accreditation for Bob to attest this property
     let bob_id = @0x2.to_id();
@@ -1219,8 +1233,10 @@ fun test_validate_properties_fails_for_revoked_property() {
     allowed_values_1.insert(property_value_1);
     allowed_values_2.insert(property_value_2);
 
-    fed.add_property(&root_cap, property_name_1, allowed_values_1, false, scenario.ctx());
-    fed.add_property(&root_cap, property_name_2, allowed_values_2, false, scenario.ctx());
+    let property_1 = property::new_property(property_name_1, allowed_values_1, false, option::none());
+    let property_2 = property::new_property(property_name_2, allowed_values_2, false, option::none());
+    fed.add_property(&root_cap, property_1, scenario.ctx());
+    fed.add_property(&root_cap, property_2, scenario.ctx());
 
     // Create accreditation for Bob to attest both properties
     let bob_id = @0x2.to_id();

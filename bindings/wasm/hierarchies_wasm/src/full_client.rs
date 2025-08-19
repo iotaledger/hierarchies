@@ -1,11 +1,8 @@
 // Copyright 2025 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::HashSet;
-
 use hierarchies::client::HierarchiesClient;
 use hierarchies::core::types::property_name::PropertyName;
-use hierarchies::core::types::property_value::PropertyValue;
 use iota_interaction_ts::WasmPublicKey;
 use iota_interaction_ts::bindings::{WasmIotaClient, WasmTransactionSigner};
 use iota_interaction_ts::wasm_error::{Result, WasmResult};
@@ -21,7 +18,7 @@ use crate::wasm_types::transactions::{
     WasmCreateFederation, WasmReinstateRootAuthority, WasmRevokeAccreditationToAccredit,
     WasmRevokeAccreditationToAttest, WasmRevokeProperty, WasmRevokeRootAuthority,
 };
-use crate::wasm_types::{WasmProperty, WasmPropertyName, WasmPropertyValue};
+use crate::wasm_types::{WasmProperty, WasmPropertyName};
 
 /// A client to interact with Hierarchies objects on the IOTA ledger.
 ///
@@ -132,28 +129,11 @@ impl WasmHierarchiesClient {
     /// # Arguments
     ///
     /// * `federation_id` - The [`WasmObjectID`] of the federation.
-    /// * `property_name` - The name of the property.
-    /// * `allowed_values` - The allowed values for the property.
-    /// * `allow_any` - Whether to allow any value.
+    /// * `property` - The property to add.
     #[wasm_bindgen(js_name = addProperty)]
-    pub fn add_property(
-        &self,
-        federation_id: WasmObjectID,
-        property_name: &WasmPropertyName,
-        allowed_values: Box<[WasmPropertyValue]>,
-        allow_any: bool,
-    ) -> Result<WasmTransactionBuilder> {
+    pub fn add_property(&self, federation_id: WasmObjectID, property: &WasmProperty) -> Result<WasmTransactionBuilder> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
-        let property_name = PropertyName::from(property_name.0.clone());
-
-        let unique_allowed_values: HashSet<PropertyValue> =
-            HashSet::from_iter(allowed_values.iter().cloned().map(|v| v.0.clone()));
-
-        let tx = self
-            .0
-            .add_property(federation_id, property_name, unique_allowed_values, allow_any)
-            .into_inner();
-
+        let tx = self.0.add_property(federation_id, property.clone().into()).into_inner();
         Ok(into_transaction_builder(WasmAddProperty(tx)))
     }
 

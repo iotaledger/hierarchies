@@ -3,10 +3,10 @@
 
 use std::collections::HashSet;
 
-use hierarchies::client::get_object_ref_by_id_with_bcs;
 use hierarchies::core::types::Federation;
 use hierarchies::core::types::property_name::PropertyName;
 use hierarchies::core::types::property_value::PropertyValue;
+use hierarchies::{client::get_object_ref_by_id_with_bcs, core::types::property::FederationProperty};
 use product_common::core_client::{CoreClient, CoreClientReadOnly};
 
 use crate::client::{TestClient, get_funded_test_client};
@@ -45,9 +45,7 @@ async fn test_add_property() -> anyhow::Result<()> {
     let result = client
         .add_property(
             *federation_id.object_id(),
-            property_name.clone(),
-            allowed_values.clone(),
-            false,
+            FederationProperty::new(property_name.clone()).with_allowed_values(allowed_values.clone()),
         )
         .build_and_execute(&client)
         .await;
@@ -86,7 +84,10 @@ async fn test_revoke_property() -> anyhow::Result<()> {
 
     // Add the property
     client
-        .add_property(*federation_id.object_id(), property_name.clone(), allowed_values, false)
+        .add_property(
+            *federation_id.object_id(),
+            FederationProperty::new(property_name.clone()).with_allowed_values(allowed_values),
+        )
         .build_and_execute(&client)
         .await?;
     let result = client
@@ -105,14 +106,12 @@ async fn test_create_and_get_properties() -> anyhow::Result<()> {
 
     let property_name = PropertyName::new(vec!["test_property"]);
 
-    let property_values = HashSet::from_iter([PropertyValue::Text("test_value".to_string())]);
+    let property_values: HashSet<PropertyValue> = HashSet::from_iter([PropertyValue::Text("test_value".to_string())]);
 
     client
         .add_property(
             *federation.id.object_id(),
-            property_name.clone(),
-            property_values,
-            false,
+            FederationProperty::new(property_name.clone()).with_allowed_values(property_values),
         )
         .build_and_execute(&client)
         .await?;
@@ -136,13 +135,11 @@ async fn test_create_and_validate_property() -> anyhow::Result<()> {
 
     let property_value = PropertyValue::Text("test_value".to_string());
 
-    let property_values = HashSet::from_iter([property_value.clone()]);
+    let property_values: HashSet<PropertyValue> = HashSet::from_iter([property_value.clone()]);
     client
         .add_property(
             *federation.id.object_id(),
-            property_name.clone(),
-            property_values,
-            false,
+            FederationProperty::new(property_name.clone()).with_allowed_values(property_values),
         )
         .build_and_execute(&client)
         .await?;
@@ -173,10 +170,15 @@ async fn test_add_property_with_allow_any() -> anyhow::Result<()> {
 
     // Create a property that allows any value
     let property_name = PropertyName::from("test.open.field");
-    let allowed_values = HashSet::new(); // Empty set when allow_any is true
+    let allowed_values: HashSet<PropertyValue> = HashSet::new(); // Empty set when allow_any is true
 
     let result = client
-        .add_property(*federation_id.object_id(), property_name.clone(), allowed_values, true)
+        .add_property(
+            *federation_id.object_id(),
+            FederationProperty::new(property_name.clone())
+                .with_allowed_values(allowed_values)
+                .with_allow_any(true),
+        )
         .build_and_execute(&client)
         .await;
 
@@ -210,7 +212,10 @@ async fn test_add_property_with_empty_allowed_values_and_allow_any_false_fails()
     let allowed_values = HashSet::new(); // Empty set
 
     let result = client
-        .add_property(*federation_id.object_id(), property_name, allowed_values, false)
+        .add_property(
+            *federation_id.object_id(),
+            FederationProperty::new(property_name.clone()).with_allowed_values(allowed_values),
+        )
         .build_and_execute(&client)
         .await;
 
@@ -242,10 +247,14 @@ async fn test_add_property_with_empty_allowed_values_and_allow_any_true_succeeds
 
     // Add a property with empty allowed values and allow_any = true (should succeed)
     let property_name = PropertyName::from("test.any.value.property");
-    let allowed_values = HashSet::new(); // Empty set
-
+    let allowed_values: HashSet<PropertyValue> = HashSet::new(); // Empty set
     let result = client
-        .add_property(*federation_id.object_id(), property_name.clone(), allowed_values, true)
+        .add_property(
+            *federation_id.object_id(),
+            FederationProperty::new(property_name.clone())
+                .with_allowed_values(allowed_values)
+                .with_allow_any(true),
+        )
         .build_and_execute(&client)
         .await;
 
@@ -283,7 +292,10 @@ async fn test_add_property_with_allowed_values_and_allow_any_false_succeeds() ->
     allowed_values.insert(PropertyValue::Number(2));
 
     let result = client
-        .add_property(*federation_id.object_id(), property_name.clone(), allowed_values, false)
+        .add_property(
+            *federation_id.object_id(),
+            FederationProperty::new(property_name.clone()).with_allowed_values(allowed_values),
+        )
         .build_and_execute(&client)
         .await;
 

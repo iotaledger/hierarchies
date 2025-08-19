@@ -2,6 +2,7 @@ use std::collections::HashSet;
 
 use anyhow::Context;
 use hierarchies::core::types::Federation;
+use hierarchies::core::types::property::FederationProperty;
 use hierarchies::core::types::property_name::PropertyName;
 use hierarchies::core::types::property_value::PropertyValue;
 use hierarchies_examples::get_funded_client;
@@ -36,11 +37,12 @@ async fn main() -> anyhow::Result<()> {
     let value = PropertyValue::Text("Hello".to_owned());
     let another_value = PropertyValue::Text("World".to_owned());
     let allowed_values = HashSet::from([value, another_value]);
+    let property = FederationProperty::new(property_name.clone()).with_allowed_values(allowed_values);
 
     // Add the Property to the federation
     {
         hierarchies_client
-            .add_property(federation_id, property_name.clone(), allowed_values, false)
+            .add_property(federation_id, property)
             .build_and_execute(&hierarchies_client)
             .await
             .context("Failed to add Property")?;

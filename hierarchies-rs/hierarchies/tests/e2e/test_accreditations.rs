@@ -31,9 +31,7 @@ async fn test_create_accreditation_to_attest() -> anyhow::Result<()> {
     client
         .add_property(
             *federation_id.object_id(),
-            property_name.clone(),
-            allowed_values.clone(),
-            false,
+            FederationProperty::new(property_name.clone()).with_allowed_values(allowed_values.clone()),
         )
         .build_and_execute(&client)
         .await?;
@@ -83,9 +81,7 @@ async fn test_create_accreditation_to_accredit() -> anyhow::Result<()> {
     client
         .add_property(
             *federation_id.object_id(),
-            property_name.clone(),
-            allowed_values.clone(),
-            false,
+            FederationProperty::new(property_name.clone()).with_allowed_values(allowed_values.clone()),
         )
         .build_and_execute(&client)
         .await?;
@@ -150,8 +146,11 @@ async fn test_multiple_properties_in_federation() -> anyhow::Result<()> {
     // Add all properties
     for (name, values, allow_any) in properties_to_add.iter() {
         let allowed_values: HashSet<PropertyValue> = values.iter().cloned().collect();
+        let property = FederationProperty::new(name.clone())
+            .with_allowed_values(allowed_values)
+            .with_allow_any(*allow_any);
         client
-            .add_property(*federation_id.object_id(), name.clone(), allowed_values, *allow_any)
+            .add_property(*federation_id.object_id(), property)
             .build_and_execute(&client)
             .await?;
     }
@@ -195,9 +194,7 @@ async fn test_revoke_accreditation_to_attest() -> anyhow::Result<()> {
     client
         .add_property(
             *federation_id.object_id(),
-            property_name.clone(),
-            allowed_values.clone(),
-            false,
+            FederationProperty::new(property_name.clone()).with_allowed_values(allowed_values.clone()),
         )
         .build_and_execute(&client)
         .await?;
@@ -255,9 +252,7 @@ async fn test_revoke_accreditation_to_accredit() -> anyhow::Result<()> {
     client
         .add_property(
             *federation_id.object_id(),
-            property_name.clone(),
-            allowed_values.clone(),
-            false,
+            FederationProperty::new(property_name.clone()).with_allowed_values(allowed_values.clone()),
         )
         .build_and_execute(&client)
         .await?;
@@ -324,15 +319,16 @@ async fn test_complex_accreditation_workflow() -> anyhow::Result<()> {
     client
         .add_property(
             *federation_id.object_id(),
-            verification_name.clone(),
-            verification_values.clone(),
-            false,
+            FederationProperty::new(verification_name.clone()).with_allowed_values(verification_values.clone()),
         )
         .build_and_execute(&client)
         .await?;
 
     client
-        .add_property(*federation_id.object_id(), age_name.clone(), age_values.clone(), false)
+        .add_property(
+            *federation_id.object_id(),
+            FederationProperty::new(age_name.clone()).with_allowed_values(age_values.clone()),
+        )
         .build_and_execute(&client)
         .await?;
 
@@ -408,9 +404,7 @@ async fn test_property_with_numeric_values() -> anyhow::Result<()> {
     client
         .add_property(
             *federation_id.object_id(),
-            score_name.clone(),
-            score_values.clone(),
-            false,
+            FederationProperty::new(score_name.clone()).with_allowed_values(score_values.clone()),
         )
         .build_and_execute(&client)
         .await?;
@@ -542,9 +536,7 @@ async fn test_create_accreditation_succeeds_after_adding_property() -> anyhow::R
     client
         .add_property(
             *federation_id.object_id(),
-            property_name.clone(),
-            allowed_values.clone(),
-            false,
+            FederationProperty::new(property_name.clone()).with_allowed_values(allowed_values.clone()),
         )
         .build_and_execute(&client)
         .await?;
@@ -598,9 +590,7 @@ async fn test_create_accreditation_with_multiple_properties_partial_exist() -> a
     client
         .add_property(
             *federation_id.object_id(),
-            existing_property_name.clone(),
-            allowed_values.clone(),
-            false,
+            FederationProperty::new(existing_property_name.clone()).with_allowed_values(allowed_values),
         )
         .build_and_execute(&client)
         .await?;
