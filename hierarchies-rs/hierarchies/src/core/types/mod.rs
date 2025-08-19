@@ -20,7 +20,8 @@ use iota_interaction::types::base_types::ObjectID;
 use iota_interaction::types::id::UID;
 use serde::{Deserialize, Serialize};
 
-use crate::{core::types::property::FederationProperties, utils::deserialize_vec_map};
+use crate::core::types::property::FederationProperties;
+use crate::utils::deserialize_vec_map;
 
 /// Represents a federation. A federation is a group of entities that have agreed to work together
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

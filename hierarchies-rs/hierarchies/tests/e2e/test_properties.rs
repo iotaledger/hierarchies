@@ -3,10 +3,11 @@
 
 use std::collections::HashSet;
 
+use hierarchies::client::get_object_ref_by_id_with_bcs;
 use hierarchies::core::types::Federation;
+use hierarchies::core::types::property::FederationProperty;
 use hierarchies::core::types::property_name::PropertyName;
 use hierarchies::core::types::property_value::PropertyValue;
-use hierarchies::{client::get_object_ref_by_id_with_bcs, core::types::property::FederationProperty};
 use product_common::core_client::{CoreClient, CoreClientReadOnly};
 
 use crate::client::{TestClient, get_funded_test_client};

@@ -1,8 +1,8 @@
 // Copyright 2020-2025 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use hierarchies::core::types::events::FederationCreatedEvent;
 use hierarchies::core::types::Federation;
+use hierarchies::core::types::events::FederationCreatedEvent;
 use iota_interaction::types::base_types::ObjectID;
 use product_common::core_client::CoreClient;
 
@@ -70,10 +70,12 @@ async fn test_creation_of_federation_with_root_authorities() -> anyhow::Result<(
     let federation: Federation = client.get_federation_by_id(*federation.object_id()).await?;
 
     assert_eq!(federation.root_authorities.len(), 2);
-    assert!(federation
-        .root_authorities
-        .iter()
-        .any(|ra| ra.account_id == root_authority_id));
+    assert!(
+        federation
+            .root_authorities
+            .iter()
+            .any(|ra| ra.account_id == root_authority_id)
+    );
 
     Ok(())
 }

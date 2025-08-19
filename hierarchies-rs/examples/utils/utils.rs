@@ -3,8 +3,8 @@
 
 use anyhow::Context;
 use hierarchies::client::{HierarchiesClient, HierarchiesClientReadOnly};
-use iota_sdk::{IotaClientBuilder, IOTA_LOCAL_NETWORK_URL};
-use product_common::test_utils::{request_funds, InMemSigner};
+use iota_sdk::{IOTA_LOCAL_NETWORK_URL, IotaClientBuilder};
+use product_common::test_utils::{InMemSigner, request_funds};
 
 pub async fn get_read_only_client() -> anyhow::Result<HierarchiesClientReadOnly> {
     let api_endpoint = std::env::var("API_ENDPOINT").unwrap_or_else(|_| IOTA_LOCAL_NETWORK_URL.to_string());

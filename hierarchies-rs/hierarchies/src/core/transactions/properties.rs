@@ -22,9 +22,8 @@ use crate::core::types::property_name::PropertyName;
 
 /// Transaction for adding new property types to federations.
 pub mod add_property {
-    use crate::core::types::property::FederationProperty;
-
     use super::*;
+    use crate::core::types::property::FederationProperty;
 
     /// A transaction that adds a new property type to a federation.
     ///
