@@ -18,11 +18,15 @@ export async function getProperties(): Promise<void> {
     const propertyName = new PropertyName(["Example LTD"]);
     const propertyValue = PropertyValue.newText("Hello");
 
-    await hierarchies.addProperty(federation.id, new FederationProperty(propertyName).withAllowedValues([propertyValue]))
+    await hierarchies.addProperty(
+        federation.id,
+        new FederationProperty(propertyName).withAllowedValues([propertyValue]),
+    )
         .buildAndExecute(hierarchies);
     console.log(`\n✅ Property ${propertyName.dotted()} added successfully`);
 
-    const secondProperty = new FederationProperty(new PropertyName(["Example LTD 2", "Example LTD 3"])).withAllowedValues([PropertyValue.newText("Hello 2")]);
+    const secondProperty = new FederationProperty(new PropertyName(["Example LTD 2", "Example LTD 3"]))
+        .withAllowedValues([PropertyValue.newText("Hello 2")]);
 
     // Add a second property
     await hierarchies.addProperty(federation.id, secondProperty).buildAndExecute(hierarchies);

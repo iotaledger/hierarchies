@@ -58,11 +58,11 @@ The following examples demonstrate the core hierarchies workflow:
 
 The validation examples show how to verify trust relationships and validate properties:
 
-| Name                                                                                           | Information                                                                  |
-| :--------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------- |
-| [01_get_accreditations](validation/01_get_attestations_and_accreditations.rs)                  | Demonstrates retrieving attestation and accreditation data from federations. |
-| [02_validate_properties](validation/02_validate_properties.rs)                                 | Shows how to validate if an entity can attest to specific properties.        |
-| [03_get_properties](validation/03_get_properties.rs)                                           | Demonstrates retrieving properties from federations.                         |
+| Name                                                                          | Information                                                                  |
+| :---------------------------------------------------------------------------- | :--------------------------------------------------------------------------- |
+| [01_get_accreditations](validation/01_get_attestations_and_accreditations.rs) | Demonstrates retrieving attestation and accreditation data from federations. |
+| [02_validate_properties](validation/02_validate_properties.rs)                | Shows how to validate if an entity can attest to specific properties.        |
+| [03_get_properties](validation/03_get_properties.rs)                          | Demonstrates retrieving properties from federations.                         |
 
 ## Key Concepts
 

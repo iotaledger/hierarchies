@@ -18,7 +18,10 @@ export async function validateProperties(): Promise<void> {
     const propertyName = new PropertyName(["Example LTD"]);
     const propertyValue = PropertyValue.newText("Hello");
 
-    await hierarchies.addProperty(federation.id, new FederationProperty(propertyName).withAllowedValues([propertyValue]))
+    await hierarchies.addProperty(
+        federation.id,
+        new FederationProperty(propertyName).withAllowedValues([propertyValue]),
+    )
         .buildAndExecute(hierarchies);
     console.log(`\n✅ Property ${propertyName.dotted()} added successfully`);
 

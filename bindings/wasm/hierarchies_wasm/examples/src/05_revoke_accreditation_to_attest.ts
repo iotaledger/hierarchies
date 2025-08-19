@@ -1,7 +1,7 @@
 // Copyright 2020-2025 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { Federation, HierarchiesClient, FederationProperty, PropertyName, PropertyValue } from "@iota/hierarchies/node";
+import { Federation, FederationProperty, HierarchiesClient, PropertyName, PropertyValue } from "@iota/hierarchies/node";
 import assert from "assert";
 import { randomBytes } from "crypto";
 import { getFundedClient } from "./util";

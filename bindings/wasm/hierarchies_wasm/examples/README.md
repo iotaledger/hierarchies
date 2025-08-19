@@ -78,11 +78,11 @@ The following examples demonstrate the core hierarchies workflow in TypeScript:
 
 The validation examples show how to verify trust relationships and validate properties in TypeScript:
 
-| Name                                                                   | Information                                                                  |
-| :----------------------------------------------------------------------| :--------------------------------------------------------------------------- |
-| [01_get_accreditations](src/validation/01_get_accreditations.ts)       | Demonstrates retrieving attestation and accreditation data from federations. |
-| [02_validate_properties](src/validation/02_validate_properties.ts)     | Shows how to validate if an entity can attest to specific properties.        |
-| [03_get_properties](src/validation/03_get_properties.ts)               | Demonstrates retrieving properties from federations.                         |
+| Name                                                               | Information                                                                  |
+| :----------------------------------------------------------------- | :--------------------------------------------------------------------------- |
+| [01_get_accreditations](src/validation/01_get_accreditations.ts)   | Demonstrates retrieving attestation and accreditation data from federations. |
+| [02_validate_properties](src/validation/02_validate_properties.ts) | Shows how to validate if an entity can attest to specific properties.        |
+| [03_get_properties](src/validation/03_get_properties.ts)           | Demonstrates retrieving properties from federations.                         |
 
 ## Utility Functions
 
