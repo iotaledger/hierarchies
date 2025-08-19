@@ -22,17 +22,15 @@ export async function getProperties(): Promise<void> {
         .buildAndExecute(hierarchies);
     console.log(`\n✅ Property ${propertyName.dotted()} added successfully`);
 
-    const propertyToAttest = new FederationProperty(propertyName).withAllowedValues([PropertyValue.newText("Hello")]);
-    const accreditationReceiver = "0x" + randomBytes(32).toString("hex");
+    const secondProperty = new FederationProperty(new PropertyName(["Example LTD 2", "Example LTD 3"])).withAllowedValues([PropertyValue.newText("Hello 2")]);
 
-    // Create an accreditation to attest
-    await hierarchies.createAccreditationToAttest(federation.id, accreditationReceiver, [propertyToAttest])
-        .buildAndExecute(hierarchies);
-    console.log(`\n✅ Accreditation to attest created for ${accreditationReceiver}`);
+    // Add a second property
+    await hierarchies.addProperty(federation.id, secondProperty).buildAndExecute(hierarchies);
+    console.log(`\n✅ Property ${secondProperty.propertyName.dotted()} added successfully`);
 
     // Get the properties
     const retrievedProperties = await hierarchies.readOnly().getProperties(federation.id);
 
     assert(retrievedProperties.length > 0, "No properties found");
-    console.log("\n✅ Successfully retrieved properties for the receiver:", accreditationReceiver);
+    console.log("\n✅ Successfully retrieved properties for the Federation", retrievedProperties);
 }
