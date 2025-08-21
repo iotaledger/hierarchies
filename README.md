@@ -32,7 +32,7 @@ IOTA Hierarchies is composed of two primary components:
 - API References:
   - [Rust API Reference](https://iotaledger.github.io/hierarchies/hierarchies/index.html): Package documentation.
 
-- [Wasm API Reference](https://docs.iota.org/references/iota-hierarchies/wasm/api_ref): Wasm Package documentation.
+- [Wasm API Reference](https://docs.iota.org/developer/iota-hierarchies/references/wasm/api_ref): Wasm Package documentation.
 
 - Examples:
   - [Rust Examples](https://github.com/iotaledger/hierarchies/tree/main/hierarchies-rs/examples/README.md): Practical code snippets to get you started with the library in Rust.
