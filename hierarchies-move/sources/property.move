@@ -1,8 +1,8 @@
 module hierarchies::property;
 
 use hierarchies::{
-    property_shape::PropertyShape,
     property_name::PropertyName,
+    property_shape::PropertyShape,
     property_value::PropertyValue
 };
 use iota::{vec_map::{Self, VecMap}, vec_set::VecSet};
@@ -53,7 +53,9 @@ public(package) fun data(self: &FederationProperties): &VecMap<PropertyName, Fed
     &self.data
 }
 
-public(package) fun data_mut(self: &mut FederationProperties): &mut VecMap<PropertyName, FederationProperty> {
+public(package) fun data_mut(
+    self: &mut FederationProperties,
+): &mut VecMap<PropertyName, FederationProperty> {
     &mut self.data
 }
 

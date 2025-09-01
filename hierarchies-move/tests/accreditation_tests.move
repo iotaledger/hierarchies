@@ -4,8 +4,8 @@ module hierarchies::accreditation_tests;
 use hierarchies::{
     accreditation::{Self, Accreditation},
     property::{Self, FederationProperty},
-    property_shape,
     property_name,
+    property_shape,
     property_value::{Self, PropertyValue}
 };
 use iota::{test_scenario::{Self, Scenario}, vec_map, vec_set::{Self, VecSet}};

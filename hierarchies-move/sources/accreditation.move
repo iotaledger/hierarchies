@@ -28,10 +28,7 @@ public fun new_accreditations(accreditations: vector<Accreditation>): Accreditat
 }
 
 /// Adds an accredited property to the list of accreditations.
-public(package) fun add_accreditation(
-    self: &mut Accreditations,
-    accreditation: Accreditation,
-) {
+public(package) fun add_accreditation(self: &mut Accreditations, accreditation: Accreditation) {
     self.accreditations.push_back(accreditation);
 }
 
@@ -191,7 +188,10 @@ public struct Accreditation has key, store {
     properties: VecMap<PropertyName, FederationProperty>,
 }
 
-public fun new_accreditation(properties: vector<FederationProperty>, ctx: &mut TxContext): Accreditation {
+public fun new_accreditation(
+    properties: vector<FederationProperty>,
+    ctx: &mut TxContext,
+): Accreditation {
     let properties_map = property::to_map_of_properties(properties);
 
     Accreditation {

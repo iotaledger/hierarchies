@@ -1191,7 +1191,13 @@ fun test_validate_property_fails_for_revoked_property() {
     // Create accreditation for Bob to attest this property
     let bob_id = @0x2.to_id();
     let property = property::new_property(property_name, allowed_values, false, option::none());
-    fed.create_accreditation_to_attest(&accredit_cap, bob_id, vector[property], &clock, scenario.ctx());
+    fed.create_accreditation_to_attest(
+        &accredit_cap,
+        bob_id,
+        vector[property],
+        &clock,
+        scenario.ctx(),
+    );
 
     // Initially validation should pass
     assert!(fed.validate_property(&bob_id, property_name, property_value, &clock), 0);
@@ -1233,8 +1239,18 @@ fun test_validate_properties_fails_for_revoked_property() {
     allowed_values_1.insert(property_value_1);
     allowed_values_2.insert(property_value_2);
 
-    let property_1 = property::new_property(property_name_1, allowed_values_1, false, option::none());
-    let property_2 = property::new_property(property_name_2, allowed_values_2, false, option::none());
+    let property_1 = property::new_property(
+        property_name_1,
+        allowed_values_1,
+        false,
+        option::none(),
+    );
+    let property_2 = property::new_property(
+        property_name_2,
+        allowed_values_2,
+        false,
+        option::none(),
+    );
     fed.add_property(&root_cap, property_1, scenario.ctx());
     fed.add_property(&root_cap, property_2, scenario.ctx());
 
