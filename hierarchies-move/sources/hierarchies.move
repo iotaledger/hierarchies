@@ -284,8 +284,14 @@ public fun add_property(
 ) {
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
     assert!(!self.is_revoked_root_authority(&cap.account_id), ERevokedRootAuthority);
-    assert!(!(property.allow_any() && property.allowed_values().keys().length() > 0), EInvalidPropertyValueCondition);
-    assert!(property.allow_any() || property.allowed_values().keys().length() > 0, EEmptyAllowedValuesWithoutAllowAny);
+    assert!(
+        !(property.allow_any() && property.allowed_values().keys().length() > 0),
+        EInvalidPropertyValueCondition,
+    );
+    assert!(
+        property.allow_any() || property.allowed_values().keys().length() > 0,
+        EEmptyAllowedValuesWithoutAllowAny,
+    );
 
     self.governance.properties.add_property(property);
 
@@ -467,11 +473,7 @@ public fun create_accreditation_to_accredit(
         );
 
         // Check if property is revoked
-        let federation_property = self
-            .governance
-            .properties
-            .data()
-            .get(property.property_name());
+        let federation_property = self.governance.properties.data().get(property.property_name());
         assert!(federation_property.is_valid_at_time(current_time_ms), EPropertyRevoked);
 
         idx = idx + 1;
@@ -536,11 +538,7 @@ public fun create_accreditation_to_attest(
         );
 
         // Check if property is revoked
-        let federation_property = self
-            .governance
-            .properties
-            .data()
-            .get(property.property_name());
+        let federation_property = self.governance.properties.data().get(property.property_name());
         assert!(federation_property.is_valid_at_time(current_time_ms), EPropertyRevoked);
 
         idx = idx + 1;
