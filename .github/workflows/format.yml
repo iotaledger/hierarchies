@@ -66,5 +66,5 @@ jobs:
         run: npm i @mysten/prettier-plugin-move
 
       - name: prettier-move check
-        working-directory: ith.move
+        working-directory: hierarchies-move
         run: npx prettier-move -c **/*.move
