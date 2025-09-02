@@ -26,6 +26,7 @@ serde_json = "1"
 strum = { version = "0.27", default-features = false, features = ["std", "derive"] }
 thiserror = "2.0"
 tokio = { version = "1.46", default-features = false, features = ["sync"] }
+chrono = { version = "0.4", features = ["serde"] }
 
 [profile.release.package.iota_interaction_ts]
 opt-level = 's'

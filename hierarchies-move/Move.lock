@@ -42,7 +42,7 @@ dependencies = [
 ]
 
 [move.toolchain-version]
-compiler-version = "1.4.1-rc"
+compiler-version = "1.4.1"
 edition = "2024.beta"
 flavor = "iota"
 
@@ -61,9 +61,9 @@ latest-published-id = "0x2319aae93cbe97ef111290154a571effb10989bca0ea8804e7804e8
 published-version = "1"
 
 [env.localnet]
-chain-id = "b16af18d"
-original-published-id = "0x8dd055002fca5bcfbf888d72fe166baff7a48ae2b7b2b969a0d831a1069373c4"
-latest-published-id = "0x8dd055002fca5bcfbf888d72fe166baff7a48ae2b7b2b969a0d831a1069373c4"
+chain-id = "34190e3f"
+original-published-id = "0xd461b539fd2045d1e769a6b73770fc36f2d759d6bd18416ab50adb3678d67c52"
+latest-published-id = "0xd461b539fd2045d1e769a6b73770fc36f2d759d6bd18416ab50adb3678d67c52"
 published-version = "1"
 
 [env.mainnet]
