@@ -29,7 +29,7 @@
 //!
 //! ## Statements Defined
 //! - `degree.bachelor`: Bachelor's degree completion status
-//! - `degree.master`: Master's degree completion status  
+//! - `degree.master`: Master's degree completion status
 //! - `degree.phd`: PhD completion status
 //! - `field.computer_science`: Computer Science specialization
 //! - `field.engineering`: Engineering specialization
@@ -195,8 +195,6 @@ async fn main() -> anyhow::Result<()> {
     // =============================================================================
     println!("🏛️ Step 3: Adding universities to the consortium...");
 
-    // Simulate Harvard University and MIT addresses
-    // In real implementation, these would be actual university wallet addresses
     let harvard_address = IotaAddress::random_for_testing_only();
     let mit_address = IotaAddress::random_for_testing_only();
 
@@ -287,7 +285,7 @@ async fn main() -> anyhow::Result<()> {
     let alice_properties = std::collections::HashMap::from([
         (degree_bachelor.clone(), PropertyValue::Text("completed".to_owned())),
         (field_cs.clone(), PropertyValue::Text("true".to_owned())),
-        (grade_gpa.clone(), PropertyValue::Text("3.85".to_owned())), // 3.85 GPA
+        (grade_gpa.clone(), PropertyValue::Text("3.85".to_owned())),
         (graduation_year.clone(), PropertyValue::Text("2024".to_owned())),
         (student_verified.clone(), PropertyValue::Text("true".to_owned())),
     ]);
@@ -325,7 +323,7 @@ async fn main() -> anyhow::Result<()> {
         graduation_year: &graduation_year,
         student_verified: &student_verified,
     };
-    
+
     format_degree_info(
         "Alice",
         &alice_student,
@@ -362,7 +360,7 @@ async fn main() -> anyhow::Result<()> {
 
     assert!(bob_accreditations.accreditations.len() == 1);
 
-    // Use the helper function to format and display Bob's degree information  
+    // Use the helper function to format and display Bob's degree information
     format_degree_info(
         "Bob",
         &bob_student,
@@ -450,12 +448,6 @@ async fn main() -> anyhow::Result<()> {
         let accreditation_to_revoke = &alice_accreditations_before_revocation.accreditations[0];
         let accreditation_id = *accreditation_to_revoke.id.object_id();
 
-        println!("📋 Revocation process:");
-        println!("   1. University investigates misconduct ✅");
-        println!("   2. Due process followed ✅");
-        println!("   3. Registrar revokes the degree attestation...");
-
-        // Perform the actual revocation using the hierarchies API
         hierarchies_client
             .revoke_accreditation_to_attest(
                 *university_consortium.id.object_id(),

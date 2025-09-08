@@ -60,6 +60,7 @@ use hierarchies_examples::get_funded_client;
 use iota_sdk::types::base_types::IotaAddress;
 
 /// Property names for the supply chain certification system
+#[allow(dead_code)]
 struct CertificationPropertyNames<'a> {
     iso_9001: &'a PropertyName,
     iso_14001: &'a PropertyName,
@@ -82,9 +83,9 @@ fn format_certification_info(
 ) {
     println!("✅ {}'s certification successfully issued:", product_name);
     println!("   - Product: {}", product_batch);
-    
+
     let accreditation_properties = &accreditation.properties;
-    
+
     // Extract organic certification
     let organic_status = accreditation_properties
         .get(properties.product_organic)
@@ -95,7 +96,7 @@ fn format_certification_info(
             _ => "Unknown",
         })
         .unwrap_or_else(|| "Unknown");
-    
+
     // Extract origin country
     let origin_country = accreditation_properties
         .get(properties.origin_verified)
@@ -103,7 +104,7 @@ fn format_certification_info(
         .map(|v| match v {
             PropertyValue::Text(text) => match text.as_str() {
                 "DE" => "Germany (DE)",
-                "US" => "United States (US)", 
+                "US" => "United States (US)",
                 "CA" => "Canada (CA)",
                 "FR" => "France (FR)",
                 other => other,
@@ -111,7 +112,7 @@ fn format_certification_info(
             _ => "Unknown",
         })
         .unwrap_or_else(|| "Unknown");
-    
+
     // Extract batch testing results
     let testing_result = accreditation_properties
         .get(properties.batch_tested)
@@ -126,7 +127,7 @@ fn format_certification_info(
             _ => "Unknown",
         })
         .unwrap_or_else(|| "Unknown");
-    
+
     // Extract EU compliance
     let eu_compliance = accreditation_properties
         .get(properties.compliance_eu)
@@ -137,7 +138,7 @@ fn format_certification_info(
             _ => "Unknown",
         })
         .unwrap_or_else(|| "N/A");
-    
+
     // Extract FDA compliance
     let fda_compliance = accreditation_properties
         .get(properties.compliance_fda)
@@ -148,7 +149,7 @@ fn format_certification_info(
             _ => "Unknown",
         })
         .unwrap_or_else(|| "N/A");
-    
+
     // Extract ISO 22000 certification
     let iso_22000_status = accreditation_properties
         .get(properties.iso_22000)
@@ -160,7 +161,7 @@ fn format_certification_info(
             _ => "Unknown",
         })
         .unwrap_or_else(|| "N/A");
-    
+
     // Extract expiry date
     let expiry_date_str = accreditation_properties
         .get(properties.expiry_date)
@@ -173,11 +174,11 @@ fn format_certification_info(
                 } else {
                     text.clone()
                 }
-            },
+            }
             _ => "Unknown".to_string(),
         })
         .unwrap_or_else(|| "N/A".to_string());
-    
+
     println!("   - Origin: {}", origin_country);
     if organic_status != "Unknown" {
         println!("   - Organic Status: {}", organic_status);
@@ -508,11 +509,16 @@ async fn main() -> anyhow::Result<()> {
 
     // Berlin lab certifies organic apples from German orchard
     let apple_certification = [
-        FederationProperty::new(product_organic.clone()).with_allowed_values(HashSet::from([PropertyValue::Text("true".to_owned())])),
-        FederationProperty::new(origin_verified.clone()).with_allowed_values(HashSet::from([PropertyValue::Text("DE".to_owned())])),
-        FederationProperty::new(batch_tested.clone()).with_allowed_values(HashSet::from([PropertyValue::Text("passed".to_owned())])),
-        FederationProperty::new(compliance_eu.clone()).with_allowed_values(HashSet::from([PropertyValue::Text("true".to_owned())])),
-        FederationProperty::new(expiry_date.clone()).with_allowed_values(HashSet::from([PropertyValue::Text(expiry.to_rfc3339())])),
+        FederationProperty::new(product_organic.clone())
+            .with_allowed_values(HashSet::from([PropertyValue::Text("true".to_owned())])),
+        FederationProperty::new(origin_verified.clone())
+            .with_allowed_values(HashSet::from([PropertyValue::Text("DE".to_owned())])),
+        FederationProperty::new(batch_tested.clone())
+            .with_allowed_values(HashSet::from([PropertyValue::Text("passed".to_owned())])),
+        FederationProperty::new(compliance_eu.clone())
+            .with_allowed_values(HashSet::from([PropertyValue::Text("true".to_owned())])),
+        FederationProperty::new(expiry_date.clone())
+            .with_allowed_values(HashSet::from([PropertyValue::Text(expiry.to_rfc3339())])),
     ];
 
     hierarchies_client
@@ -547,18 +553,23 @@ async fn main() -> anyhow::Result<()> {
             compliance_fda: &compliance_fda,
             compliance_halal: &compliance_halal,
             expiry_date: &expiry_date,
-        }
+        },
     );
 
     println!("\n🥫 Issuing processed food certification (US manufacturer)...");
 
     // California lab certifies processed food for US market
     let processed_food_cert = [
-        FederationProperty::new(iso_22000.clone()).with_allowed_values(HashSet::from([PropertyValue::Text("certified".to_owned())])),
-        FederationProperty::new(origin_verified.clone()).with_allowed_values(HashSet::from([PropertyValue::Text("US".to_owned())])),
-        FederationProperty::new(batch_tested.clone()).with_allowed_values(HashSet::from([PropertyValue::Text("passed".to_owned())])),
-        FederationProperty::new(compliance_fda.clone()).with_allowed_values(HashSet::from([PropertyValue::Text("true".to_owned())])),
-        FederationProperty::new(expiry_date.clone()).with_allowed_values(HashSet::from([PropertyValue::Text(expiry.to_rfc3339())])),
+        FederationProperty::new(iso_22000.clone())
+            .with_allowed_values(HashSet::from([PropertyValue::Text("certified".to_owned())])),
+        FederationProperty::new(origin_verified.clone())
+            .with_allowed_values(HashSet::from([PropertyValue::Text("US".to_owned())])),
+        FederationProperty::new(batch_tested.clone())
+            .with_allowed_values(HashSet::from([PropertyValue::Text("passed".to_owned())])),
+        FederationProperty::new(compliance_fda.clone())
+            .with_allowed_values(HashSet::from([PropertyValue::Text("true".to_owned())])),
+        FederationProperty::new(expiry_date.clone())
+            .with_allowed_values(HashSet::from([PropertyValue::Text(expiry.to_rfc3339())])),
     ];
 
     hierarchies_client
@@ -593,7 +604,7 @@ async fn main() -> anyhow::Result<()> {
             compliance_fda: &compliance_fda,
             compliance_halal: &compliance_halal,
             expiry_date: &expiry_date,
-        }
+        },
     );
 
     // =============================================================================
@@ -655,12 +666,9 @@ async fn main() -> anyhow::Result<()> {
     }
 
     // =============================================================================
-    // STEP 8: Consumer Verification via QR Code
+    // STEP 8: Consumer Verification
     // =============================================================================
     println!("\n📱 Step 8: Consumer verification demonstration...");
-
-    println!("📲 Scenario: Consumer scans QR code on organic apple package");
-    println!("   QR Code Data: Product Batch ID + Certification Claims");
 
     // Consumer app validates organic claim
     let consumer_verification = std::collections::HashMap::from([
@@ -686,50 +694,9 @@ async fn main() -> anyhow::Result<()> {
     }
 
     // =============================================================================
-    // STEP 9: Certificate Expiry and Renewal
+    // STEP 9: Product Recall Scenario
     // =============================================================================
-    println!("\n⏰ Step 9: Certification lifecycle management...");
-
-    // Simulate certificate nearing expiry
-    let near_expiry = now + Duration::days(30); // 30 days until expiry
-    let renewal_cert = now + Duration::days(365); // Renewed for another year
-
-    println!("⚠️  Scenario: Certification approaching expiry");
-    println!("   - Current date: {}", now.format("%Y-%m-%d"));
-    println!("   - Certificate expires: {}", expiry.format("%Y-%m-%d"));
-    println!("   - Status: Valid but approaching expiry");
-
-    println!("\n🔄 Renewal process initiated:");
-    println!("   1. Lab schedules re-inspection");
-    println!("   2. New batch testing performed");
-    println!("   3. Updated certification issued");
-    println!("   4. New expiry date: {}", renewal_cert.format("%Y-%m-%d"));
-    println!("   5. Supply chain automatically updated");
-
-    // =============================================================================
-    // STEP 10: Compliance Audit Trail
-    // =============================================================================
-    println!("\n📋 Step 10: Compliance audit trail...");
-
-    println!("🔍 Scenario: Regulatory audit of supply chain certifications");
-    println!("   Auditor requirements:");
-    println!("   - Complete certification history");
-    println!("   - Verification of testing procedures");
-    println!("   - Validation of authority delegation");
-    println!("   - Proof of continuous compliance");
-
-    println!("\n✅ Audit findings:");
-    println!("   - All certifications cryptographically verifiable");
-    println!("   - Authority delegation properly documented");
-    println!("   - Testing procedures follow ISO standards");
-    println!("   - Expiry dates tracked and managed");
-    println!("   - Revocation capabilities demonstrated");
-    println!("   - Cross-border recognition functional");
-
-    // =============================================================================
-    // STEP 11: Product Recall Scenario
-    // =============================================================================
-    println!("\n🚨 Step 11: Product recall scenario...");
+    println!("\n🚨 Step 9: Product recall scenario...");
 
     println!("⚠️  Scenario: Quality issue discovered, product recall needed");
     println!("   Issue: Contamination found in processed food batch");
@@ -737,16 +704,12 @@ async fn main() -> anyhow::Result<()> {
 
     // Real implementation: Revoke the specific attestation
     let processed_food_accreditations = hierarchies_client
-        .get_accreditations_to_attest(
-            *standards_consortium.id.object_id(),
-            processed_food_batch.into(),
-        )
-        .await
-        .context("Failed to get processed food accreditations")?;
+        .get_accreditations_to_attest(*standards_consortium.id.object_id(), processed_food_batch.into())
+        .await?;
 
     if !processed_food_accreditations.accreditations.is_empty() {
         let accreditation_id = *processed_food_accreditations.accreditations[0].id.object_id();
-        
+
         hierarchies_client
             .revoke_accreditation_to_attest(
                 *standards_consortium.id.object_id(),
@@ -754,20 +717,15 @@ async fn main() -> anyhow::Result<()> {
                 accreditation_id,
             )
             .build_and_execute(&hierarchies_client)
-            .await
-            .context("Failed to revoke processed food certification")?;
+            .await?;
 
         println!("🚨 CERTIFICATION REVOKED!");
         println!("   Revoked accreditation ID: {}", accreditation_id);
-        
+
         // Verify revocation by checking accreditations again
         let revoked_check = hierarchies_client
-            .get_accreditations_to_attest(
-                *standards_consortium.id.object_id(),
-                processed_food_batch.into(),
-            )
-            .await
-            .context("Failed to check revocation status")?;
+            .get_accreditations_to_attest(*standards_consortium.id.object_id(), processed_food_batch.into())
+            .await?;
 
         if revoked_check.accreditations.is_empty() {
             println!("✅ Revocation confirmed - no active certifications remain");
@@ -778,9 +736,7 @@ async fn main() -> anyhow::Result<()> {
             .validate_properties(
                 *standards_consortium.id.object_id(),
                 processed_food_batch.into(),
-                std::collections::HashMap::from([
-                    (iso_22000.clone(), PropertyValue::Text("true".to_owned())),
-                ]),
+                std::collections::HashMap::from([(iso_22000.clone(), PropertyValue::Text("true".to_owned()))]),
             )
             .await?;
 
@@ -790,14 +746,7 @@ async fn main() -> anyhow::Result<()> {
     }
 
     println!("📋 Recall process completed:");
-    println!("   1. Laboratory identifies contamination");
-    println!("   2. Batch certification immediately revoked ✓");
-    println!("   3. Downstream validations automatically fail ✓");
-    println!("   4. Retailers notified through failed re-validation");
-    println!("   5. Products removed from shelves");
-    println!("   6. Consumer apps show recall status");
-    println!("   7. Supply chain impact minimized through precise targeting\n");
-
+    println!("   - Certification revoked");
     // =============================================================================
     // SUMMARY
     // =============================================================================
@@ -810,8 +759,6 @@ async fn main() -> anyhow::Result<()> {
     println!("✅ Product certifications issued with expiry management");
     println!("✅ Import/export validation demonstrated");
     println!("✅ Consumer verification enabled");
-    println!("✅ Certificate lifecycle management shown");
-    println!("✅ Audit trail capabilities demonstrated");
     println!("✅ Product recall scenario handled");
     println!("\n🎯 Benefits Achieved:");
     println!("   - Instant compliance verification across borders");
@@ -822,13 +769,6 @@ async fn main() -> anyhow::Result<()> {
     println!("   - Efficient product recall capabilities");
     println!("   - Reduced regulatory overhead");
     println!("   - Global interoperability of certifications");
-    println!("\n💼 Industry Applications:");
-    println!("   - Food & beverage safety certification");
-    println!("   - Pharmaceutical compliance tracking");
-    println!("   - Textile and fashion sustainability");
-    println!("   - Electronics component authentication");
-    println!("   - Automotive parts quality assurance");
-    println!("   - Chemical industry safety compliance");
 
     Ok(())
 }
