@@ -68,14 +68,15 @@ The validation examples show how to verify trust relationships and validate prop
 
 These examples demonstrate practical applications of IOTA Hierarchies in real business scenarios with comprehensive documentation:
 
-| Name                                                                          | Information                                                                  |
-| :---------------------------------------------------------------------------- | :--------------------------------------------------------------------------- |
-| [01_university_degrees](real-world/01_university_degrees.rs)                | University degree verification system with multi-level academic hierarchy.  |
-| [02_supply_chain](real-world/02_supply_chain.rs)                            | Supply chain quality certification system with international standards.     |
+| Name                                                         | Information                                                                |
+| :----------------------------------------------------------- | :------------------------------------------------------------------------- |
+| [01_university_degrees](real-world/01_university_degrees.rs) | University degree verification system with multi-level academic hierarchy. |
+| [02_supply_chain](real-world/02_supply_chain.rs)             | Supply chain quality certification system with international standards.    |
 
 ### University Degree Verification System
 
 Demonstrates a comprehensive academic credential verification system featuring:
+
 - University consortium federation management
 - Multi-level hierarchy: University → Faculty → Registrar
 - Academic properties: degrees, fields of study, GPAs, graduation years
@@ -84,6 +85,7 @@ Demonstrates a comprehensive academic credential verification system featuring:
 - Real-world validation scenarios for employers and graduate schools
 
 **Key Features:**
+
 - Bachelor's, Master's, and PhD degree attestations
 - Computer Science, Engineering, and Mathematics specializations
 - GPA tracking and verification
@@ -93,6 +95,7 @@ Demonstrates a comprehensive academic credential verification system featuring:
 ### Supply Chain Quality Certification System
 
 Demonstrates a global supply chain certification and compliance system featuring:
+
 - International standards consortium (ISO-style) federation
 - Multi-regional structure: International → Regional → National → Local
 - Comprehensive certifications: ISO 9001, 14001, 22000, organic, compliance
@@ -101,6 +104,7 @@ Demonstrates a global supply chain certification and compliance system featuring
 - Consumer QR code verification
 
 **Key Features:**
+
 - ISO standards certification (Quality, Environmental, Food Safety)
 - Regional compliance (EU, FDA, Halal)
 - Product origin verification and batch testing

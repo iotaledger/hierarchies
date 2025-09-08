@@ -88,14 +88,15 @@ The validation examples show how to verify trust relationships and validate prop
 
 These examples demonstrate practical applications of IOTA Hierarchies in real business scenarios with comprehensive TypeScript implementation:
 
-| Name                                                                              | Information                                                                  |
-| :-------------------------------------------------------------------------------- | :--------------------------------------------------------------------------- |
-| [01_university_degrees](src/real-world/01_university_degrees.ts)                | University degree verification system with multi-level academic hierarchy.  |
-| [02_supply_chain](src/real-world/02_supply_chain.ts)                            | Supply chain quality certification system with international standards.     |
+| Name                                                             | Information                                                                |
+| :--------------------------------------------------------------- | :------------------------------------------------------------------------- |
+| [01_university_degrees](src/real-world/01_university_degrees.ts) | University degree verification system with multi-level academic hierarchy. |
+| [02_supply_chain](src/real-world/02_supply_chain.ts)             | Supply chain quality certification system with international standards.    |
 
 ### University Degree Verification System
 
 Demonstrates a comprehensive academic credential verification system optimized for web applications:
+
 - University consortium federation management
 - Multi-level hierarchy: University → Faculty → Registrar
 - Academic properties: degrees, fields of study, GPAs, graduation years
@@ -104,6 +105,7 @@ Demonstrates a comprehensive academic credential verification system optimized f
 - Mobile app integration and QR code verification
 
 **Web-Specific Features:**
+
 - Browser-based credential verification
 - Real-time validation without server round-trips
 - QR code integration for mobile verification
@@ -113,6 +115,7 @@ Demonstrates a comprehensive academic credential verification system optimized f
 ### Supply Chain Quality Certification System
 
 Demonstrates a global supply chain certification system designed for web dashboards and e-commerce integration:
+
 - International standards consortium (ISO-style) federation
 - Multi-regional structure with real-time status monitoring
 - Comprehensive certifications with web dashboard integration
@@ -121,6 +124,7 @@ Demonstrates a global supply chain certification system designed for web dashboa
 - Real-time certificate expiry tracking
 
 **Web-Specific Features:**
+
 - Interactive certification dashboard
 - RESTful API integration examples
 - Consumer-facing verification interfaces

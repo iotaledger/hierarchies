@@ -10,11 +10,11 @@ import { createAccreditationToAccredit } from "./06_create_accreditation_to_accr
 import { revokeAccreditationToAccredit } from "./07_revoke_accreditation_to_accredit";
 import { revokeRootAuthority } from "./08_revoke_root_authority";
 import { reinstateRootAuthority } from "./09_reinstate_root_authority";
+import { universityDegrees } from "./real-world/01_university_degrees";
+import { supplyChain } from "./real-world/02_supply_chain";
 import { getAccreditations } from "./validation/01_get_accreditations";
 import { validateProperties } from "./validation/02_validate_properties";
 import { getProperties } from "./validation/03_get_properties";
-import { universityDegrees } from "./real-world/01_university_degrees";
-import { supplyChain } from "./real-world/02_supply_chain";
 
 export async function main(example?: string) {
     // Extract example name.

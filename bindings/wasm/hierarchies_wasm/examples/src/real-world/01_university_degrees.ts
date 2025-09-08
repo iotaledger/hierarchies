@@ -46,7 +46,7 @@
  * - Alumni verification for networking platforms
  */
 
-import { Federation, PropertyName, PropertyValue, FederationProperty, Accreditation } from "@iota/hierarchies/node";
+import { Accreditation, Federation, FederationProperty, PropertyName, PropertyValue } from "@iota/hierarchies/node";
 import { getFundedClient } from "../util";
 
 /**
@@ -71,7 +71,7 @@ function formatDegreeInfo(
     studentName: string,
     studentAddress: string,
     accreditation: Accreditation,
-    properties: DegreePropertyNames
+    properties: DegreePropertyNames,
 ): void {
     console.log(`✅ ${studentName}'s degree successfully issued:`);
     console.log(`   - Student: ${studentAddress}`);
@@ -80,21 +80,27 @@ function formatDegreeInfo(
 
     // Extract degree type
     let degreeType = "Unknown Degree";
-    const bachelorProp = accreditationProperties.find(prop => prop.propertyName.toString() === properties.degreeBachelor.toString());
+    const bachelorProp = accreditationProperties.find(prop =>
+        prop.propertyName.toString() === properties.degreeBachelor.toString()
+    );
     if (bachelorProp && bachelorProp.allowedValues.length > 0) {
         const value = bachelorProp.allowedValues[0];
         if (value.isText()) {
             degreeType = `Bachelor's (${value.asText()})`;
         }
     } else {
-        const masterProp = accreditationProperties.find(prop => prop.propertyName.toString() === properties.degreeMaster.toString());
+        const masterProp = accreditationProperties.find(prop =>
+            prop.propertyName.toString() === properties.degreeMaster.toString()
+        );
         if (masterProp && masterProp.allowedValues.length > 0) {
             const value = masterProp.allowedValues[0];
             if (value.isText()) {
                 degreeType = `Master's (${value.asText()})`;
             }
         } else {
-            const phdProp = accreditationProperties.find(prop => prop.propertyName.toString() === properties.degreePhd.toString());
+            const phdProp = accreditationProperties.find(prop =>
+                prop.propertyName.toString() === properties.degreePhd.toString()
+            );
             if (phdProp && phdProp.allowedValues.length > 0) {
                 const value = phdProp.allowedValues[0];
                 if (value.isText()) {
@@ -113,14 +119,18 @@ function formatDegreeInfo(
             fieldOfStudy = "Computer Science";
         }
     } else {
-        const engineeringProp = accreditationProperties.find(prop => prop.propertyName.toString() === properties.fieldEngineering.toString());
+        const engineeringProp = accreditationProperties.find(prop =>
+            prop.propertyName.toString() === properties.fieldEngineering.toString()
+        );
         if (engineeringProp && engineeringProp.allowedValues.length > 0) {
             const value = engineeringProp.allowedValues[0];
             if (value.isText() && value.asText() === "true") {
                 fieldOfStudy = "Engineering";
             }
         } else {
-            const mathProp = accreditationProperties.find(prop => prop.propertyName.toString() === properties.fieldMathematics.toString());
+            const mathProp = accreditationProperties.find(prop =>
+                prop.propertyName.toString() === properties.fieldMathematics.toString()
+            );
             if (mathProp && mathProp.allowedValues.length > 0) {
                 const value = mathProp.allowedValues[0];
                 if (value.isText() && value.asText() === "true") {
@@ -132,7 +142,9 @@ function formatDegreeInfo(
 
     // Extract GPA
     let gpa = "N/A";
-    const gpaProp = accreditationProperties.find(prop => prop.propertyName.toString() === properties.gradeGpa.toString());
+    const gpaProp = accreditationProperties.find(prop =>
+        prop.propertyName.toString() === properties.gradeGpa.toString()
+    );
     if (gpaProp && gpaProp.allowedValues.length > 0) {
         const value = gpaProp.allowedValues[0];
         if (value.isText()) {
@@ -142,7 +154,9 @@ function formatDegreeInfo(
 
     // Extract graduation year
     let gradYear = "N/A";
-    const gradYearProp = accreditationProperties.find(prop => prop.propertyName.toString() === properties.graduationYear.toString());
+    const gradYearProp = accreditationProperties.find(prop =>
+        prop.propertyName.toString() === properties.graduationYear.toString()
+    );
     if (gradYearProp && gradYearProp.allowedValues.length > 0) {
         const value = gradYearProp.allowedValues[0];
         if (value.isText()) {
@@ -152,7 +166,9 @@ function formatDegreeInfo(
 
     // Extract verification status
     let verificationStatus = "Unknown";
-    const verifiedProp = accreditationProperties.find(prop => prop.propertyName.toString() === properties.studentVerified.toString());
+    const verifiedProp = accreditationProperties.find(prop =>
+        prop.propertyName.toString() === properties.studentVerified.toString()
+    );
     if (verifiedProp && verifiedProp.allowedValues.length > 0) {
         const value = verifiedProp.allowedValues[0];
         if (value.isText()) {
@@ -178,8 +194,8 @@ export async function universityDegreesExample(): Promise<void> {
     // =============================================================================
     console.log("📚 Step 1: Creating University Consortium Federation...");
 
-    const { output: universityConsortium }: { output: Federation } =
-        await hierarchies.createNewFederation().buildAndExecute(hierarchies);
+    const { output: universityConsortium }: { output: Federation } = await hierarchies.createNewFederation()
+        .buildAndExecute(hierarchies);
 
     console.log("✅ University Consortium Federation created!");
     console.log(`   Federation ID: ${universityConsortium.id}`);
@@ -270,8 +286,8 @@ export async function universityDegreesExample(): Promise<void> {
 
     // Simulate Harvard University and MIT addresses
     // In real implementation, these would be actual university wallet addresses
-    const harvardAddress = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, '0');
-    const mitAddress = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, '0');
+    const harvardAddress = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, "0");
+    const mitAddress = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, "0");
 
     // Add Harvard as root authority
     await hierarchies
@@ -293,7 +309,7 @@ export async function universityDegreesExample(): Promise<void> {
     console.log("🏫 Step 4: Creating faculty-level accreditations...");
 
     // Simulate Harvard CS Faculty address
-    const harvardCsFaculty = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, '0');
+    const harvardCsFaculty = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, "0");
 
     // Harvard delegates accreditation rights to its CS Faculty
     // This allows the faculty to further delegate to registrars and professors
@@ -321,7 +337,7 @@ export async function universityDegreesExample(): Promise<void> {
     console.log("👨‍💼 Step 5: Creating registrar attestation rights...");
 
     // Simulate Harvard CS Registrar address
-    const harvardCsRegistrar = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, '0');
+    const harvardCsRegistrar = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, "0");
 
     // CS Faculty delegates attestation rights to the CS Registrar
     // Registrar can now create attestations (issue degrees) but not delegate further
@@ -339,8 +355,8 @@ export async function universityDegreesExample(): Promise<void> {
     console.log("🎓 Step 6: Issuing student degrees...");
 
     // Simulate student addresses
-    const aliceStudent = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, '0');
-    const bobStudent = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, '0');
+    const aliceStudent = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, "0");
+    const bobStudent = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, "0");
 
     console.log("📜 Issuing Bachelor's degree in Computer Science to Alice...");
 
@@ -358,7 +374,10 @@ export async function universityDegreesExample(): Promise<void> {
         .buildAndExecute(hierarchies);
 
     // Check if the accreditation to attest was issued
-    const accreditations = await hierarchies.readOnly().getAccreditationsToAttest(universityConsortium.id, aliceStudent);
+    const accreditations = await hierarchies.readOnly().getAccreditationsToAttest(
+        universityConsortium.id,
+        aliceStudent,
+    );
 
     if (accreditations.accreditations.length === 0) {
         throw new Error("Failed to create Alice's degree accreditation");
@@ -369,7 +388,17 @@ export async function universityDegreesExample(): Promise<void> {
         "Alice",
         aliceStudent,
         accreditations.accreditations[0],
-        { degreeBachelor, degreeMaster, degreePhd, fieldCs, fieldEngineering, fieldMathematics, gradeGpa, graduationYear, studentVerified }
+        {
+            degreeBachelor,
+            degreeMaster,
+            degreePhd,
+            fieldCs,
+            fieldEngineering,
+            fieldMathematics,
+            gradeGpa,
+            graduationYear,
+            studentVerified,
+        },
     );
 
     console.log("\n📜 Issuing Master's degree in Computer Science to Bob...");
@@ -387,7 +416,10 @@ export async function universityDegreesExample(): Promise<void> {
         .buildAndExecute(hierarchies);
 
     // Check if the accreditation to attest was issued
-    const bobAccreditations = await hierarchies.readOnly().getAccreditationsToAttest(universityConsortium.id, bobStudent);
+    const bobAccreditations = await hierarchies.readOnly().getAccreditationsToAttest(
+        universityConsortium.id,
+        bobStudent,
+    );
 
     if (bobAccreditations.accreditations.length === 0) {
         throw new Error("Failed to create Bob's degree accreditation");
@@ -398,7 +430,17 @@ export async function universityDegreesExample(): Promise<void> {
         "Bob",
         bobStudent,
         bobAccreditations.accreditations[0],
-        { degreeBachelor, degreeMaster, degreePhd, fieldCs, fieldEngineering, fieldMathematics, gradeGpa, graduationYear, studentVerified }
+        {
+            degreeBachelor,
+            degreeMaster,
+            degreePhd,
+            fieldCs,
+            fieldEngineering,
+            fieldMathematics,
+            gradeGpa,
+            graduationYear,
+            studentVerified,
+        },
     );
 
     // =============================================================================
@@ -418,7 +460,7 @@ export async function universityDegreesExample(): Promise<void> {
     const isValid = await hierarchies.readOnly().validateProperties(
         universityConsortium.id,
         aliceStudent, // Validate Alice's credentials, not the registrar's
-        validationProperties
+        validationProperties,
     );
 
     if (isValid) {
@@ -440,7 +482,7 @@ export async function universityDegreesExample(): Promise<void> {
     const isMasterValid = await hierarchies.readOnly().validateProperties(
         universityConsortium.id,
         bobStudent, // Validate Bob's credentials, not the registrar's
-        gradValidation
+        gradValidation,
     );
 
     if (isMasterValid) {
@@ -463,7 +505,10 @@ export async function universityDegreesExample(): Promise<void> {
     console.log("\n📋 Step 8a: Revoking Alice's degree...");
 
     // First, get Alice's current accreditations to find the ID we need to revoke
-    const aliceAccreditationsBeforeRevocation = await hierarchies.readOnly().getAccreditationsToAttest(universityConsortium.id, aliceStudent);
+    const aliceAccreditationsBeforeRevocation = await hierarchies.readOnly().getAccreditationsToAttest(
+        universityConsortium.id,
+        aliceStudent,
+    );
 
     console.log(`🔍 Found ${aliceAccreditationsBeforeRevocation.accreditations.length} accreditation(s) for Alice`);
 
@@ -487,13 +532,23 @@ export async function universityDegreesExample(): Promise<void> {
         console.log("   - Revoked by: Harvard CS Registrar (authorized)");
 
         // Verify the revocation worked by checking accreditations again
-        const aliceAccreditationsAfterRevocation = await hierarchies.readOnly().getAccreditationsToAttest(universityConsortium.id, aliceStudent);
+        const aliceAccreditationsAfterRevocation = await hierarchies.readOnly().getAccreditationsToAttest(
+            universityConsortium.id,
+            aliceStudent,
+        );
 
         console.log("\n🔍 Step 8b: Verifying revocation...");
-        console.log(`   - Accreditations before revocation: ${aliceAccreditationsBeforeRevocation.accreditations.length}`);
-        console.log(`   - Accreditations after revocation: ${aliceAccreditationsAfterRevocation.accreditations.length}`);
+        console.log(
+            `   - Accreditations before revocation: ${aliceAccreditationsBeforeRevocation.accreditations.length}`,
+        );
+        console.log(
+            `   - Accreditations after revocation: ${aliceAccreditationsAfterRevocation.accreditations.length}`,
+        );
 
-        if (aliceAccreditationsAfterRevocation.accreditations.length < aliceAccreditationsBeforeRevocation.accreditations.length) {
+        if (
+            aliceAccreditationsAfterRevocation.accreditations.length
+                < aliceAccreditationsBeforeRevocation.accreditations.length
+        ) {
             console.log("   ✅ Revocation successful - Alice's degree is no longer valid");
         }
 
@@ -507,7 +562,7 @@ export async function universityDegreesExample(): Promise<void> {
         const isStillValid = await hierarchies.readOnly().validateProperties(
             universityConsortium.id,
             aliceStudent,
-            validationAfterRevocation
+            validationAfterRevocation,
         );
 
         if (isStillValid) {
@@ -518,7 +573,6 @@ export async function universityDegreesExample(): Promise<void> {
             console.log("   - All validators are automatically protected");
             console.log("   - Trust chain security maintained");
         }
-
     } else {
         console.log("❌ No accreditations found for Alice to revoke");
     }

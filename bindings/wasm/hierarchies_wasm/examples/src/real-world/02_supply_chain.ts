@@ -3,10 +3,10 @@
 
 /**
  * Real-World Example: Supply Chain Quality Certification System
- * 
+ *
  * This example demonstrates how to use IOTA Hierarchies to create a comprehensive
  * supply chain quality and compliance certification system. The scenario involves:
- * 
+ *
  * ## Business Context
  * Global supply chains require verifiable quality certifications and compliance
  * attestations to ensure product safety and regulatory compliance. The hierarchical
@@ -15,7 +15,7 @@
  * - Regional certifiers to delegate authority to local testing laboratories
  * - Testing labs to delegate to qualified inspectors
  * - Manufacturers and retailers to verify product certifications instantly
- * 
+ *
  * ## Trust Hierarchy
  * ```
  * International Standards Consortium (Root Authority)
@@ -29,7 +29,7 @@
  *     ├── US FDA Regional Office (Regional Certifier)
  *     └── Canadian Health Authority (Regional Certifier)
  * ```
- * 
+ *
  * ## Statements Defined
  * - `iso.9001`: ISO 9001 Quality Management certification status
  * - `iso.14001`: ISO 14001 Environmental Management certification
@@ -41,7 +41,7 @@
  * - `compliance.fda`: US FDA compliance status
  * - `compliance.halal`: Halal certification status
  * - `expiry.date`: Certification expiry timestamp
- * 
+ *
  * ## Real-World Applications
  * - Manufacturers verifying supplier certifications
  * - Retailers validating product compliance before import
@@ -51,8 +51,138 @@
  * - Audit trail for product recalls and quality issues
  */
 
-import { Federation, PropertyName, PropertyValue, FederationProperty } from "@iota/hierarchies/node";
+import { Accreditation, Federation, FederationProperty, PropertyName, PropertyValue } from "@iota/hierarchies/node";
 import { getFundedClient } from "../util";
+
+interface CertificationPropertyNames {
+    productOrganic: PropertyName;
+    originVerified: PropertyName;
+    batchTested: PropertyName;
+    complianceEu: PropertyName;
+    complianceFda: PropertyName;
+    iso22000: PropertyName;
+    expiryDate: PropertyName;
+}
+
+function formatCertificationInfo(
+    productName: string,
+    productBatch: string,
+    accreditation: Accreditation,
+    properties: CertificationPropertyNames,
+): void {
+    console.log(`✅ ${productName}'s certification successfully issued:`);
+    console.log(`   - Product: ${productBatch}`);
+
+    const accreditationProperties = accreditation.properties;
+
+    // Extract organic certification
+    const organicProp = accreditationProperties.find(prop =>
+        prop.propertyName.toString() === properties.productOrganic.toString()
+    );
+    const organicValue = organicProp?.allowedValues?.[0];
+    const organicStatus = organicValue && "text" in organicValue && organicValue.text === "true"
+        ? "Certified Organic"
+        : organicValue && "text" in organicValue && organicValue.text === "false"
+        ? "Not Organic"
+        : "Unknown";
+
+    // Extract origin country
+    const originProp = accreditationProperties.find(prop =>
+        prop.propertyName.toString() === properties.originVerified.toString()
+    );
+    const originValue = originProp?.allowedValues?.[0];
+    const originText = originValue && "text" in originValue ? originValue.text : null;
+    const originCountry = originText
+        ? (originText === "DE"
+            ? "Germany (DE)"
+            : originText === "US"
+            ? "United States (US)"
+            : originText === "CA"
+            ? "Canada (CA)"
+            : originText === "FR"
+            ? "France (FR)"
+            : originText)
+        : "Unknown";
+
+    // Extract batch testing results
+    const testingProp = accreditationProperties.find(prop =>
+        prop.propertyName.toString() === properties.batchTested.toString()
+    );
+    const testingValue = testingProp?.allowedValues?.[0];
+    const testingResult = testingValue && "text" in testingValue
+        ? (testingValue.text === "passed"
+            ? "Passed"
+            : testingValue.text === "failed"
+            ? "Failed"
+            : testingValue.text === "pending"
+            ? "Pending"
+            : "Unknown")
+        : "Unknown";
+
+    // Extract EU compliance
+    const euProp = accreditationProperties.find(prop =>
+        prop.propertyName.toString() === properties.complianceEu.toString()
+    );
+    const euValue = euProp?.allowedValues?.[0];
+    const euCompliance = euValue && "text" in euValue && euValue.text === "true"
+        ? "Yes"
+        : euValue && "text" in euValue && euValue.text === "false"
+        ? "No"
+        : "N/A";
+
+    // Extract FDA compliance
+    const fdaProp = accreditationProperties.find(prop =>
+        prop.propertyName.toString() === properties.complianceFda.toString()
+    );
+    const fdaValue = fdaProp?.allowedValues?.[0];
+    const fdaCompliance = fdaValue && "text" in fdaValue && fdaValue.text === "true"
+        ? "Yes"
+        : fdaValue && "text" in fdaValue && fdaValue.text === "false"
+        ? "No"
+        : "N/A";
+
+    // Extract ISO 22000 certification
+    const isoProp = accreditationProperties.find(prop =>
+        prop.propertyName.toString() === properties.iso22000.toString()
+    );
+    const isoValue = isoProp?.allowedValues?.[0];
+    const iso22000Status = isoValue && "text" in isoValue
+        ? (isoValue.text === "certified"
+            ? "Certified"
+            : isoValue.text === "expired"
+            ? "Expired"
+            : isoValue.text === "pending"
+            ? "Pending"
+            : "N/A")
+        : "N/A";
+
+    // Extract expiry date
+    const expiryProp = accreditationProperties.find(prop =>
+        prop.propertyName.toString() === properties.expiryDate.toString()
+    );
+    const expiryValue = expiryProp?.allowedValues?.[0];
+    const expiryDateStr = expiryValue && "text" in expiryValue && typeof expiryValue.text === "string"
+        ? new Date(expiryValue.text).toISOString().split("T")[0]
+        : "N/A";
+
+    console.log(`   - Origin: ${originCountry}`);
+    if (organicStatus !== "Unknown") {
+        console.log(`   - Organic Status: ${organicStatus}`);
+    }
+    if (iso22000Status !== "N/A") {
+        console.log(`   - ISO 22000: ${iso22000Status}`);
+    }
+    if (euCompliance !== "N/A") {
+        console.log(`   - EU Compliance: ${euCompliance}`);
+    }
+    if (fdaCompliance !== "N/A") {
+        console.log(`   - FDA Compliance: ${fdaCompliance}`);
+    }
+    console.log(`   - Testing Result: ${testingResult}`);
+    console.log(`   - Valid Until: ${expiryDateStr}`);
+    console.log(`   - Accreditation ID: ${accreditation.id}`);
+    console.log(`   - Issued by: ${accreditation.accreditedBy}\n`);
+}
 
 export async function supplyChainExample(): Promise<void> {
     console.log("🏭 Supply Chain Quality Certification System Example\n");
@@ -64,8 +194,8 @@ export async function supplyChainExample(): Promise<void> {
     // =============================================================================
     console.log("🌍 Step 1: Creating International Standards Consortium Federation...");
 
-    const { output: standardsConsortium }: { output: Federation } =
-        await hierarchies.createNewFederation().buildAndExecute(hierarchies);
+    const { output: standardsConsortium }: { output: Federation } = await hierarchies.createNewFederation()
+        .buildAndExecute(hierarchies);
 
     console.log("✅ International Standards Consortium Federation created!");
     console.log(`   Federation ID: ${standardsConsortium.id}`);
@@ -173,9 +303,9 @@ export async function supplyChainExample(): Promise<void> {
     console.log("🌐 Step 3: Adding regional standards organizations...");
 
     // Simulate regional standards organization addresses
-    const isoEurope = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, '0');
-    const isoAmericas = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, '0');
-    const isoAsiaPacific = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, '0');
+    const isoEurope = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, "0");
+    const isoAmericas = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, "0");
+    const isoAsiaPacific = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, "0");
 
     // Add regional organizations as root authorities
     await hierarchies
@@ -201,7 +331,7 @@ export async function supplyChainExample(): Promise<void> {
     console.log("🏢 Step 4: Creating national testing institute accreditations...");
 
     // German Testing Institute under ISO Europe
-    const germanTestingInstitute = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, '0');
+    const germanTestingInstitute = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, "0");
 
     // Create comprehensive accreditation package for German institute
     const europeanCertProperties = [
@@ -221,7 +351,7 @@ export async function supplyChainExample(): Promise<void> {
         .buildAndExecute(hierarchies);
 
     // US FDA Regional Office under ISO Americas
-    const usFdaRegional = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, '0');
+    const usFdaRegional = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, "0");
 
     const americasCertProperties = [
         new FederationProperty(iso9001).withAllowAny(true),
@@ -249,7 +379,7 @@ export async function supplyChainExample(): Promise<void> {
     console.log("🧪 Step 5: Creating local testing laboratory rights...");
 
     // Berlin Food Safety Lab under German Testing Institute
-    const berlinFoodLab = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, '0');
+    const berlinFoodLab = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, "0");
 
     // Focus on food safety and organic certifications
     const foodSafetyProperties = [
@@ -267,7 +397,7 @@ export async function supplyChainExample(): Promise<void> {
         .buildAndExecute(hierarchies);
 
     // California Agricultural Lab under US FDA
-    const californiaAgLab = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, '0');
+    const californiaAgLab = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, "0");
 
     await hierarchies
         .createAccreditationToAttest(standardsConsortium.id, californiaAgLab, americasCertProperties)
@@ -285,8 +415,8 @@ export async function supplyChainExample(): Promise<void> {
     console.log("🥕 Step 6: Issuing product certifications...");
 
     // Simulate product batch addresses/IDs
-    const organicApplesBatch = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, '0');
-    const processedFoodBatch = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, '0');
+    const organicApplesBatch = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, "0");
+    const processedFoodBatch = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, "0");
 
     // Current time for certification
     const now = new Date();
@@ -295,42 +425,78 @@ export async function supplyChainExample(): Promise<void> {
     console.log("🍎 Issuing organic apple certification (German orchard)...");
 
     // Berlin lab certifies organic apples from German orchard
-    const appleCertification = new Map([
-        [productOrganic.toString(), PropertyValue.newText("true")],
-        [originVerified.toString(), PropertyValue.newText("DE")], // Germany
-        [batchTested.toString(), PropertyValue.newText("passed")],
-        [complianceEu.toString(), PropertyValue.newText("true")],
-        [expiryDate.toString(), PropertyValue.newText(expiry.toISOString())],
-    ]);
+    const appleCertification = [
+        new FederationProperty(productOrganic).withAllowedValues([PropertyValue.newText("true")]),
+        new FederationProperty(originVerified).withAllowedValues([PropertyValue.newText("DE")]),
+        new FederationProperty(batchTested).withAllowedValues([PropertyValue.newText("passed")]),
+        new FederationProperty(complianceEu).withAllowedValues([PropertyValue.newText("true")]),
+        new FederationProperty(expiryDate).withAllowedValues([PropertyValue.newText(expiry.toISOString())]),
+    ];
 
-    console.log("✅ Organic apple certification issued:");
-    console.log(`   - Product: Organic Apples Batch #${organicApplesBatch.substring(0, 8)}`);
-    console.log("   - Origin: Germany (DE)");
-    console.log("   - Organic Status: Certified");
-    console.log("   - EU Compliance: Yes");
-    console.log("   - Testing Result: Passed");
-    console.log(`   - Valid Until: ${expiry.toISOString().split('T')[0]}`);
-    console.log("   - Certified By: Berlin Food Safety Lab");
+    await hierarchies
+        .createAccreditationToAttest(standardsConsortium.id, organicApplesBatch, appleCertification)
+        .buildAndExecute(hierarchies);
+
+    // Get the accreditation data to display real information
+    const appleAccreditations = await hierarchies.readOnly().getAccreditationsToAttest(
+        standardsConsortium.id,
+        organicApplesBatch,
+    );
+
+    if (appleAccreditations.accreditations.length > 0) {
+        formatCertificationInfo(
+            "Organic Apples",
+            `Batch #${organicApplesBatch.substring(0, 8)}`,
+            appleAccreditations.accreditations[0],
+            {
+                productOrganic,
+                originVerified,
+                batchTested,
+                complianceEu,
+                complianceFda,
+                iso22000,
+                expiryDate,
+            },
+        );
+    }
 
     console.log("\n🥫 Issuing processed food certification (US manufacturer)...");
 
     // California lab certifies processed food for US market
-    const processedFoodCert = new Map([
-        [iso22000.toString(), PropertyValue.newText("certified")],
-        [originVerified.toString(), PropertyValue.newText("US")],
-        [batchTested.toString(), PropertyValue.newText("passed")],
-        [complianceFda.toString(), PropertyValue.newText("true")],
-        [expiryDate.toString(), PropertyValue.newText(expiry.toISOString())],
-    ]);
+    const processedFoodCert = [
+        new FederationProperty(iso22000).withAllowedValues([PropertyValue.newText("certified")]),
+        new FederationProperty(originVerified).withAllowedValues([PropertyValue.newText("US")]),
+        new FederationProperty(batchTested).withAllowedValues([PropertyValue.newText("passed")]),
+        new FederationProperty(complianceFda).withAllowedValues([PropertyValue.newText("true")]),
+        new FederationProperty(expiryDate).withAllowedValues([PropertyValue.newText(expiry.toISOString())]),
+    ];
 
-    console.log("✅ Processed food certification issued:");
-    console.log(`   - Product: Processed Food Batch #${processedFoodBatch.substring(0, 8)}`);
-    console.log("   - Origin: United States (US)");
-    console.log("   - ISO 22000: Certified");
-    console.log("   - FDA Compliance: Yes");
-    console.log("   - Testing Result: Passed");
-    console.log(`   - Valid Until: ${expiry.toISOString().split('T')[0]}`);
-    console.log("   - Certified By: California Agricultural Lab\n");
+    await hierarchies
+        .createAccreditationToAttest(standardsConsortium.id, processedFoodBatch, processedFoodCert)
+        .buildAndExecute(hierarchies);
+
+    // Get the accreditation data to display real information
+    const processedFoodAccreditations = await hierarchies.readOnly().getAccreditationsToAttest(
+        standardsConsortium.id,
+        processedFoodBatch,
+    );
+
+    if (processedFoodAccreditations.accreditations.length > 0) {
+        formatCertificationInfo(
+            "Processed Food",
+            `Batch #${processedFoodBatch.substring(0, 8)}`,
+            processedFoodAccreditations.accreditations[0],
+            {
+                productOrganic,
+                originVerified,
+                batchTested,
+                complianceEu,
+                complianceFda,
+                iso22000,
+                expiryDate,
+            },
+        );
+    }
 
     // =============================================================================
     // STEP 7: Retail Import Validation
@@ -348,8 +514,8 @@ export async function supplyChainExample(): Promise<void> {
 
     const importValid = await hierarchies.readOnly().validateProperties(
         standardsConsortium.id,
-        berlinFoodLab,
-        importRequirements
+        organicApplesBatch, // Validate the organic apples product, not the lab
+        importRequirements,
     );
 
     if (importValid) {
@@ -374,8 +540,8 @@ export async function supplyChainExample(): Promise<void> {
 
     const fdaValid = await hierarchies.readOnly().validateProperties(
         standardsConsortium.id,
-        californiaAgLab,
-        fdaRequirements
+        processedFoodBatch, // Validate the processed food product, not the lab
+        fdaRequirements,
     );
 
     if (fdaValid) {
@@ -391,9 +557,6 @@ export async function supplyChainExample(): Promise<void> {
     // =============================================================================
     console.log("\n📱 Step 8: Consumer verification demonstration...");
 
-    console.log("📲 Scenario: Consumer scans QR code on organic apple package");
-    console.log("   QR Code Data: Product Batch ID + Certification Claims");
-
     // Consumer app validates organic claim
     const consumerVerification = new Map([
         [productOrganic.toString(), PropertyValue.newText("true")],
@@ -402,8 +565,8 @@ export async function supplyChainExample(): Promise<void> {
 
     const consumerValid = await hierarchies.readOnly().validateProperties(
         standardsConsortium.id,
-        berlinFoodLab,
-        consumerVerification
+        organicApplesBatch, // Validate the organic apples product, not the lab
+        consumerVerification,
     );
 
     if (consumerValid) {
@@ -416,95 +579,60 @@ export async function supplyChainExample(): Promise<void> {
     }
 
     // =============================================================================
-    // STEP 9: Web Dashboard Integration
+    // STEP 9: Product Recall Scenario
     // =============================================================================
-    console.log("\n💻 Step 9: Web dashboard integration...");
+    console.log("\n🚨 Step 9: Product recall scenario...");
 
-    console.log("🌐 Scenario: Retailer dashboard showing real-time certification status");
+    console.log("⚠️  Scenario: Quality issue discovered, product recall needed");
+    console.log("   Issue: Contamination found in processed food batch");
+    console.log("   Action required: Immediate certification revocation");
 
-    // Simulate dashboard data
-    const dashboardData = {
-        totalProducts: 1247,
-        certifiedProducts: 1183,
-        pendingCertification: 52,
-        expiringSoon: 12,
-        activeSuppliers: 87,
-        certificationTypes: {
-            organic: 456,
-            iso9001: 892,
-            iso22000: 334,
-            halal: 123,
-            eu_compliance: 1102,
-            fda_compliance: 789
+    // Real implementation: Revoke the specific attestation
+    const processedFoodAccreditationsForRevocation = await hierarchies.readOnly().getAccreditationsToAttest(
+        standardsConsortium.id,
+        processedFoodBatch,
+    );
+
+    if (processedFoodAccreditationsForRevocation.accreditations.length > 0) {
+        const accreditationId = processedFoodAccreditationsForRevocation.accreditations[0].id;
+
+        await hierarchies
+            .revokeAccreditationToAttest(standardsConsortium.id, processedFoodBatch, accreditationId)
+            .buildAndExecute(hierarchies);
+
+        console.log("🚨 CERTIFICATION REVOKED!");
+        console.log(`   Revoked accreditation ID: ${accreditationId}`);
+
+        // Verify revocation by checking accreditations again
+        const revokedCheck = await hierarchies.readOnly().getAccreditationsToAttest(
+            standardsConsortium.id,
+            processedFoodBatch,
+        );
+
+        if (revokedCheck.accreditations.length === 0) {
+            console.log("✅ Revocation confirmed - no active certifications remain");
         }
-    };
 
-    console.log("📊 Dashboard Analytics:");
-    console.log(`   - Total Products: ${dashboardData.totalProducts}`);
-    console.log(`   - Certified Products: ${dashboardData.certifiedProducts} (${Math.round(dashboardData.certifiedProducts / dashboardData.totalProducts * 100)}%)`);
-    console.log(`   - Pending Certification: ${dashboardData.pendingCertification}`);
-    console.log(`   - Expiring Soon: ${dashboardData.expiringSoon}`);
-    console.log(`   - Active Suppliers: ${dashboardData.activeSuppliers}`);
+        // Test validation after revocation (should fail)
+        const postRevocationValidation = await hierarchies.readOnly().validateProperties(
+            standardsConsortium.id,
+            processedFoodBatch,
+            new Map([[iso22000.toString(), PropertyValue.newText("certified")]]),
+        );
 
-    console.log("\n🏷️ Certification Breakdown:");
-    console.log(`   - Organic: ${dashboardData.certificationTypes.organic}`);
-    console.log(`   - ISO 9001: ${dashboardData.certificationTypes.iso9001}`);
-    console.log(`   - ISO 22000: ${dashboardData.certificationTypes.iso22000}`);
-    console.log(`   - Halal: ${dashboardData.certificationTypes.halal}`);
-    console.log(`   - EU Compliance: ${dashboardData.certificationTypes.eu_compliance}`);
-    console.log(`   - FDA Compliance: ${dashboardData.certificationTypes.fda_compliance}`);
-
-    // =============================================================================
-    // STEP 10: API Integration Example
-    // =============================================================================
-    console.log("\n🔌 Step 10: API integration example...");
-
-    console.log("⚡ Scenario: E-commerce platform API integration");
-
-    // Simulate API endpoint responses
-    const apiExamples = {
-        productValidation: {
-            endpoint: "/api/v1/validate/product",
-            method: "POST",
-            request: {
-                productId: organicApplesBatch.substring(0, 8),
-                certifications: ["organic", "eu_compliance"],
-                batchId: "BATCH-2024-001"
-            },
-            response: {
-                valid: true,
-                certifications: {
-                    organic: { status: "certified", expires: expiry.toISOString() },
-                    eu_compliance: { status: "certified", expires: expiry.toISOString() }
-                },
-                trustChain: ["ISO Europe", "German Testing Institute", "Berlin Food Safety Lab"],
-                verifiedAt: new Date().toISOString()
-            }
-        },
-        batchLookup: {
-            endpoint: "/api/v1/batch/{batchId}",
-            method: "GET",
-            response: {
-                batchId: "BATCH-2024-001",
-                product: "Organic Apples",
-                origin: "DE",
-                certifications: ["organic", "eu_compliance"],
-                testResults: "passed",
-                certifiedBy: "Berlin Food Safety Lab",
-                validUntil: expiry.toISOString()
-            }
+        if (!postRevocationValidation) {
+            console.log("✅ Validation correctly fails after revocation");
         }
-    };
+    }
 
-    console.log("🔍 API Examples:");
-    console.log(`   Product Validation: ${apiExamples.productValidation.endpoint}`);
-    console.log(`   - Status: ${apiExamples.productValidation.response.valid ? 'Valid' : 'Invalid'}`);
-    console.log(`   - Trust Chain: ${apiExamples.productValidation.response.trustChain.join(' → ')}`);
-
-    console.log(`\n   Batch Lookup: ${apiExamples.batchLookup.endpoint}`);
-    console.log(`   - Product: ${apiExamples.batchLookup.response.product}`);
-    console.log(`   - Origin: ${apiExamples.batchLookup.response.origin}`);
-    console.log(`   - Valid Until: ${apiExamples.batchLookup.response.validUntil.split('T')[0]}`);
+    console.log("📋 Recall process completed:");
+    console.log("   1. Laboratory identifies contamination");
+    console.log("   2. Batch certification immediately revoked ✓");
+    console.log("   3. Downstream validations automatically fail ✓");
+    console.log("   4. Retailers notified through failed re-validation");
+    console.log("   5. Products removed from shelves");
+    console.log("   6. Consumer apps show recall status");
+    console.log("   7. Supply chain impact minimized through precise targeting\n");
 
     // =============================================================================
     // SUMMARY
@@ -518,31 +646,16 @@ export async function supplyChainExample(): Promise<void> {
     console.log("✅ Product certifications issued with expiry management");
     console.log("✅ Import/export validation demonstrated");
     console.log("✅ Consumer verification enabled");
-    console.log("✅ Web dashboard integration shown");
-    console.log("✅ API integration examples provided");
+    console.log("✅ Product recall scenario handled");
     console.log("\n🎯 Benefits Achieved:");
     console.log("   - Instant compliance verification across borders");
     console.log("   - Fraud prevention through cryptographic certificates");
     console.log("   - Automated expiry management");
     console.log("   - Streamlined import/export processes");
     console.log("   - Consumer trust through transparency");
-    console.log("   - Real-time dashboard monitoring");
-    console.log("   - Easy API integration for developers");
+    console.log("   - Efficient product recall capabilities");
+    console.log("   - Reduced regulatory overhead");
     console.log("   - Global interoperability of certifications");
-    console.log("\n🌐 Web-Specific Advantages:");
-    console.log("   - Browser-based certificate validation");
-    console.log("   - Real-time dashboard updates");
-    console.log("   - QR code scanning integration");
-    console.log("   - Mobile-responsive verification");
-    console.log("   - Cross-platform API compatibility");
-    console.log("   - Progressive web app capabilities");
-    console.log("\n💼 Industry Applications:");
-    console.log("   - Food & beverage safety certification");
-    console.log("   - Pharmaceutical compliance tracking");
-    console.log("   - Textile and fashion sustainability");
-    console.log("   - Electronics component authentication");
-    console.log("   - Automotive parts quality assurance");
-    console.log("   - Chemical industry safety compliance");
 }
 
 // Export for main.ts integration
