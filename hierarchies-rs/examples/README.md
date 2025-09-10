@@ -64,6 +64,54 @@ The validation examples show how to verify trust relationships and validate prop
 | [02_validate_properties](validation/02_validate_properties.rs)                | Shows how to validate if an entity can attest to specific properties.        |
 | [03_get_properties](validation/03_get_properties.rs)                          | Demonstrates retrieving properties from federations.                         |
 
+## Real-World Examples
+
+These examples demonstrate practical applications of IOTA Hierarchies in real business scenarios with comprehensive documentation:
+
+| Name                                                         | Information                                                                |
+| :----------------------------------------------------------- | :------------------------------------------------------------------------- |
+| [01_university_degrees](real-world/01_university_degrees.rs) | University degree verification system with multi-level academic hierarchy. |
+| [02_supply_chain](real-world/02_supply_chain.rs)             | Supply chain quality certification system with international standards.    |
+
+### University Degree Verification System
+
+Demonstrates a comprehensive academic credential verification system featuring:
+
+- University consortium federation management
+- Multi-level hierarchy: University → Faculty → Registrar
+- Academic properties: degrees, fields of study, GPAs, graduation years
+- Cross-institutional credential recognition
+- Degree revocation for academic misconduct
+- Real-world validation scenarios for employers and graduate schools
+
+**Key Features:**
+
+- Bachelor's, Master's, and PhD degree attestations
+- Computer Science, Engineering, and Mathematics specializations
+- GPA tracking and verification
+- Student identity verification
+- International credential recognition
+
+### Supply Chain Quality Certification System
+
+Demonstrates a global supply chain certification and compliance system featuring:
+
+- International standards consortium (ISO-style) federation
+- Multi-regional structure: International → Regional → National → Local
+- Comprehensive certifications: ISO 9001, 14001, 22000, organic, compliance
+- Time-based certificate management with expiry tracking
+- Product batch testing and origin verification
+- Consumer QR code verification
+
+**Key Features:**
+
+- ISO standards certification (Quality, Environmental, Food Safety)
+- Regional compliance (EU, FDA, Halal)
+- Product origin verification and batch testing
+- Certification lifecycle management
+- Product recall capabilities
+- Cross-border trade facilitation
+
 ## Key Concepts
 
 ### Federation Management

@@ -2601,6 +2601,7 @@ name = "hierarchies_examples"
 version = "0.1.1-alpha"
 dependencies = [
  "anyhow",
+ "chrono",
  "hierarchies",
  "iota-sdk 1.5.0",
  "product_common",
