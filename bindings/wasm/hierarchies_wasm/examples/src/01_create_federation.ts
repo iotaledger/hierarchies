@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Federation } from "@iota/hierarchies/node";
-import assert from "assert";
 import { getFundedClient } from "./util";
 
 export async function createFederation(): Promise<void> {
@@ -15,6 +14,6 @@ export async function createFederation(): Promise<void> {
     console.log("\n✅ Federation created successfully!");
     console.log("Federation ID: ", federation.id);
 
-    assert(federation.id, "Federation ID should not be empty");
-    assert(federation.rootAuthorities.length > 0, "Federation should have at least one root authority");
+    console.assert(federation.id, "Federation ID should not be empty");
+    console.assert(federation.rootAuthorities.length > 0, "Federation should have at least one root authority");
 }

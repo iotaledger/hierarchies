@@ -3,9 +3,7 @@
 
 import { Federation, FederationProperty, PropertyName, PropertyValue } from "@iota/hierarchies/node";
 import { HierarchiesClient } from "@iota/hierarchies/node";
-import assert from "assert";
-import { randomBytes } from "crypto";
-import { getFundedClient } from "./util";
+import { generateRandomAddress, getFundedClient } from "./util";
 
 /**
  * Demonstrate how to issue an accreditation to accredit to a Property.
@@ -40,7 +38,7 @@ export async function createAccreditationToAccredit(client?: HierarchiesClient) 
     console.log(`\n✅ Property ${propertyName.dotted()} added successfully`);
 
     // A receiver is an account that will receive the accreditation
-    const receiver = "0x" + randomBytes(32).toString("hex");
+    const receiver = generateRandomAddress();
 
     // Property
     const property = new FederationProperty(propertyName).withAllowedValues([PropertyValue.newText("Hello")]);
@@ -54,8 +52,8 @@ export async function createAccreditationToAccredit(client?: HierarchiesClient) 
     // Check if the accreditation was issued
     const accreditationsToAccredit = await hierarchies.readOnly().getAccreditationsToAccredit(federation.id, receiver);
 
-    assert(accreditationsToAccredit.accreditations.length > 0, "Accreditation not found for receiver");
-    assert(
+    console.assert(accreditationsToAccredit.accreditations.length > 0, "Accreditation not found for receiver");
+    console.assert(
         accreditationsToAccredit.accreditations[0].properties[0].propertyName.dotted() === propertyName.dotted(),
         "Property name does not match for accreditation to accredit",
     );

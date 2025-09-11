@@ -1,7 +1,5 @@
 import { Federation, FederationProperty, PropertyName, PropertyValue } from "@iota/hierarchies/node";
-import assert from "assert";
-import { randomBytes } from "crypto";
-import { getFundedClient } from "../util";
+import { generateRandomAddress, getFundedClient } from "../util";
 
 export async function getAccreditations(): Promise<void> {
     const hierarchies = await getFundedClient();
@@ -22,7 +20,7 @@ export async function getAccreditations(): Promise<void> {
         .buildAndExecute(hierarchies);
     console.log(`\n✅ Property ${propertyName.dotted()} added successfully`);
 
-    const receiver = "0x" + randomBytes(32).toString("hex");
+    const receiver = generateRandomAddress();
 
     // Create and get the accreditation to attest
     const propertyToAttest = new FederationProperty(propertyName).withAllowedValues([PropertyValue.newText("Hello")]);
@@ -32,12 +30,12 @@ export async function getAccreditations(): Promise<void> {
     console.log(`\n✅ Accreditation to attest created for ${receiver}`);
 
     const accreditationsToAttest = await hierarchies.readOnly().getAccreditationsToAttest(federation.id, receiver);
-    assert(accreditationsToAttest.accreditations.length > 0, "No accreditations to attest found");
-    assert(
+    console.assert(accreditationsToAttest.accreditations.length > 0, "No accreditations to attest found");
+    console.assert(
         accreditationsToAttest.accreditations[0].properties.length > 0,
         "No properties found in accreditation to attest",
     );
-    assert(
+    console.assert(
         accreditationsToAttest.accreditations[0].properties[0].propertyName.dotted() === propertyName.dotted(),
         "Property name does not match for accreditation to attest",
     );
@@ -53,12 +51,12 @@ export async function getAccreditations(): Promise<void> {
     console.log(`\n✅ Accreditation to accredit created for ${receiver}`);
 
     const accreditationsToAccredit = await hierarchies.readOnly().getAccreditationsToAccredit(federation.id, receiver);
-    assert(accreditationsToAccredit.accreditations.length > 0, "No accreditations to accredit found");
-    assert(
+    console.assert(accreditationsToAccredit.accreditations.length > 0, "No accreditations to accredit found");
+    console.assert(
         accreditationsToAccredit.accreditations[0].properties.length > 0,
         "No properties found in accreditation to accredit",
     );
-    assert(
+    console.assert(
         accreditationsToAccredit.accreditations[0].properties[0].propertyName.dotted() === propertyName.dotted(),
         "Property name does not match for accreditation to accredit",
     );

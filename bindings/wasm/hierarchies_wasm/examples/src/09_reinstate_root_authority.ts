@@ -2,9 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Federation } from "@iota/hierarchies/node";
-import assert from "assert";
-import { randomBytes } from "crypto";
-import { getFundedClient } from "./util";
+import { generateRandomAddress, getFundedClient } from "./util";
 
 export async function reinstateRootAuthority(): Promise<void> {
     const hierarchies = await getFundedClient();
@@ -18,7 +16,7 @@ export async function reinstateRootAuthority(): Promise<void> {
     console.log("Federation ID: ", federation.id);
 
     // Add a second root authority first
-    const secondRootAuthority: string = "0x" + randomBytes(32).toString("hex");
+    const secondRootAuthority: string = generateRandomAddress();
     console.log("Adding second root authority: ", secondRootAuthority);
 
     await hierarchies
@@ -30,7 +28,7 @@ export async function reinstateRootAuthority(): Promise<void> {
     // Check if the second root authority is active
     const isRootAuthority = await hierarchies.readOnly().isRootAuthority(federation.id, secondRootAuthority);
     console.log("Is second authority a root authority: ", isRootAuthority);
-    assert(isRootAuthority, "Second root authority should be active");
+    console.assert(isRootAuthority, "Second root authority should be active");
 
     // Get the federation to see all root authorities
     let updatedFederation: Federation = await hierarchies.readOnly().getFederationById(federation.id);
@@ -72,7 +70,7 @@ export async function reinstateRootAuthority(): Promise<void> {
     // Verify the root authority was reinstated
     const isReinstatedRootAuthority = await hierarchies.readOnly().isRootAuthority(federation.id, secondRootAuthority);
     console.log("Is second authority a root authority after reinstatement: ", isReinstatedRootAuthority);
-    assert(isReinstatedRootAuthority, "Second root authority should be active after reinstatement");
+    console.assert(isReinstatedRootAuthority, "Second root authority should be active after reinstatement");
 
     // Get the final federation state
     const finalFederation: Federation = await hierarchies.readOnly().getFederationById(federation.id);

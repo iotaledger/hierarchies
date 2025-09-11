@@ -2,9 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Federation, FederationProperty, HierarchiesClient, PropertyName, PropertyValue } from "@iota/hierarchies/node";
-import assert from "assert";
-import { randomBytes } from "crypto";
-import { getFundedClient } from "./util";
+import { generateRandomAddress, getFundedClient } from "./util";
 
 /**
  * Demonstrate how to revoke an accreditation to accredit to a Property.
@@ -39,7 +37,7 @@ export async function revokeAccreditationToAccredit(client?: HierarchiesClient) 
     console.log(`\n✅ Property ${propertyName.dotted()} added successfully`);
 
     // A receiver is an account that will receive the accreditation
-    const receiver = "0x" + randomBytes(32).toString("hex");
+    const receiver = generateRandomAddress();
 
     // Property
     const property = new FederationProperty(propertyName).withAllowedValues([PropertyValue.newText("Hello")]);
@@ -52,7 +50,7 @@ export async function revokeAccreditationToAccredit(client?: HierarchiesClient) 
 
     // Check if the receiver has the permission to accredit
     let accreditationsToAccredit = await hierarchies.readOnly().getAccreditationsToAccredit(federation.id, receiver);
-    assert(accreditationsToAccredit.accreditations.length > 0, "Receiver should have permission to accredit");
+    console.assert(accreditationsToAccredit.accreditations.length > 0, "Receiver should have permission to accredit");
     console.log("\n✅ Accreditation to accredit found for receiver");
 
     // Revoke the accreditation
@@ -65,6 +63,6 @@ export async function revokeAccreditationToAccredit(client?: HierarchiesClient) 
 
     // Check if the accreditation was revoked
     accreditationsToAccredit = await hierarchies.readOnly().getAccreditationsToAccredit(federation.id, receiver);
-    assert(accreditationsToAccredit.accreditations.length === 0, "Accreditation not revoked for receiver");
+    console.assert(accreditationsToAccredit.accreditations.length === 0, "Accreditation not revoked for receiver");
     console.log("\n✅ Accreditation successfully revoked for receiver");
 }
