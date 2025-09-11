@@ -3,8 +3,7 @@
 
 import { Federation, FederationProperty, HierarchiesClient, PropertyName, PropertyValue } from "@iota/hierarchies/node";
 import assert from "assert";
-import { randomBytes } from "crypto";
-import { getFundedClient } from "./util";
+import { generateRandomAddress, getFundedClient } from "./util";
 
 /**
  * Demonstrate how to revoke an accreditation to attest to a Property.
@@ -39,7 +38,7 @@ export async function revokeAccreditationToAttest(client?: HierarchiesClient) {
     console.log(`\n✅ Property ${propertyName.dotted()} added successfully`);
 
     // A receiver is an account that will receive the attestation
-    const receiver = "0x" + randomBytes(32).toString("hex");
+    const receiver = generateRandomAddress();
 
     // Property
     const property = new FederationProperty(propertyName).withAllowedValues([PropertyValue.newText("Hello")]);

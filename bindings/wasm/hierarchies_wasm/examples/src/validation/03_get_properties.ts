@@ -3,7 +3,6 @@
 
 import { Federation, FederationProperty, PropertyName, PropertyValue } from "@iota/hierarchies/node";
 import assert from "assert";
-import { randomBytes } from "crypto";
 import { getFundedClient } from "../util";
 
 export async function getProperties(): Promise<void> {

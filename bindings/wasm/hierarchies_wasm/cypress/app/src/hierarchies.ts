@@ -8,7 +8,7 @@ export const runTest = async (example: string) => {
         await main(example);
         console.log("success");
     } catch (error) {
-        throw (error);
+        throw error;
     }
 };
 

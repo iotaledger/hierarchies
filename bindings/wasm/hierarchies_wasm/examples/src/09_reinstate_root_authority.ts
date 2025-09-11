@@ -3,8 +3,7 @@
 
 import { Federation } from "@iota/hierarchies/node";
 import assert from "assert";
-import { randomBytes } from "crypto";
-import { getFundedClient } from "./util";
+import { generateRandomAddress, getFundedClient } from "./util";
 
 export async function reinstateRootAuthority(): Promise<void> {
     const hierarchies = await getFundedClient();
@@ -18,7 +17,7 @@ export async function reinstateRootAuthority(): Promise<void> {
     console.log("Federation ID: ", federation.id);
 
     // Add a second root authority first
-    const secondRootAuthority: string = "0x" + randomBytes(32).toString("hex");
+    const secondRootAuthority: string = generateRandomAddress();
     console.log("Adding second root authority: ", secondRootAuthority);
 
     await hierarchies

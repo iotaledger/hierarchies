@@ -1,7 +1,6 @@
 import { Federation, FederationProperty, PropertyName, PropertyValue } from "@iota/hierarchies/node";
 import assert from "assert";
-import { randomBytes } from "crypto";
-import { getFundedClient } from "../util";
+import { generateRandomAddress, getFundedClient } from "../util";
 
 export async function getAccreditations(): Promise<void> {
     const hierarchies = await getFundedClient();
@@ -22,7 +21,7 @@ export async function getAccreditations(): Promise<void> {
         .buildAndExecute(hierarchies);
     console.log(`\n✅ Property ${propertyName.dotted()} added successfully`);
 
-    const receiver = "0x" + randomBytes(32).toString("hex");
+    const receiver = generateRandomAddress();
 
     // Create and get the accreditation to attest
     const propertyToAttest = new FederationProperty(propertyName).withAllowedValues([PropertyValue.newText("Hello")]);
