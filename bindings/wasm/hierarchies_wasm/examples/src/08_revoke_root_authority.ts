@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Federation } from "@iota/hierarchies/node";
-import assert from "assert";
 import { generateRandomAddress, getFundedClient } from "./util";
 
 export async function revokeRootAuthority(): Promise<void> {
@@ -29,7 +28,7 @@ export async function revokeRootAuthority(): Promise<void> {
     // Check if the second root authority is active
     const isRootAuthority = await hierarchies.readOnly().isRootAuthority(federation.id, secondRootAuthority);
     console.log("Is second authority a root authority: ", isRootAuthority);
-    assert(isRootAuthority, "Second root authority should be active");
+    console.assert(isRootAuthority, "Second root authority should be active");
 
     // Get the federation to see all root authorities
     let updatedFederation: Federation = await hierarchies.readOnly().getFederationById(federation.id);

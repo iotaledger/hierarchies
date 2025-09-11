@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Federation, FederationProperty, PropertyName, PropertyValue } from "@iota/hierarchies/node";
-import assert from "assert";
 import { generateRandomAddress, getFundedClient } from "../util";
 
 export async function validateProperties(): Promise<void> {
@@ -40,7 +39,7 @@ export async function validateProperties(): Promise<void> {
         properties,
     );
 
-    assert(validationResult, "Validation failed");
+    console.assert(validationResult, "Validation failed");
 
     console.log("\n✅ Successfully validated properties for the receiver:", accreditationReceiver);
 }

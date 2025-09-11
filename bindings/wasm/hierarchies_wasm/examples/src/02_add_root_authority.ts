@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Federation } from "@iota/hierarchies/node";
-import assert from "assert";
 import { generateRandomAddress, getFundedClient } from "./util";
 
 export async function addRootAuthority(): Promise<void> {
@@ -29,7 +28,7 @@ export async function addRootAuthority(): Promise<void> {
     const updatedFederation: Federation = await hierarchies.readOnly().getFederationById(federation.id);
 
     // Check if the root authority was added
-    assert(
+    console.assert(
         updatedFederation.rootAuthorities.some(ra => ra.accountId === newRootAuthority),
         "Root authority was not added to the federation.",
     );
