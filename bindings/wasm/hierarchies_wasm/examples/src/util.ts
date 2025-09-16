@@ -55,3 +55,8 @@ export async function getFundedClient(): Promise<HierarchiesClient> {
 
     return hierarchiesClient;
 }
+
+export function generateRandomAddress(): string {
+    return "0x"
+        + Array.from({ length: 32 }, () => Math.floor(Math.random() * 256).toString(16).padStart(2, "0")).join("");
+}

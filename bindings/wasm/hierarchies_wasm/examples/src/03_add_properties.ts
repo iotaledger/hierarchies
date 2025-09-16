@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Federation, FederationProperty, PropertyName, PropertyValue } from "@iota/hierarchies/node";
-import assert from "assert";
 import { getFundedClient } from "./util";
 
 /**
@@ -41,7 +40,7 @@ export async function addProperties(): Promise<void> {
     const addedProperty = updatedFederation.governance.properties.data.find(p =>
         p.propertyName.dotted() === propertyName.dotted()
     );
-    assert(addedProperty, `Didn't find the Property in the Federation: ${propertyName.dotted()}`);
+    console.assert(addedProperty, `Didn't find the Property in the Federation: ${propertyName.dotted()}`);
 
     console.log("\n✅ Property was successfully added to the federation.");
 }
