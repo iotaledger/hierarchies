@@ -4,7 +4,7 @@ exclude = ["bindings/wasm/hierarchies_wasm"]
 resolver = "2"
 
 [workspace.package]
-version = "0.1.1-alpha"
+version = "0.1.2-alpha"
 authors = ["IOTA Stiftung"]
 edition = "2024"
 homepage = "https://www.iota.org"
