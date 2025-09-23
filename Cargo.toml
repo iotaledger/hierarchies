@@ -4,7 +4,7 @@ exclude = ["bindings/wasm/hierarchies_wasm"]
 resolver = "2"
 
 [workspace.package]
-version = "0.1.1-alpha"
+version = "0.1.2-alpha"
 authors = ["IOTA Stiftung"]
 edition = "2024"
 homepage = "https://www.iota.org"
@@ -16,11 +16,11 @@ anyhow = "1.0"
 async-trait = "0.1"
 bcs = "0.1"
 chrono = { version = "0.4", features = ["serde"] }
-iota-sdk = { git = "https://github.com/iotaledger/iota.git", tag = "v1.5.0", package = "iota-sdk" }
-iota_interaction = { git = "https://github.com/iotaledger/product-core.git", default-features = false, tag = "v0.8.1", package = "iota_interaction" }
-iota_interaction_rust = { git = "https://github.com/iotaledger/product-core.git", default-features = false, tag = "v0.8.1", package = "iota_interaction_rust" }
-iota_interaction_ts = { git = "https://github.com/iotaledger/product-core.git", default-features = false, tag = "v0.8.1", package = "iota_interaction_ts" }
-product_common = { git = "https://github.com/iotaledger/product-core.git", tag = "v0.8.1", default-features = false, package = "product_common" }
+iota-sdk = { git = "https://github.com/iotaledger/iota.git", tag = "v1.6.1", package = "iota-sdk" }
+iota_interaction = { git = "https://github.com/iotaledger/product-core.git", default-features = false, tag = "v0.8.2", package = "iota_interaction" }
+iota_interaction_rust = { git = "https://github.com/iotaledger/product-core.git", default-features = false, tag = "v0.8.2", package = "iota_interaction_rust" }
+iota_interaction_ts = { git = "https://github.com/iotaledger/product-core.git", default-features = false, tag = "v0.8.2", package = "iota_interaction_ts" }
+product_common = { git = "https://github.com/iotaledger/product-core.git", tag = "v0.8.2", default-features = false, package = "product_common" }
 secret-storage = { git = "https://github.com/iotaledger/secret-storage", tag = "v0.3.0", default-features = false }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
