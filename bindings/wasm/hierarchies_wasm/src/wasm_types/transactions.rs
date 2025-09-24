@@ -23,6 +23,12 @@ use crate::wasm_types::{WasmFederation, WasmProperty, WasmPropertyName};
 #[wasm_bindgen (js_name=CreateFederation, inspectable)]
 pub struct WasmCreateFederation(pub(crate) CreateFederation);
 
+impl Default for WasmCreateFederation {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[wasm_bindgen (js_class=CreateFederation)]
 impl WasmCreateFederation {
     /// Creates a new instance of `WasmCreateFederation`.

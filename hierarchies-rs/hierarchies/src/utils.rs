@@ -11,7 +11,7 @@ use iota_interaction::types::collection_types::{VecMap, VecSet};
 use iota_interaction::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 use iota_interaction::types::transaction::{Argument, Command};
 use iota_interaction::types::{MOVE_STDLIB_PACKAGE_ID, TypeTag};
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Deserializer};
 
 /// Deserialize a [`VecMap`] into a [`HashMap`]
 pub(crate) fn deserialize_vec_map<'de, D, K, V>(deserializer: D) -> Result<HashMap<K, V>, D::Error>
@@ -39,13 +39,12 @@ where
 }
 
 /// Convert an option value into a [`ProgrammableMoveCall`] argument
-pub(crate) fn option_to_move<T: Serialize>(
-    option: Option<T>,
+pub(crate) fn option_to_move(
+    option: Option<Argument>,
     tag: TypeTag,
     ptb: &mut ProgrammableTransactionBuilder,
 ) -> Result<Argument, anyhow::Error> {
     let arg = if let Some(t) = option {
-        let t = ptb.pure(t)?;
         ptb.programmable_move_call(
             MOVE_STDLIB_PACKAGE_ID,
             STD_OPTION_MODULE_NAME.into(),

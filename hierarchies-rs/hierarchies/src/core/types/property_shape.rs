@@ -50,13 +50,13 @@ pub(crate) fn new_property_shape_starts_with(
     ptb: &mut ProgrammableTransactionBuilder,
     package_id: ObjectID,
 ) -> anyhow::Result<Argument> {
-    let names = ptb.pure(text)?;
-    let condition: Argument = ptb.programmable_move_call(
+    let text = ptb.pure(text)?;
+    let condition = ptb.programmable_move_call(
         package_id,
         ident_str!("property_shape").into(),
         ident_str!("new_property_shape_starts_with").into(),
         vec![],
-        vec![names],
+        vec![text],
     );
 
     Ok(condition)
@@ -67,13 +67,13 @@ fn new_property_shape_ends_with(
     ptb: &mut ProgrammableTransactionBuilder,
     package_id: ObjectID,
 ) -> anyhow::Result<Argument> {
-    let names = ptb.pure(text)?;
-    let condition: Argument = ptb.programmable_move_call(
+    let text = ptb.pure(text)?;
+    let condition = ptb.programmable_move_call(
         package_id,
         ident_str!("property_shape").into(),
         ident_str!("new_property_shape_ends_with").into(),
         vec![],
-        vec![names],
+        vec![text],
     );
 
     Ok(condition)
@@ -84,13 +84,13 @@ fn new_property_shape_contains(
     ptb: &mut ProgrammableTransactionBuilder,
     package_id: ObjectID,
 ) -> anyhow::Result<Argument> {
-    let names = ptb.pure(text)?;
-    let condition: Argument = ptb.programmable_move_call(
+    let text = ptb.pure(text)?;
+    let condition = ptb.programmable_move_call(
         package_id,
         ident_str!("property_shape").into(),
         ident_str!("new_property_shape_contains").into(),
         vec![],
-        vec![names],
+        vec![text],
     );
 
     Ok(condition)
@@ -101,13 +101,13 @@ fn new_property_shape_greater_than(
     ptb: &mut ProgrammableTransactionBuilder,
     package_id: ObjectID,
 ) -> anyhow::Result<Argument> {
-    let names = ptb.pure(value)?;
-    let condition: Argument = ptb.programmable_move_call(
+    let value = ptb.pure(value)?;
+    let condition = ptb.programmable_move_call(
         package_id,
         ident_str!("property_shape").into(),
         ident_str!("new_property_shape_greater_than").into(),
         vec![],
-        vec![names],
+        vec![value],
     );
     Ok(condition)
 }
@@ -117,13 +117,13 @@ fn new_property_shape_lower_than(
     ptb: &mut ProgrammableTransactionBuilder,
     package_id: ObjectID,
 ) -> anyhow::Result<Argument> {
-    let names = ptb.pure(value)?;
-    let condition: Argument = ptb.programmable_move_call(
+    let value = ptb.pure(value)?;
+    let condition = ptb.programmable_move_call(
         package_id,
         ident_str!("property_shape").into(),
         ident_str!("new_property_shape_lower_than").into(),
         vec![],
-        vec![names],
+        vec![value],
     );
     Ok(condition)
 }

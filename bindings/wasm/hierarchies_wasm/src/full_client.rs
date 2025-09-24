@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use hierarchies::client::HierarchiesClient;
-use hierarchies::core::types::property_name::PropertyName;
 use iota_interaction_ts::WasmPublicKey;
 use iota_interaction_ts::bindings::{WasmIotaClient, WasmTransactionSigner};
 use iota_interaction_ts::wasm_error::{Result, WasmResult};
@@ -151,7 +150,7 @@ impl WasmHierarchiesClient {
         valid_to_ms: Option<u64>,
     ) -> Result<WasmTransactionBuilder> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
-        let property_name = PropertyName::from(property_name.0.clone());
+        let property_name = property_name.0.clone();
         let tx = self
             .0
             .revoke_property(federation_id, property_name, valid_to_ms)
@@ -171,7 +170,7 @@ impl WasmHierarchiesClient {
         &self,
         federation_id: WasmObjectID,
         receiver: WasmObjectID,
-        want_properties: Box<[WasmProperty]>,
+        want_properties: Vec<WasmProperty>,
     ) -> Result<WasmTransactionBuilder> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         let receiver = parse_wasm_object_id(&receiver)?;
@@ -226,7 +225,7 @@ impl WasmHierarchiesClient {
         &self,
         federation_id: WasmObjectID,
         receiver: WasmObjectID,
-        want_properties: Box<[WasmProperty]>,
+        want_properties: Vec<WasmProperty>,
     ) -> Result<WasmTransactionBuilder> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         let receiver = parse_wasm_object_id(&receiver)?;

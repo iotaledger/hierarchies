@@ -10,6 +10,8 @@ import { createAccreditationToAccredit } from "./06_create_accreditation_to_accr
 import { revokeAccreditationToAccredit } from "./07_revoke_accreditation_to_accredit";
 import { revokeRootAuthority } from "./08_revoke_root_authority";
 import { reinstateRootAuthority } from "./09_reinstate_root_authority";
+import { universityDegrees } from "./real-world/01_university_degrees";
+import { supplyChain } from "./real-world/02_supply_chain";
 import { getAccreditations } from "./validation/01_get_accreditations";
 import { validateProperties } from "./validation/02_validate_properties";
 import { getProperties } from "./validation/03_get_properties";
@@ -34,6 +36,8 @@ export async function main(example?: string) {
             await reinstateRootAuthority();
             await getAccreditations();
             await validateProperties();
+            await universityDegrees();
+            await supplyChain();
             return await getProperties();
         case "01_create_federation":
             return await createFederation();
@@ -59,6 +63,10 @@ export async function main(example?: string) {
             return await validateProperties();
         case "03_get_properties":
             return await getProperties();
+        case "real_world_01_university_degrees":
+            return await universityDegrees();
+        case "real_world_02_supply_chain":
+            return await supplyChain();
         default:
             throw "Unknown example name: '" + argument + "'";
     }

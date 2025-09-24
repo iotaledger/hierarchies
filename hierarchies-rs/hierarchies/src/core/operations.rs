@@ -266,7 +266,9 @@ pub(crate) trait HierarchiesOperations {
 
         let fed_ref = HierarchiesImpl::get_fed_ref(client, federation_id).await?;
         let fed_ref = ptb.obj(fed_ref)?;
+        println!("✅ REACHED HERE 001");
         let property = new_property(client.package_id(), &mut ptb, property)?;
+        println!("✅ REACHED HERE 002");
 
         ptb.programmable_move_call(
             client.package_id(),

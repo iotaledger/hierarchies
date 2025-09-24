@@ -171,7 +171,6 @@ impl WasmHierarchiesClientReadOnly {
     }
 
     /// Check if root authority is in the federation.
-
     /// # Arguments
     ///
     /// * `federation_id`: The [`ObjectID`] of the federation.

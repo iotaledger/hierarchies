@@ -6,6 +6,7 @@ edition.workspace = true
 
 [dependencies]
 anyhow.workspace = true
+chrono.workspace = true
 hierarchies = { path = "../hierarchies" }
 iota-sdk = { workspace = true }
 product_common = { workspace = true, features = ["test-utils"] }
@@ -62,3 +63,13 @@ name = "02_validation_validate_properties"
 [[example]]
 path = "validation/03_get_properties.rs"
 name = "03_validation_get_properties"
+
+# Real World
+
+[[example]]
+path = "real-world/01_university_degrees.rs"
+name = "01_real_world_university_degrees"
+
+[[example]]
+path = "real-world/02_supply_chain.rs"
+name = "02_real_world_supply_chain"

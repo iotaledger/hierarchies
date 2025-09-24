@@ -7,6 +7,7 @@ use hierarchies::client::get_object_ref_by_id_with_bcs;
 use hierarchies::core::types::Federation;
 use hierarchies::core::types::property::FederationProperty;
 use hierarchies::core::types::property_name::PropertyName;
+use hierarchies::core::types::property_shape::PropertyShape;
 use hierarchies::core::types::property_value::PropertyValue;
 use product_common::core_client::{CoreClient, CoreClientReadOnly};
 
@@ -309,6 +310,47 @@ async fn test_add_property_with_allowed_values_and_allow_any_false_succeeds() ->
     assert!(
         client
             .is_property_in_federation(*federation_id.object_id(), property_name)
+            .await?
+    );
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_add_property_with_expression_and_allowed_values() -> anyhow::Result<()> {
+    let client = get_funded_test_client().await?;
+    let grade_gpa = PropertyName::from("grade.gpa");
+
+    // Create a new federation
+    let federation_id = client
+        .create_new_federation()
+        .build_and_execute(&client)
+        .await?
+        .output
+        .id;
+
+    client
+        .add_property(
+            *federation_id.object_id(),
+            FederationProperty::new(grade_gpa.clone())
+                .with_expression(PropertyShape::GreaterThan(200)) // GPA > 2.0 (stored as 200 for precision)
+                .with_allowed_values(HashSet::from([
+                    PropertyValue::Number(200),
+                    PropertyValue::Number(250),
+                    PropertyValue::Number(300),
+                    PropertyValue::Number(320),
+                    PropertyValue::Number(350),
+                    PropertyValue::Number(380),
+                    PropertyValue::Number(400), // Common GPA ranges: 2.0, 2.5, 3.0, 3.2, 3.5, 3.8, 4.0
+                ])),
+        )
+        .build_and_execute(&client)
+        .await?;
+
+    // Verify the property was added
+    assert!(
+        client
+            .is_property_in_federation(*federation_id.object_id(), grade_gpa)
             .await?
     );
 

@@ -32,8 +32,8 @@ impl WasmAccreditation {
     pub fn properties(&self) -> Box<[WasmProperty]> {
         self.0
             .properties
-            .iter()
-            .map(|(_, property)| WasmProperty::from(property.clone()))
+            .values()
+            .map(|property| WasmProperty::from(property.clone()))
             .collect::<Vec<_>>()
             .into_boxed_slice()
     }

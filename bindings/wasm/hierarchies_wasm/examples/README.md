@@ -84,6 +84,54 @@ The validation examples show how to verify trust relationships and validate prop
 | [02_validate_properties](src/validation/02_validate_properties.ts) | Shows how to validate if an entity can attest to specific properties.        |
 | [03_get_properties](src/validation/03_get_properties.ts)           | Demonstrates retrieving properties from federations.                         |
 
+## Real-World Examples
+
+These examples demonstrate practical applications of IOTA Hierarchies in real business scenarios with comprehensive TypeScript implementation:
+
+| Name                                                             | Information                                                                |
+| :--------------------------------------------------------------- | :------------------------------------------------------------------------- |
+| [01_university_degrees](src/real-world/01_university_degrees.ts) | University degree verification system with multi-level academic hierarchy. |
+| [02_supply_chain](src/real-world/02_supply_chain.ts)             | Supply chain quality certification system with international standards.    |
+
+### University Degree Verification System
+
+Demonstrates a comprehensive academic credential verification system optimized for web applications:
+
+- University consortium federation management
+- Multi-level hierarchy: University → Faculty → Registrar
+- Academic properties: degrees, fields of study, GPAs, graduation years
+- Cross-institutional credential recognition
+- Degree revocation for academic misconduct
+- Mobile app integration and QR code verification
+
+**Web-Specific Features:**
+
+- Browser-based credential verification
+- Real-time validation without server round-trips
+- QR code integration for mobile verification
+- Progressive Web App (PWA) compatibility
+- Cross-platform TypeScript implementation
+
+### Supply Chain Quality Certification System
+
+Demonstrates a global supply chain certification system designed for web dashboards and e-commerce integration:
+
+- International standards consortium (ISO-style) federation
+- Multi-regional structure with real-time status monitoring
+- Comprehensive certifications with web dashboard integration
+- Consumer-facing QR code verification
+- E-commerce API integration examples
+- Real-time certificate expiry tracking
+
+**Web-Specific Features:**
+
+- Interactive certification dashboard
+- RESTful API integration examples
+- Consumer-facing verification interfaces
+- Real-time compliance monitoring
+- Mobile-responsive design patterns
+- WebAssembly performance optimization
+
 ## Utility Functions
 
 | Name                   | Information                                                                   |
