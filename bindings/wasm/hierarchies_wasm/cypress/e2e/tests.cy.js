@@ -16,6 +16,8 @@ describe(
             "01_get_accreditations",
             "02_validate_properties",
             "03_get_properties",
+            "real_world_01_university_degrees",
+            "real_world_02_supply_chain",
         ];
 
         _.each(examples, (example) => {

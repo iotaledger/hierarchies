@@ -102,15 +102,14 @@ pub(crate) fn new_property(
 
     let allowed_values = utils::create_vec_set_from_move_values(allowed_values, value_tag, ptb, package_id);
 
-    let property_expression_tag = PropertyShape::move_type(package_id);
+    let property_shape_tag = PropertyShape::move_type(package_id);
 
-    let expression = match property.shape {
-        Some(expression) => {
-            let expression = expression.into_ptb(ptb, package_id)?;
-            utils::option_to_move(Some(expression), property_expression_tag, ptb)?
+    let shape = match property.shape {
+        Some(shape) => {
+            let shape_arg = shape.into_ptb(ptb, package_id)?;
+            utils::option_to_move(Some(shape_arg), property_shape_tag, ptb)?
         }
-
-        None => utils::option_to_move::<FederationProperty>(None, property_expression_tag, ptb)?,
+        None => utils::option_to_move(None, property_shape_tag, ptb)?,
     };
 
     let property = ptb.programmable_move_call(
@@ -118,7 +117,7 @@ pub(crate) fn new_property(
         ident_str!("property").into(),
         ident_str!("new_property").into(),
         vec![],
-        vec![property_names, allowed_values, allow_any, expression],
+        vec![property_names, allowed_values, allow_any, shape],
     );
 
     Ok(property)
@@ -158,7 +157,7 @@ pub(crate) fn new_properties(
                 utils::option_to_move(Some(expression), property_expression_tag, ptb)?
             }
 
-            None => utils::option_to_move::<FederationProperty>(None, property_expression_tag, ptb)?,
+            None => utils::option_to_move(None, property_expression_tag, ptb)?,
         };
 
         let property = ptb.programmable_move_call(

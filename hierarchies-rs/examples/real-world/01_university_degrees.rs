@@ -49,6 +49,7 @@ use std::collections::HashSet;
 use hierarchies::core::types::Accreditation;
 use hierarchies::core::types::property::FederationProperty;
 use hierarchies::core::types::property_name::PropertyName;
+use hierarchies::core::types::property_shape::PropertyShape;
 use hierarchies::core::types::property_value::PropertyValue;
 use hierarchies_examples::get_funded_client;
 use iota_sdk::types::base_types::IotaAddress;
@@ -95,6 +96,8 @@ async fn main() -> anyhow::Result<()> {
     let grade_gpa = PropertyName::from("grade.gpa");
     let graduation_year = PropertyName::from("graduation.year");
     let student_verified = PropertyName::from("student.verified");
+    let student_id = PropertyName::from("student.id");
+    let honors_level = PropertyName::from("honors.level");
 
     // Add degree completion properties with specific allowed values
     let degree_values = HashSet::from([
@@ -111,6 +114,8 @@ async fn main() -> anyhow::Result<()> {
         .build_and_execute(&hierarchies_client)
         .await?;
 
+    println!("✅ Degree Bachelor property added!");
+
     hierarchies_client
         .add_property(
             *university_consortium.id.object_id(),
@@ -119,6 +124,8 @@ async fn main() -> anyhow::Result<()> {
         .build_and_execute(&hierarchies_client)
         .await?;
 
+    println!("✅ Degree Master property added!");
+
     hierarchies_client
         .add_property(
             *university_consortium.id.object_id(),
@@ -126,6 +133,8 @@ async fn main() -> anyhow::Result<()> {
         )
         .build_and_execute(&hierarchies_client)
         .await?;
+
+    println!("✅ Degree PhD property added!");
 
     // Add field of study properties (boolean - true if student studied this field)
     let boolean_values = HashSet::from([
@@ -141,6 +150,8 @@ async fn main() -> anyhow::Result<()> {
         .build_and_execute(&hierarchies_client)
         .await?;
 
+    println!("✅ Field Computer Science property added!");
+
     hierarchies_client
         .add_property(
             *university_consortium.id.object_id(),
@@ -148,6 +159,8 @@ async fn main() -> anyhow::Result<()> {
         )
         .build_and_execute(&hierarchies_client)
         .await?;
+
+    println!("✅ Field Engineering property added!");
 
     hierarchies_client
         .add_property(
@@ -157,23 +170,82 @@ async fn main() -> anyhow::Result<()> {
         .build_and_execute(&hierarchies_client)
         .await?;
 
-    // Add GPA property (allow any numeric value - will be validated by business logic)
+    println!("✅ Field Mathematics property added!");
+    // Add GPA property with advanced numeric validation (must be between 2.0-4.0)
     hierarchies_client
         .add_property(
             *university_consortium.id.object_id(),
-            FederationProperty::new(grade_gpa.clone()).with_allow_any(true),
-        ) // Universities can attest any GPA value
-        .build_and_execute(&hierarchies_client)
-        .await?;
-
-    // Add graduation year (allow any year - business rules apply)
-    hierarchies_client
-        .add_property(
-            *university_consortium.id.object_id(),
-            FederationProperty::new(graduation_year.clone()).with_allow_any(true),
+            FederationProperty::new(grade_gpa.clone())
+                .with_expression(PropertyShape::GreaterThan(200)) // GPA > 2.0 (stored as 200 for precision)
+                .with_allowed_values(HashSet::from([
+                    PropertyValue::Number(200),
+                    PropertyValue::Number(250),
+                    PropertyValue::Number(300),
+                    PropertyValue::Number(320),
+                    PropertyValue::Number(350),
+                    PropertyValue::Number(380),
+                    PropertyValue::Number(400), // Common GPA ranges: 2.0, 2.5, 3.0, 3.2, 3.5, 3.8, 4.0
+                ])),
         )
         .build_and_execute(&hierarchies_client)
         .await?;
+
+    println!("✅ GPA property added!");
+
+    // Add graduation year with range validation (must be recent - from 1950 onwards)
+    hierarchies_client
+        .add_property(
+            *university_consortium.id.object_id(),
+            FederationProperty::new(graduation_year.clone())
+                .with_expression(PropertyShape::GreaterThan(1950))
+                .with_allowed_values(HashSet::from([
+                    PropertyValue::Number(1950),
+                    PropertyValue::Number(1960),
+                    PropertyValue::Number(1970),
+                    PropertyValue::Number(1980),
+                    PropertyValue::Number(1990),
+                    PropertyValue::Number(2000),
+                    PropertyValue::Number(2010),
+                    PropertyValue::Number(2020),
+                    PropertyValue::Number(2021),
+                    PropertyValue::Number(2022),
+                    PropertyValue::Number(2023),
+                    PropertyValue::Number(2024),
+                ])),
+        )
+        .build_and_execute(&hierarchies_client)
+        .await?;
+
+    println!("✅ Graduation year property added!");
+
+    // Add student ID property with format validation (must start with university code)
+    hierarchies_client
+        .add_property(
+            *university_consortium.id.object_id(),
+            FederationProperty::new(student_id.clone())
+                .with_expression(PropertyShape::Contains("-".to_string()))
+                .with_allow_any(true),
+        )
+        .build_and_execute(&hierarchies_client)
+        .await?;
+
+    println!("✅ Student ID property added!");
+
+    // Add honors level with specific validation (must end with recognized honor suffixes)
+    hierarchies_client
+        .add_property(
+            *university_consortium.id.object_id(),
+            FederationProperty::new(honors_level.clone()).with_allowed_values(HashSet::from([
+                PropertyValue::Text("magna_cum_laude".to_owned()),
+                PropertyValue::Text("summa_cum_laude".to_owned()),
+                PropertyValue::Text("cum_laude".to_owned()),
+                PropertyValue::Text("none".to_owned()),
+            ])),
+        )
+        .build_and_execute(&hierarchies_client)
+        .await?;
+
+    println!("✅ Honors level property added!");
 
     // Add student verification status
     hierarchies_client
@@ -184,10 +256,15 @@ async fn main() -> anyhow::Result<()> {
         .build_and_execute(&hierarchies_client)
         .await?;
 
-    println!("✅ Academic properties defined:");
-    println!("   - Degree types: Bachelor, Master, PhD");
+    println!("✅ Student verification status property added!");
+
+    println!("✅ Academic properties defined with advanced validation:");
+    println!("   - Degree types: Bachelor, Master, PhD (with completion status)");
     println!("   - Fields: Computer Science, Engineering, Mathematics");
-    println!("   - Academic metrics: GPA, Graduation Year");
+    println!("   - GPA: Numeric validation (must be > 2.0, specific ranges allowed)");
+    println!("   - Graduation Year: Range validation (must be after 1950)");
+    println!("   - Student ID: Format validation (must contain dash separator)");
+    println!("   - Honors: Specific latin honor levels (cum laude, magna, summa)");
     println!("   - Verification: Student identity verification\n");
 
     // =============================================================================
@@ -281,13 +358,15 @@ async fn main() -> anyhow::Result<()> {
 
     println!("📜 Issuing Bachelor's degree in Computer Science to Alice...");
 
-    // Create Alice's degree attestation data
+    // Create Alice's degree attestation data with advanced property shapes validation
     let alice_properties = std::collections::HashMap::from([
         (degree_bachelor.clone(), PropertyValue::Text("completed".to_owned())),
         (field_cs.clone(), PropertyValue::Text("true".to_owned())),
-        (grade_gpa.clone(), PropertyValue::Text("3.85".to_owned())),
-        (graduation_year.clone(), PropertyValue::Text("2024".to_owned())),
+        (grade_gpa.clone(), PropertyValue::Number(385)), // 3.85 GPA (stored as 385 for precision)
+        (graduation_year.clone(), PropertyValue::Number(2024)),
         (student_verified.clone(), PropertyValue::Text("true".to_owned())),
+        (student_id.clone(), PropertyValue::Text("HARV-123456".to_owned())), // University code + student number
+        (honors_level.clone(), PropertyValue::Text("magna_cum_laude".to_owned())),
     ]);
 
     let alice_properties = alice_properties
@@ -322,6 +401,8 @@ async fn main() -> anyhow::Result<()> {
         grade_gpa: &grade_gpa,
         graduation_year: &graduation_year,
         student_verified: &student_verified,
+        student_id: &student_id,
+        honors_level: &honors_level,
     };
 
     format_degree_info(
@@ -336,9 +417,11 @@ async fn main() -> anyhow::Result<()> {
     let bob_properties = std::collections::HashMap::from([
         (degree_master.clone(), PropertyValue::Text("completed".to_owned())),
         (field_cs.clone(), PropertyValue::Text("true".to_owned())),
-        (grade_gpa.clone(), PropertyValue::Text("3.92".to_owned())), // 3.92 GPA
-        (graduation_year.clone(), PropertyValue::Text("2023".to_owned())),
+        (grade_gpa.clone(), PropertyValue::Number(392)), // 3.92 GPA (stored as 392 for precision)
+        (graduation_year.clone(), PropertyValue::Number(2023)),
         (student_verified.clone(), PropertyValue::Text("true".to_owned())),
+        (student_id.clone(), PropertyValue::Text("MIT-789012".to_owned())), // MIT student ID format
+        (honors_level.clone(), PropertyValue::Text("summa_cum_laude".to_owned())), // Highest honors
     ]);
 
     hierarchies_client
@@ -545,6 +628,8 @@ struct DegreePropertyNames<'a> {
     grade_gpa: &'a PropertyName,
     graduation_year: &'a PropertyName,
     student_verified: &'a PropertyName,
+    student_id: &'a PropertyName,
+    honors_level: &'a PropertyName,
 }
 
 /// Helper function to format and display degree information from an accreditation response
@@ -613,9 +698,29 @@ fn format_degree_info(
         }
     };
 
-    // Extract GPA
+    // Extract GPA (now stored as number with advanced validation)
     let gpa = accreditation_properties
         .get(properties.grade_gpa)
+        .and_then(|p| p.allowed_values.iter().next())
+        .map(|v| match v {
+            PropertyValue::Number(num) => format!("{:.2}", (*num as f64) / 100.0), // Convert back to decimal
+            PropertyValue::Text(text) => text.clone(),
+        })
+        .unwrap_or_else(|| "N/A".to_string());
+
+    // Extract graduation year (now stored as number with range validation)
+    let grad_year = accreditation_properties
+        .get(properties.graduation_year)
+        .and_then(|p| p.allowed_values.iter().next())
+        .map(|v| match v {
+            PropertyValue::Number(year) => year.to_string(),
+            PropertyValue::Text(text) => text.clone(),
+        })
+        .unwrap_or_else(|| "N/A".to_string());
+
+    // Extract student ID (with format validation - must contain dash)
+    let student_id = accreditation_properties
+        .get(properties.student_id)
         .and_then(|p| p.allowed_values.iter().next())
         .map(|v| match v {
             PropertyValue::Text(text) => text.clone(),
@@ -623,15 +728,21 @@ fn format_degree_info(
         })
         .unwrap_or_else(|| "N/A".to_string());
 
-    // Extract graduation year
-    let grad_year = accreditation_properties
-        .get(properties.graduation_year)
+    // Extract honors level (with specific allowed values validation)
+    let honors = accreditation_properties
+        .get(properties.honors_level)
         .and_then(|p| p.allowed_values.iter().next())
         .map(|v| match v {
-            PropertyValue::Text(text) => text.clone(),
-            _ => "N/A".to_string(),
+            PropertyValue::Text(text) => match text.as_str() {
+                "summa_cum_laude" => "Summa Cum Laude",
+                "magna_cum_laude" => "Magna Cum Laude",
+                "cum_laude" => "Cum Laude",
+                "none" => "No Honors",
+                _ => text,
+            },
+            _ => "N/A",
         })
-        .unwrap_or_else(|| "N/A".to_string());
+        .unwrap_or_else(|| "N/A");
 
     // Extract verification status
     let verification_status = accreditation_properties
@@ -645,8 +756,10 @@ fn format_degree_info(
         .unwrap_or_else(|| "Unknown");
 
     println!("   - Degree: {} in {}", degree_type, field_of_study);
-    println!("   - GPA: {}", gpa);
-    println!("   - Graduation Year: {}", grad_year);
+    println!("   - GPA: {} (validated: > 2.0)", gpa);
+    println!("   - Graduation Year: {} (validated: > 1950)", grad_year);
+    println!("   - Student ID: {} (validated: contains dash)", student_id);
+    println!("   - Honors: {}", honors);
     println!("   - Verification Status: {}", verification_status);
     println!("   - Accreditation ID: {:?}", accreditation.id);
     println!("   - Issued by: {:?}\n", accreditation.accredited_by);

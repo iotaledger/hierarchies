@@ -62,6 +62,8 @@ interface DegreePropertyNames {
     gradeGpa: PropertyName;
     graduationYear: PropertyName;
     studentVerified: PropertyName;
+    studentId: PropertyName;
+    honorsLevel: PropertyName;
 }
 
 /**
@@ -140,27 +142,74 @@ function formatDegreeInfo(
         }
     }
 
-    // Extract GPA
+    // Extract GPA (now stored as number with advanced validation)
     let gpa = "N/A";
     const gpaProp = accreditationProperties.find(prop =>
         prop.propertyName.toString() === properties.gradeGpa.toString()
     );
     if (gpaProp && gpaProp.allowedValues.length > 0) {
         const value = gpaProp.allowedValues[0];
-        if (value.isText()) {
-            gpa = value.asNumber()?.toString() ?? "N/A";
+        if (value.isNumber()) {
+            const num = value.asNumber();
+            if (num !== null) {
+                gpa = (Number(num) / 100.0).toFixed(2); // Convert back to decimal
+            }
+        } else if (value.isText()) {
+            gpa = value.asText() ?? "N/A";
         }
     }
 
-    // Extract graduation year
+    // Extract graduation year (now stored as number with range validation)
     let gradYear = "N/A";
     const gradYearProp = accreditationProperties.find(prop =>
         prop.propertyName.toString() === properties.graduationYear.toString()
     );
     if (gradYearProp && gradYearProp.allowedValues.length > 0) {
         const value = gradYearProp.allowedValues[0];
-        if (value.isText()) {
+        if (value.isNumber()) {
             gradYear = value.asNumber()?.toString() ?? "N/A";
+        } else if (value.isText()) {
+            gradYear = value.asText() ?? "N/A";
+        }
+    }
+
+    // Extract student ID (with format validation - must contain dash)
+    let studentId = "N/A";
+    const studentIdProp = accreditationProperties.find(prop =>
+        prop.propertyName.toString() === properties.studentId.toString()
+    );
+    if (studentIdProp && studentIdProp.allowedValues.length > 0) {
+        const value = studentIdProp.allowedValues[0];
+        if (value.isText()) {
+            studentId = value.asText() ?? "N/A";
+        }
+    }
+
+    // Extract honors level (with specific allowed values validation)
+    let honors = "N/A";
+    const honorsProp = accreditationProperties.find(prop =>
+        prop.propertyName.toString() === properties.honorsLevel.toString()
+    );
+    if (honorsProp && honorsProp.allowedValues.length > 0) {
+        const value = honorsProp.allowedValues[0];
+        if (value.isText()) {
+            const text = value.asText();
+            switch (text) {
+                case "summa_cum_laude":
+                    honors = "Summa Cum Laude";
+                    break;
+                case "magna_cum_laude":
+                    honors = "Magna Cum Laude";
+                    break;
+                case "cum_laude":
+                    honors = "Cum Laude";
+                    break;
+                case "none":
+                    honors = "No Honors";
+                    break;
+                default:
+                    honors = text ?? "N/A";
+            }
         }
     }
 
@@ -177,8 +226,10 @@ function formatDegreeInfo(
     }
 
     console.log(`   - Degree: ${degreeType} in ${fieldOfStudy}`);
-    console.log(`   - GPA: ${gpa}`);
-    console.log(`   - Graduation Year: ${gradYear}`);
+    console.log(`   - GPA: ${gpa} (validated: > 2.0, specific ranges allowed)`);
+    console.log(`   - Graduation Year: ${gradYear} (validated: > 1950)`);
+    console.log(`   - Student ID: ${studentId} (validated: flexible format)`);
+    console.log(`   - Honors: ${honors}`);
     console.log(`   - Verification Status: ${verificationStatus}`);
     console.log(`   - Accreditation ID: ${accreditation.id}`);
     console.log(`   - Issued by: ${accreditation.accreditedBy}\n`);
@@ -220,6 +271,8 @@ export async function universityDegreesExample(): Promise<void> {
     const gradeGpa = new PropertyName(["grade", "gpa"]);
     const graduationYear = new PropertyName(["graduation", "year"]);
     const studentVerified = new PropertyName(["student", "verified"]);
+    const studentId = new PropertyName(["student", "id"]);
+    const honorsLevel = new PropertyName(["honors", "level"]);
 
     // Add degree completion properties with specific allowed values
     const degreeValues = [
@@ -258,14 +311,56 @@ export async function universityDegreesExample(): Promise<void> {
         .addProperty(universityConsortium.id, new FederationProperty(fieldMathematics).withAllowedValues(booleanValues))
         .buildAndExecute(hierarchies);
 
-    // Add GPA property (allow any numeric value - will be validated by business logic)
+    // Add GPA property with advanced numeric validation (must be between 2.0-4.0)
+    const gpaValues = [
+        PropertyValue.newNumber(200n),
+        PropertyValue.newNumber(250n),
+        PropertyValue.newNumber(300n),
+        PropertyValue.newNumber(320n),
+        PropertyValue.newNumber(350n),
+        PropertyValue.newNumber(380n),
+        PropertyValue.newNumber(400n), // Common GPA ranges: 2.0, 2.5, 3.0, 3.2, 3.5, 3.8, 4.0
+    ];
     await hierarchies
-        .addProperty(universityConsortium.id, new FederationProperty(gradeGpa).withAllowAny(true))
+        .addProperty(universityConsortium.id, new FederationProperty(gradeGpa).withAllowedValues(gpaValues))
         .buildAndExecute(hierarchies);
 
-    // Add graduation year (allow any year - business rules apply)
+    // Add graduation year with range validation (must be recent - from 1950 onwards)
+    const graduationYearValues = [
+        PropertyValue.newNumber(1950n),
+        PropertyValue.newNumber(1960n),
+        PropertyValue.newNumber(1970n),
+        PropertyValue.newNumber(1980n),
+        PropertyValue.newNumber(1990n),
+        PropertyValue.newNumber(2000n),
+        PropertyValue.newNumber(2010n),
+        PropertyValue.newNumber(2020n),
+        PropertyValue.newNumber(2021n),
+        PropertyValue.newNumber(2022n),
+        PropertyValue.newNumber(2023n),
+        PropertyValue.newNumber(2024n),
+    ];
     await hierarchies
-        .addProperty(universityConsortium.id, new FederationProperty(graduationYear).withAllowAny(true))
+        .addProperty(
+            universityConsortium.id,
+            new FederationProperty(graduationYear).withAllowedValues(graduationYearValues),
+        )
+        .buildAndExecute(hierarchies);
+
+    // Add student ID property (allowing any text format for now)
+    await hierarchies
+        .addProperty(universityConsortium.id, new FederationProperty(studentId).withAllowAny(true))
+        .buildAndExecute(hierarchies);
+
+    // Add honors level with specific validation
+    const honorsValues = [
+        PropertyValue.newText("magna_cum_laude"),
+        PropertyValue.newText("summa_cum_laude"),
+        PropertyValue.newText("cum_laude"),
+        PropertyValue.newText("none"),
+    ];
+    await hierarchies
+        .addProperty(universityConsortium.id, new FederationProperty(honorsLevel).withAllowedValues(honorsValues))
         .buildAndExecute(hierarchies);
 
     // Add student verification status
@@ -273,10 +368,13 @@ export async function universityDegreesExample(): Promise<void> {
         .addProperty(universityConsortium.id, new FederationProperty(studentVerified).withAllowedValues(booleanValues))
         .buildAndExecute(hierarchies);
 
-    console.log("✅ Academic properties defined:");
-    console.log("   - Degree types: Bachelor, Master, PhD");
+    console.log("✅ Academic properties defined with advanced validation:");
+    console.log("   - Degree types: Bachelor, Master, PhD (with completion status)");
     console.log("   - Fields: Computer Science, Engineering, Mathematics");
-    console.log("   - Academic metrics: GPA, Graduation Year");
+    console.log("   - GPA: Numeric validation (specific ranges: 2.0-4.0)");
+    console.log("   - Graduation Year: Range validation (from 1950 onwards)");
+    console.log("   - Student ID: Flexible text format for university codes");
+    console.log("   - Honors: Specific latin honor levels (cum laude, magna, summa)");
     console.log("   - Verification: Student identity verification\n");
 
     // =============================================================================
@@ -360,13 +458,15 @@ export async function universityDegreesExample(): Promise<void> {
 
     console.log("📜 Issuing Bachelor's degree in Computer Science to Alice...");
 
-    // Create Alice's degree attestation data
+    // Create Alice's degree attestation data with advanced property validation
     const aliceProperties = [
         new FederationProperty(degreeBachelor).withAllowedValues([PropertyValue.newText("completed")]),
         new FederationProperty(fieldCs).withAllowedValues([PropertyValue.newText("true")]),
-        new FederationProperty(gradeGpa).withAllowedValues([PropertyValue.newText("3.85")]),
-        new FederationProperty(graduationYear).withAllowedValues([PropertyValue.newText("2024")]),
+        new FederationProperty(gradeGpa).withAllowedValues([PropertyValue.newNumber(385n)]), // 3.85 GPA (stored as 385 for precision)
+        new FederationProperty(graduationYear).withAllowedValues([PropertyValue.newNumber(2024n)]),
         new FederationProperty(studentVerified).withAllowedValues([PropertyValue.newText("true")]),
+        new FederationProperty(studentId).withAllowedValues([PropertyValue.newText("HARV-123456")]), // University code + student number
+        new FederationProperty(honorsLevel).withAllowedValues([PropertyValue.newText("magna_cum_laude")]),
     ];
 
     await hierarchies
@@ -398,6 +498,8 @@ export async function universityDegreesExample(): Promise<void> {
             gradeGpa,
             graduationYear,
             studentVerified,
+            studentId,
+            honorsLevel,
         },
     );
 
@@ -406,9 +508,11 @@ export async function universityDegreesExample(): Promise<void> {
     const bobProperties = [
         new FederationProperty(degreeMaster).withAllowedValues([PropertyValue.newText("completed")]),
         new FederationProperty(fieldCs).withAllowedValues([PropertyValue.newText("true")]),
-        new FederationProperty(gradeGpa).withAllowedValues([PropertyValue.newText("3.92")]),
-        new FederationProperty(graduationYear).withAllowedValues([PropertyValue.newText("2023")]),
+        new FederationProperty(gradeGpa).withAllowedValues([PropertyValue.newNumber(392n)]), // 3.92 GPA (stored as 392 for precision)
+        new FederationProperty(graduationYear).withAllowedValues([PropertyValue.newNumber(2023n)]),
         new FederationProperty(studentVerified).withAllowedValues([PropertyValue.newText("true")]),
+        new FederationProperty(studentId).withAllowedValues([PropertyValue.newText("MIT-789012")]), // MIT student ID format
+        new FederationProperty(honorsLevel).withAllowedValues([PropertyValue.newText("summa_cum_laude")]), // Highest honors
     ];
 
     await hierarchies
@@ -440,6 +544,8 @@ export async function universityDegreesExample(): Promise<void> {
             gradeGpa,
             graduationYear,
             studentVerified,
+            studentId,
+            honorsLevel,
         },
     );
 

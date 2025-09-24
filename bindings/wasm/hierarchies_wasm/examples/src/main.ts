@@ -36,6 +36,8 @@ export async function main(example?: string) {
             await reinstateRootAuthority();
             await getAccreditations();
             await validateProperties();
+            await universityDegrees();
+            await supplyChain();
             return await getProperties();
         case "01_create_federation":
             return await createFederation();
