@@ -225,59 +225,101 @@ export async function supplyChainExample(): Promise<void> {
     const expiryDate = new PropertyName(["expiry", "date"]);
 
     // Certification status values
-    const certStatusValues = [
-        PropertyValue.newText("certified"),
-        PropertyValue.newText("pending"),
-        PropertyValue.newText("expired"),
-        PropertyValue.newText("revoked"),
-        PropertyValue.newText("suspended"),
-    ];
 
     // Add ISO certification properties
     await hierarchies
-        .addProperty(standardsConsortium.id, new FederationProperty(iso9001).withAllowedValues(certStatusValues))
+        .addProperty(
+            standardsConsortium.id,
+            new FederationProperty(iso9001).withAllowedValues([
+                PropertyValue.newText("certified"),
+                PropertyValue.newText("pending"),
+                PropertyValue.newText("expired"),
+                PropertyValue.newText("revoked"),
+                PropertyValue.newText("suspended"),
+            ]),
+        )
         .buildAndExecute(hierarchies);
 
     await hierarchies
-        .addProperty(standardsConsortium.id, new FederationProperty(iso14001).withAllowedValues(certStatusValues))
+        .addProperty(
+            standardsConsortium.id,
+            new FederationProperty(iso14001).withAllowedValues([
+                PropertyValue.newText("certified"),
+                PropertyValue.newText("pending"),
+                PropertyValue.newText("expired"),
+                PropertyValue.newText("revoked"),
+                PropertyValue.newText("suspended"),
+            ]),
+        )
         .buildAndExecute(hierarchies);
 
     await hierarchies
-        .addProperty(standardsConsortium.id, new FederationProperty(iso22000).withAllowedValues(certStatusValues))
+        .addProperty(
+            standardsConsortium.id,
+            new FederationProperty(iso22000).withAllowedValues([
+                PropertyValue.newText("certified"),
+                PropertyValue.newText("pending"),
+                PropertyValue.newText("expired"),
+                PropertyValue.newText("revoked"),
+                PropertyValue.newText("suspended"),
+            ]),
+        )
         .buildAndExecute(hierarchies);
 
     // Boolean certifications (certified/not certified)
-    const booleanValues = [
-        PropertyValue.newText("true"),
-        PropertyValue.newText("false"),
-    ];
 
     await hierarchies
-        .addProperty(standardsConsortium.id, new FederationProperty(productOrganic).withAllowedValues(booleanValues))
+        .addProperty(
+            standardsConsortium.id,
+            new FederationProperty(productOrganic).withAllowedValues([
+                PropertyValue.newText("true"),
+                PropertyValue.newText("false"),
+            ]),
+        )
         .buildAndExecute(hierarchies);
 
     await hierarchies
-        .addProperty(standardsConsortium.id, new FederationProperty(complianceEu).withAllowedValues(booleanValues))
+        .addProperty(
+            standardsConsortium.id,
+            new FederationProperty(complianceEu).withAllowedValues([
+                PropertyValue.newText("true"),
+                PropertyValue.newText("false"),
+            ]),
+        )
         .buildAndExecute(hierarchies);
 
     await hierarchies
-        .addProperty(standardsConsortium.id, new FederationProperty(complianceFda).withAllowedValues(booleanValues))
+        .addProperty(
+            standardsConsortium.id,
+            new FederationProperty(complianceFda).withAllowedValues([
+                PropertyValue.newText("true"),
+                PropertyValue.newText("false"),
+            ]),
+        )
         .buildAndExecute(hierarchies);
 
     await hierarchies
-        .addProperty(standardsConsortium.id, new FederationProperty(complianceHalal).withAllowedValues(booleanValues))
+        .addProperty(
+            standardsConsortium.id,
+            new FederationProperty(complianceHalal).withAllowedValues([
+                PropertyValue.newText("true"),
+                PropertyValue.newText("false"),
+            ]),
+        )
         .buildAndExecute(hierarchies);
 
     // Testing results
-    const testResults = [
-        PropertyValue.newText("passed"),
-        PropertyValue.newText("failed"),
-        PropertyValue.newText("pending"),
-        PropertyValue.newText("inconclusive"),
-    ];
 
     await hierarchies
-        .addProperty(standardsConsortium.id, new FederationProperty(batchTested).withAllowedValues(testResults))
+        .addProperty(
+            standardsConsortium.id,
+            new FederationProperty(batchTested).withAllowedValues([
+                PropertyValue.newText("passed"),
+                PropertyValue.newText("failed"),
+                PropertyValue.newText("pending"),
+                PropertyValue.newText("inconclusive"),
+            ]),
+        )
         .buildAndExecute(hierarchies);
 
     // Country codes for origin verification (allow any - validated by business logic)
@@ -334,37 +376,34 @@ export async function supplyChainExample(): Promise<void> {
     const germanTestingInstitute = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, "0");
 
     // Create comprehensive accreditation package for German institute
-    const europeanCertProperties = [
-        new FederationProperty(iso9001).withAllowAny(true),
-        new FederationProperty(iso14001).withAllowAny(true),
-        new FederationProperty(iso22000).withAllowAny(true),
-        new FederationProperty(productOrganic).withAllowAny(true),
-        new FederationProperty(originVerified).withAllowAny(true),
-        new FederationProperty(batchTested).withAllowAny(true),
-        new FederationProperty(complianceEu).withAllowAny(true),
-        new FederationProperty(expiryDate).withAllowAny(true),
-    ];
 
     // ISO Europe delegates accreditation rights to German Testing Institute
     await hierarchies
-        .createAccreditationToAccredit(standardsConsortium.id, germanTestingInstitute, europeanCertProperties)
+        .createAccreditationToAccredit(standardsConsortium.id, germanTestingInstitute, [
+            new FederationProperty(iso9001).withAllowAny(true),
+            new FederationProperty(iso14001).withAllowAny(true),
+            new FederationProperty(iso22000).withAllowAny(true),
+            new FederationProperty(productOrganic).withAllowAny(true),
+            new FederationProperty(originVerified).withAllowAny(true),
+            new FederationProperty(batchTested).withAllowAny(true),
+            new FederationProperty(complianceEu).withAllowAny(true),
+            new FederationProperty(expiryDate).withAllowAny(true),
+        ])
         .buildAndExecute(hierarchies);
 
     // US FDA Regional Office under ISO Americas
     const usFdaRegional = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, "0");
 
-    const americasCertProperties = [
-        new FederationProperty(iso9001).withAllowAny(true),
-        new FederationProperty(iso22000).withAllowAny(true),
-        new FederationProperty(productOrganic).withAllowAny(true),
-        new FederationProperty(originVerified).withAllowAny(true),
-        new FederationProperty(batchTested).withAllowAny(true),
-        new FederationProperty(complianceFda).withAllowAny(true),
-        new FederationProperty(expiryDate).withAllowAny(true),
-    ];
-
     await hierarchies
-        .createAccreditationToAccredit(standardsConsortium.id, usFdaRegional, americasCertProperties)
+        .createAccreditationToAccredit(standardsConsortium.id, usFdaRegional, [
+            new FederationProperty(iso9001).withAllowAny(true),
+            new FederationProperty(iso22000).withAllowAny(true),
+            new FederationProperty(productOrganic).withAllowAny(true),
+            new FederationProperty(originVerified).withAllowAny(true),
+            new FederationProperty(batchTested).withAllowAny(true),
+            new FederationProperty(complianceFda).withAllowAny(true),
+            new FederationProperty(expiryDate).withAllowAny(true),
+        ])
         .buildAndExecute(hierarchies);
 
     console.log("✅ National testing institutes accredited:");
@@ -382,25 +421,32 @@ export async function supplyChainExample(): Promise<void> {
     const berlinFoodLab = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, "0");
 
     // Focus on food safety and organic certifications
-    const foodSafetyProperties = [
-        new FederationProperty(iso22000).withAllowAny(true),
-        new FederationProperty(productOrganic).withAllowAny(true),
-        new FederationProperty(originVerified).withAllowAny(true),
-        new FederationProperty(batchTested).withAllowAny(true),
-        new FederationProperty(complianceEu).withAllowAny(true),
-        new FederationProperty(expiryDate).withAllowAny(true),
-    ];
 
     // German Testing Institute delegates attestation rights to Berlin lab
     await hierarchies
-        .createAccreditationToAttest(standardsConsortium.id, berlinFoodLab, foodSafetyProperties)
+        .createAccreditationToAttest(standardsConsortium.id, berlinFoodLab, [
+            new FederationProperty(iso22000).withAllowAny(true),
+            new FederationProperty(productOrganic).withAllowAny(true),
+            new FederationProperty(originVerified).withAllowAny(true),
+            new FederationProperty(batchTested).withAllowAny(true),
+            new FederationProperty(complianceEu).withAllowAny(true),
+            new FederationProperty(expiryDate).withAllowAny(true),
+        ])
         .buildAndExecute(hierarchies);
 
     // California Agricultural Lab under US FDA
     const californiaAgLab = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, "0");
 
     await hierarchies
-        .createAccreditationToAttest(standardsConsortium.id, californiaAgLab, americasCertProperties)
+        .createAccreditationToAttest(standardsConsortium.id, californiaAgLab, [
+            new FederationProperty(iso9001).withAllowAny(true),
+            new FederationProperty(iso22000).withAllowAny(true),
+            new FederationProperty(productOrganic).withAllowAny(true),
+            new FederationProperty(originVerified).withAllowAny(true),
+            new FederationProperty(batchTested).withAllowAny(true),
+            new FederationProperty(complianceFda).withAllowAny(true),
+            new FederationProperty(expiryDate).withAllowAny(true),
+        ])
         .buildAndExecute(hierarchies);
 
     console.log("✅ Local testing laboratories authorized:");

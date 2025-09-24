@@ -275,75 +275,106 @@ export async function universityDegreesExample(): Promise<void> {
     const honorsLevel = new PropertyName(["honors", "level"]);
 
     // Add degree completion properties with specific allowed values
-    const degreeValues = [
-        PropertyValue.newText("completed"),
-        PropertyValue.newText("in_progress"),
-        PropertyValue.newText("withdrawn"),
-    ];
 
-    await hierarchies
-        .addProperty(universityConsortium.id, new FederationProperty(degreeBachelor).withAllowedValues(degreeValues))
-        .buildAndExecute(hierarchies);
-
-    await hierarchies
-        .addProperty(universityConsortium.id, new FederationProperty(degreeMaster).withAllowedValues(degreeValues))
-        .buildAndExecute(hierarchies);
-
-    await hierarchies
-        .addProperty(universityConsortium.id, new FederationProperty(degreePhd).withAllowedValues(degreeValues))
-        .buildAndExecute(hierarchies);
-
-    // Add field of study properties (boolean - true if student studied this field)
-    const booleanValues = [
-        PropertyValue.newText("true"),
-        PropertyValue.newText("false"),
-    ];
-
-    await hierarchies
-        .addProperty(universityConsortium.id, new FederationProperty(fieldCs).withAllowedValues(booleanValues))
-        .buildAndExecute(hierarchies);
-
-    await hierarchies
-        .addProperty(universityConsortium.id, new FederationProperty(fieldEngineering).withAllowedValues(booleanValues))
-        .buildAndExecute(hierarchies);
-
-    await hierarchies
-        .addProperty(universityConsortium.id, new FederationProperty(fieldMathematics).withAllowedValues(booleanValues))
-        .buildAndExecute(hierarchies);
-
-    // Add GPA property with advanced numeric validation (must be between 2.0-4.0)
-    const gpaValues = [
-        PropertyValue.newNumber(200n),
-        PropertyValue.newNumber(250n),
-        PropertyValue.newNumber(300n),
-        PropertyValue.newNumber(320n),
-        PropertyValue.newNumber(350n),
-        PropertyValue.newNumber(380n),
-        PropertyValue.newNumber(400n), // Common GPA ranges: 2.0, 2.5, 3.0, 3.2, 3.5, 3.8, 4.0
-    ];
-    await hierarchies
-        .addProperty(universityConsortium.id, new FederationProperty(gradeGpa).withAllowedValues(gpaValues))
-        .buildAndExecute(hierarchies);
-
-    // Add graduation year with range validation (must be recent - from 1950 onwards)
-    const graduationYearValues = [
-        PropertyValue.newNumber(1950n),
-        PropertyValue.newNumber(1960n),
-        PropertyValue.newNumber(1970n),
-        PropertyValue.newNumber(1980n),
-        PropertyValue.newNumber(1990n),
-        PropertyValue.newNumber(2000n),
-        PropertyValue.newNumber(2010n),
-        PropertyValue.newNumber(2020n),
-        PropertyValue.newNumber(2021n),
-        PropertyValue.newNumber(2022n),
-        PropertyValue.newNumber(2023n),
-        PropertyValue.newNumber(2024n),
-    ];
     await hierarchies
         .addProperty(
             universityConsortium.id,
-            new FederationProperty(graduationYear).withAllowedValues(graduationYearValues),
+            new FederationProperty(degreeBachelor).withAllowedValues([
+                PropertyValue.newText("completed"),
+                PropertyValue.newText("in_progress"),
+                PropertyValue.newText("withdrawn"),
+            ]),
+        )
+        .buildAndExecute(hierarchies);
+
+    await hierarchies
+        .addProperty(
+            universityConsortium.id,
+            new FederationProperty(degreeMaster).withAllowedValues([
+                PropertyValue.newText("completed"),
+                PropertyValue.newText("in_progress"),
+                PropertyValue.newText("withdrawn"),
+            ]),
+        )
+        .buildAndExecute(hierarchies);
+
+    await hierarchies
+        .addProperty(
+            universityConsortium.id,
+            new FederationProperty(degreePhd).withAllowedValues([
+                PropertyValue.newText("completed"),
+                PropertyValue.newText("in_progress"),
+                PropertyValue.newText("withdrawn"),
+            ]),
+        )
+        .buildAndExecute(hierarchies);
+
+    // Add field of study properties (boolean - true if student studied this field)
+
+    await hierarchies
+        .addProperty(
+            universityConsortium.id,
+            new FederationProperty(fieldCs).withAllowedValues([
+                PropertyValue.newText("true"),
+                PropertyValue.newText("false"),
+            ]),
+        )
+        .buildAndExecute(hierarchies);
+
+    await hierarchies
+        .addProperty(
+            universityConsortium.id,
+            new FederationProperty(fieldEngineering).withAllowedValues([
+                PropertyValue.newText("true"),
+                PropertyValue.newText("false"),
+            ]),
+        )
+        .buildAndExecute(hierarchies);
+
+    await hierarchies
+        .addProperty(
+            universityConsortium.id,
+            new FederationProperty(fieldMathematics).withAllowedValues([
+                PropertyValue.newText("true"),
+                PropertyValue.newText("false"),
+            ]),
+        )
+        .buildAndExecute(hierarchies);
+
+    // Add GPA property with advanced numeric validation (must be between 2.0-4.0)
+    await hierarchies
+        .addProperty(
+            universityConsortium.id,
+            new FederationProperty(gradeGpa).withAllowedValues([
+                PropertyValue.newNumber(200n),
+                PropertyValue.newNumber(250n),
+                PropertyValue.newNumber(300n),
+                PropertyValue.newNumber(320n),
+                PropertyValue.newNumber(350n),
+                PropertyValue.newNumber(380n),
+                PropertyValue.newNumber(400n),
+            ]),
+        )
+        .buildAndExecute(hierarchies);
+
+    // Add graduation year with range validation (must be recent - from 1950 onwards)
+    await hierarchies
+        .addProperty(
+            universityConsortium.id,
+            new FederationProperty(graduationYear).withAllowedValues([
+                PropertyValue.newNumber(1950n),
+                PropertyValue.newNumber(1960n),
+                PropertyValue.newNumber(1970n),
+                PropertyValue.newNumber(1980n),
+                PropertyValue.newNumber(1990n),
+                PropertyValue.newNumber(2000n),
+                PropertyValue.newNumber(2010n),
+                PropertyValue.newNumber(2020n),
+                PropertyValue.newNumber(2021n),
+                PropertyValue.newNumber(2022n),
+                PropertyValue.newNumber(2023n),
+                PropertyValue.newNumber(2024n),
+            ]),
         )
         .buildAndExecute(hierarchies);
 
@@ -353,19 +384,27 @@ export async function universityDegreesExample(): Promise<void> {
         .buildAndExecute(hierarchies);
 
     // Add honors level with specific validation
-    const honorsValues = [
-        PropertyValue.newText("magna_cum_laude"),
-        PropertyValue.newText("summa_cum_laude"),
-        PropertyValue.newText("cum_laude"),
-        PropertyValue.newText("none"),
-    ];
     await hierarchies
-        .addProperty(universityConsortium.id, new FederationProperty(honorsLevel).withAllowedValues(honorsValues))
+        .addProperty(
+            universityConsortium.id,
+            new FederationProperty(honorsLevel).withAllowedValues([
+                PropertyValue.newText("magna_cum_laude"),
+                PropertyValue.newText("summa_cum_laude"),
+                PropertyValue.newText("cum_laude"),
+                PropertyValue.newText("none"),
+            ]),
+        )
         .buildAndExecute(hierarchies);
 
     // Add student verification status
     await hierarchies
-        .addProperty(universityConsortium.id, new FederationProperty(studentVerified).withAllowedValues(booleanValues))
+        .addProperty(
+            universityConsortium.id,
+            new FederationProperty(studentVerified).withAllowedValues([
+                PropertyValue.newText("true"),
+                PropertyValue.newText("false"),
+            ]),
+        )
         .buildAndExecute(hierarchies);
 
     console.log("✅ Academic properties defined with advanced validation:");
@@ -411,18 +450,17 @@ export async function universityDegreesExample(): Promise<void> {
 
     // Harvard delegates accreditation rights to its CS Faculty
     // This allows the faculty to further delegate to registrars and professors
-    const csFacultyProperties = [
-        new FederationProperty(degreeBachelor).withAllowAny(true),
-        new FederationProperty(degreeMaster).withAllowAny(true),
-        new FederationProperty(degreePhd).withAllowAny(true),
-        new FederationProperty(fieldCs).withAllowAny(true),
-        new FederationProperty(gradeGpa).withAllowAny(true),
-        new FederationProperty(graduationYear).withAllowAny(true),
-        new FederationProperty(studentVerified).withAllowAny(true),
-    ];
 
     await hierarchies
-        .createAccreditationToAccredit(universityConsortium.id, harvardCsFaculty, csFacultyProperties)
+        .createAccreditationToAccredit(universityConsortium.id, harvardCsFaculty, [
+            new FederationProperty(degreeBachelor).withAllowAny(true),
+            new FederationProperty(degreeMaster).withAllowAny(true),
+            new FederationProperty(degreePhd).withAllowAny(true),
+            new FederationProperty(fieldCs).withAllowAny(true),
+            new FederationProperty(gradeGpa).withAllowAny(true),
+            new FederationProperty(graduationYear).withAllowAny(true),
+            new FederationProperty(studentVerified).withAllowAny(true),
+        ])
         .buildAndExecute(hierarchies);
 
     console.log("✅ Harvard CS Faculty granted accreditation rights:");
@@ -440,7 +478,15 @@ export async function universityDegreesExample(): Promise<void> {
     // CS Faculty delegates attestation rights to the CS Registrar
     // Registrar can now create attestations (issue degrees) but not delegate further
     await hierarchies
-        .createAccreditationToAttest(universityConsortium.id, harvardCsRegistrar, csFacultyProperties)
+        .createAccreditationToAttest(universityConsortium.id, harvardCsRegistrar, [
+            new FederationProperty(degreeBachelor).withAllowAny(true),
+            new FederationProperty(degreeMaster).withAllowAny(true),
+            new FederationProperty(degreePhd).withAllowAny(true),
+            new FederationProperty(fieldCs).withAllowAny(true),
+            new FederationProperty(gradeGpa).withAllowAny(true),
+            new FederationProperty(graduationYear).withAllowAny(true),
+            new FederationProperty(studentVerified).withAllowAny(true),
+        ])
         .buildAndExecute(hierarchies);
 
     console.log("✅ Harvard CS Registrar granted attestation rights:");
@@ -459,7 +505,7 @@ export async function universityDegreesExample(): Promise<void> {
     console.log("📜 Issuing Bachelor's degree in Computer Science to Alice...");
 
     // Create Alice's degree attestation data with advanced property validation
-    const aliceProperties = [
+    const aliceProperties: FederationProperty[] = [
         new FederationProperty(degreeBachelor).withAllowedValues([PropertyValue.newText("completed")]),
         new FederationProperty(fieldCs).withAllowedValues([PropertyValue.newText("true")]),
         new FederationProperty(gradeGpa).withAllowedValues([PropertyValue.newNumber(385n)]), // 3.85 GPA (stored as 385 for precision)
@@ -505,7 +551,7 @@ export async function universityDegreesExample(): Promise<void> {
 
     console.log("\n📜 Issuing Master's degree in Computer Science to Bob...");
 
-    const bobProperties = [
+    const bobProperties: FederationProperty[] = [
         new FederationProperty(degreeMaster).withAllowedValues([PropertyValue.newText("completed")]),
         new FederationProperty(fieldCs).withAllowedValues([PropertyValue.newText("true")]),
         new FederationProperty(gradeGpa).withAllowedValues([PropertyValue.newNumber(392n)]), // 3.92 GPA (stored as 392 for precision)
