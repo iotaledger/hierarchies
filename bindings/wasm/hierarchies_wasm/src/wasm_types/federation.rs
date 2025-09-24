@@ -183,8 +183,8 @@ impl WasmProperties {
     pub fn data(&self) -> Vec<WasmProperty> {
         self.0
             .data
-            .iter()
-            .map(|(_, v)| WasmProperty::from(v.clone()))
+            .values()
+            .map(|v| WasmProperty::from(v.clone()))
             .collect::<Vec<_>>()
     }
 
@@ -231,7 +231,7 @@ impl WasmProperty {
     }
 
     #[wasm_bindgen(js_name=withAllowedValues)]
-    pub fn with_allowed_values(mut self, allowed_values: Box<[WasmPropertyValue]>) -> Self {
+    pub fn with_allowed_values(mut self, allowed_values: Vec<WasmPropertyValue>) -> Self {
         self.0.allowed_values = allowed_values.iter().cloned().map(|v| v.0).collect();
         self
     }
@@ -274,7 +274,7 @@ impl WasmProperty {
 
     /// Sets the allowed values for this property.
     #[wasm_bindgen(setter, js_name = allowedValues)]
-    pub fn set_allowed_values(&mut self, allowed_values: Box<[WasmPropertyValue]>) {
+    pub fn set_allowed_values(&mut self, allowed_values: Vec<WasmPropertyValue>) {
         self.0.allowed_values = allowed_values.iter().cloned().map(|v| v.0).collect();
     }
 
@@ -332,6 +332,12 @@ pub struct WasmTimespan(pub(crate) Timespan);
 impl From<Timespan> for WasmTimespan {
     fn from(value: Timespan) -> Self {
         WasmTimespan(value)
+    }
+}
+
+impl Default for WasmTimespan {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
