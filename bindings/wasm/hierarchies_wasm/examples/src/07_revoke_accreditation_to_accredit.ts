@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Federation, FederationProperty, HierarchiesClient, PropertyName, PropertyValue } from "@iota/hierarchies/node";
+import { strict as assert } from "assert";
 import { generateRandomAddress, getFundedClient } from "./util";
 
 /**
@@ -50,7 +51,7 @@ export async function revokeAccreditationToAccredit(client?: HierarchiesClient) 
 
     // Check if the receiver has the permission to accredit
     let accreditationsToAccredit = await hierarchies.readOnly().getAccreditationsToAccredit(federation.id, receiver);
-    console.assert(accreditationsToAccredit.accreditations.length > 0, "Receiver should have permission to accredit");
+    assert(accreditationsToAccredit.accreditations.length > 0, "Receiver should have permission to accredit");
     console.log("\n✅ Accreditation to accredit found for receiver");
 
     // Revoke the accreditation
@@ -63,6 +64,7 @@ export async function revokeAccreditationToAccredit(client?: HierarchiesClient) 
 
     // Check if the accreditation was revoked
     accreditationsToAccredit = await hierarchies.readOnly().getAccreditationsToAccredit(federation.id, receiver);
-    console.assert(accreditationsToAccredit.accreditations.length === 0, "Accreditation not revoked for receiver");
+
+    assert(accreditationsToAccredit.accreditations.length === 0, "Accreditation not revoked for receiver");
     console.log("\n✅ Accreditation successfully revoked for receiver");
 }

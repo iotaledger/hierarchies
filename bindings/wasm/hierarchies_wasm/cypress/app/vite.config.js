@@ -1,4 +1,5 @@
 import { defineConfig } from "vite";
+import { nodePolyfills } from "vite-plugin-node-polyfills";
 
 export default defineConfig(({ command, mode }) => {
     // variables will be set during build time
@@ -9,6 +10,11 @@ export default defineConfig(({ command, mode }) => {
     ];
 
     return {
+        plugins: [
+            nodePolyfills({
+                include: ["assert"],
+            }),
+        ],
         define: EXPOSED_ENVS.reduce((prev, env_var) => {
             const var_value = globalThis?.process?.env?.[env_var];
             if (var_value) {

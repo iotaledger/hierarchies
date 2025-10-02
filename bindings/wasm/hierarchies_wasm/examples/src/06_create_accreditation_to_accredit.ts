@@ -3,6 +3,7 @@
 
 import { Federation, FederationProperty, PropertyName, PropertyValue } from "@iota/hierarchies/node";
 import { HierarchiesClient } from "@iota/hierarchies/node";
+import { strict as assert } from "assert";
 import { generateRandomAddress, getFundedClient } from "./util";
 
 /**
@@ -52,9 +53,10 @@ export async function createAccreditationToAccredit(client?: HierarchiesClient) 
     // Check if the accreditation was issued
     const accreditationsToAccredit = await hierarchies.readOnly().getAccreditationsToAccredit(federation.id, receiver);
 
-    console.assert(accreditationsToAccredit.accreditations.length > 0, "Accreditation not found for receiver");
-    console.assert(
-        accreditationsToAccredit.accreditations[0].properties[0].propertyName.dotted() === propertyName.dotted(),
+    assert(accreditationsToAccredit.accreditations.length > 0, "Accreditation not found for receiver");
+    assert.equal(
+        accreditationsToAccredit.accreditations[0].properties[0].propertyName.dotted(),
+        propertyName.dotted(),
         "Property name does not match for accreditation to accredit",
     );
 
