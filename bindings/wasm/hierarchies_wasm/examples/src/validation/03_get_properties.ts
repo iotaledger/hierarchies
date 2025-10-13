@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Federation, FederationProperty, PropertyName, PropertyValue } from "@iota/hierarchies/node";
+import { strict as assert } from "assert";
 import { getFundedClient } from "../util";
-
 export async function getProperties(): Promise<void> {
     const hierarchies = await getFundedClient();
     const { output: federation }: { output: Federation } = await hierarchies.createNewFederation().buildAndExecute(
@@ -33,6 +33,6 @@ export async function getProperties(): Promise<void> {
     // Get the properties
     const retrievedProperties = await hierarchies.readOnly().getProperties(federation.id);
 
-    console.assert(retrievedProperties.length > 0, "No properties found");
+    assert(retrievedProperties.length > 0, "No properties found");
     console.log("\n✅ Successfully retrieved properties for the Federation", retrievedProperties);
 }
