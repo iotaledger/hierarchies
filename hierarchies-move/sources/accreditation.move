@@ -69,6 +69,7 @@ public(package) fun is_property_allowed(
         let maybe_property = accreditation.properties.try_get(property_name);
 
         if (maybe_property.is_none()) {
+            idx_properties_to_attest = idx_properties_to_attest + 1;
             continue
         };
         if (
