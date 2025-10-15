@@ -258,7 +258,10 @@ public fun is_attester(self: &Federation, entity_id: &ID): bool {
 }
 
 /// Gets accreditations for delegation for a specific entity
-public fun get_accreditations_to_accredit(self: &Federation, entity_id: &ID): &Accreditations {
+public fun get_accreditations_to_accredit(
+    self: &Federation,
+    entity_id: &ID,
+): &Accreditations {
     self.governance.accreditations_to_accredit.get(entity_id)
 }
 
@@ -481,6 +484,7 @@ public fun create_accreditation_to_accredit(
 
     // Check permissions only if sender is not a root authority
     if (!self.is_root_authority(&ctx.sender().to_id())) {
+        assert!(self.is_accreditor(&ctx.sender().to_id()), EUnauthorizedInsufficientAccreditationToAccredit);
         let accreditations_to_accredit = self.get_accreditations_to_accredit(
             &ctx.sender().to_id(),
         );
@@ -546,6 +550,7 @@ public fun create_accreditation_to_attest(
 
     // Check permissions only if sender is not a root authority
     if (!self.is_root_authority(&ctx.sender().to_id())) {
+        assert!(self.is_accreditor(&ctx.sender().to_id()), EUnauthorizedInsufficientAccreditationToAccredit);
         let accreditations_to_accredit = self.get_accreditations_to_accredit(
             &ctx.sender().to_id(),
         );
@@ -591,7 +596,14 @@ public fun revoke_accreditation_to_attest(
     let current_time_ms = clock.timestamp_ms();
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
 
-    let remover_accreditations = self.get_accreditations_to_accredit(&ctx.sender().to_id());
+    // Check revocation permissions
+    if (!self.is_root_authority(&ctx.sender().to_id())) {
+        assert!(self.is_accreditor(&ctx.sender().to_id()), EUnauthorizedInsufficientAccreditationToAccredit);
+    };
+
+    // Check if entity has attestation permissions
+    assert!(self.is_attester(entity_id), EAccreditationNotFound);
+
     let entities_attest_permissions = self.get_accreditations_to_attest(entity_id);
     let mut accreditation_to_revoke_idx = entities_attest_permissions.find_accredited_property_id(
         permission_id,
@@ -605,6 +617,7 @@ public fun revoke_accreditation_to_attest(
                 accreditation_to_revoke_idx.extract(),
             ];
         let (_, properties) = (*accreditation_to_revoke.properties()).into_keys_values();
+        let remover_accreditations = self.get_accreditations_to_accredit(&ctx.sender().to_id());
         assert!(
             remover_accreditations.are_properties_compliant(&properties, current_time_ms),
             EUnauthorizedInsufficientAccreditationToAccredit,
@@ -632,7 +645,14 @@ public fun revoke_accreditation_to_accredit(
     ctx: &mut TxContext,
 ) {
     assert!(cap.federation_id == self.federation_id(), EUnauthorizedWrongFederation);
-    let remover_permissions = self.get_accreditations_to_accredit(&ctx.sender().to_id());
+
+    // Check if sender has accreditation permissions
+    if (!self.is_root_authority(&ctx.sender().to_id())) {
+        assert!(self.is_accreditor(&ctx.sender().to_id()), EUnauthorizedInsufficientAccreditationToAccredit);
+    };
+
+    // Check if entity has accreditation permissions
+    assert!(self.is_accreditor(entity_id), EAccreditationNotFound);
 
     let entities_accredit_permissions = self.get_accreditations_to_accredit(entity_id);
     let mut accreditation_to_revoke_idx = entities_accredit_permissions.find_accredited_property_id(
@@ -648,6 +668,7 @@ public fun revoke_accreditation_to_accredit(
             ];
         let current_time_ms = clock.timestamp_ms();
         let (_, properties) = (*accreditation_to_revoke.properties()).into_keys_values();
+        let remover_permissions = self.get_accreditations_to_accredit(&ctx.sender().to_id());
         assert!(
             remover_permissions.are_properties_compliant(&properties, current_time_ms),
             EUnauthorizedInsufficientAccreditationToAccredit,
@@ -692,6 +713,11 @@ public fun validate_property(
         return false
     };
 
+    // Check if attester has accreditation permissions
+    if (!self.is_attester(attester_id)) {
+        return false
+    };
+
     // Check if attester has permissions for the property
     let accreditations = self.get_accreditations_to_attest(attester_id);
     if (!accreditations.is_property_allowed(&property_name, &property_value, current_time_ms)) {
@@ -727,6 +753,11 @@ public fun validate_properties(
         };
 
         idx = idx + 1;
+    };
+
+    // Check if issuer has accreditation permissions
+    if (!self.is_attester(attester_id)) {
+        return false
     };
 
     // Then check if issuer has permissions for all properties
