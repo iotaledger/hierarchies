@@ -258,10 +258,7 @@ public fun is_attester(self: &Federation, entity_id: &ID): bool {
 }
 
 /// Gets accreditations for delegation for a specific entity
-public fun get_accreditations_to_accredit(
-    self: &Federation,
-    entity_id: &ID,
-): &Accreditations {
+public fun get_accreditations_to_accredit(self: &Federation, entity_id: &ID): &Accreditations {
     self.governance.accreditations_to_accredit.get(entity_id)
 }
 
@@ -484,7 +481,10 @@ public fun create_accreditation_to_accredit(
 
     // Check permissions only if sender is not a root authority
     if (!self.is_root_authority(&ctx.sender().to_id())) {
-        assert!(self.is_accreditor(&ctx.sender().to_id()), EUnauthorizedInsufficientAccreditationToAccredit);
+        assert!(
+            self.is_accreditor(&ctx.sender().to_id()),
+            EUnauthorizedInsufficientAccreditationToAccredit,
+        );
         let accreditations_to_accredit = self.get_accreditations_to_accredit(
             &ctx.sender().to_id(),
         );
@@ -550,7 +550,10 @@ public fun create_accreditation_to_attest(
 
     // Check permissions only if sender is not a root authority
     if (!self.is_root_authority(&ctx.sender().to_id())) {
-        assert!(self.is_accreditor(&ctx.sender().to_id()), EUnauthorizedInsufficientAccreditationToAccredit);
+        assert!(
+            self.is_accreditor(&ctx.sender().to_id()),
+            EUnauthorizedInsufficientAccreditationToAccredit,
+        );
         let accreditations_to_accredit = self.get_accreditations_to_accredit(
             &ctx.sender().to_id(),
         );
@@ -598,7 +601,10 @@ public fun revoke_accreditation_to_attest(
 
     // Check revocation permissions
     if (!self.is_root_authority(&ctx.sender().to_id())) {
-        assert!(self.is_accreditor(&ctx.sender().to_id()), EUnauthorizedInsufficientAccreditationToAccredit);
+        assert!(
+            self.is_accreditor(&ctx.sender().to_id()),
+            EUnauthorizedInsufficientAccreditationToAccredit,
+        );
     };
 
     // Check if entity has attestation permissions
@@ -648,7 +654,10 @@ public fun revoke_accreditation_to_accredit(
 
     // Check if sender has accreditation permissions
     if (!self.is_root_authority(&ctx.sender().to_id())) {
-        assert!(self.is_accreditor(&ctx.sender().to_id()), EUnauthorizedInsufficientAccreditationToAccredit);
+        assert!(
+            self.is_accreditor(&ctx.sender().to_id()),
+            EUnauthorizedInsufficientAccreditationToAccredit,
+        );
     };
 
     // Check if entity has accreditation permissions
