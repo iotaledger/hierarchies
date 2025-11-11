@@ -3712,7 +3712,7 @@ dependencies = [
 [[package]]
 name = "iota_interaction"
 version = "0.8.5"
-source = "git+https://github.com/iotaledger/product-core.git?tag=v0.8.5#d4ea4439f4ec20c4caa98eede18f00d533637a73"
+source = "git+https://github.com/iotaledger/product-core.git?branch=feat%2Ffull-package-history#16ba2ebcfb794375caffce10f933b8f78085f46d"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3752,7 +3752,7 @@ dependencies = [
 [[package]]
 name = "iota_interaction_rust"
 version = "0.8.5"
-source = "git+https://github.com/iotaledger/product-core.git?tag=v0.8.5#d4ea4439f4ec20c4caa98eede18f00d533637a73"
+source = "git+https://github.com/iotaledger/product-core.git?branch=feat%2Ffull-package-history#16ba2ebcfb794375caffce10f933b8f78085f46d"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3765,7 +3765,7 @@ dependencies = [
 [[package]]
 name = "iota_interaction_ts"
 version = "0.8.5"
-source = "git+https://github.com/iotaledger/product-core.git?tag=v0.8.5#d4ea4439f4ec20c4caa98eede18f00d533637a73"
+source = "git+https://github.com/iotaledger/product-core.git?branch=feat%2Ffull-package-history#16ba2ebcfb794375caffce10f933b8f78085f46d"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -5785,7 +5785,7 @@ dependencies = [
 [[package]]
 name = "product_common"
 version = "0.8.5"
-source = "git+https://github.com/iotaledger/product-core.git?tag=v0.8.5#d4ea4439f4ec20c4caa98eede18f00d533637a73"
+source = "git+https://github.com/iotaledger/product-core.git?branch=feat%2Ffull-package-history#16ba2ebcfb794375caffce10f933b8f78085f46d"
 dependencies = [
  "anyhow",
  "async-trait",
