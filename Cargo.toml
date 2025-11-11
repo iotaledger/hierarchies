@@ -8,23 +8,26 @@ version = "0.1.5-alpha"
 authors = ["IOTA Stiftung"]
 edition = "2024"
 homepage = "https://www.iota.org"
-license = "Apache-2.0"
 repository = "https://github.com/iotaledger/hierarchies"
+license = "Apache-2.0"
 
 [workspace.dependencies]
 anyhow = "1.0"
 async-trait = "0.1"
 bcs = "0.1"
 chrono = { version = "0.4", features = ["serde"] }
+iota_interaction = { package = "iota_interaction", git = "https://github.com/iotaledger/product-core.git", branch = "feat/full-package-history", default-features = false }
+iota_interaction_rust = { package = "iota_interaction_rust", git = "https://github.com/iotaledger/product-core.git", branch = "feat/full-package-history", default-features = false }
+iota_interaction_ts = { package = "iota_interaction_ts", git = "https://github.com/iotaledger/product-core.git", branch = "feat/full-package-history", default-features = false }
 iota-sdk = { package = "iota-sdk", git = "https://github.com/iotaledger/iota.git", tag = "v1.10.0" }
-iota_interaction = { package = "iota_interaction", git = "https://github.com/iotaledger/product-core.git", tag = "v0.8.5", default-features = false }
-iota_interaction_rust = { package = "iota_interaction_rust", git = "https://github.com/iotaledger/product-core.git", tag = "v0.8.5", default-features = false }
-iota_interaction_ts = { package = "iota_interaction_ts", git = "https://github.com/iotaledger/product-core.git", tag = "v0.8.5", default-features = false }
-product_common = { package = "product_common", git = "https://github.com/iotaledger/product-core.git", tag = "v0.8.5", default-features = false }
+product_common = { package = "product_common", git = "https://github.com/iotaledger/product-core.git", branch = "feat/full-package-history", default-features = false }
 secret-storage = { git = "https://github.com/iotaledger/secret-storage", tag = "v0.3.0", default-features = false }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-strum = { version = "0.27", default-features = false, features = ["derive", "std"] }
+strum = { version = "0.27", default-features = false, features = [
+  "derive",
+  "std"
+] }
 thiserror = "2.0"
 tokio = { version = "1.46", default-features = false, features = ["sync"] }
 

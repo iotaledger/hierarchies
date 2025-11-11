@@ -8,13 +8,22 @@ edition.workspace = true
 anyhow.workspace = true
 async-trait.workspace = true
 bcs.workspace = true
-product_common = { workspace = true, default-features = false, features = ["transaction"] }
+product_common = { workspace = true, default-features = false, features = [
+  "transaction"
+] }
 secret-storage.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 strum.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
+
+[dev-dependencies]
+async-trait.workspace = true
+product_common = { workspace = true, features = ["test-utils", "transaction"] }
+
+[build-dependencies]
+product_common = { workspace = true, features = ["move-history-manager"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 iota_interaction = { workspace = true, default-features = false }
@@ -26,21 +35,16 @@ tokio = { workspace = true }
 iota_interaction = { workspace = true, default-features = false }
 iota_interaction_ts = { workspace = true }
 
-[dev-dependencies]
-async-trait.workspace = true
-product_common = { workspace = true, features = ["transaction", "test-utils"] }
-
 [features]
 default = ["send-sync"]
+# Uses a default HTTP Client instead of a user-provided one.
+default-http-client = ["product_common/default-http-client"]
+# Enables an high-level integration with IOTA gas-station.
+gas-station = ["product_common/gas-station"]
 send-sync = [
-  "send-sync-storage",
-  "product_common/send-sync",
   "iota_interaction/send-sync-transaction",
+  "product_common/send-sync",
+  "send-sync-storage",
 ]
 # Enables `Send` + `Sync` bounds for the storage traits.
 send-sync-storage = ["secret-storage/send-sync-storage"]
-
-# Enables an high-level integration with IOTA gas-station.
-gas-station = ["product_common/gas-station"]
-# Uses a default HTTP Client instead of a user-provided one.
-default-http-client = ["product_common/default-http-client"]
