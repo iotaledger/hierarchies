@@ -26,9 +26,6 @@ type PackageRegistryLock = RwLockReadGuard<'static, PackageRegistry>;
 type PackageRegistryLockMut = RwLockWriteGuard<'static, PackageRegistry>;
 
 static HIERARCHIES_PACKAGE_REGISTRY: LazyLock<RwLock<PackageRegistry>> = LazyLock::new(|| {
-    // let move_lock_content = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../hierarchies-move/Move.lock"));
-    // RwLock::new(PackageRegistry::from_move_lock_content(move_lock_content).expect("Move.lock exists and it's valid"))
-
     let package_history_json = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/../../hierarchies-move/Move.history.json"

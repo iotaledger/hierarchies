@@ -8,9 +8,7 @@ edition.workspace = true
 anyhow.workspace = true
 async-trait.workspace = true
 bcs.workspace = true
-product_common = { workspace = true, default-features = false, features = [
-  "transaction"
-] }
+product_common = { workspace = true, default-features = false, features = ["transaction"] }
 secret-storage.workspace = true
 serde.workspace = true
 serde_json.workspace = true
