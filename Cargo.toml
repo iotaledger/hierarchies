@@ -16,7 +16,7 @@ anyhow = "1.0"
 async-trait = "0.1"
 bcs = "0.1"
 chrono = { version = "0.4", features = ["serde"] }
-iota-sdk = { package = "iota-sdk", git = "https://github.com/iotaledger/iota.git", tag = "v1.11.0-rc" }
+iota-sdk = { package = "iota-sdk", git = "https://github.com/iotaledger/iota.git", tag = "v1.11.0" }
 iota_interaction = { package = "iota_interaction", git = "https://github.com/iotaledger/product-core.git", branch = "feat/iota-v1-11-0-rc-upstream-merge", default-features = false }
 iota_interaction_rust = { package = "iota_interaction_rust", git = "https://github.com/iotaledger/product-core.git", branch = "feat/iota-v1-11-0-rc-upstream-merge", default-features = false }
 iota_interaction_ts = { package = "iota_interaction_ts", git = "https://github.com/iotaledger/product-core.git", branch = "feat/iota-v1-11-0-rc-upstream-merge", default-features = false }
