@@ -82,7 +82,7 @@ jobs:
         with:
           ref: ${{ github.event.inputs.publish-branch }}
       - name: Release to npm
-        uses: "iotaledger/hierarchies/.github/actions/publish/publish-wasm@chore/adapt-npm-workflows"
+        uses: "./.github/actions/publish/wasm"
         with:
           dry-run: ${{ github.event.inputs.publish-dry-run }}
           input-artifact-name: hierarchies-wasm-bindings-build
