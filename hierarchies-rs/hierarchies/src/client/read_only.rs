@@ -137,6 +137,7 @@ impl HierarchiesClientReadOnly {
     /// This function allows overriding the package ID lookup from the registry,
     /// which is useful for connecting to networks where the package ID is known
     /// but not yet registered, or for testing with custom deployments.
+    #[allow(deprecated)] // TODO : Remove after MoveHistoryManager is released with product-core
     pub async fn new_with_pkg_id(
         #[cfg(target_arch = "wasm32")] iota_client: WasmIotaClient,
         #[cfg(not(target_arch = "wasm32"))] iota_client: IotaClient,

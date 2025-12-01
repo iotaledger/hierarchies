@@ -1,6 +1,6 @@
 [package]
 name = "hierarchies_wasm"
-version = "0.1.5-alpha"
+version = "0.1.6-alpha"
 authors = ["IOTA Stiftung"]
 edition = "2024"
 homepage = "https://www.iota.org"
@@ -18,8 +18,8 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 anyhow = "1.0"
 console_error_panic_hook = "0.1"
-iota_interaction = { package = "iota_interaction", git = "https://github.com/iotaledger/product-core.git", branch = "feat/full-package-history", default-features = false }
-iota_interaction_ts = { package = "iota_interaction_ts", git = "https://github.com/iotaledger/product-core.git", branch = "feat/full-package-history" }
+iota_interaction = { package = "iota_interaction", git = "https://github.com/iotaledger/product-core.git", tag = "v0.8.6", default-features = false }
+iota_interaction_ts = { package = "iota_interaction_ts", git = "https://github.com/iotaledger/product-core.git", tag = "v0.8.6" }
 js-sys = { version = "0.3" }
 serde = { version = "1.0", features = ["derive"] }
 serde-wasm-bindgen = "0.6"
@@ -34,7 +34,7 @@ features = ["default-http-client", "gas-station"]
 [dependencies.product_common]
 package = "product_common"
 git = "https://github.com/iotaledger/product-core.git"
-branch = "feat/full-package-history"
+tag = "v0.8.6"
 features = [
   "default-http-client",
   "binding-utils",
