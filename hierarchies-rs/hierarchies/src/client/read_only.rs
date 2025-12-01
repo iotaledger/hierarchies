@@ -149,7 +149,7 @@ impl HierarchiesClientReadOnly {
         // Use the passed pkg_id to add a new env or override the information of an existing one.
         {
             let mut registry = package::hierarchies_package_registry_mut().await;
-            registry.insert_env(Env::new(network.as_ref()), vec![package_id]);
+            registry.insert_env_history(Env::new(network.as_ref()), vec![package_id]);
         }
 
         Self::new_internal(client, network).await
