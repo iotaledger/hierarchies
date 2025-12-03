@@ -4,9 +4,6 @@ inputs:
   tag:
     description: "Which npm tag to publish under e.g. `dev`, will default to `latest`"
     required: false
-  npm-token:
-    description: "used for authenticating towards npm"
-    required: true
   input-artifact-name:
     description: "Name used for the input Wasm build artifact"
     required: true
@@ -21,9 +18,9 @@ runs:
   using: "composite"
   steps:
     - name: Set up Node.js
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v5
       with:
-        node-version: "20.x"
+        node-version: "lts/*"
         registry-url: "https://registry.npmjs.org"
 
     - name: Download bindings/wasm artifacts
@@ -34,8 +31,6 @@ runs:
 
     - name: Publish WASM bindings to NPM
       shell: sh
-      env:
-        NODE_AUTH_TOKEN: ${{ inputs.npm-token }}
       working-directory: ${{ inputs.working-directory }}
       # will publish 'latest' tag if no tag is passed
       run: |

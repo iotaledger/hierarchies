@@ -1,10 +1,10 @@
 [workspace]
+resolver = "2"
 members = ["hierarchies-rs/examples", "hierarchies-rs/hierarchies"]
 exclude = ["bindings/wasm/hierarchies_wasm"]
-resolver = "2"
 
 [workspace.package]
-version = "0.1.3-alpha"
+version = "0.1.6-alpha"
 authors = ["IOTA Stiftung"]
 edition = "2024"
 homepage = "https://www.iota.org"
@@ -16,17 +16,17 @@ anyhow = "1.0"
 async-trait = "0.1"
 bcs = "0.1"
 chrono = { version = "0.4", features = ["serde"] }
-iota-sdk = { git = "https://github.com/iotaledger/iota.git", tag = "v1.7.0", package = "iota-sdk" }
-iota_interaction = { git = "https://github.com/iotaledger/product-core.git", default-features = false, tag = "v0.8.3", package = "iota_interaction" }
-iota_interaction_rust = { git = "https://github.com/iotaledger/product-core.git", default-features = false, tag = "v0.8.3", package = "iota_interaction_rust" }
-iota_interaction_ts = { git = "https://github.com/iotaledger/product-core.git", default-features = false, tag = "v0.8.3", package = "iota_interaction_ts" }
-product_common = { git = "https://github.com/iotaledger/product-core.git", tag = "v0.8.3", default-features = false, package = "product_common" }
+iota-sdk = { package = "iota-sdk", git = "https://github.com/iotaledger/iota.git", tag = "v1.11.0" }
+iota_interaction = { package = "iota_interaction", git = "https://github.com/iotaledger/product-core.git", tag = "v0.8.6", default-features = false }
+iota_interaction_rust = { package = "iota_interaction_rust", git = "https://github.com/iotaledger/product-core.git", tag = "v0.8.6", default-features = false }
+iota_interaction_ts = { package = "iota_interaction_ts", git = "https://github.com/iotaledger/product-core.git", tag = "v0.8.6", default-features = false }
+product_common = { package = "product_common", git = "https://github.com/iotaledger/product-core.git", tag = "v0.8.6", default-features = false }
 secret-storage = { git = "https://github.com/iotaledger/secret-storage", tag = "v0.3.0", default-features = false }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-strum = { version = "0.27", default-features = false, features = ["std", "derive"] }
+strum = { version = "0.27", default-features = false, features = ["derive", "std"] }
 thiserror = "2.0"
-tokio = { version = "1.46", default-features = false, features = ["sync"] }
+tokio = { version = "1.46.1", default-features = false, features = ["sync"] }
 
 [profile.release.package.iota_interaction_ts]
-opt-level = 's'
+opt-level = "s"
