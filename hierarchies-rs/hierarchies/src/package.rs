@@ -27,8 +27,14 @@ type PackageRegistryLockMut = RwLockWriteGuard<'static, PackageRegistry>;
 
 #[allow(deprecated)] // TODO : Remove after MoveHistoryManager is released with product-core
 static HIERARCHIES_PACKAGE_REGISTRY: LazyLock<RwLock<PackageRegistry>> = LazyLock::new(|| {
-    let move_lock_content = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../hierarchies-move/Move.lock"));
-    RwLock::new(PackageRegistry::from_move_lock_content(move_lock_content).expect("Move.lock exists and it's valid"))
+    let package_history_json = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../hierarchies-move/Move.history.json"
+    ));
+    RwLock::new(
+        PackageRegistry::from_package_history_json_str(package_history_json)
+            .expect("Move.history.json exists and it's valid"),
+    )
 });
 
 pub(crate) async fn hierarchies_package_registry() -> PackageRegistryLock {
