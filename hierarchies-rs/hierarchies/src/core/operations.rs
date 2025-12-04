@@ -27,37 +27,17 @@ use iota_interaction::types::programmable_transaction_builder::ProgrammableTrans
 use iota_interaction::types::transaction::{CallArg, Command, ObjectArg, ProgrammableTransaction};
 use iota_interaction::{IotaClientTrait, MoveType, OptionalSync, ident_str};
 use product_common::core_client::CoreClientReadOnly;
+use serde::de::DeserializeOwned;
 
 use crate::core::error::OperationError;
-use crate::core::types::Capability;
 use crate::core::types::property::{FederationProperty, new_properties, new_property};
 use crate::core::types::property_name::PropertyName;
 use crate::core::types::property_value::PropertyValue;
+use crate::core::types::{AccreditCap, RootAuthority, RootAuthorityCap, move_names};
 use crate::core::{CapabilityError, get_clock_ref};
 use crate::error::{NetworkError, ObjectError};
 
 const MAIN_HIERARCHIES_MODULE: &str = move_names::MODULE_MAIN;
-
-/// Move package module names for Hierarchies smart contract interactions.
-///
-/// These constants define the module names used when calling functions
-/// in the Hierarchies Move package deployed on the IOTA network.
-pub mod move_names {
-    /// The main Hierarchies package name
-    pub const PACKAGE_NAME: &str = "hierarchies";
-    /// Main module containing federation and core operations
-    pub const MODULE_MAIN: &str = "main";
-    /// Module for property-related operations
-    pub const MODULE_PROPERTY: &str = "property";
-    /// Module for property value operations
-    pub const MODULE_VALUE: &str = "property_value";
-    /// Module for property name operations
-    pub const MODULE_NAME: &str = "property_name";
-    /// Module for property shape operations
-    pub const MODULE_SHAPE: &str = "property_shape";
-    /// Utility module for common operations
-    pub const MODULE_UTILS: &str = "utils";
-}
 
 /// Internal implementation of Hierarchies operations.
 ///
@@ -78,63 +58,82 @@ pub(crate) struct HierarchiesImpl;
 impl HierarchiesOperations for HierarchiesImpl {}
 
 impl HierarchiesImpl {
-    /// Retrieves a capability object for the specified sender.
+    /// Retrieves a RootAuthorityCap for the specified owner.
     ///
-    /// Capabilities grant permissions within the Hierarchies system:
-    /// - `RootAuthority`: Full administrative access
-    /// - `Accredit`: Permission to delegate both accreditation and attestation rights
+    /// This method searches across all package versions in history to find
+    /// a capability object owned by the sender, which is necessary after package upgrades.
     ///
     /// # Errors
     ///
-    /// Returns an error if:
-    /// - The sender doesn't own the requested capability type
-    /// - The capability object structure is invalid
-    /// - Network communication fails
-    pub(crate) async fn get_cap<C>(
+    /// Returns an error if the owner doesn't have a RootAuthorityCap.
+    pub(crate) async fn get_root_authority_cap<C>(
         client: &C,
-        cap_type: Capability,
-        sender: IotaAddress,
+        owner: IotaAddress,
+        federation_id: ObjectID,
     ) -> Result<ObjectRef, CapabilityError>
     where
         C: CoreClientReadOnly + OptionalSync,
     {
-        let cap_tag = StructTag::from_str(&format!(
-            "{}::{MAIN_HIERARCHIES_MODULE}::{cap_type}",
-            client.package_id()
-        ))
-        .map_err(|_| CapabilityError::InvalidType {
-            cap_type: cap_type.to_string(),
-        })?;
+        let cap: RootAuthorityCap = client
+            .find_object_for_address(owner, |cap: &RootAuthorityCap| cap.federation_id == federation_id)
+            .await
+            .map_err(|_| CapabilityError::NotFound {
+                cap_type: "RootAuthorityCap".to_string(),
+            })?
+            .ok_or_else(|| CapabilityError::NotFound {
+                cap_type: "RootAuthorityCap".to_string(),
+            })?;
 
-        let filter = IotaObjectResponseQuery::new_with_filter(IotaObjectDataFilter::StructType(cap_tag));
+        let object_id = *cap.id.object_id();
+        client
+            .get_object_ref_by_id(object_id)
+            .await
+            .map_err(|_| CapabilityError::NotFound {
+                cap_type: "RootAuthorityCap".to_string(),
+            })?
+            .map(|owned_ref| owned_ref.reference.to_object_ref())
+            .ok_or_else(|| CapabilityError::NotFound {
+                cap_type: "RootAuthorityCap".to_string(),
+            })
+    }
 
-        let mut cursor = None;
-        loop {
-            let mut page = client
-                .client_adapter()
-                .read_api()
-                .get_owned_objects(sender, Some(filter.clone()), cursor, None)
-                .await
-                .map_err(|_e| CapabilityError::NotFound {
-                    cap_type: cap_type.to_string(),
-                })?;
+    /// Retrieves an AccreditCap for the specified owner.
+    ///
+    /// This method searches across all package versions in history to find
+    /// a capability object owned by the sender, which is necessary after package upgrades.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the owner doesn't have an AccreditCap.
+    pub(crate) async fn get_accredit_cap<C>(
+        client: &C,
+        owner: IotaAddress,
+        federation_id: ObjectID,
+    ) -> Result<ObjectRef, CapabilityError>
+    where
+        C: CoreClientReadOnly + OptionalSync,
+    {
+        let cap: AccreditCap = client
+            .find_object_for_address(owner, |cap: &AccreditCap| cap.federation_id == federation_id)
+            .await
+            .map_err(|_| CapabilityError::NotFound {
+                cap_type: "AccreditCap".to_string(),
+            })?
+            .ok_or_else(|| CapabilityError::NotFound {
+                cap_type: "AccreditCap".to_string(),
+            })?;
 
-            let cap = std::mem::take(&mut page.data)
-                .into_iter()
-                .find_map(|res| res.data.map(|obj| obj.object_ref()));
-
-            cursor = page.next_cursor;
-            if let Some(cap) = cap {
-                return Ok(cap);
-            }
-            if !page.has_next_page {
-                break;
-            }
-        }
-
-        Err(CapabilityError::NotFound {
-            cap_type: cap_type.to_string(),
-        })
+        let object_id = *cap.id.object_id();
+        client
+            .get_object_ref_by_id(object_id)
+            .await
+            .map_err(|_| CapabilityError::NotFound {
+                cap_type: "AccreditCap".to_string(),
+            })?
+            .map(|owned_ref| owned_ref.reference.to_object_ref())
+            .ok_or_else(|| CapabilityError::NotFound {
+                cap_type: "AccreditCap".to_string(),
+            })
     }
 
     /// Creates a shared object reference for a federation.
@@ -260,8 +259,7 @@ pub(crate) trait HierarchiesOperations {
     {
         let mut ptb = ProgrammableTransactionBuilder::new();
 
-        let cap = HierarchiesImpl::get_cap(client, Capability::RootAuthority, owner).await?;
-
+        let cap = HierarchiesImpl::get_root_authority_cap(client, owner, federation_id).await?;
         let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
 
         let fed_ref = HierarchiesImpl::get_fed_ref(client, federation_id).await?;
@@ -297,7 +295,7 @@ pub(crate) trait HierarchiesOperations {
     {
         let mut ptb = ProgrammableTransactionBuilder::new();
 
-        let cap = HierarchiesImpl::get_cap(client, Capability::Accredit, owner).await?;
+        let cap = HierarchiesImpl::get_accredit_cap(client, owner, federation_id).await?;
 
         let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
 
@@ -341,7 +339,7 @@ pub(crate) trait HierarchiesOperations {
     {
         let mut ptb = ProgrammableTransactionBuilder::new();
 
-        let cap = HierarchiesImpl::get_cap(client, Capability::RootAuthority, owner).await?;
+        let cap = HierarchiesImpl::get_root_authority_cap(client, owner, federation_id).await?;
 
         let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
 
@@ -383,7 +381,7 @@ pub(crate) trait HierarchiesOperations {
     {
         let mut ptb = ProgrammableTransactionBuilder::new();
 
-        let cap = HierarchiesImpl::get_cap(client, Capability::Accredit, owner).await?;
+        let cap = HierarchiesImpl::get_accredit_cap(client, owner, federation_id).await?;
         let clock = get_clock_ref(&mut ptb);
 
         let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
@@ -428,7 +426,7 @@ pub(crate) trait HierarchiesOperations {
     {
         let mut ptb = ProgrammableTransactionBuilder::new();
 
-        let cap = HierarchiesImpl::get_cap(client, Capability::Accredit, owner).await?;
+        let cap = HierarchiesImpl::get_accredit_cap(client, owner, federation_id).await?;
         let clock = get_clock_ref(&mut ptb);
         let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
 
@@ -472,7 +470,7 @@ pub(crate) trait HierarchiesOperations {
     {
         let mut ptb = ProgrammableTransactionBuilder::new();
 
-        let cap = HierarchiesImpl::get_cap(client, Capability::Accredit, owner).await?;
+        let cap = HierarchiesImpl::get_accredit_cap(client, owner, federation_id).await?;
         let clock = get_clock_ref(&mut ptb);
         let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
 
@@ -736,7 +734,7 @@ pub(crate) trait HierarchiesOperations {
     {
         let mut ptb = ProgrammableTransactionBuilder::new();
 
-        let cap = HierarchiesImpl::get_cap(client, Capability::RootAuthority, owner).await?;
+        let cap = HierarchiesImpl::get_root_authority_cap(client, owner, federation_id).await?;
 
         let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
 
@@ -787,7 +785,7 @@ pub(crate) trait HierarchiesOperations {
     {
         let mut ptb = ProgrammableTransactionBuilder::new();
 
-        let cap = HierarchiesImpl::get_cap(client, Capability::RootAuthority, owner).await?;
+        let cap = HierarchiesImpl::get_root_authority_cap(client, owner, federation_id).await?;
 
         let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
 
@@ -990,7 +988,7 @@ pub(crate) trait HierarchiesOperations {
     {
         let mut ptb = ProgrammableTransactionBuilder::new();
 
-        let cap = HierarchiesImpl::get_cap(client, Capability::RootAuthority, owner).await?;
+        let cap = HierarchiesImpl::get_root_authority_cap(client, owner, federation_id).await?;
 
         let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
 
@@ -1035,8 +1033,7 @@ pub(crate) trait HierarchiesOperations {
         C: CoreClientReadOnly + OptionalSync,
     {
         let mut ptb = ProgrammableTransactionBuilder::new();
-
-        let cap = HierarchiesImpl::get_cap(client, Capability::RootAuthority, owner).await?;
+        let cap = HierarchiesImpl::get_root_authority_cap(client, owner, federation_id).await?;
 
         let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
 
