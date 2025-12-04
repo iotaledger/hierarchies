@@ -16,6 +16,9 @@ use serde::{Deserialize, Serialize};
 
 use super::move_names;
 
+pub(crate) const ROOT_AUTHORITY_CAP_TYPE: &str = "RootAuthorityCap";
+pub(crate) const ACCREDIT_CAP_TYPE: &str = "AccreditCap";
+
 /// Capability for root authority operations.
 ///
 /// This capability grants full administrative access to a federation,
@@ -29,7 +32,7 @@ pub struct RootAuthorityCap {
 
 impl MoveType for RootAuthorityCap {
     fn move_type(package: ObjectID) -> TypeTag {
-        TypeTag::from_str(format!("{package}::{}::RootAuthorityCap", move_names::MODULE_MAIN).as_str())
+        TypeTag::from_str(format!("{package}::{}::{}", move_names::MODULE_MAIN, ROOT_AUTHORITY_CAP_TYPE).as_str())
             .expect("Failed to create type tag")
     }
 }
@@ -46,7 +49,7 @@ pub struct AccreditCap {
 
 impl MoveType for AccreditCap {
     fn move_type(package: ObjectID) -> TypeTag {
-        TypeTag::from_str(format!("{package}::{}::AccreditCap", move_names::MODULE_MAIN).as_str())
+        TypeTag::from_str(format!("{package}::{}::{}", move_names::MODULE_MAIN, ACCREDIT_CAP_TYPE).as_str())
             .expect("Failed to create type tag")
     }
 }

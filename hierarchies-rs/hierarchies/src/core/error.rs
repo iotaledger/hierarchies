@@ -58,4 +58,12 @@ pub enum CapabilityError {
     /// Invalid capability type
     #[error("invalid capability type: {cap_type}")]
     InvalidType { cap_type: String },
+
+    /// Generic error with message and source, for any capability error context.
+    #[error("{message}: {source}")]
+    Generic {
+        message: String,
+        #[source]
+        source: Box<dyn std::error::Error + Send + Sync>,
+    },
 }

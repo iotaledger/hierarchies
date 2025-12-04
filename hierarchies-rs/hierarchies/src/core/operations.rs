@@ -30,7 +30,7 @@ use crate::core::error::OperationError;
 use crate::core::types::property::{FederationProperty, new_properties, new_property};
 use crate::core::types::property_name::PropertyName;
 use crate::core::types::property_value::PropertyValue;
-use crate::core::types::{AccreditCap, RootAuthorityCap, move_names};
+use crate::core::types::{ACCREDIT_CAP_TYPE, AccreditCap, ROOT_AUTHORITY_CAP_TYPE, RootAuthorityCap, move_names};
 use crate::core::{CapabilityError, get_clock_ref};
 use crate::error::{NetworkError, ObjectError};
 
@@ -73,22 +73,24 @@ impl HierarchiesImpl {
             .find_object_for_address(owner, |cap: &RootAuthorityCap| cap.federation_id == federation_id)
             .await
             .map_err(|_| CapabilityError::NotFound {
-                cap_type: "RootAuthorityCap".to_string(),
+                cap_type: ROOT_AUTHORITY_CAP_TYPE.to_string(),
             })?
             .ok_or_else(|| CapabilityError::NotFound {
-                cap_type: "RootAuthorityCap".to_string(),
+                cap_type: ROOT_AUTHORITY_CAP_TYPE.to_string(),
             })?;
 
         let object_id = *cap.id.object_id();
+
         client
             .get_object_ref_by_id(object_id)
             .await
-            .map_err(|_| CapabilityError::NotFound {
-                cap_type: "RootAuthorityCap".to_string(),
+            .map_err(|e| CapabilityError::Generic {
+                message: "Failed to get object ref by id".to_string(),
+                source: e.into(),
             })?
             .map(|owned_ref| owned_ref.reference.to_object_ref())
             .ok_or_else(|| CapabilityError::NotFound {
-                cap_type: "RootAuthorityCap".to_string(),
+                cap_type: ROOT_AUTHORITY_CAP_TYPE.to_string(),
             })
     }
 
@@ -112,22 +114,23 @@ impl HierarchiesImpl {
             .find_object_for_address(owner, |cap: &AccreditCap| cap.federation_id == federation_id)
             .await
             .map_err(|_| CapabilityError::NotFound {
-                cap_type: "AccreditCap".to_string(),
+                cap_type: ACCREDIT_CAP_TYPE.to_string(),
             })?
             .ok_or_else(|| CapabilityError::NotFound {
-                cap_type: "AccreditCap".to_string(),
+                cap_type: ACCREDIT_CAP_TYPE.to_string(),
             })?;
 
         let object_id = *cap.id.object_id();
         client
             .get_object_ref_by_id(object_id)
             .await
-            .map_err(|_| CapabilityError::NotFound {
-                cap_type: "AccreditCap".to_string(),
+            .map_err(|e| CapabilityError::Generic {
+                message: "Failed to get object ref by id".to_string(),
+                source: e.into(),
             })?
             .map(|owned_ref| owned_ref.reference.to_object_ref())
             .ok_or_else(|| CapabilityError::NotFound {
-                cap_type: "AccreditCap".to_string(),
+                cap_type: ACCREDIT_CAP_TYPE.to_string(),
             })
     }
 
