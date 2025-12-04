@@ -72,8 +72,9 @@ impl HierarchiesImpl {
         let cap: RootAuthorityCap = client
             .find_object_for_address(owner, |cap: &RootAuthorityCap| cap.federation_id == federation_id)
             .await
-            .map_err(|_| CapabilityError::NotFound {
-                cap_type: ROOT_AUTHORITY_CAP_TYPE.to_string(),
+            .map_err(|e| CapabilityError::Generic {
+                message: "Failed to find object for address".to_string(),
+                source: e.into(),
             })?
             .ok_or_else(|| CapabilityError::NotFound {
                 cap_type: ROOT_AUTHORITY_CAP_TYPE.to_string(),
@@ -113,8 +114,9 @@ impl HierarchiesImpl {
         let cap: AccreditCap = client
             .find_object_for_address(owner, |cap: &AccreditCap| cap.federation_id == federation_id)
             .await
-            .map_err(|_| CapabilityError::NotFound {
-                cap_type: ACCREDIT_CAP_TYPE.to_string(),
+            .map_err(|e| CapabilityError::Generic {
+                message: "Failed to find object for address".to_string(),
+                source: e.into(),
             })?
             .ok_or_else(|| CapabilityError::NotFound {
                 cap_type: ACCREDIT_CAP_TYPE.to_string(),
