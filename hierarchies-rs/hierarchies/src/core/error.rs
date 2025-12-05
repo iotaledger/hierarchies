@@ -58,4 +58,11 @@ pub enum CapabilityError {
     /// Invalid capability type
     #[error("invalid capability type: {cap_type}")]
     InvalidType { cap_type: String },
+
+    /// RPC call failed
+    #[error("RPC call failed: {source}")]
+    Rpc {
+        #[source]
+        source: Box<dyn std::error::Error + Send + Sync>,
+    },
 }
