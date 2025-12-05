@@ -59,10 +59,9 @@ pub enum CapabilityError {
     #[error("invalid capability type: {cap_type}")]
     InvalidType { cap_type: String },
 
-    /// Generic error with message and source, for any capability error context.
-    #[error("{message}: {source}")]
-    Generic {
-        message: String,
+    /// RPC call failed
+    #[error("RPC call failed: {source}")]
+    Rpc {
         #[source]
         source: Box<dyn std::error::Error + Send + Sync>,
     },

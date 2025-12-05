@@ -72,10 +72,7 @@ impl HierarchiesImpl {
         let cap: RootAuthorityCap = client
             .find_object_for_address(owner, |cap: &RootAuthorityCap| cap.federation_id == federation_id)
             .await
-            .map_err(|e| CapabilityError::Generic {
-                message: "Failed to find object for address".to_string(),
-                source: e.into(),
-            })?
+            .map_err(|e| CapabilityError::Rpc { source: e.into() })?
             .ok_or_else(|| CapabilityError::NotFound {
                 cap_type: ROOT_AUTHORITY_CAP_TYPE.to_string(),
             })?;
@@ -85,10 +82,7 @@ impl HierarchiesImpl {
         client
             .get_object_ref_by_id(object_id)
             .await
-            .map_err(|e| CapabilityError::Generic {
-                message: "Failed to get object ref by id".to_string(),
-                source: e.into(),
-            })?
+            .map_err(|e| CapabilityError::Rpc { source: e.into() })?
             .map(|owned_ref| owned_ref.reference.to_object_ref())
             .ok_or_else(|| CapabilityError::NotFound {
                 cap_type: ROOT_AUTHORITY_CAP_TYPE.to_string(),
@@ -114,10 +108,7 @@ impl HierarchiesImpl {
         let cap: AccreditCap = client
             .find_object_for_address(owner, |cap: &AccreditCap| cap.federation_id == federation_id)
             .await
-            .map_err(|e| CapabilityError::Generic {
-                message: "Failed to find object for address".to_string(),
-                source: e.into(),
-            })?
+            .map_err(|e| CapabilityError::Rpc { source: e.into() })?
             .ok_or_else(|| CapabilityError::NotFound {
                 cap_type: ACCREDIT_CAP_TYPE.to_string(),
             })?;
@@ -126,10 +117,7 @@ impl HierarchiesImpl {
         client
             .get_object_ref_by_id(object_id)
             .await
-            .map_err(|e| CapabilityError::Generic {
-                message: "Failed to get object ref by id".to_string(),
-                source: e.into(),
-            })?
+            .map_err(|e| CapabilityError::Rpc { source: e.into() })?
             .map(|owned_ref| owned_ref.reference.to_object_ref())
             .ok_or_else(|| CapabilityError::NotFound {
                 cap_type: ACCREDIT_CAP_TYPE.to_string(),
