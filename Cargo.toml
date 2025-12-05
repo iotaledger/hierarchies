@@ -4,7 +4,7 @@ members = ["hierarchies-rs/examples", "hierarchies-rs/hierarchies"]
 exclude = ["bindings/wasm/hierarchies_wasm"]
 
 [workspace.package]
-version = "0.1.6-alpha"
+version = "0.1.7-alpha"
 authors = ["IOTA Stiftung"]
 edition = "2024"
 homepage = "https://www.iota.org"
@@ -24,7 +24,10 @@ product_common = { package = "product_common", git = "https://github.com/iotaled
 secret-storage = { git = "https://github.com/iotaledger/secret-storage", tag = "v0.3.0", default-features = false }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-strum = { version = "0.27", default-features = false, features = ["derive", "std"] }
+strum = { version = "0.27", default-features = false, features = [
+  "derive",
+  "std",
+] }
 thiserror = "2.0"
 tokio = { version = "1.46.1", default-features = false, features = ["sync"] }
 

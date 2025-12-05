@@ -1,6 +1,6 @@
 [package]
 name = "hierarchies_wasm"
-version = "0.1.6-alpha"
+version = "0.1.7-alpha"
 authors = ["IOTA Stiftung"]
 edition = "2024"
 homepage = "https://www.iota.org"
@@ -51,7 +51,9 @@ empty_docs = "allow"
 
 [lints.rust]
 # required for current wasm_bindgen version
-unexpected_cfgs = { level = "warn", check-cfg = ["cfg(wasm_bindgen_unstable_test_coverage)"] }
+unexpected_cfgs = { level = "warn", check-cfg = [
+  "cfg(wasm_bindgen_unstable_test_coverage)",
+] }
 
 [profile.release]
 opt-level = "s"
