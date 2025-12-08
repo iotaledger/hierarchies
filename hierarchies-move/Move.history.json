@@ -1,8 +1,8 @@
 {
   "aliases": {
-    "devnet": "e678123a",
     "mainnet": "6364aad5",
-    "testnet": "2304aa97"
+    "testnet": "2304aa97",
+    "devnet": "e678123a"
   },
   "envs": {
     "6364aad5": [
