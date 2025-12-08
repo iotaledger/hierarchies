@@ -6,24 +6,50 @@
 //! This module provides capability types for the Hierarchies (IOTA Trust Hierarchy)
 //! module.
 
-use core::fmt;
-use std::fmt::Display;
+use std::str::FromStr;
 
+use iota_interaction::MoveType;
+use iota_interaction::move_types::language_storage::TypeTag;
+use iota_interaction::types::base_types::ObjectID;
+use iota_interaction::types::id::UID;
 use serde::{Deserialize, Serialize};
 
-/// Capabilities are the different types of capabilities that can be issued
-/// to an account
+use super::move_names;
+
+pub(crate) const ROOT_AUTHORITY_CAP_TYPE: &str = "RootAuthorityCap";
+pub(crate) const ACCREDIT_CAP_TYPE: &str = "AccreditCap";
+
+/// Capability for root authority operations.
+///
+/// This capability grants full administrative access to a federation,
+/// including the ability to add/remove other root authorities and manage properties.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum Capability {
-    RootAuthority,
-    Accredit,
+pub struct RootAuthorityCap {
+    pub id: UID,
+    pub federation_id: ObjectID,
+    pub account_id: ObjectID,
 }
 
-impl Display for Capability {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Capability::RootAuthority => write!(f, "RootAuthorityCap"),
-            Capability::Accredit => write!(f, "AccreditCap"),
-        }
+impl MoveType for RootAuthorityCap {
+    fn move_type(package: ObjectID) -> TypeTag {
+        TypeTag::from_str(format!("{package}::{}::{}", move_names::MODULE_MAIN, ROOT_AUTHORITY_CAP_TYPE).as_str())
+            .expect("Failed to create type tag")
+    }
+}
+
+/// Capability for accreditation operations.
+///
+/// This capability grants the ability to delegate accreditation and attestation rights
+/// to other accounts within a federation.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AccreditCap {
+    pub id: UID,
+    pub federation_id: ObjectID,
+}
+
+impl MoveType for AccreditCap {
+    fn move_type(package: ObjectID) -> TypeTag {
+        TypeTag::from_str(format!("{package}::{}::{}", move_names::MODULE_MAIN, ACCREDIT_CAP_TYPE).as_str())
+            .expect("Failed to create type tag")
     }
 }

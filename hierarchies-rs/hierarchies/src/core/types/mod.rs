@@ -23,6 +23,27 @@ use serde::{Deserialize, Serialize};
 use crate::core::types::property::FederationProperties;
 use crate::utils::deserialize_vec_map;
 
+/// Move package module names for Hierarchies smart contract interactions.
+///
+/// These constants define the module names used when calling functions
+/// in the Hierarchies Move package deployed on the IOTA network.
+pub mod move_names {
+    /// The main Hierarchies package name
+    pub const PACKAGE_NAME: &str = "hierarchies";
+    /// Main module containing federation and core operations
+    pub const MODULE_MAIN: &str = "main";
+    /// Module for property-related operations
+    pub const MODULE_PROPERTY: &str = "property";
+    /// Module for property value operations
+    pub const MODULE_VALUE: &str = "property_value";
+    /// Module for property name operations
+    pub const MODULE_NAME: &str = "property_name";
+    /// Module for property shape operations
+    pub const MODULE_SHAPE: &str = "property_shape";
+    /// Utility module for common operations
+    pub const MODULE_UTILS: &str = "utils";
+}
+
 /// Represents a federation. A federation is a group of entities that have agreed to work together
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Federation {
