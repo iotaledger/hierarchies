@@ -14,6 +14,7 @@ pub mod permissions;
 pub mod properties;
 pub mod reinstate_root_authority;
 pub mod revoke_root_authority;
+pub mod validate_property;
 
 // Re-export error types
 pub use add_root_authority::*;
@@ -22,3 +23,4 @@ pub use new_federation::*;
 pub use permissions::*;
 pub use reinstate_root_authority::*;
 pub use revoke_root_authority::*;
+pub use validate_property::*;

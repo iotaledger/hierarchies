@@ -5,12 +5,34 @@ authors.workspace = true
 edition.workspace = true
 
 [dependencies]
+
 anyhow.workspace = true
 chrono.workspace = true
 hierarchies = { path = "../hierarchies" }
 iota-sdk = { workspace = true }
 product_common = { workspace = true, features = ["test-utils"] }
 tokio.workspace = true
+serde_json.workspace = true
+serde.workspace = true
+
+
+[dependencies.reqwest]
+version = "0.12.11"
+features = ["json"]
+
+[dependencies.log]
+version = "0.4"
+
+[dependencies.env_logger]
+version = "0.11"
+
+[dependencies.serde_yaml]
+version = "0.9"
+
+[dependencies.clap]
+version = "4.5"
+features = ["derive"]
+
 
 [lib]
 path = "utils/utils.rs"
@@ -73,3 +95,7 @@ name = "01_real_world_university_degrees"
 [[example]]
 path = "real-world/02_supply_chain.rs"
 name = "02_real_world_supply_chain"
+
+[[example]]
+path = "check_fee.rs"
+name = "check_fee"

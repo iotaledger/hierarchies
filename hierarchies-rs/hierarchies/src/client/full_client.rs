@@ -87,10 +87,11 @@ use crate::core::transactions::properties::revoke_property::RevokeProperty;
 use crate::core::transactions::revoke_root_authority::RevokeRootAuthority;
 use crate::core::transactions::{
     CreateAccreditation, CreateAccreditationToAttest, CreateFederation, ReinstateRootAuthority,
-    RevokeAccreditationToAccredit, RevokeAccreditationToAttest,
+    RevokeAccreditationToAccredit, RevokeAccreditationToAttest, ValidateProperty,
 };
 use crate::core::types::property::FederationProperty;
 use crate::core::types::property_name::PropertyName;
+use crate::core::types::property_value::PropertyValue;
 use crate::iota_interaction_adapter::IotaClientAdapter;
 
 /// The `HierarchiesClient` struct is responsible for managing the connection to the
@@ -101,6 +102,16 @@ pub struct HierarchiesClient<S> {
     public_key: PublicKey,
     /// The signer of the client.
     signer: S,
+}
+
+impl<S: Clone> Clone for HierarchiesClient<S> {
+    fn clone(&self) -> Self {
+        Self {
+            read_client: self.read_client.clone(),
+            public_key: self.public_key.clone(),
+            signer: self.signer.clone(),
+        }
+    }
 }
 
 impl<S> HierarchiesClient<S>
@@ -273,6 +284,22 @@ where
             user_id,
             permission_id,
             self.sender_address(),
+        ))
+    }
+
+    /// Validates an attestation
+    pub fn validate_property_non_free(
+        &self,
+        federation_id: ObjectID,
+        attester_id: ObjectID,
+        property_name: PropertyName,
+        property_value: PropertyValue,
+    ) -> TransactionBuilder<ValidateProperty> {
+        TransactionBuilder::new(ValidateProperty::new(
+            federation_id,
+            attester_id,
+            property_name,
+            property_value,
         ))
     }
 }
