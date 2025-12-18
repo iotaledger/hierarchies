@@ -8,6 +8,7 @@ edition.workspace = true
 anyhow.workspace = true
 chrono.workspace = true
 hierarchies = { path = "../hierarchies" }
+hyper = { workspace = true } # Fix for iota-sdk 1.13 issue with axum-server.
 iota-sdk = { workspace = true }
 product_common = { workspace = true, features = ["test-utils"] }
 tokio.workspace = true

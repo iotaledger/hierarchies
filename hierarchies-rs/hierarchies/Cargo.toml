@@ -26,6 +26,7 @@ product_common = { workspace = true, features = ["move-history-manager"] }
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 iota_interaction = { workspace = true, default-features = false }
 iota_interaction_rust = { workspace = true, default-features = false }
+hyper = { workspace = true } # Fix for iota-sdk 1.13 issue with axum-server.
 secret-storage = { workspace = true, default-features = false }
 tokio = { workspace = true }
 
