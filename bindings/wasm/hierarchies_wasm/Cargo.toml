@@ -1,6 +1,6 @@
 [package]
 name = "hierarchies_wasm"
-version = "0.1.8-alpha"
+version = "0.1.9-alpha"
 authors = ["IOTA Stiftung"]
 edition = "2024"
 homepage = "https://www.iota.org"
