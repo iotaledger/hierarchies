@@ -19,7 +19,7 @@ crate-type = ["cdylib", "rlib"]
 anyhow = "1.0"
 console_error_panic_hook = "0.1"
 # Latest hyper is not compatible with axum-server used by iota-sdk. We need to pin it to 1.7 until iota-sdk upgrades axum-server.
-hyper = "=1.7"  # Fix for iota-sdk 1.13 issue with axum-server.
+hyper = "=1.7" # Fix for iota-sdk 1.13 issue with axum-server.
 iota_interaction = { package = "iota_interaction", git = "https://github.com/iotaledger/product-core.git", tag = "v0.8.9", default-features = false }
 iota_interaction_ts = { package = "iota_interaction_ts", git = "https://github.com/iotaledger/product-core.git", tag = "v0.8.9" }
 js-sys = { version = "0.3" }
@@ -53,9 +53,7 @@ empty_docs = "allow"
 
 [lints.rust]
 # required for current wasm_bindgen version
-unexpected_cfgs = { level = "warn", check-cfg = [
-  "cfg(wasm_bindgen_unstable_test_coverage)"
-] }
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(wasm_bindgen_unstable_test_coverage)"] }
 
 [profile.release]
 opt-level = "s"
