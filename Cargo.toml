@@ -4,7 +4,7 @@ members = ["hierarchies-rs/examples", "hierarchies-rs/hierarchies"]
 exclude = ["bindings/wasm/hierarchies_wasm"]
 
 [workspace.package]
-version = "0.1.9-alpha"
+version = "0.1.10-alpha"
 authors = ["IOTA Stiftung"]
 edition = "2024"
 homepage = "https://www.iota.org"
