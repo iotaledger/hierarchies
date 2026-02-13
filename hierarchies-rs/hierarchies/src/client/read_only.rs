@@ -17,7 +17,6 @@ use iota_interaction::types::transaction::{ProgrammableTransaction, TransactionK
 use iota_interaction_ts::bindings::WasmIotaClient;
 use product_common::core_client::CoreClientReadOnly;
 use product_common::network_name::NetworkName;
-use product_common::package_registry::Env;
 use serde::de::DeserializeOwned;
 
 use crate::client::error::ClientError;
@@ -39,9 +38,8 @@ use crate::package;
 pub struct HierarchiesClientReadOnly {
     /// The underlying IOTA client adapter used for communication.
     client: IotaClientAdapter,
-    /// The [`ObjectID`] of the deployed Hierarchies package (smart contract).
-    /// All interactions go through this package ID.
-    hierarchies_package_id: ObjectID,
+    /// The history of the deployed Hierarchies package (smart contract).
+    package_history: Vec<ObjectID>,
     /// The name of the network this client is connected to (e.g., "mainnet", "testnet").
     network_name: NetworkName,
     chain_id: String,
@@ -105,13 +103,17 @@ impl HierarchiesClientReadOnly {
     /// using the internal package registry.
     async fn new_internal(iota_client: IotaClientAdapter, network: NetworkName) -> Result<Self, ClientError> {
         let chain_id = network.as_ref().to_string();
-        let (network, hierarchies_pkg_id) = {
+        let (network, package_history) = {
             let package_registry = package::hierarchies_package_registry().await;
-            let package_id = package_registry.package_id(&network).ok_or_else(|| {
-                ClientError::Configuration(ConfigError::PackageNotFound {
-                    network: network.to_string(),
-                })
-            })?;
+            let package_history = package_registry
+                .history(&network)
+                .ok_or_else(|| {
+                    ClientError::Configuration(ConfigError::PackageNotFound {
+                        network: network.to_string(),
+                    })
+                })?
+                .to_vec();
+
             let network = match chain_id.as_str() {
                 product_common::package_registry::MAINNET_CHAIN_ID => {
                     NetworkName::try_from("iota").expect("valid network name")
@@ -122,11 +124,11 @@ impl HierarchiesClientReadOnly {
                     .unwrap_or(network),
             };
 
-            (network, package_id)
+            (network, package_history)
         };
         Ok(HierarchiesClientReadOnly {
             client: iota_client,
-            hierarchies_package_id: hierarchies_pkg_id,
+            package_history,
             network_name: network,
             chain_id,
         })
@@ -149,7 +151,7 @@ impl HierarchiesClientReadOnly {
         // Use the passed pkg_id to add a new env or override the information of an existing one.
         {
             let mut registry = package::hierarchies_package_registry_mut().await;
-            registry.insert_env_history(Env::new(network.as_ref()), vec![package_id]);
+            registry.insert_new_package_version(&network, package_id);
         }
 
         Self::new_internal(client, network).await
@@ -325,7 +327,10 @@ impl HierarchiesClientReadOnly {
 #[async_trait::async_trait]
 impl CoreClientReadOnly for HierarchiesClientReadOnly {
     fn package_id(&self) -> ObjectID {
-        self.hierarchies_package_id
+        *self
+            .package_history
+            .last()
+            .expect("at least one package exists in history")
     }
 
     fn network_name(&self) -> &NetworkName {
@@ -334,5 +339,9 @@ impl CoreClientReadOnly for HierarchiesClientReadOnly {
 
     fn client_adapter(&self) -> &IotaClientAdapter {
         &self.client
+    }
+
+    fn package_history(&self) -> Vec<ObjectID> {
+        self.package_history.clone()
     }
 }

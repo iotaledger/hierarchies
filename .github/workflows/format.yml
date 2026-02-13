@@ -16,6 +16,7 @@ on:
       - "**.ts"
       - "**.js"
       - "**.json"
+      - "**.move"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
