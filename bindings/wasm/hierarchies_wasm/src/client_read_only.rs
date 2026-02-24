@@ -4,7 +4,6 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
-use crate::wasm_types::{WasmAccreditations, WasmFederation, WasmPropertyName, WasmPropertyValue};
 use anyhow::anyhow;
 use hierarchies::client::HierarchiesClientReadOnly;
 use hierarchies::core::types::property_name::PropertyName;
@@ -16,6 +15,8 @@ use product_common::bindings::WasmObjectID;
 use product_common::bindings::utils::parse_wasm_object_id;
 use product_common::core_client::CoreClientReadOnly;
 use wasm_bindgen::prelude::*;
+
+use crate::wasm_types::{WasmAccreditations, WasmFederation, WasmPropertyName, WasmPropertyValue};
 
 /// A client to interact with Hierarchies objects on the IOTA ledger.
 ///
