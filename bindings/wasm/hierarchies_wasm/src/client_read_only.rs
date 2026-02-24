@@ -4,8 +4,11 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
+use crate::wasm_types::{WasmAccreditations, WasmFederation, WasmPropertyName, WasmPropertyValue};
 use anyhow::anyhow;
 use hierarchies::client::HierarchiesClientReadOnly;
+use hierarchies::core::types::property_name::PropertyName;
+use hierarchies::core::types::property_value::PropertyValue;
 use iota_interaction::types::base_types::ObjectID;
 use iota_interaction_ts::bindings::WasmIotaClient;
 use iota_interaction_ts::wasm_error::{Result, WasmResult, wasm_error};
@@ -13,8 +16,6 @@ use product_common::bindings::WasmObjectID;
 use product_common::bindings::utils::parse_wasm_object_id;
 use product_common::core_client::CoreClientReadOnly;
 use wasm_bindgen::prelude::*;
-
-use crate::wasm_types::{WasmAccreditations, WasmFederation, WasmPropertyName, WasmPropertyValue};
 
 /// A client to interact with Hierarchies objects on the IOTA ledger.
 ///
@@ -478,11 +479,8 @@ impl WasmHierarchiesClientReadOnly {
         let mut converted_properties = HashMap::new();
 
         properties.for_each(&mut |value, key| {
-            if let (Ok(property_name), Ok(property_value)) = (
-                serde_wasm_bindgen::from_value::<WasmPropertyName>(key),
-                serde_wasm_bindgen::from_value::<WasmPropertyValue>(value),
-            ) {
-                converted_properties.insert(property_name.into(), property_value.into());
+            if let (Some(name), Some(val)) = (extract_property_name(&key), extract_property_value(&value)) {
+                converted_properties.insert(name, val);
             }
         });
 
@@ -493,4 +491,26 @@ impl WasmHierarchiesClientReadOnly {
             .map_err(wasm_error)?;
         Ok(is_valid)
     }
+}
+
+fn call_js_method(obj: &JsValue, method: &str) -> Option<JsValue> {
+    let func = js_sys::Reflect::get(obj, &JsValue::from_str(method)).ok()?;
+    let func: &js_sys::Function = func.unchecked_ref();
+    func.call0(obj).ok()
+}
+
+fn extract_property_name(js_val: &JsValue) -> Option<PropertyName> {
+    let names_array = js_sys::Array::from(&call_js_method(js_val, "getNames")?);
+    let names: Vec<String> = names_array.iter().filter_map(|v| v.as_string()).collect();
+    Some(PropertyName::new(names))
+}
+
+fn extract_property_value(js_val: &JsValue) -> Option<PropertyValue> {
+    if call_js_method(js_val, "isText")?.as_bool().unwrap_or(false) {
+        return Some(PropertyValue::Text(call_js_method(js_val, "asText")?.as_string()?));
+    }
+    let bigint_val = call_js_method(js_val, "asNumber")?;
+    let bigint: js_sys::BigInt = bigint_val.dyn_into().ok()?;
+    let number = u64::try_from(bigint).ok()?;
+    Some(PropertyValue::Number(number))
 }

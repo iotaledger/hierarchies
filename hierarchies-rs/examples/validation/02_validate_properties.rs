@@ -64,7 +64,7 @@ async fn main() -> anyhow::Result<()> {
     }
 
     // Validate if properties can be attested by the receiver
-    let properties = [(property_name, value)];
+    let properties = [(property_name.clone(), value)];
 
     let validate = hierarchies_client
         .validate_properties(*federation_id, (*receiver).into(), properties)
@@ -73,6 +73,15 @@ async fn main() -> anyhow::Result<()> {
     assert!(validate.is_ok());
 
     println!("Validated attestations");
+
+    // Validate if invalid property value for the same property will return false
+    let invalid_property_value = PropertyValue::Text("Invalid Property Value".to_owned());
+    let invalid_properties = [(property_name, invalid_property_value)];
+    let validate_invalid_property_value = hierarchies_client
+        .validate_properties(*federation_id, (*receiver).into(), invalid_properties)
+        .await;
+    assert!(validate_invalid_property_value.is_ok());
+    println!("Validated invalid property value");
 
     Ok(())
 }
