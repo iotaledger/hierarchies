@@ -163,12 +163,15 @@ Demonstrates a global supply chain certification system designed for web dashboa
 
 ### Web Application Integration
 
+> **Important:** The web version requires calling `init()` to load the WASM module
+> before using any other function. Failing to do so will result in an error.
+
 ```typescript
-import {
-    HierarchiesClient,
-    HierarchiesClientReadOnly,
-} from "@iota/hierarchies/web";
+import { init, HierarchiesClientReadOnly } from "@iota/hierarchies/web";
 import { IotaClient } from "@iota/iota-sdk/client";
+
+// Initialize the WASM module (required for web, must be called once before any other usage)
+await init();
 
 // Initialize the IOTA client
 const iotaClient = new IotaClient({ url: "https://api.testnet.iota.cafe" });
@@ -176,10 +179,15 @@ const hierarchies = await HierarchiesClientReadOnly.createWithPkgId(
     iotaClient,
     "0x...",
 );
+```
 
-// Create a new federation
-const federation = await hierarchies.createNewFederation()
-    .buildAndExecute(hierarchies);
+If you are using a bundler like Vite, you can pass the WASM URL explicitly:
+
+```typescript
+import { init, HierarchiesClientReadOnly } from "@iota/hierarchies/web";
+import wasmUrl from "@iota/hierarchies/web/hierarchies_wasm_bg.wasm?url";
+
+await init(wasmUrl);
 ```
 
 ### Node.js Application Integration
@@ -245,11 +253,12 @@ const isValid = await hierarchies.validateProperties(
 
 ## Best Practices for Web Development
 
-1. **Environment Detection**: Check for WebAssembly support before initialization
-2. **Async Operations**: Always handle hierarchies operations asynchronously
-3. **Error Boundaries**: Implement proper error handling in React/Vue components
-4. **Memory Management**: Dispose of large objects when no longer needed
-5. **Network Optimization**: Cache federation data when possible
+1. **Call `init()` Early**: Always call and `await init()` once at application startup before using any other library function
+2. **Environment Detection**: Check for WebAssembly support before initialization
+3. **Async Operations**: Always handle hierarchies operations asynchronously
+4. **Error Boundaries**: Implement proper error handling in React/Vue components
+5. **Memory Management**: Dispose of large objects when no longer needed
+6. **Network Optimization**: Cache federation data when possible
 
 ## Security Considerations for Web Apps
 
