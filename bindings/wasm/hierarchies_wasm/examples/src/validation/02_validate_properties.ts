@@ -40,6 +40,18 @@ export async function validateProperties(): Promise<void> {
     );
 
     assert(validationResult, "Validation failed");
-
     console.log("\n✅ Successfully validated properties for the receiver:", accreditationReceiver);
+
+    // Validation the attestation as a collection of properties
+    const invalidProperties = new Map<PropertyName, PropertyValue>([[
+        new PropertyName(["Example LTD"]),
+        PropertyValue.newText("Invalid Property Name Value"),
+    ]]);
+    const invalidPropertiesResult = await hierarchies.readOnly().validateProperties(
+        federation.id,
+        accreditationReceiver,
+        invalidProperties,
+    );
+    assert(!invalidPropertiesResult, "Validation should fail");
+    console.log("\n✅ Successfully validated invalid properties for the receiver:", accreditationReceiver);
 }
