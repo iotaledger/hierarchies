@@ -62,12 +62,36 @@ You can build the bindings for `node.js` using the following command:
 npm run build:nodejs
 ```
 
-<!--
-
 You can build the bindings for the `web` using the following command:
 
 ```bash npm2yarn
 npm run build:web
 ```
 
--->
+## Web Usage
+
+The web version of this library requires explicit WASM initialization before any other function
+can be used. Call and `await` the `init()` function once during your application startup:
+
+```typescript
+import { init, HierarchiesClientReadOnly } from "@iota/hierarchies/web";
+import { IotaClient, getFullnodeUrl } from "@iota/iota-sdk/client";
+
+// Initialize the WASM module (required, must be awaited before any other usage)
+await init();
+
+const iotaClient = new IotaClient({ url: getFullnodeUrl("testnet") });
+const client = await HierarchiesClientReadOnly.create(iotaClient);
+```
+
+If you are using a bundler like Vite, pass the WASM URL explicitly:
+
+```typescript
+import { init } from "@iota/hierarchies/web";
+import wasmUrl from "@iota/hierarchies/web/hierarchies_wasm_bg.wasm?url";
+
+await init(wasmUrl);
+```
+
+> **Note:** The Node.js version (`@iota/hierarchies/node`) does not require calling `init()` —
+> the WASM module is loaded automatically.
