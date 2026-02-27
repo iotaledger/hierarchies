@@ -74,8 +74,8 @@ The web version of this library requires explicit WASM initialization before any
 can be used. Call and `await` the `init()` function once during your application startup:
 
 ```typescript
-import { init, HierarchiesClientReadOnly } from "@iota/hierarchies/web";
-import { IotaClient, getFullnodeUrl } from "@iota/iota-sdk/client";
+import { HierarchiesClientReadOnly, init } from "@iota/hierarchies/web";
+import { getFullnodeUrl, IotaClient } from "@iota/iota-sdk/client";
 
 // Initialize the WASM module (required, must be awaited before any other usage)
 await init();
