@@ -167,7 +167,7 @@ Demonstrates a global supply chain certification system designed for web dashboa
 > before using any other function. Failing to do so will result in an error.
 
 ```typescript
-import { init, HierarchiesClientReadOnly } from "@iota/hierarchies/web";
+import { HierarchiesClientReadOnly, init } from "@iota/hierarchies/web";
 import { IotaClient } from "@iota/iota-sdk/client";
 
 // Initialize the WASM module (required for web, must be called once before any other usage)
@@ -184,7 +184,7 @@ const hierarchies = await HierarchiesClientReadOnly.createWithPkgId(
 If you are using a bundler like Vite, you can pass the WASM URL explicitly:
 
 ```typescript
-import { init, HierarchiesClientReadOnly } from "@iota/hierarchies/web";
+import { HierarchiesClientReadOnly, init } from "@iota/hierarchies/web";
 import wasmUrl from "@iota/hierarchies/web/hierarchies_wasm_bg.wasm?url";
 
 await init(wasmUrl);
