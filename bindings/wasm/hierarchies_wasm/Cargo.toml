@@ -18,10 +18,9 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 anyhow = "1.0"
 console_error_panic_hook = "0.1"
-# Latest hyper is not compatible with axum-server used by iota-sdk. We need to pin it to 1.7 until iota-sdk upgrades axum-server.
-hyper = "=1.7" # Fix for iota-sdk 1.13 issue with axum-server.
-iota_interaction = { package = "iota_interaction", git = "https://github.com/iotaledger/product-core.git", tag = "v0.8.11", default-features = false }
-iota_interaction_ts = { package = "iota_interaction_ts", git = "https://github.com/iotaledger/product-core.git", tag = "v0.8.11" }
+hyper = "1.8"
+iota_interaction = { package = "iota_interaction", git = "https://github.com/iotaledger/product-core.git", tag = "v0.8.12", default-features = false }
+iota_interaction_ts = { package = "iota_interaction_ts", git = "https://github.com/iotaledger/product-core.git", tag = "v0.8.12" }
 js-sys = { version = "=0.3.85" }
 serde = { version = "1.0", features = ["derive"] }
 serde-wasm-bindgen = "0.6"
@@ -36,7 +35,7 @@ features = ["default-http-client", "gas-station"]
 [dependencies.product_common]
 package = "product_common"
 git = "https://github.com/iotaledger/product-core.git"
-tag = "v0.8.11"
+tag = "v0.8.12"
 features = [
   "default-http-client",
   "binding-utils",
