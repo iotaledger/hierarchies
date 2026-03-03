@@ -18,7 +18,7 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 anyhow = "1.0"
 console_error_panic_hook = "0.1"
-hyper = "1.8" # Fix for iota-sdk 1.13 issue with axum-server.
+hyper = "1.8"
 iota_interaction = { package = "iota_interaction", git = "https://github.com/iotaledger/product-core.git", tag = "v0.8.12", default-features = false }
 iota_interaction_ts = { package = "iota_interaction_ts", git = "https://github.com/iotaledger/product-core.git", tag = "v0.8.12" }
 js-sys = { version = "=0.3.85" }
