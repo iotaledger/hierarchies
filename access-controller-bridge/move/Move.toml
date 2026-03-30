@@ -6,7 +6,7 @@ edition = "2024.beta"
 
 [dependencies]
 Hierarchies = { local = "../../hierarchies-move" }
-TfComponents = { local = "../../../product-core/components_move" }
+TfComponents = { git = "https://github.com/iotaledger/product-core.git", subdir = "components_move", rev = "feat/tf-compoenents-dev" }
 
 [addresses]
 access_controller_bridge = "0x0"
