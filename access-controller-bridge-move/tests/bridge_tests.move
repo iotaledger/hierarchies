@@ -41,19 +41,31 @@ fun full_setup(scenario: &mut ts::Scenario): ID {
 
     scenario.next_tx(alice());
 
-    // Create ACB
+    // Create ACB with role configs (admin-defined property values)
     let fed: Federation = ts::take_shared(scenario);
     let mut configs = vec_map::empty();
+
+    // "catch_logger" role: requires catch_logging = Cod
+    let mut logger_props = vec_map::empty();
+    logger_props.insert(catch_logging_name(), cod_value());
     configs.insert(
         utf8(b"catch_logger"),
-        bridge::new_capability_type_config(vector[catch_logging_name()]),
+        bridge::new_role_config(logger_props),
+    );
+
+    // "catch_manager" role: requires both catch_logging and catch_management
+    let mut manager_props = vec_map::empty();
+    manager_props.insert(
+        catch_logging_name(),
+        property_value::new_property_value_string(utf8(b"Cod")),
+    );
+    manager_props.insert(
+        catch_management_name(),
+        property_value::new_property_value_string(utf8(b"any")),
     );
     configs.insert(
         utf8(b"catch_manager"),
-        bridge::new_capability_type_config(vector[
-            catch_logging_name(),
-            catch_management_name(),
-        ]),
+        bridge::new_role_config(manager_props),
     );
 
     let acb = bridge::create<TestMarker>(&fed, target_id, configs, scenario.ctx());
@@ -98,9 +110,11 @@ fun test_create_and_query() {
 
     let fed: Federation = ts::take_shared(&scenario);
     let mut configs = vec_map::empty();
+    let mut props = vec_map::empty();
+    props.insert(catch_logging_name(), cod_value());
     configs.insert(
         utf8(b"logger"),
-        bridge::new_capability_type_config(vector[catch_logging_name()]),
+        bridge::new_role_config(props),
     );
 
     let acb = bridge::create<TestMarker>(&fed, target_id, configs, scenario.ctx());
@@ -109,8 +123,8 @@ fun test_create_and_query() {
     assert!(bridge::federation_id(&acb) == object::id(&fed));
     assert!(!bridge::is_frozen(&acb));
     assert!(bridge::version(&acb) == 1);
-    assert!(bridge::has_capability_type(&acb, &utf8(b"logger")));
-    assert!(!bridge::has_capability_type(&acb, &utf8(b"other")));
+    assert!(bridge::has_role(&acb, &utf8(b"logger")));
+    assert!(!bridge::has_role(&acb, &utf8(b"other")));
 
     transfer::public_share_object(acb);
     ts::return_shared(fed);
@@ -134,9 +148,11 @@ fun test_create_not_root_authority_fails() {
     scenario.next_tx(bob());
     let fed: Federation = ts::take_shared(&scenario);
     let mut configs = vec_map::empty();
+    let mut props = vec_map::empty();
+    props.insert(catch_logging_name(), cod_value());
     configs.insert(
         utf8(b"logger"),
-        bridge::new_capability_type_config(vector[catch_logging_name()]),
+        bridge::new_role_config(props),
     );
 
     let acb = bridge::create<TestMarker>(&fed, @0xDEAD.to_id(), configs, scenario.ctx());
@@ -146,11 +162,11 @@ fun test_create_not_root_authority_fails() {
 }
 
 #[test]
-#[expected_failure(abort_code = bridge::EEmptyRequiredProperties)]
-fun test_empty_properties_fails() {
+#[expected_failure(abort_code = bridge::EEmptyPropertyValues)]
+fun test_empty_property_values_fails() {
     let scenario = ts::begin(alice());
-    // Creating config with empty vector should fail
-    bridge::new_capability_type_config(vector[]);
+    // Creating config with empty VecMap should fail
+    bridge::new_role_config(vec_map::empty());
     scenario.end();
 }
 
@@ -198,9 +214,11 @@ fun test_deposit_wrong_target_fails() {
     // Create ACB with a different target
     let fed: Federation = ts::take_shared(&scenario);
     let mut configs = vec_map::empty();
+    let mut props = vec_map::empty();
+    props.insert(catch_logging_name(), cod_value());
     configs.insert(
         utf8(b"catch_logger"),
-        bridge::new_capability_type_config(vector[catch_logging_name()]),
+        bridge::new_role_config(props),
     );
     let acb = bridge::create<TestMarker>(&fed, @0xDEAD.to_id(), configs, scenario.ctx());
     transfer::public_share_object(acb);
@@ -231,11 +249,10 @@ fun test_borrow_and_return() {
     let mut clock = clock::create_for_testing(scenario.ctx());
     clock.set_for_testing(2000);
 
-    let mut props = vec_map::empty();
-    props.insert(catch_logging_name(), cod_value());
-
     let (cap, receipt) = bridge::borrow(
-        &mut acb, &fed, utf8(b"catch_logger"), props, &clock, scenario.ctx(),
+        &mut acb, &fed,
+        bridge::role_name(utf8(b"catch_logger")),
+        &clock, scenario.ctx(),
     );
 
     // Capability is removed from ACB while borrowed
@@ -267,11 +284,10 @@ fun test_borrow_non_attester_fails() {
     let mut clock = clock::create_for_testing(scenario.ctx());
     clock.set_for_testing(2000);
 
-    let mut props = vec_map::empty();
-    props.insert(catch_logging_name(), cod_value());
-
     let (cap, receipt) = bridge::borrow(
-        &mut acb, &fed, utf8(b"catch_logger"), props, &clock, scenario.ctx(),
+        &mut acb, &fed,
+        bridge::role_name(utf8(b"catch_logger")),
+        &clock, scenario.ctx(),
     );
 
     bridge::return_cap(&mut acb, cap, receipt, &clock);
@@ -283,21 +299,61 @@ fun test_borrow_non_attester_fails() {
 
 #[test]
 #[expected_failure(abort_code = bridge::EValidationFailed)]
-fun test_borrow_wrong_value_fails() {
+fun test_borrow_not_accredited_for_role_fails() {
     let mut scenario = ts::begin(alice());
-    full_setup(&mut scenario);
+    test_utils::setup_federation(&mut scenario);
 
+    let target_uid = scenario.new_object();
+    let target_id = target_uid.uid_to_inner();
+    target_uid.delete();
+
+    let (role_map, admin_cap, logger_cap, manager_cap) =
+        test_utils::create_test_capabilities(target_id, scenario.ctx());
+    transfer::public_transfer(logger_cap, alice());
+    capability::destroy_for_testing(admin_cap);
+    capability::destroy_for_testing(manager_cap);
+    test_utils::destroy_role_map(role_map);
+    scenario.next_tx(alice());
+
+    // Create ACB with a role requiring catch_logging = Mackerel.
+    // Bob is only accredited for Cod and Haddock → validation will fail.
+    let fed: Federation = ts::take_shared(&scenario);
+    let mut configs = vec_map::empty();
+    let mut props = vec_map::empty();
+    props.insert(
+        catch_logging_name(),
+        property_value::new_property_value_string(utf8(b"Mackerel")),
+    );
+    configs.insert(utf8(b"mackerel_logger"), bridge::new_role_config(props));
+
+    let acb = bridge::create<TestMarker>(&fed, target_id, configs, scenario.ctx());
+    transfer::public_share_object(acb);
+    ts::return_shared(fed);
+    scenario.next_tx(alice());
+
+    // Deposit cap
+    let fed: Federation = ts::take_shared(&scenario);
+    let mut acb: AccessControllerBridge<TestMarker> = ts::take_shared(&scenario);
+    let cap: capability::Capability = ts::take_from_address(&scenario, alice());
+    bridge::deposit_capability(&mut acb, &fed, utf8(b"mackerel_logger"), cap, scenario.ctx());
+    ts::return_shared(acb);
+    ts::return_shared(fed);
+    scenario.next_tx(alice());
+
+    // Accredit BOB for catch_logging = [Cod, Haddock] (NOT Mackerel)
+    test_utils::accredit_bob_as_attester(&mut scenario);
+
+    // Bob tries to borrow mackerel_logger → fails (not accredited for Mackerel)
     scenario.next_tx(bob());
     let fed: Federation = ts::take_shared(&scenario);
     let mut acb: AccessControllerBridge<TestMarker> = ts::take_shared(&scenario);
     let mut clock = clock::create_for_testing(scenario.ctx());
     clock.set_for_testing(2000);
 
-    let mut props = vec_map::empty();
-    props.insert(catch_logging_name(), property_value::new_property_value_string(utf8(b"Mackerel")));
-
     let (cap, receipt) = bridge::borrow(
-        &mut acb, &fed, utf8(b"catch_logger"), props, &clock, scenario.ctx(),
+        &mut acb, &fed,
+        bridge::role_name(utf8(b"mackerel_logger")),
+        &clock, scenario.ctx(),
     );
 
     bridge::return_cap(&mut acb, cap, receipt, &clock);
@@ -308,8 +364,8 @@ fun test_borrow_wrong_value_fails() {
 }
 
 #[test]
-#[expected_failure(abort_code = bridge::ECapabilityTypeNotFound)]
-fun test_borrow_unknown_type_fails() {
+#[expected_failure(abort_code = bridge::ERoleNotFound)]
+fun test_borrow_unknown_role_fails() {
     let mut scenario = ts::begin(alice());
     full_setup(&mut scenario);
 
@@ -320,34 +376,9 @@ fun test_borrow_unknown_type_fails() {
     clock.set_for_testing(2000);
 
     let (cap, receipt) = bridge::borrow(
-        &mut acb, &fed, utf8(b"nonexistent"), vec_map::empty(), &clock, scenario.ctx(),
-    );
-
-    bridge::return_cap(&mut acb, cap, receipt, &clock);
-    clock::destroy_for_testing(clock);
-    ts::return_shared(acb);
-    ts::return_shared(fed);
-    scenario.end();
-}
-
-#[test]
-#[expected_failure(abort_code = bridge::EPropertyNotProvided)]
-fun test_borrow_missing_property_fails() {
-    let mut scenario = ts::begin(alice());
-    full_setup(&mut scenario);
-
-    scenario.next_tx(bob());
-    let fed: Federation = ts::take_shared(&scenario);
-    let mut acb: AccessControllerBridge<TestMarker> = ts::take_shared(&scenario);
-    let mut clock = clock::create_for_testing(scenario.ctx());
-    clock.set_for_testing(2000);
-
-    // catch_manager requires both properties, only provide one
-    let mut props = vec_map::empty();
-    props.insert(catch_logging_name(), cod_value());
-
-    let (cap, receipt) = bridge::borrow(
-        &mut acb, &fed, utf8(b"catch_manager"), props, &clock, scenario.ctx(),
+        &mut acb, &fed,
+        bridge::role_name(utf8(b"nonexistent")),
+        &clock, scenario.ctx(),
     );
 
     bridge::return_cap(&mut acb, cap, receipt, &clock);
@@ -381,11 +412,10 @@ fun test_borrow_frozen_fails() {
     let mut clock = clock::create_for_testing(scenario.ctx());
     clock.set_for_testing(2000);
 
-    let mut props = vec_map::empty();
-    props.insert(catch_logging_name(), cod_value());
-
     let (cap, receipt) = bridge::borrow(
-        &mut acb, &fed, utf8(b"catch_logger"), props, &clock, scenario.ctx(),
+        &mut acb, &fed,
+        bridge::role_name(utf8(b"catch_logger")),
+        &clock, scenario.ctx(),
     );
 
     bridge::return_cap(&mut acb, cap, receipt, &clock);
@@ -420,23 +450,25 @@ fun test_freeze_and_unfreeze() {
 }
 
 #[test]
-fun test_add_and_remove_capability_type() {
+fun test_add_and_remove_role() {
     let mut scenario = ts::begin(alice());
     full_setup(&mut scenario);
 
     let fed: Federation = ts::take_shared(&scenario);
     let mut acb: AccessControllerBridge<TestMarker> = ts::take_shared(&scenario);
 
-    bridge::add_capability_type(
+    let mut props = vec_map::empty();
+    props.insert(catch_logging_name(), cod_value());
+    bridge::add_role(
         &mut acb, &fed,
         utf8(b"auditor"),
-        bridge::new_capability_type_config(vector[catch_logging_name()]),
+        bridge::new_role_config(props),
         scenario.ctx(),
     );
-    assert!(bridge::has_capability_type(&acb, &utf8(b"auditor")));
+    assert!(bridge::has_role(&acb, &utf8(b"auditor")));
 
-    bridge::remove_capability_type(&mut acb, &fed, utf8(b"auditor"), scenario.ctx());
-    assert!(!bridge::has_capability_type(&acb, &utf8(b"auditor")));
+    bridge::remove_role(&mut acb, &fed, utf8(b"auditor"), scenario.ctx());
+    assert!(!bridge::has_role(&acb, &utf8(b"auditor")));
 
     ts::return_shared(acb);
     ts::return_shared(fed);
@@ -444,20 +476,24 @@ fun test_add_and_remove_capability_type() {
 }
 
 #[test]
-fun test_update_capability_type_config() {
+fun test_update_role_config() {
     let mut scenario = ts::begin(alice());
     full_setup(&mut scenario);
 
     let fed: Federation = ts::take_shared(&scenario);
     let mut acb: AccessControllerBridge<TestMarker> = ts::take_shared(&scenario);
 
-    bridge::update_capability_type_config(
+    // Update catch_logger role to also require catch_management
+    let mut new_props = vec_map::empty();
+    new_props.insert(catch_logging_name(), cod_value());
+    new_props.insert(
+        catch_management_name(),
+        property_value::new_property_value_string(utf8(b"any")),
+    );
+    bridge::update_role_config(
         &mut acb, &fed,
         utf8(b"catch_logger"),
-        bridge::new_capability_type_config(vector[
-            catch_logging_name(),
-            catch_management_name(),
-        ]),
+        bridge::new_role_config(new_props),
         scenario.ctx(),
     );
 
@@ -468,21 +504,17 @@ fun test_update_capability_type_config() {
 
 #[test]
 #[expected_failure(abort_code = bridge::ECapabilityAlreadyDeposited)]
-fun test_remove_type_with_deposited_cap_fails() {
+fun test_remove_role_with_deposited_cap_fails() {
     let mut scenario = ts::begin(alice());
     full_setup(&mut scenario);
 
     let fed: Federation = ts::take_shared(&scenario);
     let mut acb: AccessControllerBridge<TestMarker> = ts::take_shared(&scenario);
-    bridge::remove_capability_type(&mut acb, &fed, utf8(b"catch_logger"), scenario.ctx());
+    bridge::remove_role(&mut acb, &fed, utf8(b"catch_logger"), scenario.ctx());
     ts::return_shared(acb);
     ts::return_shared(fed);
     scenario.end();
 }
-
-// Note: Revocation tests (revoking accreditation → borrow fails) require access
-// to `accreditation::accredited_properties()` which is `public(package)`.
-// This scenario is validated in the localnet integration examples.
 
 // ===== Double borrow test =====
 
@@ -499,19 +531,17 @@ fun test_double_borrow_fails() {
     let mut clock = clock::create_for_testing(scenario.ctx());
     clock.set_for_testing(2000);
 
-    let mut props = vec_map::empty();
-    props.insert(catch_logging_name(), cod_value());
-
     let (cap1, receipt1) = bridge::borrow(
-        &mut acb, &fed, utf8(b"catch_logger"), props, &clock, scenario.ctx(),
+        &mut acb, &fed,
+        bridge::role_name(utf8(b"catch_logger")),
+        &clock, scenario.ctx(),
     );
 
     // Try to borrow again — should fail (already borrowed)
-    let mut props2 = vec_map::empty();
-    props2.insert(catch_logging_name(), cod_value());
-
     let (cap2, receipt2) = bridge::borrow(
-        &mut acb, &fed, utf8(b"catch_logger"), props2, &clock, scenario.ctx(),
+        &mut acb, &fed,
+        bridge::role_name(utf8(b"catch_logger")),
+        &clock, scenario.ctx(),
     );
 
     bridge::return_cap(&mut acb, cap2, receipt2, &clock);

@@ -1,8 +1,13 @@
-/// Access Controller Bridge v4 — Capability Custodian Pattern.
+/// Access Controller Bridge v4.1 — Capability Custodian Pattern
+/// with Role-Based Property Mapping.
 ///
 /// Bridges hierarchies' federation trust model with component authorization
 /// by custodying `tf_components::Capability` objects and lending them to
 /// users who pass federation validation.
+///
+/// Admin defines exact property name+value pairs per role. Borrowers provide
+/// only a `PermissionContext::RoleName` — they cannot influence what values
+/// are validated.
 ///
 /// The ACB is component-agnostic: it holds Capabilities for any component
 /// that uses `tf_components::Capability` + `RoleMap`.
@@ -16,7 +21,7 @@ use iota::{
     clock::Clock,
     dynamic_object_field,
     event,
-    vec_map::{Self, VecMap},
+    vec_map::VecMap,
 };
 use std::string::String;
 
@@ -28,19 +33,19 @@ const PACKAGE_VERSION: u64 = 1;
 
 const EVersionMismatch: u64 = 0;
 const EBridgeFrozen: u64 = 1;
-const ECapabilityTypeNotFound: u64 = 2;
+const ERoleNotFound: u64 = 2;
 const EFederationMismatch: u64 = 3;
-const EPropertyNotProvided: u64 = 4;
+// reserved: 4 (was EPropertyNotProvided — no longer needed)
 const EValidationFailed: u64 = 5;
 const ENotRootAuthority: u64 = 6;
-const ECapabilityTypeAlreadyExists: u64 = 7;
+const ERoleAlreadyExists: u64 = 7;
 const ECapabilityAlreadyDeposited: u64 = 8;
 const ECapabilityNotDeposited: u64 = 9;
 const ECapabilityTargetMismatch: u64 = 10;
 const EReceiptBridgeMismatch: u64 = 11;
 const EReceiptCapabilityMismatch: u64 = 12;
 // reserved: 13
-const EEmptyRequiredProperties: u64 = 14;
+const EEmptyPropertyValues: u64 = 14;
 const ECapabilityCurrentlyBorrowed: u64 = 15;
 
 // ===== Core Data Structures =====
@@ -59,28 +64,38 @@ public struct AccessControllerBridge<phantom P> has key, store {
     target_id: ID,
     /// The federation that validates trust
     federation_id: ID,
-    /// Named capability types → property requirements
-    capability_type_configs: VecMap<String, CapabilityTypeConfig>,
+    /// Named roles → property value requirements
+    role_configs: VecMap<String, RoleConfig>,
     /// Emergency freeze flag (ISO A.5.29)
     frozen: bool,
     /// Package version for migration support
     version: u64,
 }
 
-/// Configuration for a named capability type.
+/// Configuration for a named role.
 ///
-/// Defines which federation properties must be validated before lending
-/// the associated Capability. Permissions are defined in the target
-/// component's RoleMap, not here.
+/// Defines the exact property name+value pairs that the federation must
+/// validate before lending the associated Capability. The admin defines
+/// both the property names AND values — the borrower does not choose values.
 ///
-/// INVARIANT: required_properties MUST be non-empty.
-public struct CapabilityTypeConfig has copy, drop, store {
-    required_properties: vector<PropertyName>,
+/// Permissions are defined in the target component's RoleMap, not here.
+///
+/// INVARIANT: property_values MUST be non-empty.
+public struct RoleConfig has copy, drop, store {
+    property_values: VecMap<PropertyName, PropertyValue>,
+}
+
+/// Enum representing the context for a permission request.
+///
+/// The borrower passes a PermissionContext to borrow() instead of
+/// a raw string + property values. Self-documenting and extensible.
+public enum PermissionContext has copy, drop, store {
+    RoleName(String),
 }
 
 /// Dynamic object field key for stored Capabilities.
 public struct CapabilityKey has copy, drop, store {
-    capability_type: String,
+    role_name: String,
 }
 
 /// Hot-potato receipt for a borrowed Capability.
@@ -89,7 +104,7 @@ public struct CapabilityKey has copy, drop, store {
 public struct BorrowReceipt {
     capability_id: ID,
     bridge_id: ID,
-    capability_type: String,
+    role_name: String,
     holder: address,
 }
 
@@ -104,7 +119,7 @@ public struct BridgeCreated has copy, drop {
 
 public struct CapabilityDeposited has copy, drop {
     bridge_id: ID,
-    capability_type: String,
+    role_name: String,
     capability_id: ID,
     capability_role: String,
     deposited_by: address,
@@ -112,7 +127,7 @@ public struct CapabilityDeposited has copy, drop {
 
 public struct CapabilityWithdrawn has copy, drop {
     bridge_id: ID,
-    capability_type: String,
+    role_name: String,
     capability_id: ID,
     withdrawn_by: address,
 }
@@ -120,7 +135,7 @@ public struct CapabilityWithdrawn has copy, drop {
 public struct CapabilityBorrowed has copy, drop {
     bridge_id: ID,
     target_id: ID,
-    capability_type: String,
+    role_name: String,
     capability_id: ID,
     holder: address,
     validated_scope: VecMap<PropertyName, PropertyValue>,
@@ -130,7 +145,7 @@ public struct CapabilityBorrowed has copy, drop {
 public struct CapabilityReturned has copy, drop {
     bridge_id: ID,
     target_id: ID,
-    capability_type: String,
+    role_name: String,
     capability_id: ID,
     holder: address,
     timestamp: u64,
@@ -159,13 +174,17 @@ public struct BridgeDeleted has copy, drop {
     deleted_by: address,
 }
 
-// ===== CapabilityTypeConfig constructor =====
+// ===== Constructors =====
 
-public fun new_capability_type_config(
-    required_properties: vector<PropertyName>,
-): CapabilityTypeConfig {
-    assert!(!required_properties.is_empty(), EEmptyRequiredProperties);
-    CapabilityTypeConfig { required_properties }
+public fun new_role_config(
+    property_values: VecMap<PropertyName, PropertyValue>,
+): RoleConfig {
+    assert!(!property_values.is_empty(), EEmptyPropertyValues);
+    RoleConfig { property_values }
+}
+
+public fun role_name(name: String): PermissionContext {
+    PermissionContext::RoleName(name)
 }
 
 // ===== Internal Helpers =====
@@ -194,17 +213,17 @@ fun assert_version<P>(bridge: &AccessControllerBridge<P>) {
 public fun create<P>(
     federation: &Federation,
     target_id: ID,
-    capability_type_configs: VecMap<String, CapabilityTypeConfig>,
+    role_configs: VecMap<String, RoleConfig>,
     ctx: &mut TxContext,
 ): AccessControllerBridge<P> {
     let sender_id = ctx.sender().to_id();
     assert!(federation.is_root_authority(&sender_id), ENotRootAuthority);
 
     // Validate all configs
-    let keys = capability_type_configs.keys();
+    let keys = role_configs.keys();
     let mut i = 0;
     while (i < keys.length()) {
-        assert!(!capability_type_configs.get(&keys[i]).required_properties.is_empty(), EEmptyRequiredProperties);
+        assert!(!role_configs.get(&keys[i]).property_values.is_empty(), EEmptyPropertyValues);
         i = i + 1;
     };
 
@@ -213,7 +232,7 @@ public fun create<P>(
         id: object::new(ctx),
         target_id,
         federation_id,
-        capability_type_configs,
+        role_configs,
         frozen: false,
         version: PACKAGE_VERSION,
     };
@@ -239,10 +258,10 @@ public fun delete<P>(
     assert!(federation.is_root_authority(&sender_id), ENotRootAuthority);
 
     // Verify all Capabilities have been withdrawn
-    let keys = bridge.capability_type_configs.keys();
+    let keys = bridge.role_configs.keys();
     let mut i = 0;
     while (i < keys.length()) {
-        let key = CapabilityKey { capability_type: keys[i] };
+        let key = CapabilityKey { role_name: keys[i] };
         assert!(!dynamic_object_field::exists_(&bridge.id, key), ECapabilityAlreadyDeposited);
         i = i + 1;
     };
@@ -252,7 +271,7 @@ public fun delete<P>(
         id,
         target_id: _,
         federation_id: _,
-        capability_type_configs: _,
+        role_configs: _,
         frozen: _,
         version: _,
     } = bridge;
@@ -267,19 +286,19 @@ public fun delete<P>(
 
 // ===== Deposit / Withdraw =====
 
-/// Deposit a Capability into the ACB for a specific capability type.
+/// Deposit a Capability into the ACB for a specific role.
 public fun deposit_capability<P>(
     bridge: &mut AccessControllerBridge<P>,
     federation: &Federation,
-    capability_type: String,
+    role_name: String,
     cap: Capability,
     ctx: &TxContext,
 ) {
     assert_root_authority(bridge, federation, ctx);
-    assert!(bridge.capability_type_configs.contains(&capability_type), ECapabilityTypeNotFound);
+    assert!(bridge.role_configs.contains(&role_name), ERoleNotFound);
     assert!(capability::target_key(&cap) == bridge.target_id, ECapabilityTargetMismatch);
 
-    let key = CapabilityKey { capability_type };
+    let key = CapabilityKey { role_name };
     assert!(!dynamic_object_field::exists_(&bridge.id, key), ECapabilityAlreadyDeposited);
 
     let cap_id = capability::id(&cap);
@@ -289,7 +308,7 @@ public fun deposit_capability<P>(
 
     event::emit(CapabilityDeposited {
         bridge_id: object::uid_to_inner(&bridge.id),
-        capability_type: key.capability_type,
+        role_name: key.role_name,
         capability_id: cap_id,
         capability_role: cap_role,
         deposited_by: ctx.sender(),
@@ -300,19 +319,19 @@ public fun deposit_capability<P>(
 public fun withdraw_capability<P>(
     bridge: &mut AccessControllerBridge<P>,
     federation: &Federation,
-    capability_type: String,
+    role_name: String,
     ctx: &TxContext,
 ): Capability {
     assert_root_authority(bridge, federation, ctx);
 
-    let key = CapabilityKey { capability_type };
+    let key = CapabilityKey { role_name };
     assert!(dynamic_object_field::exists_(&bridge.id, key), ECapabilityNotDeposited);
 
     let cap: Capability = dynamic_object_field::remove(&mut bridge.id, key);
 
     event::emit(CapabilityWithdrawn {
         bridge_id: object::uid_to_inner(&bridge.id),
-        capability_type: key.capability_type,
+        role_name: key.role_name,
         capability_id: capability::id(&cap),
         withdrawn_by: ctx.sender(),
     });
@@ -324,56 +343,54 @@ public fun withdraw_capability<P>(
 
 /// Borrow a Capability from the ACB.
 ///
-/// Validates the caller's federation standing, removes the Capability
-/// from storage, and returns it with a hot-potato BorrowReceipt.
+/// The borrower provides a `PermissionContext` (currently: a role name).
+/// The ACB looks up the role's pre-defined property values, validates
+/// them against the federation, and lends the Capability.
 ///
 /// The BorrowReceipt MUST be consumed by `return_cap()` in the same PTB.
 public fun borrow<P>(
     bridge: &mut AccessControllerBridge<P>,
     federation: &Federation,
-    capability_type: String,
-    property_values: VecMap<PropertyName, PropertyValue>,
+    context: PermissionContext,
     clock: &Clock,
     ctx: &TxContext,
 ): (Capability, BorrowReceipt) {
     assert_version(bridge);
     assert_not_frozen(bridge);
     assert!(bridge.federation_id == object::id(federation), EFederationMismatch);
-    assert!(bridge.capability_type_configs.contains(&capability_type), ECapabilityTypeNotFound);
 
-    let config = bridge.capability_type_configs.get(&capability_type);
-
-    // Build filtered property map with only required properties
-    let required = &config.required_properties;
-    let mut filtered = vec_map::empty<PropertyName, PropertyValue>();
-    let mut i = 0;
-    while (i < required.length()) {
-        let prop_name = required[i];
-        assert!(property_values.contains(&prop_name), EPropertyNotProvided);
-        filtered.insert(prop_name, *property_values.get(&prop_name));
-        i = i + 1;
+    // Extract role name from PermissionContext
+    let role_name = match (&context) {
+        PermissionContext::RoleName(name) => *name,
     };
 
-    // Validate against federation
+    assert!(bridge.role_configs.contains(&role_name), ERoleNotFound);
+    let config = bridge.role_configs.get(&role_name);
+
+    // Validate admin-defined property values against the federation
     let requester_id = ctx.sender().to_id();
-    assert!(federation.validate_properties(&requester_id, filtered, clock), EValidationFailed);
+    let property_values = config.property_values;
+    assert!(
+        federation.validate_properties(&requester_id, property_values, clock),
+        EValidationFailed,
+    );
 
     // Remove Capability from dynamic field
-    let key = CapabilityKey { capability_type };
+    let key = CapabilityKey { role_name };
     assert!(dynamic_object_field::exists_(&bridge.id, key), ECapabilityCurrentlyBorrowed);
     let cap: Capability = dynamic_object_field::remove(&mut bridge.id, key);
 
     let receipt = BorrowReceipt {
         capability_id: capability::id(&cap),
         bridge_id: object::uid_to_inner(&bridge.id),
-        capability_type: key.capability_type,
+        role_name: key.role_name,
         holder: ctx.sender(),
     };
 
     event::emit(CapabilityBorrowed {
         bridge_id: object::uid_to_inner(&bridge.id),
         target_id: bridge.target_id,
-        capability_type: key.capability_type,
+        role_name: key.role_name,
         capability_id: capability::id(&cap),
         holder: ctx.sender(),
         validated_scope: property_values,
@@ -390,18 +407,18 @@ public fun return_cap<P>(
     receipt: BorrowReceipt,
     clock: &Clock,
 ) {
-    let BorrowReceipt { capability_id, bridge_id, capability_type, holder } = receipt;
+    let BorrowReceipt { capability_id, bridge_id, role_name, holder } = receipt;
 
     assert!(bridge_id == object::uid_to_inner(&bridge.id), EReceiptBridgeMismatch);
     assert!(capability_id == capability::id(&cap), EReceiptCapabilityMismatch);
 
-    let key = CapabilityKey { capability_type };
+    let key = CapabilityKey { role_name };
     dynamic_object_field::add(&mut bridge.id, key, cap);
 
     event::emit(CapabilityReturned {
         bridge_id,
         target_id: bridge.target_id,
-        capability_type: key.capability_type,
+        role_name: key.role_name,
         capability_id,
         holder,
         timestamp: clock.timestamp_ms(),
@@ -410,68 +427,68 @@ public fun return_cap<P>(
 
 // ===== Lifecycle Management =====
 
-/// Add a new capability type configuration.
-public fun add_capability_type<P>(
+/// Add a new role configuration.
+public fun add_role<P>(
     bridge: &mut AccessControllerBridge<P>,
     federation: &Federation,
-    capability_type: String,
-    config: CapabilityTypeConfig,
+    role_name: String,
+    config: RoleConfig,
     ctx: &TxContext,
 ) {
     assert_root_authority(bridge, federation, ctx);
-    assert!(!config.required_properties.is_empty(), EEmptyRequiredProperties);
-    assert!(!bridge.capability_type_configs.contains(&capability_type), ECapabilityTypeAlreadyExists);
+    assert!(!config.property_values.is_empty(), EEmptyPropertyValues);
+    assert!(!bridge.role_configs.contains(&role_name), ERoleAlreadyExists);
 
-    bridge.capability_type_configs.insert(capability_type, config);
+    bridge.role_configs.insert(role_name, config);
 
     event::emit(BridgeUpdated {
         bridge_id: object::uid_to_inner(&bridge.id),
         updated_by: ctx.sender(),
-        change_type: b"add_capability_type".to_string(),
+        change_type: b"add_role".to_string(),
     });
 }
 
-/// Remove a capability type configuration. Capability must be withdrawn first.
-public fun remove_capability_type<P>(
+/// Remove a role configuration. Capability must be withdrawn first.
+public fun remove_role<P>(
     bridge: &mut AccessControllerBridge<P>,
     federation: &Federation,
-    capability_type: String,
+    role_name: String,
     ctx: &TxContext,
 ) {
     assert_root_authority(bridge, federation, ctx);
 
-    let key = CapabilityKey { capability_type };
+    let key = CapabilityKey { role_name };
     assert!(!dynamic_object_field::exists_(&bridge.id, key), ECapabilityAlreadyDeposited);
-    assert!(bridge.capability_type_configs.contains(&capability_type), ECapabilityTypeNotFound);
+    assert!(bridge.role_configs.contains(&role_name), ERoleNotFound);
 
-    bridge.capability_type_configs.remove(&capability_type);
+    bridge.role_configs.remove(&role_name);
 
     event::emit(BridgeUpdated {
         bridge_id: object::uid_to_inner(&bridge.id),
         updated_by: ctx.sender(),
-        change_type: b"remove_capability_type".to_string(),
+        change_type: b"remove_role".to_string(),
     });
 }
 
-/// Update property requirements for an existing capability type.
-public fun update_capability_type_config<P>(
+/// Update property values for an existing role.
+public fun update_role_config<P>(
     bridge: &mut AccessControllerBridge<P>,
     federation: &Federation,
-    capability_type: String,
-    new_config: CapabilityTypeConfig,
+    role_name: String,
+    new_config: RoleConfig,
     ctx: &TxContext,
 ) {
     assert_root_authority(bridge, federation, ctx);
-    assert!(!new_config.required_properties.is_empty(), EEmptyRequiredProperties);
-    assert!(bridge.capability_type_configs.contains(&capability_type), ECapabilityTypeNotFound);
+    assert!(!new_config.property_values.is_empty(), EEmptyPropertyValues);
+    assert!(bridge.role_configs.contains(&role_name), ERoleNotFound);
 
-    bridge.capability_type_configs.remove(&capability_type);
-    bridge.capability_type_configs.insert(capability_type, new_config);
+    bridge.role_configs.remove(&role_name);
+    bridge.role_configs.insert(role_name, new_config);
 
     event::emit(BridgeUpdated {
         bridge_id: object::uid_to_inner(&bridge.id),
         updated_by: ctx.sender(),
-        change_type: b"update_capability_type_config".to_string(),
+        change_type: b"update_role_config".to_string(),
     });
 }
 
@@ -540,12 +557,12 @@ public fun is_frozen<P>(bridge: &AccessControllerBridge<P>): bool {
     bridge.frozen
 }
 
-public fun has_capability_type<P>(bridge: &AccessControllerBridge<P>, capability_type: &String): bool {
-    bridge.capability_type_configs.contains(capability_type)
+public fun has_role<P>(bridge: &AccessControllerBridge<P>, role_name: &String): bool {
+    bridge.role_configs.contains(role_name)
 }
 
-public fun is_capability_deposited<P>(bridge: &AccessControllerBridge<P>, capability_type: &String): bool {
-    let key = CapabilityKey { capability_type: *capability_type };
+public fun is_capability_deposited<P>(bridge: &AccessControllerBridge<P>, role_name: &String): bool {
+    let key = CapabilityKey { role_name: *role_name };
     dynamic_object_field::exists_(&bridge.id, key)
 }
 
@@ -553,6 +570,6 @@ public fun version<P>(bridge: &AccessControllerBridge<P>): u64 {
     bridge.version
 }
 
-public fun get_required_properties(config: &CapabilityTypeConfig): &vector<PropertyName> {
-    &config.required_properties
+public fun get_property_values(config: &RoleConfig): &VecMap<PropertyName, PropertyValue> {
+    &config.property_values
 }
