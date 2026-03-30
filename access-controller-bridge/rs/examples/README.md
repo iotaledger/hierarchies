@@ -9,27 +9,23 @@ Runnable examples demonstrating the Access Controller Bridge lifecycle against a
    iota start --force-regenesis
    ```
 
-2. Published packages. Publish in dependency order and record the package IDs:
+2. Published packages. The ACB depends on Hierarchies and TfComponents (which are resolved
+   via `Move.toml` local paths). Publish the ACB with `--with-unpublished-dependencies` to
+   publish all dependencies in one step, or publish them individually in dependency order:
    ```bash
-   # 1. tf_components
-   cd component-repos/product-core/components_move
+   # From the repo root — publish ACB (includes dependencies automatically)
+   cd access-controller-bridge/move
    iota client publish --with-unpublished-dependencies --silence-warnings --json --gas-budget 500000000
-   # Record IOTA_TF_COMPONENTS_PKG_ID
+   # Record IOTA_ACB_PKG_ID from the output
 
-   # 2. hierarchies
-   cd component-repos/hierarchies/hierarchies-move
-   iota client publish --with-unpublished-dependencies --silence-warnings --json --gas-budget 500000000
-   # Record IOTA_HIERARCHIES_PKG_ID
-
-   # 3. audit_trail
-   cd component-repos/notarization/audit-trail-move
-   iota client publish --with-unpublished-dependencies --silence-warnings --json --gas-budget 500000000
+   # The audit trail is a separate package (not a dependency of the ACB).
+   # It must be published separately if you want to run examples that use it.
+   # See the audit trail repo for publish instructions.
    # Record IOTA_AUDIT_TRAIL_PKG_ID
 
-   # 4. access_controller_bridge
-   cd component-repos/hierarchies/access-controller-bridge/move
-   iota client publish --with-unpublished-dependencies --silence-warnings --json --gas-budget 500000000
-   # Record IOTA_ACB_PKG_ID
+   # Extract the remaining package IDs from the ACB publish output:
+   # IOTA_HIERARCHIES_PKG_ID and IOTA_TF_COMPONENTS_PKG_ID appear in the
+   # objectChanges as "published" entries for the dependency packages.
    ```
 
 ## Running
@@ -85,7 +81,7 @@ All three steps execute atomically in one PTB. If any step fails, the entire tra
 ## Project Structure
 
 ```
-rs/examples/
+access-controller-bridge/rs/examples/
 ├── Cargo.toml                  # Workspace member, depends on iota-sdk + hierarchies
 ├── utils/
 │   └── utils.rs                # PtbHelper — PTB construction for all Move calls
@@ -93,6 +89,8 @@ rs/examples/
 ├── 02_borrow_use_return.rs     # Borrow-Use-Return flow
 └── README.md
 ```
+
+Run from this directory (`access-controller-bridge/rs/examples/`).
 
 ## Key Pattern: PtbHelper
 

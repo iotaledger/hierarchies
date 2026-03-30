@@ -85,7 +85,7 @@ All three steps execute atomically in one PTB. If any step fails, the entire tra
 ## Project Structure
 
 ```
-ts/examples/
+access-controller-bridge/ts/examples/
 ├── package.json                  # @iota/iota-sdk dependency
 ├── tsconfig.json                 # ES2022, CommonJS
 ├── utils.ts                      # PtbHelper — PTB construction for all Move calls
@@ -93,6 +93,8 @@ ts/examples/
 ├── 02_borrow_use_return.ts       # Borrow-Use-Return flow
 └── README.md
 ```
+
+Run from this directory (`access-controller-bridge/ts/examples/`). Install dependencies with `npm install` first.
 
 ## Key Pattern: PtbHelper
 
