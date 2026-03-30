@@ -1,0 +1,27 @@
+[package]
+name = "acb-examples"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[lib]
+name = "acb_examples"
+path = "utils/utils.rs"
+
+[[example]]
+name = "01_full_initialization"
+path = "01_full_initialization.rs"
+
+[[example]]
+name = "02_borrow_use_return"
+path = "02_borrow_use_return.rs"
+
+[dependencies]
+anyhow = { workspace = true }
+hierarchies = { path = "../../hierarchies-rs/hierarchies" }
+iota-sdk = { workspace = true }
+iota_interaction = { workspace = true }
+product_common = { workspace = true, features = ["core-client", "test-utils", "transaction"] }
+secret-storage = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }

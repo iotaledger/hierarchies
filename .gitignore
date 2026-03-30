@@ -8,6 +8,7 @@
 .idea
 .DS_Store
 /hierarchies-move/build/*
+/access-controller-bridge-move/build/*
 /bindings/wasm/hierarchies_wasm/docs/*
 
 # ignore folder created in CI for downloaded iota binaries
