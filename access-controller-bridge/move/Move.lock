@@ -74,6 +74,6 @@ flavor = "iota"
 
 [env.localnet]
 chain-id = "40bef197"
-original-published-id = "0x13c910d9a554fa63696d47280827b747332244a5b1232172f9a8102cebb23ac6"
-latest-published-id = "0x13c910d9a554fa63696d47280827b747332244a5b1232172f9a8102cebb23ac6"
+original-published-id = "0xdab9ec9c36cf51c0164a62a1d870b1e058b8e955b734e2ad8ede7e50b978ce16"
+latest-published-id = "0xdab9ec9c36cf51c0164a62a1d870b1e058b8e955b734e2ad8ede7e50b978ce16"
 published-version = "1"
