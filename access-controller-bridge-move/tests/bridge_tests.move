@@ -503,6 +503,75 @@ fun test_update_role_config() {
 }
 
 #[test]
+fun test_add_role_with_capability() {
+    let mut scenario = ts::begin(alice());
+    test_utils::setup_federation(&mut scenario);
+
+    let target_uid = scenario.new_object();
+    let target_id = target_uid.uid_to_inner();
+    target_uid.delete();
+
+    let (role_map, admin_cap, logger_cap, manager_cap) =
+        test_utils::create_test_capabilities(target_id, scenario.ctx());
+    transfer::public_transfer(logger_cap, alice());
+    capability::destroy_for_testing(admin_cap);
+    capability::destroy_for_testing(manager_cap);
+    test_utils::destroy_role_map(role_map);
+    scenario.next_tx(alice());
+
+    // Create ACB with no roles
+    let fed: Federation = ts::take_shared(&scenario);
+    let acb = bridge::create<TestMarker>(&fed, target_id, vec_map::empty(), scenario.ctx());
+    transfer::public_share_object(acb);
+    ts::return_shared(fed);
+    scenario.next_tx(alice());
+
+    // Add role + deposit in one call
+    let fed: Federation = ts::take_shared(&scenario);
+    let mut acb: AccessControllerBridge<TestMarker> = ts::take_shared(&scenario);
+    let cap: capability::Capability = ts::take_from_address(&scenario, alice());
+
+    let mut props = vec_map::empty();
+    props.insert(catch_logging_name(), cod_value());
+    bridge::add_role_with_capability(
+        &mut acb, &fed,
+        utf8(b"cod_logger"),
+        bridge::new_role_config(props),
+        cap,
+        scenario.ctx(),
+    );
+
+    assert!(bridge::has_role(&acb, &utf8(b"cod_logger")));
+    assert!(bridge::is_capability_deposited(&acb, &utf8(b"cod_logger")));
+
+    ts::return_shared(acb);
+    ts::return_shared(fed);
+    scenario.end();
+}
+
+#[test]
+fun test_remove_role_and_withdraw() {
+    let mut scenario = ts::begin(alice());
+    full_setup(&mut scenario);
+
+    let fed: Federation = ts::take_shared(&scenario);
+    let mut acb: AccessControllerBridge<TestMarker> = ts::take_shared(&scenario);
+
+    // Remove role + withdraw in one call
+    let cap = bridge::remove_role_and_withdraw(
+        &mut acb, &fed, utf8(b"catch_logger"), scenario.ctx(),
+    );
+
+    assert!(!bridge::has_role(&acb, &utf8(b"catch_logger")));
+    assert!(!bridge::is_capability_deposited(&acb, &utf8(b"catch_logger")));
+
+    capability::destroy_for_testing(cap);
+    ts::return_shared(acb);
+    ts::return_shared(fed);
+    scenario.end();
+}
+
+#[test]
 #[expected_failure(abort_code = bridge::ECapabilityAlreadyDeposited)]
 fun test_remove_role_with_deposited_cap_fails() {
     let mut scenario = ts::begin(alice());

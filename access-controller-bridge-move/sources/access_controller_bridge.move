@@ -58,6 +58,12 @@ const ECapabilityCurrentlyBorrowed: u64 = 15;
 ///
 /// Phantom P provides organizational type safety between ACB instances
 /// for different component types.
+///
+/// IMPORTANT: The ACB has `store` ability because `create()` returns it
+/// by value and the caller must `transfer::public_share_object()` it,
+/// which requires `store`. The ACB MUST be shared immediately after
+/// creation. If kept as an owned object, the owner controls all access
+/// and the federation-mediated model is bypassed.
 public struct AccessControllerBridge<phantom P> has key, store {
     id: UID,
     /// The component instance being governed
@@ -468,6 +474,31 @@ public fun remove_role<P>(
         updated_by: ctx.sender(),
         change_type: b"remove_role".to_string(),
     });
+}
+
+/// Add a new role and deposit its Capability in one call.
+public fun add_role_with_capability<P>(
+    bridge: &mut AccessControllerBridge<P>,
+    federation: &Federation,
+    role_name: String,
+    config: RoleConfig,
+    cap: Capability,
+    ctx: &TxContext,
+) {
+    add_role(bridge, federation, role_name, config, ctx);
+    deposit_capability(bridge, federation, role_name, cap, ctx);
+}
+
+/// Withdraw a Capability and remove its role config in one call.
+public fun remove_role_and_withdraw<P>(
+    bridge: &mut AccessControllerBridge<P>,
+    federation: &Federation,
+    role_name: String,
+    ctx: &TxContext,
+): Capability {
+    let cap = withdraw_capability(bridge, federation, role_name, ctx);
+    remove_role(bridge, federation, role_name, ctx);
+    cap
 }
 
 /// Update property values for an existing role.
