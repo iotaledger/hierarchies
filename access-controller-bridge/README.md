@@ -78,26 +78,6 @@ After setup, accredited attesters can borrow capabilities and operate on the tar
 | Cannot forge Capabilities | `new_capability()` is `public(package)` in tf_components |
 | Cannot forge receipts | `BorrowReceipt` can only be created by `borrow()` |
 
-## Project Structure
-
-```
-access-controller-bridge/
-├── move/                         # Move smart contract
-│   ├── sources/                  # AccessControllerBridge module
-│   ├── tests/                    # 17 unit tests
-│   ├── scripts/                  # Publish script for deployment
-│   └── Move.toml
-├── rs/examples/                  # Rust examples (iota-sdk)
-│   ├── 01_full_initialization    # Complete 7-phase setup
-│   ├── 02_borrow_use_return      # Borrow–Use–Return in a single PTB
-│   └── README.md
-├── ts/examples/                  # TypeScript examples (@iota/iota-sdk)
-│   ├── 01_full_initialization    # Complete 7-phase setup
-│   ├── 02_borrow_use_return      # Borrow–Use–Return in a single PTB
-│   └── README.md
-└── README.md                     # This file
-```
-
 ## Examples
 
 Working examples are provided in both Rust and TypeScript. Each example is self-contained — it creates all required objects (federation, audit trail, ACB) and demonstrates the full flow against a live IOTA network.
