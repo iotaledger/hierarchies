@@ -18,7 +18,7 @@ path = "02_borrow_use_return.rs"
 
 [dependencies]
 anyhow = { workspace = true }
-hierarchies = { path = "../../hierarchies-rs/hierarchies" }
+hierarchies = { path = "../../../hierarchies-rs/hierarchies" }
 iota-sdk = { workspace = true }
 iota_interaction = { workspace = true }
 product_common = { workspace = true, features = ["core-client", "test-utils", "transaction"] }

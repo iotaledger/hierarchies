@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["hierarchies-rs/examples", "hierarchies-rs/hierarchies", "access-controller-bridge-rs/examples"]
+members = ["hierarchies-rs/examples", "hierarchies-rs/hierarchies", "access-controller-bridge/rs/examples"]
 exclude = ["bindings/wasm/hierarchies_wasm"]
 
 [workspace.package]

@@ -2,7 +2,7 @@
 
 [move]
 version = 3
-manifest_digest = "AD10EE81CBE5C03DFAF85B9EF6A5A4845C58C5AC8216285C5CB86B086C99EB6E"
+manifest_digest = "8D7E7173058105ED0AF0F9813A67B01CB93B3CBC618CFC753183913FB3F65E95"
 deps_digest = "52B406A7A21811BEF51751CF88DA0E76DAEFFEAC888D4F4060B1A72BBE7D8D35"
 dependencies = [
   { id = "Hierarchies", name = "Hierarchies" },
@@ -15,7 +15,7 @@ dependencies = [
 
 [[move.package]]
 id = "Hierarchies"
-source = { local = "../hierarchies-move" }
+source = { local = "../../hierarchies-move" }
 
 dependencies = [
   { id = "Iota", name = "Iota" },
@@ -56,7 +56,7 @@ dependencies = [
 
 [[move.package]]
 id = "TfComponents"
-source = { local = "../../product-core/components_move" }
+source = { local = "../../../product-core/components_move" }
 
 dependencies = [
   { id = "Iota", name = "Iota" },
@@ -74,6 +74,6 @@ flavor = "iota"
 
 [env.localnet]
 chain-id = "40bef197"
-original-published-id = "0x36ee39116a55948c8b589f349190f1dc3cc203e43ef857a756579e092f57bc15"
-latest-published-id = "0x36ee39116a55948c8b589f349190f1dc3cc203e43ef857a756579e092f57bc15"
+original-published-id = "0x57654d7c8a220f3bf24d5efa57ef45ee09818f6ae9113ca2604b4132ca744bf0"
+latest-published-id = "0x57654d7c8a220f3bf24d5efa57ef45ee09818f6ae9113ca2604b4132ca744bf0"
 published-version = "1"

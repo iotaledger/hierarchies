@@ -5,8 +5,8 @@ version = "0.1.0"
 edition = "2024.beta"
 
 [dependencies]
-Hierarchies = { local = "../hierarchies-move" }
-TfComponents = { local = "../../product-core/components_move" }
+Hierarchies = { local = "../../hierarchies-move" }
+TfComponents = { local = "../../../product-core/components_move" }
 
 [addresses]
 access_controller_bridge = "0x0"

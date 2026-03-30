@@ -1,0 +1,17 @@
+{
+    "name": "acb-examples-ts",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "example:init": "npx ts-node 01_full_initialization.ts",
+        "example:borrow": "npx ts-node 02_borrow_use_return.ts"
+    },
+    "dependencies": {
+        "@iota/iota-sdk": "^1.11.0"
+    },
+    "devDependencies": {
+        "@types/node": "^22.0.0",
+        "typescript": "^5.7.3",
+        "ts-node": "^10.9.2"
+    }
+}
