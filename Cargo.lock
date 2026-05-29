@@ -3768,8 +3768,8 @@ dependencies = [
 
 [[package]]
 name = "iota_interaction"
-version = "0.8.17"
-source = "git+https://github.com/iotaledger/product-core.git?branch=feat%2Fiota-v1-23-rc-upstream-merge#b6d5bd7cacf2dde69c9bee1104920f8e0304a236"
+version = "0.8.18"
+source = "git+https://github.com/iotaledger/product-core.git?tag=v0.8.18#9518c0a4544d2d25bdc0b6cc3af250fa39ec9ddf"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3812,8 +3812,8 @@ dependencies = [
 
 [[package]]
 name = "iota_interaction_rust"
-version = "0.8.17"
-source = "git+https://github.com/iotaledger/product-core.git?branch=feat%2Fiota-v1-23-rc-upstream-merge#b6d5bd7cacf2dde69c9bee1104920f8e0304a236"
+version = "0.8.18"
+source = "git+https://github.com/iotaledger/product-core.git?tag=v0.8.18#9518c0a4544d2d25bdc0b6cc3af250fa39ec9ddf"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3826,8 +3826,8 @@ dependencies = [
 
 [[package]]
 name = "iota_interaction_ts"
-version = "0.8.17"
-source = "git+https://github.com/iotaledger/product-core.git?branch=feat%2Fiota-v1-23-rc-upstream-merge#b6d5bd7cacf2dde69c9bee1104920f8e0304a236"
+version = "0.8.18"
+source = "git+https://github.com/iotaledger/product-core.git?tag=v0.8.18#9518c0a4544d2d25bdc0b6cc3af250fa39ec9ddf"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -5876,8 +5876,8 @@ dependencies = [
 
 [[package]]
 name = "product_common"
-version = "0.8.17"
-source = "git+https://github.com/iotaledger/product-core.git?branch=feat%2Fiota-v1-23-rc-upstream-merge#b6d5bd7cacf2dde69c9bee1104920f8e0304a236"
+version = "0.8.18"
+source = "git+https://github.com/iotaledger/product-core.git?tag=v0.8.18#9518c0a4544d2d25bdc0b6cc3af250fa39ec9ddf"
 dependencies = [
  "anyhow",
  "async-trait",
