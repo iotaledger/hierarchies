@@ -3,8 +3,7 @@
 
 use std::str::FromStr;
 
-use iota_interaction::types::TypeTag;
-use iota_interaction::types::base_types::ObjectID;
+use iota_interaction::types::base_types::{ObjectID, TypeTag};
 use iota_interaction::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 use iota_interaction::types::transaction::Argument;
 use iota_interaction::{MoveType, ident_str};
@@ -41,8 +40,8 @@ pub(crate) fn new_property_value_string(
     let v = ptb.pure(value)?;
     Ok(ptb.programmable_move_call(
         package_id,
-        ident_str!("property_value").into(),
-        ident_str!("new_property_value_string").into(),
+        ident_str!("property_value").as_str().into(),
+        ident_str!("new_property_value_string").as_str().into(),
         vec![],
         vec![v],
     ))
@@ -57,8 +56,8 @@ pub(crate) fn new_property_value_number(
     let v = ptb.pure(value)?;
     Ok(ptb.programmable_move_call(
         package_id,
-        ident_str!("property_value").into(),
-        ident_str!("new_property_value_number").into(),
+        ident_str!("property_value").as_str().into(),
+        ident_str!("new_property_value_number").as_str().into(),
         vec![],
         vec![v],
     ))

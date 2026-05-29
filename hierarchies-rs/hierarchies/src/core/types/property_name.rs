@@ -7,8 +7,7 @@
 
 use std::str::FromStr;
 
-use iota_interaction::types::TypeTag;
-use iota_interaction::types::base_types::ObjectID;
+use iota_interaction::types::base_types::{ObjectID, TypeTag};
 use iota_interaction::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 use iota_interaction::types::transaction::Argument;
 use iota_interaction::{MoveType, ident_str};
@@ -67,8 +66,8 @@ pub(crate) fn new_property_name(
     let names = ptb.pure(name.names())?;
     let property_names: Argument = ptb.programmable_move_call(
         package_id,
-        ident_str!("property_name").into(),
-        ident_str!("new_property_name_from_vector").into(),
+        ident_str!("property_name").as_str().into(),
+        ident_str!("new_property_name_from_vector").as_str().into(),
         vec![],
         vec![names],
     );

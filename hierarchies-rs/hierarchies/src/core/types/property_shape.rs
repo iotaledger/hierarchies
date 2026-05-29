@@ -8,8 +8,7 @@
 use std::str::FromStr;
 use std::string::String;
 
-use iota_interaction::types::TypeTag;
-use iota_interaction::types::base_types::ObjectID;
+use iota_interaction::types::base_types::{ObjectID, TypeTag};
 use iota_interaction::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 use iota_interaction::types::transaction::Argument;
 use iota_interaction::{MoveType, ident_str};
@@ -53,8 +52,8 @@ pub(crate) fn new_property_shape_starts_with(
     let text = ptb.pure(text)?;
     let condition = ptb.programmable_move_call(
         package_id,
-        ident_str!("property_shape").into(),
-        ident_str!("new_property_shape_starts_with").into(),
+        ident_str!("property_shape").as_str().into(),
+        ident_str!("new_property_shape_starts_with").as_str().into(),
         vec![],
         vec![text],
     );
@@ -70,8 +69,8 @@ fn new_property_shape_ends_with(
     let text = ptb.pure(text)?;
     let condition = ptb.programmable_move_call(
         package_id,
-        ident_str!("property_shape").into(),
-        ident_str!("new_property_shape_ends_with").into(),
+        ident_str!("property_shape").as_str().into(),
+        ident_str!("new_property_shape_ends_with").as_str().into(),
         vec![],
         vec![text],
     );
@@ -87,8 +86,8 @@ fn new_property_shape_contains(
     let text = ptb.pure(text)?;
     let condition = ptb.programmable_move_call(
         package_id,
-        ident_str!("property_shape").into(),
-        ident_str!("new_property_shape_contains").into(),
+        ident_str!("property_shape").as_str().into(),
+        ident_str!("new_property_shape_contains").as_str().into(),
         vec![],
         vec![text],
     );
@@ -104,8 +103,8 @@ fn new_property_shape_greater_than(
     let value = ptb.pure(value)?;
     let condition = ptb.programmable_move_call(
         package_id,
-        ident_str!("property_shape").into(),
-        ident_str!("new_property_shape_greater_than").into(),
+        ident_str!("property_shape").as_str().into(),
+        ident_str!("new_property_shape_greater_than").as_str().into(),
         vec![],
         vec![value],
     );
@@ -120,8 +119,8 @@ fn new_property_shape_lower_than(
     let value = ptb.pure(value)?;
     let condition = ptb.programmable_move_call(
         package_id,
-        ident_str!("property_shape").into(),
-        ident_str!("new_property_shape_lower_than").into(),
+        ident_str!("property_shape").as_str().into(),
+        ident_str!("new_property_shape_lower_than").as_str().into(),
         vec![],
         vec![value],
     );

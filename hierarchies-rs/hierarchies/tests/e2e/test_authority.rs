@@ -62,7 +62,7 @@ async fn test_revoke_root_authority_success() -> anyhow::Result<()> {
         .await?;
 
     // Verify all three are root authorities
-    let alice_id = ObjectID::from_address(client.sender_address().into());
+    let alice_id = ObjectID::from_address(client.sender_address());
     assert!(client.is_root_authority(*federation.object_id(), alice_id).await?);
     assert!(client.is_root_authority(*federation.object_id(), bob_id).await?);
     assert!(client.is_root_authority(*federation.object_id(), charlie_id).await?);
@@ -123,7 +123,7 @@ async fn test_cannot_revoke_last_root_authority() -> anyhow::Result<()> {
         .output
         .id;
 
-    let alice_id = ObjectID::from_address(client.sender_address().into());
+    let alice_id = ObjectID::from_address(client.sender_address());
 
     // Try to revoke the only root authority (Alice)
     let result = client
@@ -152,7 +152,7 @@ async fn test_is_root_authority() -> anyhow::Result<()> {
         .output
         .id;
 
-    let alice_id = ObjectID::from_address(client.sender_address().into());
+    let alice_id = ObjectID::from_address(client.sender_address());
     let bob_id = ObjectID::random();
     let charlie_id = ObjectID::random();
 

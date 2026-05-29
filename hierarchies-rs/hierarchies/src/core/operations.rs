@@ -22,7 +22,7 @@ use iota_interaction::rpc_types::IotaObjectDataOptions;
 use iota_interaction::types::base_types::{IotaAddress, ObjectID, ObjectRef, SequenceNumber};
 use iota_interaction::types::object::Owner;
 use iota_interaction::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use iota_interaction::types::transaction::{CallArg, Command, ObjectArg, ProgrammableTransaction};
+use iota_interaction::types::transaction::{CallArg, Command, ProgrammableTransaction, SharedObjectRef};
 use iota_interaction::{IotaClientTrait, MoveType, OptionalSync, ident_str};
 use product_common::core_client::CoreClientReadOnly;
 
@@ -83,7 +83,7 @@ impl HierarchiesImpl {
             .get_object_ref_by_id(object_id)
             .await
             .map_err(|e| CapabilityError::Rpc { source: e.into() })?
-            .map(|owned_ref| owned_ref.reference.to_object_ref())
+            .map(|owned_ref| owned_ref.reference)
             .ok_or_else(|| CapabilityError::NotFound {
                 cap_type: ROOT_AUTHORITY_CAP_TYPE.to_string(),
             })
@@ -118,7 +118,7 @@ impl HierarchiesImpl {
             .get_object_ref_by_id(object_id)
             .await
             .map_err(|e| CapabilityError::Rpc { source: e.into() })?
-            .map(|owned_ref| owned_ref.reference.to_object_ref())
+            .map(|owned_ref| owned_ref.reference)
             .ok_or_else(|| CapabilityError::NotFound {
                 cap_type: ACCREDIT_CAP_TYPE.to_string(),
             })
@@ -133,17 +133,17 @@ impl HierarchiesImpl {
     /// # Errors
     ///
     /// Returns an error if the federation object is not found or not shared.
-    async fn get_fed_ref<C>(client: &C, federation_id: ObjectID) -> Result<ObjectArg, OperationError>
+    async fn get_fed_ref<C>(client: &C, federation_id: ObjectID) -> Result<CallArg, OperationError>
     where
         C: CoreClientReadOnly + OptionalSync,
     {
-        let fed_ref = ObjectArg::SharedObject {
-            id: federation_id,
+        let fed_ref = CallArg::Shared(SharedObjectRef {
+            object_id: federation_id,
             initial_shared_version: HierarchiesImpl::initial_shared_version(client, &federation_id)
                 .await
                 .map_err(|e| OperationError::Object(ObjectError::RetrievalFailed { source: Box::new(e) }))?,
             mutable: true,
-        };
+        });
 
         Ok(fed_ref)
     }
@@ -173,7 +173,7 @@ impl HierarchiesImpl {
             })?;
 
         match owner {
-            Owner::Shared { initial_shared_version } => Ok(initial_shared_version),
+            Owner::Shared(initial_shared_version) => Ok(initial_shared_version),
             _ => Err(ObjectError::WrongType {
                 expected: "SharedObject".to_string(),
                 actual: "ImmOrOwnedObject".to_string(),
@@ -214,8 +214,8 @@ pub(crate) trait HierarchiesOperations {
 
         ptb.move_call(
             package_id,
-            ident_str!(move_names::MODULE_MAIN).into(),
-            ident_str!("new_federation").into(),
+            ident_str!(move_names::MODULE_MAIN).as_str().into(),
+            ident_str!("new_federation").as_str().into(),
             vec![],
             vec![],
         )?;
@@ -248,7 +248,7 @@ pub(crate) trait HierarchiesOperations {
         let mut ptb = ProgrammableTransactionBuilder::new();
 
         let cap = HierarchiesImpl::get_root_authority_cap(client, owner, federation_id).await?;
-        let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
+        let cap = ptb.obj(CallArg::ImmutableOrOwned(cap))?;
 
         let fed_ref = HierarchiesImpl::get_fed_ref(client, federation_id).await?;
         let fed_ref = ptb.obj(fed_ref)?;
@@ -256,8 +256,8 @@ pub(crate) trait HierarchiesOperations {
 
         ptb.programmable_move_call(
             client.package_id(),
-            ident_str!(move_names::MODULE_MAIN).into(),
-            ident_str!("add_property").into(),
+            ident_str!(move_names::MODULE_MAIN).as_str().into(),
+            ident_str!("add_property").as_str().into(),
             vec![],
             vec![fed_ref, cap, property],
         );
@@ -285,7 +285,7 @@ pub(crate) trait HierarchiesOperations {
 
         let cap = HierarchiesImpl::get_accredit_cap(client, owner, federation_id).await?;
 
-        let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
+        let cap = ptb.obj(CallArg::ImmutableOrOwned(cap))?;
 
         let fed_ref = HierarchiesImpl::get_fed_ref(client, federation_id).await?;
         let fed_ref = ptb.obj(fed_ref)?;
@@ -295,8 +295,8 @@ pub(crate) trait HierarchiesOperations {
         let clock = get_clock_ref(&mut ptb);
         ptb.programmable_move_call(
             client.package_id(),
-            ident_str!(move_names::MODULE_MAIN).into(),
-            ident_str!("revoke_accreditation_to_attest").into(),
+            ident_str!(move_names::MODULE_MAIN).as_str().into(),
+            ident_str!("revoke_accreditation_to_attest").as_str().into(),
             vec![],
             vec![fed_ref, cap, user_id_arg, permission_id, clock],
         );
@@ -329,7 +329,7 @@ pub(crate) trait HierarchiesOperations {
 
         let cap = HierarchiesImpl::get_root_authority_cap(client, owner, federation_id).await?;
 
-        let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
+        let cap = ptb.obj(CallArg::ImmutableOrOwned(cap))?;
 
         let fed_ref = HierarchiesImpl::get_fed_ref(client, federation_id).await?;
         let fed_ref = ptb.obj(fed_ref)?;
@@ -338,8 +338,8 @@ pub(crate) trait HierarchiesOperations {
 
         ptb.programmable_move_call(
             client.package_id(),
-            ident_str!(move_names::MODULE_MAIN).into(),
-            ident_str!("add_root_authority").into(),
+            ident_str!(move_names::MODULE_MAIN).as_str().into(),
+            ident_str!("add_root_authority").as_str().into(),
             vec![],
             vec![fed_ref, cap, account_id_arg],
         );
@@ -372,7 +372,7 @@ pub(crate) trait HierarchiesOperations {
         let cap = HierarchiesImpl::get_accredit_cap(client, owner, federation_id).await?;
         let clock = get_clock_ref(&mut ptb);
 
-        let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
+        let cap = ptb.obj(CallArg::ImmutableOrOwned(cap))?;
 
         let fed_ref = HierarchiesImpl::get_fed_ref(client, federation_id).await?;
         let fed_ref = ptb.obj(fed_ref)?;
@@ -383,8 +383,8 @@ pub(crate) trait HierarchiesOperations {
 
         ptb.programmable_move_call(
             client.package_id(),
-            ident_str!(move_names::MODULE_MAIN).into(),
-            ident_str!("create_accreditation_to_accredit").into(),
+            ident_str!(move_names::MODULE_MAIN).as_str().into(),
+            ident_str!("create_accreditation_to_accredit").as_str().into(),
             vec![],
             vec![fed_ref, cap, receiver_arg, want_properties, clock],
         );
@@ -416,7 +416,7 @@ pub(crate) trait HierarchiesOperations {
 
         let cap = HierarchiesImpl::get_accredit_cap(client, owner, federation_id).await?;
         let clock = get_clock_ref(&mut ptb);
-        let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
+        let cap = ptb.obj(CallArg::ImmutableOrOwned(cap))?;
 
         let fed_ref = HierarchiesImpl::get_fed_ref(client, federation_id).await?;
         let fed_ref = ptb.obj(fed_ref)?;
@@ -427,8 +427,8 @@ pub(crate) trait HierarchiesOperations {
 
         ptb.programmable_move_call(
             client.package_id(),
-            ident_str!(move_names::MODULE_MAIN).into(),
-            ident_str!("create_accreditation_to_attest").into(),
+            ident_str!(move_names::MODULE_MAIN).as_str().into(),
+            ident_str!("create_accreditation_to_attest").as_str().into(),
             vec![],
             vec![fed_ref, cap, receiver_arg, want_properties, clock],
         );
@@ -460,7 +460,7 @@ pub(crate) trait HierarchiesOperations {
 
         let cap = HierarchiesImpl::get_accredit_cap(client, owner, federation_id).await?;
         let clock = get_clock_ref(&mut ptb);
-        let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
+        let cap = ptb.obj(CallArg::ImmutableOrOwned(cap))?;
 
         let fed_ref = HierarchiesImpl::get_fed_ref(client, federation_id).await?;
         let fed_ref = ptb.obj(fed_ref)?;
@@ -470,8 +470,8 @@ pub(crate) trait HierarchiesOperations {
 
         ptb.programmable_move_call(
             client.package_id(),
-            ident_str!(move_names::MODULE_MAIN).into(),
-            ident_str!("revoke_accreditation_to_accredit").into(),
+            ident_str!(move_names::MODULE_MAIN).as_str().into(),
+            ident_str!("revoke_accreditation_to_accredit").as_str().into(),
             vec![],
             vec![fed_ref, cap, user_id_arg, accreditation_id, clock],
         );
@@ -497,12 +497,11 @@ pub(crate) trait HierarchiesOperations {
         let mut ptb = ProgrammableTransactionBuilder::new();
 
         let fed_ref = HierarchiesImpl::get_fed_ref(client, federation_id).await?;
-        let fed_ref = CallArg::Object(fed_ref);
 
         ptb.move_call(
             client.package_id(),
-            ident_str!(move_names::MODULE_MAIN).into(),
-            ident_str!("get_properties").into(),
+            ident_str!(move_names::MODULE_MAIN).as_str().into(),
+            ident_str!("get_properties").as_str().into(),
             vec![],
             vec![fed_ref],
         )?;
@@ -538,13 +537,12 @@ pub(crate) trait HierarchiesOperations {
         let mut ptb = ProgrammableTransactionBuilder::new();
 
         let fed_ref = HierarchiesImpl::get_fed_ref(client, federation_id).await?;
-        let fed_ref = CallArg::Object(fed_ref);
         let property_name = CallArg::Pure(bcs::to_bytes(&property_name)?);
 
         ptb.move_call(
             client.package_id(),
-            ident_str!(move_names::MODULE_MAIN).into(),
-            ident_str!("is_property_in_federation").into(),
+            ident_str!(move_names::MODULE_MAIN).as_str().into(),
+            ident_str!("is_property_in_federation").as_str().into(),
             vec![],
             vec![fed_ref, property_name],
         )?;
@@ -579,13 +577,12 @@ pub(crate) trait HierarchiesOperations {
         let mut ptb = ProgrammableTransactionBuilder::new();
 
         let fed_ref = HierarchiesImpl::get_fed_ref(client, federation_id).await?;
-        let fed_ref = CallArg::Object(fed_ref);
         let user_id = CallArg::Pure(bcs::to_bytes(&user_id)?);
 
         ptb.move_call(
             client.package_id(),
-            ident_str!(move_names::MODULE_MAIN).into(),
-            ident_str!("get_accreditations_to_attest").into(),
+            ident_str!(move_names::MODULE_MAIN).as_str().into(),
+            ident_str!("get_accreditations_to_attest").as_str().into(),
             vec![],
             vec![fed_ref, user_id],
         )?;
@@ -609,13 +606,12 @@ pub(crate) trait HierarchiesOperations {
         let mut ptb = ProgrammableTransactionBuilder::new();
 
         let fed_ref = HierarchiesImpl::get_fed_ref(client, federation_id).await?;
-        let fed_ref = CallArg::Object(fed_ref);
         let user_id = CallArg::Pure(bcs::to_bytes(&user_id)?);
 
         ptb.move_call(
             client.package_id(),
-            ident_str!(move_names::MODULE_MAIN).into(),
-            ident_str!("is_attester").into(),
+            ident_str!(move_names::MODULE_MAIN).as_str().into(),
+            ident_str!("is_attester").as_str().into(),
             vec![],
             vec![fed_ref, user_id],
         )?;
@@ -651,13 +647,12 @@ pub(crate) trait HierarchiesOperations {
         let mut ptb = ProgrammableTransactionBuilder::new();
 
         let fed_ref = HierarchiesImpl::get_fed_ref(client, federation_id).await?;
-        let fed_ref = CallArg::Object(fed_ref);
         let user_id = CallArg::Pure(bcs::to_bytes(&user_id)?);
 
         ptb.move_call(
             client.package_id(),
-            ident_str!(move_names::MODULE_MAIN).into(),
-            ident_str!("get_accreditations_to_accredit").into(),
+            ident_str!(move_names::MODULE_MAIN).as_str().into(),
+            ident_str!("get_accreditations_to_accredit").as_str().into(),
             vec![],
             vec![fed_ref, user_id],
         )?;
@@ -681,13 +676,12 @@ pub(crate) trait HierarchiesOperations {
         let mut ptb = ProgrammableTransactionBuilder::new();
 
         let fed_ref = HierarchiesImpl::get_fed_ref(client, federation_id).await?;
-        let fed_ref = CallArg::Object(fed_ref);
         let user_id = CallArg::Pure(bcs::to_bytes(&user_id)?);
 
         ptb.move_call(
             client.package_id(),
-            ident_str!(move_names::MODULE_MAIN).into(),
-            ident_str!("is_accreditor").into(),
+            ident_str!(move_names::MODULE_MAIN).as_str().into(),
+            ident_str!("is_accreditor").as_str().into(),
             vec![],
             vec![fed_ref, user_id],
         )?;
@@ -724,7 +718,7 @@ pub(crate) trait HierarchiesOperations {
 
         let cap = HierarchiesImpl::get_root_authority_cap(client, owner, federation_id).await?;
 
-        let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
+        let cap = ptb.obj(CallArg::ImmutableOrOwned(cap))?;
 
         let fed_ref = HierarchiesImpl::get_fed_ref(client, federation_id).await?;
         let fed_ref = ptb.obj(fed_ref)?;
@@ -735,8 +729,8 @@ pub(crate) trait HierarchiesOperations {
 
         ptb.programmable_move_call(
             client.package_id(),
-            ident_str!(move_names::MODULE_MAIN).into(),
-            ident_str!("revoke_property").into(),
+            ident_str!(move_names::MODULE_MAIN).as_str().into(),
+            ident_str!("revoke_property").as_str().into(),
             vec![],
             vec![fed_ref, cap, property_name, clock],
         );
@@ -775,7 +769,7 @@ pub(crate) trait HierarchiesOperations {
 
         let cap = HierarchiesImpl::get_root_authority_cap(client, owner, federation_id).await?;
 
-        let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
+        let cap = ptb.obj(CallArg::ImmutableOrOwned(cap))?;
 
         let fed_ref = HierarchiesImpl::get_fed_ref(client, federation_id).await?;
         let fed_ref = ptb.obj(fed_ref)?;
@@ -787,8 +781,8 @@ pub(crate) trait HierarchiesOperations {
 
         ptb.programmable_move_call(
             client.package_id(),
-            ident_str!(move_names::MODULE_MAIN).into(),
-            ident_str!("revoke_property_at").into(),
+            ident_str!(move_names::MODULE_MAIN).as_str().into(),
+            ident_str!("revoke_property_at").as_str().into(),
             vec![],
             vec![fed_ref, cap, property_name, valid_to_ms, clock],
         );
@@ -838,8 +832,8 @@ pub(crate) trait HierarchiesOperations {
 
         ptb.programmable_move_call(
             client.package_id(),
-            ident_str!(move_names::MODULE_MAIN).into(),
-            ident_str!("validate_property").into(),
+            ident_str!(move_names::MODULE_MAIN).as_str().into(),
+            ident_str!("validate_property").as_str().into(),
             vec![],
             vec![fed_ref, attester_id, property_name, property_value, clock],
         );
@@ -892,19 +886,19 @@ pub(crate) trait HierarchiesOperations {
         let property_name_tag = PropertyName::move_type(client.package_id());
         let property_value_tag = PropertyValue::move_type(client.package_id());
 
-        let property_names_args = ptb.command(Command::MakeMoveVec(
-            Some(property_name_tag.clone().into()),
+        let property_names_args = ptb.command(Command::new_make_move_vector(
+            Some(property_name_tag.clone()),
             property_names,
         ));
-        let property_values_args = ptb.command(Command::MakeMoveVec(
-            Some(property_value_tag.clone().into()),
+        let property_values_args = ptb.command(Command::new_make_move_vector(
+            Some(property_value_tag.clone()),
             property_values,
         ));
 
         let properties = ptb.programmable_move_call(
             client.package_id(),
-            ident_str!("utils").into(),
-            ident_str!("vec_map_from_keys_values").into(),
+            ident_str!("utils").as_str().into(),
+            ident_str!("vec_map_from_keys_values").as_str().into(),
             vec![property_name_tag, property_value_tag],
             vec![property_names_args, property_values_args],
         );
@@ -914,8 +908,8 @@ pub(crate) trait HierarchiesOperations {
 
         ptb.programmable_move_call(
             client.package_id(),
-            ident_str!(move_names::MODULE_MAIN).into(),
-            ident_str!("validate_properties").into(),
+            ident_str!(move_names::MODULE_MAIN).as_str().into(),
+            ident_str!("validate_properties").as_str().into(),
             vec![],
             vec![fed_ref, entity_id, properties, clock],
         );
@@ -937,13 +931,12 @@ pub(crate) trait HierarchiesOperations {
         let mut ptb = ProgrammableTransactionBuilder::new();
 
         let fed_ref = HierarchiesImpl::get_fed_ref(client, federation_id).await?;
-        let fed_ref = CallArg::Object(fed_ref);
         let user_id = CallArg::Pure(bcs::to_bytes(&user_id)?);
 
         ptb.move_call(
             client.package_id(),
-            ident_str!(move_names::MODULE_MAIN).into(),
-            ident_str!("is_root_authority").into(),
+            ident_str!(move_names::MODULE_MAIN).as_str().into(),
+            ident_str!("is_root_authority").as_str().into(),
             vec![],
             vec![fed_ref, user_id],
         )?;
@@ -978,7 +971,7 @@ pub(crate) trait HierarchiesOperations {
 
         let cap = HierarchiesImpl::get_root_authority_cap(client, owner, federation_id).await?;
 
-        let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
+        let cap = ptb.obj(CallArg::ImmutableOrOwned(cap))?;
 
         let fed_ref = HierarchiesImpl::get_fed_ref(client, federation_id).await?;
         let fed_ref = ptb.obj(fed_ref)?;
@@ -987,8 +980,8 @@ pub(crate) trait HierarchiesOperations {
 
         ptb.programmable_move_call(
             client.package_id(),
-            ident_str!(move_names::MODULE_MAIN).into(),
-            ident_str!("revoke_root_authority").into(),
+            ident_str!(move_names::MODULE_MAIN).as_str().into(),
+            ident_str!("revoke_root_authority").as_str().into(),
             vec![],
             vec![fed_ref, cap, account_id_arg],
         );
@@ -1023,7 +1016,7 @@ pub(crate) trait HierarchiesOperations {
         let mut ptb = ProgrammableTransactionBuilder::new();
         let cap = HierarchiesImpl::get_root_authority_cap(client, owner, federation_id).await?;
 
-        let cap = ptb.obj(ObjectArg::ImmOrOwnedObject(cap))?;
+        let cap = ptb.obj(CallArg::ImmutableOrOwned(cap))?;
 
         let fed_ref = HierarchiesImpl::get_fed_ref(client, federation_id).await?;
         let fed_ref = ptb.obj(fed_ref)?;
@@ -1032,8 +1025,8 @@ pub(crate) trait HierarchiesOperations {
 
         ptb.programmable_move_call(
             client.package_id(),
-            ident_str!(move_names::MODULE_MAIN).into(),
-            ident_str!("reinstate_root_authority").into(),
+            ident_str!(move_names::MODULE_MAIN).as_str().into(),
+            ident_str!("reinstate_root_authority").as_str().into(),
             vec![],
             vec![fed_ref, cap, account_id_arg],
         );
