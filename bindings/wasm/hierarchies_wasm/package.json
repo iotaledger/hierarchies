@@ -74,7 +74,7 @@
         "wasm-opt": "^1.4.0"
     },
     "dependencies": {
-        "@iota/iota-interaction-ts": "^0.13.0"
+        "@iota/iota-interaction-ts": "^0.14.0"
     },
     "peerDependencies": {
         "@iota/iota-sdk": "^1.13.0"

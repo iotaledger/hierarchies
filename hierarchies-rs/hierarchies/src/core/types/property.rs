@@ -4,8 +4,7 @@
 use std::collections::{HashMap, HashSet};
 use std::str::FromStr;
 
-use iota_interaction::types::TypeTag;
-use iota_interaction::types::base_types::ObjectID;
+use iota_interaction::types::base_types::{ObjectID, TypeTag};
 use iota_interaction::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 use iota_interaction::types::transaction::{Argument, Command};
 use iota_interaction::{MoveType, ident_str};
@@ -114,8 +113,8 @@ pub(crate) fn new_property(
 
     let property = ptb.programmable_move_call(
         package_id,
-        ident_str!("property").into(),
-        ident_str!("new_property").into(),
+        ident_str!("property").as_str().into(),
+        ident_str!("new_property").as_str().into(),
         vec![],
         vec![property_names, allowed_values, allow_any, shape],
     );
@@ -162,16 +161,16 @@ pub(crate) fn new_properties(
 
         let property = ptb.programmable_move_call(
             package_id,
-            ident_str!("property").into(),
-            ident_str!("new_property").into(),
+            ident_str!("property").as_str().into(),
+            ident_str!("new_property").as_str().into(),
             vec![],
             vec![property_names, allowed_values, allow_any, expression],
         );
         property_args.push(property);
     }
 
-    Ok(ptb.command(Command::MakeMoveVec(
-        Some(FederationProperty::move_type(package_id).into()),
+    Ok(ptb.command(Command::new_make_move_vector(
+        Some(FederationProperty::move_type(package_id)),
         property_args,
     )))
 }

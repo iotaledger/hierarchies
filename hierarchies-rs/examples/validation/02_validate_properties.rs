@@ -67,7 +67,7 @@ async fn main() -> anyhow::Result<()> {
     let properties = [(property_name.clone(), value)];
 
     let validate = hierarchies_client
-        .validate_properties(*federation_id, (*receiver).into(), properties)
+        .validate_properties(*federation_id, receiver, properties)
         .await;
 
     assert!(validate.is_ok());
@@ -78,7 +78,7 @@ async fn main() -> anyhow::Result<()> {
     let invalid_property_value = PropertyValue::Text("Invalid Property Value".to_owned());
     let invalid_properties = [(property_name, invalid_property_value)];
     let validate_invalid_property_value = hierarchies_client
-        .validate_properties(*federation_id, (*receiver).into(), invalid_properties)
+        .validate_properties(*federation_id, receiver, invalid_properties)
         .await;
     assert!(validate_invalid_property_value.is_ok());
     println!("Validated invalid property value");

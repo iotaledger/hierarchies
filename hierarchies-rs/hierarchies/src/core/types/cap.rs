@@ -9,8 +9,7 @@
 use std::str::FromStr;
 
 use iota_interaction::MoveType;
-use iota_interaction::move_types::language_storage::TypeTag;
-use iota_interaction::types::base_types::ObjectID;
+use iota_interaction::types::base_types::{ObjectID, TypeTag};
 use iota_interaction::types::id::UID;
 use serde::{Deserialize, Serialize};
 

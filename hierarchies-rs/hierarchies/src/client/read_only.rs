@@ -279,7 +279,7 @@ impl HierarchiesClientReadOnly {
         let inspection_result = self
             .client
             .read_api()
-            .dev_inspect_transaction_block(IotaAddress::ZERO, TransactionKind::programmable(tx), None, None, None)
+            .dev_inspect_transaction_block(IotaAddress::ZERO, TransactionKind::Programmable(tx), None, None, None)
             .await
             .map_err(|err| ClientError::ExecutionFailed {
                 reason: format!("Failed to inspect transaction block: {err}"),

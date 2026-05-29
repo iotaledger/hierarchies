@@ -272,8 +272,8 @@ async fn main() -> anyhow::Result<()> {
     // =============================================================================
     println!("🏛️ Step 3: Adding universities to the consortium...");
 
-    let harvard_address = IotaAddress::random_for_testing_only();
-    let mit_address = IotaAddress::random_for_testing_only();
+    let harvard_address = IotaAddress::random();
+    let mit_address = IotaAddress::random();
 
     // Add Harvard as root authority
     hierarchies_client
@@ -297,7 +297,7 @@ async fn main() -> anyhow::Result<()> {
     println!("🏫 Step 4: Creating faculty-level accreditations...");
 
     // Simulate Harvard CS Faculty address
-    let harvard_cs_faculty = IotaAddress::random_for_testing_only();
+    let harvard_cs_faculty = IotaAddress::random();
 
     // Harvard delegates accreditation rights to its CS Faculty
     // This allows the faculty to further delegate to registrars and professors
@@ -330,7 +330,7 @@ async fn main() -> anyhow::Result<()> {
     println!("👨‍💼 Step 5: Creating registrar attestation rights...");
 
     // Simulate Harvard CS Registrar address
-    let harvard_cs_registrar = IotaAddress::random_for_testing_only();
+    let harvard_cs_registrar = IotaAddress::random();
 
     // CS Faculty delegates attestation rights to the CS Registrar
     // Registrar can now create attestations (issue degrees) but not delegate further
@@ -353,8 +353,8 @@ async fn main() -> anyhow::Result<()> {
     println!("🎓 Step 6: Issuing student degrees...");
 
     // Simulate student addresses
-    let alice_student = IotaAddress::random_for_testing_only();
-    let bob_student = IotaAddress::random_for_testing_only();
+    let alice_student = IotaAddress::random();
+    let bob_student = IotaAddress::random();
 
     println!("📜 Issuing Bachelor's degree in Computer Science to Alice...");
 
