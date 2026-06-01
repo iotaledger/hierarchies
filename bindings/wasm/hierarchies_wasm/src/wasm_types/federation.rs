@@ -107,7 +107,7 @@ impl WasmGovernance {
         for (key, value) in &self.0.accreditations_to_accredit {
             map.set(
                 &wasm_bindgen::JsValue::from_str(&key.to_string()),
-                &serde_wasm_bindgen::to_value(&WasmAccreditations::from(value.clone())).unwrap(),
+                &wasm_bindgen::JsValue::from(WasmAccreditations::from(value.clone())),
             );
         }
         map
@@ -123,7 +123,7 @@ impl WasmGovernance {
         for (key, value) in &self.0.accreditations_to_attest {
             map.set(
                 &wasm_bindgen::JsValue::from_str(&key.to_string()),
-                &serde_wasm_bindgen::to_value(&WasmAccreditations::from(value.clone())).unwrap(),
+                &wasm_bindgen::JsValue::from(WasmAccreditations::from(value.clone())),
             );
         }
         map

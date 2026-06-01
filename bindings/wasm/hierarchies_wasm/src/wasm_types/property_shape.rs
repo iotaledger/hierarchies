@@ -41,6 +41,36 @@ impl WasmPropertyShape {
         Self(PropertyShape::LowerThan(value))
     }
 
+    /// Returns the variant tag (`"StartsWith"`, `"EndsWith"`, `"Contains"`,
+    /// `"GreaterThan"` or `"LowerThan"`).
+    ///
+    /// Exposed as a `#[wasm_bindgen(getter)]` together with [`Self::value`] so
+    /// the contained data is visible under `console.log` / `JSON.stringify`
+    /// (an `inspectable` class with only methods renders as `{}`).
+    #[wasm_bindgen(getter, js_name = "type")]
+    pub fn variant_type(&self) -> String {
+        match self.0 {
+            PropertyShape::StartsWith(_) => "StartsWith".to_string(),
+            PropertyShape::EndsWith(_) => "EndsWith".to_string(),
+            PropertyShape::Contains(_) => "Contains".to_string(),
+            PropertyShape::GreaterThan(_) => "GreaterThan".to_string(),
+            PropertyShape::LowerThan(_) => "LowerThan".to_string(),
+        }
+    }
+
+    /// Returns the contained value as a `string` (for the text variants) or a
+    /// `number` (for `GreaterThan` / `LowerThan`). Pairs with
+    /// [`Self::variant_type`] for inspection.
+    #[wasm_bindgen(getter)]
+    pub fn value(&self) -> JsValue {
+        match &self.0 {
+            PropertyShape::StartsWith(text) | PropertyShape::EndsWith(text) | PropertyShape::Contains(text) => {
+                JsValue::from_str(text)
+            }
+            PropertyShape::GreaterThan(value) | PropertyShape::LowerThan(value) => JsValue::from_f64(*value as f64),
+        }
+    }
+
     /// Returns `true` if the `PropertyShape` is of type `StartsWith`.
     #[wasm_bindgen(js_name = isStartsWith)]
     pub fn is_starts_with(&self) -> bool {
