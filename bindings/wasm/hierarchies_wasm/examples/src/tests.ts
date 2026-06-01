@@ -18,6 +18,7 @@ import { supplyChain } from "./real-world/02_supply_chain";
 import { getAccreditations } from "./validation/01_get_accreditations";
 import { validateProperties } from "./validation/02_validate_properties";
 import { getProperties } from "./validation/03_get_properties";
+import { federationSerialization } from "./validation/04_federation_serialization";
 
 import { afterEach } from "mocha";
 
@@ -63,6 +64,9 @@ describe("Test node examples", function() {
     });
     it("Should get Properties", async () => {
         await getProperties();
+    });
+    it("Should expose consistent serialization from getFederationById", async () => {
+        await federationSerialization();
     });
     it("Should run University Degrees Example", async () => {
         await universityDegrees();

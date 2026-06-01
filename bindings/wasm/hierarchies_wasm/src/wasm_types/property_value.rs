@@ -33,6 +33,25 @@ impl WasmPropertyValue {
         Self(PropertyValue::Number(number))
     }
 
+    /// Returns the variant tag (`"Text"` or `"Number"`).
+    #[wasm_bindgen(getter, js_name = "type")]
+    pub fn variant_type(&self) -> String {
+        match self.0 {
+            PropertyValue::Text(_) => "Text".to_string(),
+            PropertyValue::Number(_) => "Number".to_string(),
+        }
+    }
+
+    /// Returns the contained value as a `string` (for `Text`) or a `number`
+    /// (for `Number`). Pairs with [`Self::variant_type`] for inspection.
+    #[wasm_bindgen(getter)]
+    pub fn value(&self) -> JsValue {
+        match &self.0 {
+            PropertyValue::Text(text) => JsValue::from_str(text),
+            PropertyValue::Number(number) => JsValue::from_f64(*number as f64),
+        }
+    }
+
     /// Returns `true` if the `PropertyValue` is of type `Text`.
     #[wasm_bindgen(js_name = isText)]
     pub fn is_text(&self) -> bool {
