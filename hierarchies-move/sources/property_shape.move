@@ -37,6 +37,32 @@ public fun new_property_shape_lower_than(value: u64): PropertyShape {
     PropertyShape::LowerThan(value)
 }
 
+/// Checks if two shapes are exactly equal (same variant and same parameter).
+public(package) fun equals(self: &PropertyShape, other: &PropertyShape): bool {
+    match (self) {
+        PropertyShape::StartsWith(a) => match (other) {
+            PropertyShape::StartsWith(b) => a == b,
+            _ => false,
+        },
+        PropertyShape::EndsWith(a) => match (other) {
+            PropertyShape::EndsWith(b) => a == b,
+            _ => false,
+        },
+        PropertyShape::Contains(a) => match (other) {
+            PropertyShape::Contains(b) => a == b,
+            _ => false,
+        },
+        PropertyShape::GreaterThan(a) => match (other) {
+            PropertyShape::GreaterThan(b) => a == b,
+            _ => false,
+        },
+        PropertyShape::LowerThan(a) => match (other) {
+            PropertyShape::LowerThan(b) => a == b,
+            _ => false,
+        },
+    }
+}
+
 /// Checks if the condition matches the value.
 public fun property_shape_matches(self: &PropertyShape, value: &PropertyValue): bool {
     match (self) {

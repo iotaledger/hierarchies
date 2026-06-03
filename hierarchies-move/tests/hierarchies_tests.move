@@ -15,11 +15,13 @@ use hierarchies::{
         add_root_authority,
         revoke_root_authority,
         is_root_authority,
-        revoke_property
+        revoke_property,
+        test_only_insert_attest_accreditation
     },
     property,
     property_name::new_property_name,
-    property_value::new_property_value_number
+    property_shape::new_property_shape_starts_with,
+    property_value::{new_property_value_number, new_property_value_string}
 };
 use iota::{clock, test_scenario, vec_map, vec_set};
 use std::string::utf8;
@@ -1293,6 +1295,395 @@ fun test_validate_properties_fails_for_revoked_property() {
     test_scenario::return_shared(fed);
     test_scenario::return_to_address(alice, root_cap);
     test_scenario::return_to_address(alice, accredit_cap);
+    clock.destroy_for_testing();
+    let _ = scenario.end();
+}
+
+// ===== Federation value-scope enforcement =====
+
+#[test]
+#[expected_failure(abort_code = hierarchies::main::EPropertyValuesOutOfFederationScope)]
+fun test_create_accreditation_to_accredit_fails_for_value_out_of_scope() {
+    let alice = @0x1;
+    let mut scenario = test_scenario::begin(alice);
+    let mut clock = clock::create_for_testing(scenario.ctx());
+    clock.set_for_testing(1000);
+
+    new_federation(scenario.ctx());
+    scenario.next_tx(alice);
+
+    let mut fed: Federation = scenario.take_shared();
+    let cap: RootAuthorityCap = scenario.take_from_address(alice);
+    let accredit_cap: AccreditCap = scenario.take_from_address(alice);
+
+    // Federation declares test-property with allowed_values = {"a"}.
+    let property_name = new_property_name(utf8(b"test-property"));
+    let mut federation_values = vec_set::empty();
+    federation_values.insert(new_property_value_string(utf8(b"a")));
+    let federation_property = property::new_property(
+        property_name,
+        federation_values,
+        false,
+        option::none(),
+    );
+    fed.add_property(&cap, federation_property, scenario.ctx());
+    scenario.next_tx(alice);
+
+    let new_id = scenario.new_object();
+    let bob = new_id.uid_to_inner();
+
+    // Request an accreditation for "b" — outside the federation's value space.
+    let mut requested_values = vec_set::empty();
+    requested_values.insert(new_property_value_string(utf8(b"b")));
+    let requested = property::new_property(property_name, requested_values, false, option::none());
+
+    // Should abort with EPropertyValuesOutOfFederationScope, even though alice
+    // is a root authority.
+    fed.create_accreditation_to_accredit(
+        &accredit_cap,
+        bob,
+        vector[requested],
+        &clock,
+        scenario.ctx(),
+    );
+
+    // Cleanup - not reached due to expected failure.
+    test_scenario::return_to_address(alice, cap);
+    test_scenario::return_to_address(alice, accredit_cap);
+    test_scenario::return_shared(fed);
+    new_id.delete();
+    clock.destroy_for_testing();
+    let _ = scenario.end();
+}
+
+#[test]
+#[expected_failure(abort_code = hierarchies::main::EPropertyValuesOutOfFederationScope)]
+fun test_create_accreditation_to_attest_fails_for_value_out_of_scope() {
+    let alice = @0x1;
+    let mut scenario = test_scenario::begin(alice);
+    let mut clock = clock::create_for_testing(scenario.ctx());
+    clock.set_for_testing(1000);
+
+    new_federation(scenario.ctx());
+    scenario.next_tx(alice);
+
+    let mut fed: Federation = scenario.take_shared();
+    let cap: RootAuthorityCap = scenario.take_from_address(alice);
+    let accredit_cap: AccreditCap = scenario.take_from_address(alice);
+
+    // Federation declares test-property with allowed_values = {"a"}.
+    let property_name = new_property_name(utf8(b"test-property"));
+    let mut federation_values = vec_set::empty();
+    federation_values.insert(new_property_value_string(utf8(b"a")));
+    let federation_property = property::new_property(
+        property_name,
+        federation_values,
+        false,
+        option::none(),
+    );
+    fed.add_property(&cap, federation_property, scenario.ctx());
+    scenario.next_tx(alice);
+
+    let new_id = scenario.new_object();
+    let bob = new_id.uid_to_inner();
+
+    // Request an accreditation for "c" — outside the federation's value space.
+    let mut requested_values = vec_set::empty();
+    requested_values.insert(new_property_value_string(utf8(b"c")));
+    let requested = property::new_property(property_name, requested_values, false, option::none());
+
+    fed.create_accreditation_to_attest(
+        &accredit_cap,
+        bob,
+        vector[requested],
+        &clock,
+        scenario.ctx(),
+    );
+
+    test_scenario::return_to_address(alice, cap);
+    test_scenario::return_to_address(alice, accredit_cap);
+    test_scenario::return_shared(fed);
+    new_id.delete();
+    clock.destroy_for_testing();
+    let _ = scenario.end();
+}
+
+#[test]
+#[expected_failure(abort_code = hierarchies::main::EPropertyValuesOutOfFederationScope)]
+fun test_create_accreditation_to_attest_fails_for_allow_any_widening() {
+    let alice = @0x1;
+    let mut scenario = test_scenario::begin(alice);
+    let mut clock = clock::create_for_testing(scenario.ctx());
+    clock.set_for_testing(1000);
+
+    new_federation(scenario.ctx());
+    scenario.next_tx(alice);
+
+    let mut fed: Federation = scenario.take_shared();
+    let cap: RootAuthorityCap = scenario.take_from_address(alice);
+    let accredit_cap: AccreditCap = scenario.take_from_address(alice);
+
+    // Federation declares a bounded property (allow_any = false).
+    let property_name = new_property_name(utf8(b"test-property"));
+    let mut federation_values = vec_set::empty();
+    federation_values.insert(new_property_value_string(utf8(b"a")));
+    let federation_property = property::new_property(
+        property_name,
+        federation_values,
+        false,
+        option::none(),
+    );
+    fed.add_property(&cap, federation_property, scenario.ctx());
+    scenario.next_tx(alice);
+
+    let new_id = scenario.new_object();
+    let bob = new_id.uid_to_inner();
+
+    // Request allow_any = true against a bounded federation — must be rejected.
+    let requested = property::new_property(
+        property_name,
+        vec_set::empty(),
+        true,
+        option::none(),
+    );
+
+    fed.create_accreditation_to_attest(
+        &accredit_cap,
+        bob,
+        vector[requested],
+        &clock,
+        scenario.ctx(),
+    );
+
+    test_scenario::return_to_address(alice, cap);
+    test_scenario::return_to_address(alice, accredit_cap);
+    test_scenario::return_shared(fed);
+    new_id.delete();
+    clock.destroy_for_testing();
+    let _ = scenario.end();
+}
+
+#[test]
+#[expected_failure(abort_code = hierarchies::main::EPropertyValuesOutOfFederationScope)]
+fun test_create_accreditation_to_attest_fails_for_shape_widening() {
+    let alice = @0x1;
+    let mut scenario = test_scenario::begin(alice);
+    let mut clock = clock::create_for_testing(scenario.ctx());
+    clock.set_for_testing(1000);
+
+    new_federation(scenario.ctx());
+    scenario.next_tx(alice);
+
+    let mut fed: Federation = scenario.take_shared();
+    let cap: RootAuthorityCap = scenario.take_from_address(alice);
+    let accredit_cap: AccreditCap = scenario.take_from_address(alice);
+
+    // Federation declares a property bounded by allowed_values, with no shape.
+    let property_name = new_property_name(utf8(b"test-property"));
+    let mut federation_values = vec_set::empty();
+    federation_values.insert(new_property_value_string(utf8(b"abc")));
+    let federation_property = property::new_property(
+        property_name,
+        federation_values,
+        false,
+        option::none(),
+    );
+    fed.add_property(&cap, federation_property, scenario.ctx());
+    scenario.next_tx(alice);
+
+    let new_id = scenario.new_object();
+    let bob = new_id.uid_to_inner();
+
+    // Request a shape while the federation has neither shape nor allow_any.
+    let requested = property::new_property(
+        property_name,
+        vec_set::empty(),
+        false,
+        option::some(new_property_shape_starts_with(utf8(b"a"))),
+    );
+
+    fed.create_accreditation_to_attest(
+        &accredit_cap,
+        bob,
+        vector[requested],
+        &clock,
+        scenario.ctx(),
+    );
+
+    test_scenario::return_to_address(alice, cap);
+    test_scenario::return_to_address(alice, accredit_cap);
+    test_scenario::return_shared(fed);
+    new_id.delete();
+    clock.destroy_for_testing();
+    let _ = scenario.end();
+}
+
+#[test]
+fun test_create_accreditation_to_attest_succeeds_for_value_subset() {
+    let alice = @0x1;
+    let mut scenario = test_scenario::begin(alice);
+    let mut clock = clock::create_for_testing(scenario.ctx());
+    clock.set_for_testing(1000);
+
+    new_federation(scenario.ctx());
+    scenario.next_tx(alice);
+
+    let mut fed: Federation = scenario.take_shared();
+    let cap: RootAuthorityCap = scenario.take_from_address(alice);
+    let accredit_cap: AccreditCap = scenario.take_from_address(alice);
+
+    // Federation declares allowed_values = {"a", "b"}.
+    let property_name = new_property_name(utf8(b"test-property"));
+    let mut federation_values = vec_set::empty();
+    federation_values.insert(new_property_value_string(utf8(b"a")));
+    federation_values.insert(new_property_value_string(utf8(b"b")));
+    let federation_property = property::new_property(
+        property_name,
+        federation_values,
+        false,
+        option::none(),
+    );
+    fed.add_property(&cap, federation_property, scenario.ctx());
+    scenario.next_tx(alice);
+
+    let new_id = scenario.new_object();
+    let bob = new_id.uid_to_inner();
+
+    // Request a strict subset {"a"} — should succeed.
+    let mut requested_values = vec_set::empty();
+    requested_values.insert(new_property_value_string(utf8(b"a")));
+    let requested = property::new_property(property_name, requested_values, false, option::none());
+
+    fed.create_accreditation_to_attest(
+        &accredit_cap,
+        bob,
+        vector[requested],
+        &clock,
+        scenario.ctx(),
+    );
+    scenario.next_tx(alice);
+
+    assert!(fed.is_attester(&bob), 0);
+    // The granted (in-scope) value validates.
+    assert!(
+        fed.validate_property(&bob, property_name, new_property_value_string(utf8(b"a")), &clock),
+        1,
+    );
+
+    test_scenario::return_to_address(alice, cap);
+    test_scenario::return_to_address(alice, accredit_cap);
+    test_scenario::return_shared(fed);
+    new_id.delete();
+    clock.destroy_for_testing();
+    let _ = scenario.end();
+}
+
+#[test]
+fun test_create_accreditation_to_attest_succeeds_for_allow_any_federation() {
+    let alice = @0x1;
+    let mut scenario = test_scenario::begin(alice);
+    let mut clock = clock::create_for_testing(scenario.ctx());
+    clock.set_for_testing(1000);
+
+    new_federation(scenario.ctx());
+    scenario.next_tx(alice);
+
+    let mut fed: Federation = scenario.take_shared();
+    let cap: RootAuthorityCap = scenario.take_from_address(alice);
+    let accredit_cap: AccreditCap = scenario.take_from_address(alice);
+
+    // Federation declares allow_any = true.
+    let property_name = new_property_name(utf8(b"test-property"));
+    let federation_property = property::new_property(
+        property_name,
+        vec_set::empty(),
+        true,
+        option::none(),
+    );
+    fed.add_property(&cap, federation_property, scenario.ctx());
+    scenario.next_tx(alice);
+
+    let new_id = scenario.new_object();
+    let bob = new_id.uid_to_inner();
+
+    // Request allow_any = true — allowed because the federation also allows any.
+    let requested = property::new_property(
+        property_name,
+        vec_set::empty(),
+        true,
+        option::none(),
+    );
+
+    fed.create_accreditation_to_attest(
+        &accredit_cap,
+        bob,
+        vector[requested],
+        &clock,
+        scenario.ctx(),
+    );
+    scenario.next_tx(alice);
+
+    assert!(fed.is_attester(&bob), 0);
+
+    test_scenario::return_to_address(alice, cap);
+    test_scenario::return_to_address(alice, accredit_cap);
+    test_scenario::return_shared(fed);
+    new_id.delete();
+    clock.destroy_for_testing();
+    let _ = scenario.end();
+}
+
+#[test]
+fun test_validate_property_refuses_out_of_scope_accreditation() {
+    let alice = @0x1;
+    let mut scenario = test_scenario::begin(alice);
+    let mut clock = clock::create_for_testing(scenario.ctx());
+    clock.set_for_testing(1000);
+
+    new_federation(scenario.ctx());
+    scenario.next_tx(alice);
+
+    let mut fed: Federation = scenario.take_shared();
+    let cap: RootAuthorityCap = scenario.take_from_address(alice);
+
+    // Federation declares allowed_values = {"a"}.
+    let property_name = new_property_name(utf8(b"test-property"));
+    let mut federation_values = vec_set::empty();
+    federation_values.insert(new_property_value_string(utf8(b"a")));
+    let federation_property = property::new_property(
+        property_name,
+        federation_values,
+        false,
+        option::none(),
+    );
+    fed.add_property(&cap, federation_property, scenario.ctx());
+    scenario.next_tx(alice);
+
+    let bob_id = @0x2.to_id();
+
+    // Inject an out-of-scope attest accreditation for "c", bypassing the
+    // creation gate (simulating an accreditation issued by a prior buggy
+    // package version).
+    let mut bad_values = vec_set::empty();
+    bad_values.insert(new_property_value_string(utf8(b"c")));
+    let bad_property = property::new_property(property_name, bad_values, false, option::none());
+    fed.test_only_insert_attest_accreditation(bob_id, vector[bad_property], scenario.ctx());
+    scenario.next_tx(alice);
+
+    // Even though Bob's accreditation carries "c", validation must refuse it
+    // because the federation never allowed "c".
+    assert!(
+        !fed.validate_property(
+            &bob_id,
+            property_name,
+            new_property_value_string(utf8(b"c")),
+            &clock,
+        ),
+        0,
+    );
+
+    test_scenario::return_to_address(alice, cap);
+    test_scenario::return_shared(fed);
     clock.destroy_for_testing();
     let _ = scenario.end();
 }
