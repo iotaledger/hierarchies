@@ -375,18 +375,39 @@ export async function supplyChainExample(): Promise<void> {
     // German Testing Institute under ISO Europe
     const germanTestingInstitute = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, "0");
 
-    // Create comprehensive accreditation package for German institute
+    // The delegated value space must stay within the federation's declared
+    // bounds for each property, so we delegate the federation's declared sets
+    // rather than `allowAny`. Only `originVerified` and `expiryDate` are
+    // declared `allowAny` by the federation, so they may be delegated as such.
+    //
+    // Note: `PropertyValue`/`FederationProperty` instances are consumed when
+    // passed across the wasm boundary, so these are factory functions that
+    // produce fresh instances for each property.
+    const certStatusValues = () => [
+        PropertyValue.newText("certified"),
+        PropertyValue.newText("pending"),
+        PropertyValue.newText("expired"),
+        PropertyValue.newText("revoked"),
+        PropertyValue.newText("suspended"),
+    ];
+    const booleanValues = () => [PropertyValue.newText("true"), PropertyValue.newText("false")];
+    const testResults = () => [
+        PropertyValue.newText("passed"),
+        PropertyValue.newText("failed"),
+        PropertyValue.newText("pending"),
+        PropertyValue.newText("inconclusive"),
+    ];
 
     // ISO Europe delegates accreditation rights to German Testing Institute
     await hierarchies
         .createAccreditationToAccredit(standardsConsortium.id, germanTestingInstitute, [
-            new FederationProperty(iso9001).withAllowAny(true),
-            new FederationProperty(iso14001).withAllowAny(true),
-            new FederationProperty(iso22000).withAllowAny(true),
-            new FederationProperty(productOrganic).withAllowAny(true),
+            new FederationProperty(iso9001).withAllowedValues(certStatusValues()),
+            new FederationProperty(iso14001).withAllowedValues(certStatusValues()),
+            new FederationProperty(iso22000).withAllowedValues(certStatusValues()),
+            new FederationProperty(productOrganic).withAllowedValues(booleanValues()),
             new FederationProperty(originVerified).withAllowAny(true),
-            new FederationProperty(batchTested).withAllowAny(true),
-            new FederationProperty(complianceEu).withAllowAny(true),
+            new FederationProperty(batchTested).withAllowedValues(testResults()),
+            new FederationProperty(complianceEu).withAllowedValues(booleanValues()),
             new FederationProperty(expiryDate).withAllowAny(true),
         ])
         .buildAndExecute(hierarchies);
@@ -396,12 +417,12 @@ export async function supplyChainExample(): Promise<void> {
 
     await hierarchies
         .createAccreditationToAccredit(standardsConsortium.id, usFdaRegional, [
-            new FederationProperty(iso9001).withAllowAny(true),
-            new FederationProperty(iso22000).withAllowAny(true),
-            new FederationProperty(productOrganic).withAllowAny(true),
+            new FederationProperty(iso9001).withAllowedValues(certStatusValues()),
+            new FederationProperty(iso22000).withAllowedValues(certStatusValues()),
+            new FederationProperty(productOrganic).withAllowedValues(booleanValues()),
             new FederationProperty(originVerified).withAllowAny(true),
-            new FederationProperty(batchTested).withAllowAny(true),
-            new FederationProperty(complianceFda).withAllowAny(true),
+            new FederationProperty(batchTested).withAllowedValues(testResults()),
+            new FederationProperty(complianceFda).withAllowedValues(booleanValues()),
             new FederationProperty(expiryDate).withAllowAny(true),
         ])
         .buildAndExecute(hierarchies);
@@ -425,11 +446,11 @@ export async function supplyChainExample(): Promise<void> {
     // German Testing Institute delegates attestation rights to Berlin lab
     await hierarchies
         .createAccreditationToAttest(standardsConsortium.id, berlinFoodLab, [
-            new FederationProperty(iso22000).withAllowAny(true),
-            new FederationProperty(productOrganic).withAllowAny(true),
+            new FederationProperty(iso22000).withAllowedValues(certStatusValues()),
+            new FederationProperty(productOrganic).withAllowedValues(booleanValues()),
             new FederationProperty(originVerified).withAllowAny(true),
-            new FederationProperty(batchTested).withAllowAny(true),
-            new FederationProperty(complianceEu).withAllowAny(true),
+            new FederationProperty(batchTested).withAllowedValues(testResults()),
+            new FederationProperty(complianceEu).withAllowedValues(booleanValues()),
             new FederationProperty(expiryDate).withAllowAny(true),
         ])
         .buildAndExecute(hierarchies);
@@ -439,12 +460,12 @@ export async function supplyChainExample(): Promise<void> {
 
     await hierarchies
         .createAccreditationToAttest(standardsConsortium.id, californiaAgLab, [
-            new FederationProperty(iso9001).withAllowAny(true),
-            new FederationProperty(iso22000).withAllowAny(true),
-            new FederationProperty(productOrganic).withAllowAny(true),
+            new FederationProperty(iso9001).withAllowedValues(certStatusValues()),
+            new FederationProperty(iso22000).withAllowedValues(certStatusValues()),
+            new FederationProperty(productOrganic).withAllowedValues(booleanValues()),
             new FederationProperty(originVerified).withAllowAny(true),
-            new FederationProperty(batchTested).withAllowAny(true),
-            new FederationProperty(complianceFda).withAllowAny(true),
+            new FederationProperty(batchTested).withAllowedValues(testResults()),
+            new FederationProperty(complianceFda).withAllowedValues(booleanValues()),
             new FederationProperty(expiryDate).withAllowAny(true),
         ])
         .buildAndExecute(hierarchies);
