@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use hierarchies::client::HierarchiesClient;
+use iota_interaction::types::base_types::ObjectID;
 use iota_interaction_ts::WasmPublicKey;
 use iota_interaction_ts::bindings::{WasmIotaClient, WasmTransactionSigner};
 use iota_interaction_ts::wasm_error::{Result, WasmResult};
-use iota_interaction::types::base_types::ObjectID;
 use product_common::bindings::transaction::WasmTransactionBuilder;
 use product_common::bindings::utils::{into_transaction_builder, parse_wasm_object_id};
 use product_common::bindings::{WasmIotaAddress, WasmObjectID};
