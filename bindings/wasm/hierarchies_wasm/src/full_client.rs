@@ -5,6 +5,7 @@ use hierarchies::client::HierarchiesClient;
 use iota_interaction_ts::WasmPublicKey;
 use iota_interaction_ts::bindings::{WasmIotaClient, WasmTransactionSigner};
 use iota_interaction_ts::wasm_error::{Result, WasmResult};
+use iota_interaction::types::base_types::ObjectID;
 use product_common::bindings::transaction::WasmTransactionBuilder;
 use product_common::bindings::utils::{into_transaction_builder, parse_wasm_object_id};
 use product_common::bindings::{WasmIotaAddress, WasmObjectID};
@@ -317,5 +318,13 @@ impl WasmHierarchiesClient {
     #[wasm_bindgen(js_name = readOnly)]
     pub fn read_only(&self) -> WasmHierarchiesClientReadOnly {
         WasmHierarchiesClientReadOnly((*self.0).clone())
+    }
+
+    /// Returns the `tf_components` package ID currently in use.
+    ///
+    /// @returns Stringified object ID of the resolved `tf_components` package.
+    #[wasm_bindgen(js_name = tfComponentsPackageId)]
+    pub fn tf_components_package_id(&self) -> String {
+        self.0.tf_components_package_id().unwrap_or(ObjectID::ZERO).to_string()
     }
 }
