@@ -492,6 +492,14 @@ impl WasmHierarchiesClientReadOnly {
             .map_err(wasm_error)?;
         Ok(is_valid)
     }
+
+    /// Returns the `tf_components` package ID currently in use.
+    ///
+    /// @returns Stringified object ID of the resolved `tf_components` package.
+    #[wasm_bindgen(js_name = tfComponentsPackageId)]
+    pub fn tf_components_package_id(&self) -> String {
+        self.0.tf_components_package_id().unwrap_or(ObjectID::ZERO).to_string()
+    }
 }
 
 fn call_js_method(obj: &JsValue, method: &str) -> Option<JsValue> {
