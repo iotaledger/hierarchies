@@ -300,6 +300,10 @@ where
     fn network_name(&self) -> &NetworkName {
         self.read_client.network()
     }
+
+    fn package_history(&self) -> Vec<ObjectID> {
+        self.read_client.package_history()
+    }
 }
 
 impl<S> CoreClient<S> for HierarchiesClient<S>
