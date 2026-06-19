@@ -35,10 +35,13 @@ to [rustup.rs](https://rustup.rs) for the installation.
 - for running example: a local network node with the IOTA hierarchies package deployed as being described
   [here](https://docs.iota.org/developer/iota-hierarchies/getting-started/local-network-setup)
 
-### 1. Install `wasm-bindgen-cli`
+### 1. Install Local Tooling
 
-If you want to build the library from source,
-you will first need to manually install [`wasm-bindgen-cli`](https://github.com/rustwasm/wasm-bindgen).
+If you want to build the library from source you have to install additional build tools locally.
+
+#### Install `wasm-bindgen-cli`
+
+First you need to install [`wasm-bindgen-cli`](https://github.com/rustwasm/wasm-bindgen).
 A manual installation is required because we use the [Weak References](https://rustwasm.github.io/wasm-bindgen/reference/weak-references.html) feature,
 which [`wasm-pack` does not expose](https://github.com/rustwasm/wasm-pack/issues/930).
 
@@ -46,9 +49,20 @@ which [`wasm-pack` does not expose](https://github.com/rustwasm/wasm-pack/issues
 cargo install --force wasm-bindgen-cli
 ```
 
+#### Install `wasm-opt`
+
+To reduce the size of the wasm package, it is optimized with `wasm-opt`, which is part of [`binaryen`](https://github.com/WebAssembly/binaryen).
+
+You can either download a [release of binaryen](https://github.com/WebAssembly/binaryen/releases) and make the bin folder available in your PATH or check if your operating system tooling offers a more convenient way of installing the binaries like APT, Homebrew, etc.
+
+Some examples:
+
+- Linux via APT: `sudo apt-get update && sudo apt-get -y install binaryen` (taken from [here](https://installati.one/install-binaryen-ubuntu-22-04/))
+- MacOS via Homebrew: `brew install binaryen` (see [Homebrew entry](https://formulae.brew.sh/formula/binaryen))
+
 ### 2. Install Dependencies
 
-After installing `wasm-bindgen-cli`, you can install the necessary dependencies using the following command:
+After installing local tooling, you can install the necessary dependencies using the following command:
 
 ```bash
 npm install

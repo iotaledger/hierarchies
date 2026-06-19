@@ -60,6 +60,13 @@ jobs:
         with:
           version: "0.2.108"
 
+      # Install wasm-opt from binaryen repository.
+      - name: Install binaryen
+        uses: sigoden/install-binary@v1
+        with:
+          repo: WebAssembly/binaryen
+          name: wasm-opt
+
       - name: Setup sccache
         uses: "./.github/actions/rust/sccache/setup"
         with:
