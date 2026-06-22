@@ -15,7 +15,8 @@ use hierarchies::{
         add_root_authority,
         revoke_root_authority,
         is_root_authority,
-        revoke_property
+        revoke_property,
+        validate_property
     },
     property,
     property_name::new_property_name,
@@ -1290,6 +1291,77 @@ fun test_validate_properties_fails_for_revoked_property() {
     // Now validation should fail because one of the properties is revoked
     assert!(!fed.validate_properties(&bob_id, properties, &clock), 1);
 
+    test_scenario::return_shared(fed);
+    test_scenario::return_to_address(alice, root_cap);
+    test_scenario::return_to_address(alice, accredit_cap);
+    clock.destroy_for_testing();
+    let _ = scenario.end();
+}
+
+#[test]
+fun test_validate_property_returns_false_when_attester_has_different_property() {
+    let alice = @0x1;
+    let mut scenario = test_scenario::begin(alice);
+    let mut clock = clock::create_for_testing(scenario.ctx());
+    clock.set_for_testing(1000);
+
+    // Create a new federation
+    new_federation(scenario.ctx());
+    scenario.next_tx(alice);
+
+    let mut fed: Federation = scenario.take_shared();
+    let root_cap: RootAuthorityCap = scenario.take_from_address(alice);
+    let accredit_cap: AccreditCap = scenario.take_from_address(alice);
+
+    // Step 1: Add two properties to the federation: "role" and "foo"
+    let property_name_role = new_property_name(utf8(b"role"));
+    let property_value_example = new_property_value_number(1);
+    let mut allowed_values_role = vec_set::empty();
+    allowed_values_role.insert(property_value_example);
+
+    let property_name_foo = new_property_name(utf8(b"foo"));
+    let property_value_bar = new_property_value_number(2);
+    let mut allowed_values_foo = vec_set::empty();
+    allowed_values_foo.insert(property_value_bar);
+
+    let property_role = property::new_property(
+        property_name_role,
+        allowed_values_role,
+        false,
+        option::none(),
+    );
+    let property_foo = property::new_property(
+        property_name_foo,
+        allowed_values_foo,
+        false,
+        option::none(),
+    );
+
+    fed.add_property(&root_cap, property_role, scenario.ctx());
+    fed.add_property(&root_cap, property_foo, scenario.ctx());
+    scenario.next_tx(alice);
+
+    let bob_id = @0x2.to_id();
+    let property_for_bob = property::new_property(
+        property_name_foo,
+        allowed_values_foo,
+        false,
+        option::none(),
+    );
+
+    fed.create_accreditation_to_attest(
+        &accredit_cap,
+        bob_id,
+        vector[property_for_bob],
+        &clock,
+        scenario.ctx(),
+    );
+
+    assert!(fed.validate_property(&bob_id, property_name_foo, property_value_bar, &clock), 0);
+
+    assert!(!fed.validate_property(&bob_id, property_name_role, property_value_example, &clock), 1);
+
+    // Cleanup
     test_scenario::return_shared(fed);
     test_scenario::return_to_address(alice, root_cap);
     test_scenario::return_to_address(alice, accredit_cap);

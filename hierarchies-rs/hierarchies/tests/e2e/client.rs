@@ -71,6 +71,10 @@ impl CoreClientReadOnly for TestClient {
     fn client_adapter(&self) -> &IotaClientAdapter {
         self.client.client_adapter()
     }
+
+    fn package_history(&self) -> Vec<ObjectID> {
+        self.client.package_history()
+    }
 }
 
 impl CoreClient<InMemSigner> for TestClient {

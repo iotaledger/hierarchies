@@ -69,8 +69,10 @@ impl HierarchiesImpl {
     where
         C: CoreClientReadOnly + OptionalSync,
     {
-        let cap: RootAuthorityCap = client
-            .find_object_for_address(owner, |cap: &RootAuthorityCap| cap.federation_id == federation_id)
+        let cap = client
+            .find_object_for_address::<RootAuthorityCap, _>(owner, |cap: &RootAuthorityCap| {
+                cap.federation_id == federation_id
+            })
             .await
             .map_err(|e| CapabilityError::Rpc { source: e.into() })?
             .ok_or_else(|| CapabilityError::NotFound {

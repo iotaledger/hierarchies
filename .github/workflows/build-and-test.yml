@@ -17,6 +17,7 @@ on:
       - ".github/workflows/shared-build-wasm.yml"
       - ".github/actions/**"
       - "**.rs"
+      - "**.move"
       - "**.toml"
       - "**.lock"
       - "bindings/**"
