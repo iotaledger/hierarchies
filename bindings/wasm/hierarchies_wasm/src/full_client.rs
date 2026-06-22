@@ -8,7 +8,7 @@ use iota_interaction_ts::wasm_error::{Result, WasmResult};
 use iota_sdk_types::ObjectId;
 use product_common::bindings::transaction::WasmTransactionBuilder;
 use product_common::bindings::utils::{into_transaction_builder, parse_wasm_object_id};
-use product_common::bindings::{WasmIotaAddress, WasmObjectId};
+use product_common::bindings::{WasmIotaAddress, WasmObjectID};
 use product_common::core_client::{CoreClient, CoreClientReadOnly};
 use wasm_bindgen::prelude::*;
 
@@ -65,13 +65,13 @@ impl WasmHierarchiesClient {
     ///
     /// # Arguments
     ///
-    /// * `federation_id` - The [`WasmObjectId`] of the federation.
-    /// * `account_id` - The [`WasmObjectId`] of the account to add as a root authority.
+    /// * `federation_id` - The [`WasmObjectID`] of the federation.
+    /// * `account_id` - The [`WasmObjectID`] of the account to add as a root authority.
     #[wasm_bindgen(js_name = addRootAuthority)]
     pub fn add_root_authority(
         &self,
-        federation_id: WasmObjectId,
-        account_id: WasmObjectId,
+        federation_id: WasmObjectID,
+        account_id: WasmObjectID,
     ) -> Result<WasmTransactionBuilder> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         let account_id = parse_wasm_object_id(&account_id)?;
@@ -87,13 +87,13 @@ impl WasmHierarchiesClient {
     ///
     /// # Arguments
     ///
-    /// * `federation_id` - The [`WasmObjectId`] of the federation.
-    /// * `account_id` - The [`WasmObjectId`] of the account to revoke as a root authority.
+    /// * `federation_id` - The [`WasmObjectID`] of the federation.
+    /// * `account_id` - The [`WasmObjectID`] of the account to revoke as a root authority.
     #[wasm_bindgen(js_name = revokeRootAuthority)]
     pub fn revoke_root_authority(
         &self,
-        federation_id: WasmObjectId,
-        account_id: WasmObjectId,
+        federation_id: WasmObjectID,
+        account_id: WasmObjectID,
     ) -> Result<WasmTransactionBuilder> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         let account_id = parse_wasm_object_id(&account_id)?;
@@ -109,13 +109,13 @@ impl WasmHierarchiesClient {
     ///
     /// # Arguments
     ///
-    /// * `federation_id` - The [`WasmObjectId`] of the federation.
-    /// * `account_id` - The [`WasmObjectId`] of the account to reinstate as a root authority.
+    /// * `federation_id` - The [`WasmObjectID`] of the federation.
+    /// * `account_id` - The [`WasmObjectID`] of the account to reinstate as a root authority.
     #[wasm_bindgen(js_name = reinstateRootAuthority)]
     pub fn reinstate_root_authority(
         &self,
-        federation_id: WasmObjectId,
-        account_id: WasmObjectId,
+        federation_id: WasmObjectID,
+        account_id: WasmObjectID,
     ) -> Result<WasmTransactionBuilder> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         let account_id = parse_wasm_object_id(&account_id)?;
@@ -128,10 +128,10 @@ impl WasmHierarchiesClient {
     ///
     /// # Arguments
     ///
-    /// * `federation_id` - The [`WasmObjectId`] of the federation.
+    /// * `federation_id` - The [`WasmObjectID`] of the federation.
     /// * `property` - The property to add.
     #[wasm_bindgen(js_name = addProperty)]
-    pub fn add_property(&self, federation_id: WasmObjectId, property: &WasmProperty) -> Result<WasmTransactionBuilder> {
+    pub fn add_property(&self, federation_id: WasmObjectID, property: &WasmProperty) -> Result<WasmTransactionBuilder> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         let tx = self.0.add_property(federation_id, property.clone().into()).into_inner();
         Ok(into_transaction_builder(WasmAddProperty(tx)))
@@ -141,12 +141,12 @@ impl WasmHierarchiesClient {
     ///
     /// # Arguments
     ///
-    /// * `federation_id` - The [`WasmObjectId`] of the federation.
+    /// * `federation_id` - The [`WasmObjectID`] of the federation.
     /// * `property_name` - The name of the property to revoke.
     /// * `valid_to_ms` - The timestamp in milliseconds until which the property is valid.
     pub fn revoke_property(
         &self,
-        federation_id: WasmObjectId,
+        federation_id: WasmObjectID,
         property_name: &WasmPropertyName,
         valid_to_ms: Option<u64>,
     ) -> Result<WasmTransactionBuilder> {
@@ -163,14 +163,14 @@ impl WasmHierarchiesClient {
     ///
     /// # Arguments
     ///
-    /// * `federation_id` - The [`WasmObjectId`] of the federation.
-    /// * `receiver` - The [`WasmObjectId`] of the receiver of the accreditation.
+    /// * `federation_id` - The [`WasmObjectID`] of the federation.
+    /// * `receiver` - The [`WasmObjectID`] of the receiver of the accreditation.
     /// * `want_properties` - The properties for which permissions are being granted.
     #[wasm_bindgen(js_name = createAccreditationToAttest)]
     pub fn create_accreditation_to_attest(
         &self,
-        federation_id: WasmObjectId,
-        receiver: WasmObjectId,
+        federation_id: WasmObjectID,
+        receiver: WasmObjectID,
         want_properties: Vec<WasmProperty>,
     ) -> Result<WasmTransactionBuilder> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
@@ -192,15 +192,15 @@ impl WasmHierarchiesClient {
     ///
     /// # Arguments
     ///
-    /// * `federation_id` - The [`WasmObjectId`] of the federation.
-    /// * `user_id` - The [`WasmObjectId`] of the user whose accreditation is being revoked.
-    /// * `permission_id` - The [`WasmObjectId`] of the permission to revoke.
+    /// * `federation_id` - The [`WasmObjectID`] of the federation.
+    /// * `user_id` - The [`WasmObjectID`] of the user whose accreditation is being revoked.
+    /// * `permission_id` - The [`WasmObjectID`] of the permission to revoke.
     #[wasm_bindgen(js_name = revokeAccreditationToAttest)]
     pub fn revoke_accreditation_to_attest(
         &self,
-        federation_id: WasmObjectId,
-        user_id: WasmObjectId,
-        permission_id: WasmObjectId,
+        federation_id: WasmObjectID,
+        user_id: WasmObjectID,
+        permission_id: WasmObjectID,
     ) -> Result<WasmTransactionBuilder> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         let user_id = parse_wasm_object_id(&user_id)?;
@@ -218,14 +218,14 @@ impl WasmHierarchiesClient {
     ///
     /// # Arguments
     ///
-    /// * `federation_id` - The [`WasmObjectId`] of the federation.
-    /// * `receiver` - The [`WasmObjectId`] of the receiver of the accreditation.
+    /// * `federation_id` - The [`WasmObjectID`] of the federation.
+    /// * `receiver` - The [`WasmObjectID`] of the receiver of the accreditation.
     /// * `want_properties` - The properties for which permissions are being granted.
     #[wasm_bindgen(js_name = createAccreditationToAccredit)]
     pub fn create_accreditation_to_accredit(
         &self,
-        federation_id: WasmObjectId,
-        receiver: WasmObjectId,
+        federation_id: WasmObjectID,
+        receiver: WasmObjectID,
         want_properties: Vec<WasmProperty>,
     ) -> Result<WasmTransactionBuilder> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
@@ -247,15 +247,15 @@ impl WasmHierarchiesClient {
     ///
     /// # Arguments
     ///
-    /// * `federation_id` - The [`WasmObjectId`] of the federation.
-    /// * `user_id` - The [`WasmObjectId`] of the user whose accreditation is being revoked.
-    /// * `accreditation_id` - The [`WasmObjectId`] of the accreditation to revoke.
+    /// * `federation_id` - The [`WasmObjectID`] of the federation.
+    /// * `user_id` - The [`WasmObjectID`] of the user whose accreditation is being revoked.
+    /// * `accreditation_id` - The [`WasmObjectID`] of the accreditation to revoke.
     #[wasm_bindgen(js_name = revokeAccreditationToAccredit)]
     pub fn revoke_accreditation_to_accredit(
         &self,
-        federation_id: WasmObjectId,
-        user_id: WasmObjectId,
-        accreditation_id: WasmObjectId,
+        federation_id: WasmObjectID,
+        user_id: WasmObjectID,
+        accreditation_id: WasmObjectID,
     ) -> Result<WasmTransactionBuilder> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         let user_id = parse_wasm_object_id(&user_id)?;

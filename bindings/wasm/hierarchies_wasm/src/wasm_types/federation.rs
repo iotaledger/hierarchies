@@ -6,7 +6,7 @@ use std::collections::HashSet;
 use hierarchies::core::types::property::{FederationProperties, FederationProperty};
 use hierarchies::core::types::timespan::Timespan;
 use hierarchies::core::types::{Federation, Governance, RootAuthority};
-use product_common::bindings::WasmObjectId;
+use product_common::bindings::WasmObjectID;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::wasm_bindgen;
 
@@ -30,7 +30,7 @@ impl WasmFederation {
     /// # Returns
     /// A string representing the federation ID.
     #[wasm_bindgen(getter)]
-    pub fn id(&self) -> WasmObjectId {
+    pub fn id(&self) -> WasmObjectID {
         self.0.id.object_id().to_string()
     }
 
@@ -57,7 +57,7 @@ impl WasmFederation {
     /// # Returns
     /// An array of revoked root authorities.
     #[wasm_bindgen(getter, js_name = revokedRootAuthorities)]
-    pub fn revoked_root_authorities(&self) -> Vec<WasmObjectId> {
+    pub fn revoked_root_authorities(&self) -> Vec<WasmObjectID> {
         self.0
             .revoked_root_authorities
             .iter()
@@ -84,7 +84,7 @@ impl WasmGovernance {
     /// # Returns
     /// A string representing the governance ID.
     #[wasm_bindgen(getter)]
-    pub fn id(&self) -> WasmObjectId {
+    pub fn id(&self) -> WasmObjectID {
         self.0.id.object_id().to_string()
     }
 
@@ -148,7 +148,7 @@ impl WasmRootAuthority {
     /// # Returns
     /// A string representing the root authority ID.
     #[wasm_bindgen(getter)]
-    pub fn id(&self) -> WasmObjectId {
+    pub fn id(&self) -> WasmObjectID {
         self.0.id.object_id().to_string()
     }
 
@@ -157,7 +157,7 @@ impl WasmRootAuthority {
     /// # Returns
     /// A string representing the account ID.
     #[wasm_bindgen(getter, js_name = accountId)]
-    pub fn account_id(&self) -> WasmObjectId {
+    pub fn account_id(&self) -> WasmObjectID {
         self.0.account_id.to_string()
     }
 }

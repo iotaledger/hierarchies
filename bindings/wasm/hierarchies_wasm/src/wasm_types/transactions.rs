@@ -14,7 +14,7 @@ use iota_interaction_ts::wasm_error::{Result, wasm_error};
 use product_common::bindings::utils::{
     apply_with_events, build_programmable_transaction, parse_wasm_iota_address, parse_wasm_object_id,
 };
-use product_common::bindings::{WasmIotaAddress, WasmObjectId};
+use product_common::bindings::{WasmIotaAddress, WasmObjectID};
 use wasm_bindgen::prelude::*;
 
 use crate::wasm_types::{WasmFederation, WasmProperty, WasmPropertyName};
@@ -91,7 +91,7 @@ impl WasmAddRootAuthority {
     /// * `account_id` - The ID of the account to add as a root authority.
     /// * `signer_address` - The address of the transaction signer.
     #[wasm_bindgen(constructor)]
-    pub fn new(federation_id: WasmObjectId, account_id: WasmObjectId, signer_address: WasmIotaAddress) -> Result<Self> {
+    pub fn new(federation_id: WasmObjectID, account_id: WasmObjectID, signer_address: WasmIotaAddress) -> Result<Self> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         let account_id = parse_wasm_object_id(&account_id)?;
         let signer_address = parse_wasm_iota_address(&signer_address)?;
@@ -150,7 +150,7 @@ impl WasmRevokeRootAuthority {
     /// * `account_id` - The ID of the account to revoke as a root authority.
     /// * `signer_address` - The address of the transaction signer.
     #[wasm_bindgen(constructor)]
-    pub fn new(federation_id: WasmObjectId, account_id: WasmObjectId, signer_address: WasmIotaAddress) -> Result<Self> {
+    pub fn new(federation_id: WasmObjectID, account_id: WasmObjectID, signer_address: WasmIotaAddress) -> Result<Self> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         let account_id = parse_wasm_object_id(&account_id)?;
         let signer_address = parse_wasm_iota_address(&signer_address)?;
@@ -214,7 +214,7 @@ impl WasmReinstateRootAuthority {
     /// * `account_id` - The ID of the account to reinstate as a root authority.
     /// * `signer_address` - The address of the transaction signer.
     #[wasm_bindgen(constructor)]
-    pub fn new(federation_id: WasmObjectId, account_id: WasmObjectId, signer_address: WasmIotaAddress) -> Result<Self> {
+    pub fn new(federation_id: WasmObjectID, account_id: WasmObjectID, signer_address: WasmIotaAddress) -> Result<Self> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         let account_id = parse_wasm_object_id(&account_id)?;
         let signer_address = parse_wasm_iota_address(&signer_address)?;
@@ -278,7 +278,7 @@ impl WasmAddProperty {
     /// * `property` - The property to add.
     /// * `owner` - The address of the transaction signer.
     #[wasm_bindgen(constructor)]
-    pub fn new(federation_id: WasmObjectId, property: &WasmProperty, owner: WasmIotaAddress) -> Result<Self> {
+    pub fn new(federation_id: WasmObjectID, property: &WasmProperty, owner: WasmIotaAddress) -> Result<Self> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         let signer_address = parse_wasm_iota_address(&owner)?;
 
@@ -343,7 +343,7 @@ impl WasmRevokeProperty {
     /// * `owner` - The address of the transaction signer.
     #[wasm_bindgen(constructor)]
     pub fn new(
-        federation_id: WasmObjectId,
+        federation_id: WasmObjectID,
         property_name: WasmPropertyName,
         valid_to_ms: Option<u64>,
         owner: WasmIotaAddress,
@@ -413,8 +413,8 @@ impl WasmCreateAccreditationToAttest {
     /// * `owner` - The address of the transaction signer.
     #[wasm_bindgen(constructor)]
     pub fn new(
-        federation_id: WasmObjectId,
-        receiver: WasmObjectId,
+        federation_id: WasmObjectID,
+        receiver: WasmObjectID,
         want_properties: js_sys::Array,
         owner: WasmIotaAddress,
     ) -> Result<Self> {
@@ -487,9 +487,9 @@ impl WasmRevokeAccreditationToAttest {
     /// * `owner` - The address of the transaction signer.
     #[wasm_bindgen(constructor)]
     pub fn new(
-        federation_id: WasmObjectId,
-        entity_id: WasmObjectId,
-        accreditation_id: WasmObjectId,
+        federation_id: WasmObjectID,
+        entity_id: WasmObjectID,
+        accreditation_id: WasmObjectID,
         owner: WasmIotaAddress,
     ) -> Result<Self> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
@@ -558,8 +558,8 @@ impl WasmCreateAccreditationToAccredit {
     /// * `owner` - The address of the transaction signer.
     #[wasm_bindgen(constructor)]
     pub fn new(
-        federation_id: WasmObjectId,
-        receiver_id: WasmObjectId,
+        federation_id: WasmObjectID,
+        receiver_id: WasmObjectID,
         want_properties: js_sys::Array,
         owner: WasmIotaAddress,
     ) -> Result<Self> {
@@ -632,9 +632,9 @@ impl WasmRevokeAccreditationToAccredit {
     /// * `owner` - The address of the transaction signer.
     #[wasm_bindgen(constructor)]
     pub fn new(
-        federation_id: WasmObjectId,
-        entity_id: WasmObjectId,
-        accreditation_id: WasmObjectId,
+        federation_id: WasmObjectID,
+        entity_id: WasmObjectID,
+        accreditation_id: WasmObjectID,
         owner: WasmIotaAddress,
     ) -> Result<Self> {
         let federation_id = parse_wasm_object_id(&federation_id)?;

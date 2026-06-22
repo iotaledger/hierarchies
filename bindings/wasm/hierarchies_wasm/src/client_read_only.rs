@@ -11,7 +11,7 @@ use hierarchies::core::types::property_value::PropertyValue;
 use iota_interaction_ts::bindings::WasmIotaClient;
 use iota_interaction_ts::wasm_error::{Result, WasmResult, wasm_error};
 use iota_sdk_types::ObjectId;
-use product_common::bindings::WasmObjectId;
+use product_common::bindings::WasmObjectID;
 use product_common::bindings::utils::parse_wasm_object_id;
 use product_common::core_client::CoreClientReadOnly;
 use wasm_bindgen::prelude::*;
@@ -166,7 +166,7 @@ impl WasmHierarchiesClientReadOnly {
     /// }
     /// ```
     #[wasm_bindgen(js_name = getFederationById)]
-    pub async fn get_federation_by_id(&self, federation_id: WasmObjectId) -> Result<WasmFederation> {
+    pub async fn get_federation_by_id(&self, federation_id: WasmObjectID) -> Result<WasmFederation> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         let federation = self.0.get_federation_by_id(federation_id).await.map_err(wasm_error)?;
         Ok(federation.into())
@@ -181,7 +181,7 @@ impl WasmHierarchiesClientReadOnly {
     /// # Returns
     /// A `Result` containing a boolean indicating if the user is a root authority or an [`Error`].
     #[wasm_bindgen(js_name = isRootAuthority)]
-    pub async fn is_root_authority(&self, federation_id: WasmObjectId, user_id: WasmObjectId) -> Result<bool> {
+    pub async fn is_root_authority(&self, federation_id: WasmObjectID, user_id: WasmObjectID) -> Result<bool> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         let user_id = parse_wasm_object_id(&user_id)?;
         let is_root_authority = self
@@ -215,7 +215,7 @@ impl WasmHierarchiesClientReadOnly {
     /// }
     /// ```
     #[wasm_bindgen(js_name = getProperties)]
-    pub async fn get_properties(&self, federation_id: WasmObjectId) -> Result<Vec<WasmPropertyName>> {
+    pub async fn get_properties(&self, federation_id: WasmObjectID) -> Result<Vec<WasmPropertyName>> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         let properties = self.0.get_properties(federation_id).await.map_err(wasm_error)?;
         Ok(properties.into_iter().map(|property| property.into()).collect())
@@ -247,7 +247,7 @@ impl WasmHierarchiesClientReadOnly {
     #[wasm_bindgen(js_name = isPropertyInFederation)]
     pub async fn is_property_in_federation(
         &self,
-        federation_id: WasmObjectId,
+        federation_id: WasmObjectID,
         property_name: WasmPropertyName,
     ) -> Result<bool> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
@@ -284,8 +284,8 @@ impl WasmHierarchiesClientReadOnly {
     #[wasm_bindgen(js_name = getAccreditationsToAttest)]
     pub async fn get_accreditations_to_attest(
         &self,
-        federation_id: WasmObjectId,
-        user_id: WasmObjectId,
+        federation_id: WasmObjectID,
+        user_id: WasmObjectID,
     ) -> Result<WasmAccreditations> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         let user_id = parse_wasm_object_id(&user_id)?;
@@ -321,7 +321,7 @@ impl WasmHierarchiesClientReadOnly {
     /// }
     /// ```
     #[wasm_bindgen(js_name = isAttester)]
-    pub async fn is_attester(&self, federation_id: WasmObjectId, user_id: WasmObjectId) -> Result<bool> {
+    pub async fn is_attester(&self, federation_id: WasmObjectID, user_id: WasmObjectID) -> Result<bool> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         let user_id = parse_wasm_object_id(&user_id)?;
         let is_attester = self.0.is_attester(federation_id, user_id).await.map_err(wasm_error)?;
@@ -354,8 +354,8 @@ impl WasmHierarchiesClientReadOnly {
     #[wasm_bindgen(js_name = getAccreditationsToAccredit)]
     pub async fn get_accreditations_to_accredit(
         &self,
-        federation_id: WasmObjectId,
-        user_id: WasmObjectId,
+        federation_id: WasmObjectID,
+        user_id: WasmObjectID,
     ) -> Result<WasmAccreditations> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         let user_id = parse_wasm_object_id(&user_id)?;
@@ -391,7 +391,7 @@ impl WasmHierarchiesClientReadOnly {
     /// }
     /// ```
     #[wasm_bindgen(js_name = isAccreditor)]
-    pub async fn is_accreditor(&self, federation_id: WasmObjectId, user_id: WasmObjectId) -> Result<bool> {
+    pub async fn is_accreditor(&self, federation_id: WasmObjectID, user_id: WasmObjectID) -> Result<bool> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
         let user_id = parse_wasm_object_id(&user_id)?;
         let is_accreditor = self.0.is_accreditor(federation_id, user_id).await.map_err(wasm_error)?;
@@ -426,8 +426,8 @@ impl WasmHierarchiesClientReadOnly {
     #[wasm_bindgen(js_name = validateProperty)]
     pub async fn validate_property(
         &self,
-        federation_id: WasmObjectId,
-        user_id: WasmObjectId,
+        federation_id: WasmObjectID,
+        user_id: WasmObjectID,
         property_name: WasmPropertyName,
         property_value: WasmPropertyValue,
     ) -> Result<bool> {
@@ -470,8 +470,8 @@ impl WasmHierarchiesClientReadOnly {
     #[wasm_bindgen(js_name = validateProperties)]
     pub async fn validate_properties(
         &self,
-        federation_id: WasmObjectId,
-        entity_id: WasmObjectId,
+        federation_id: WasmObjectID,
+        entity_id: WasmObjectID,
         properties: js_sys::Map,
     ) -> Result<bool> {
         let federation_id = parse_wasm_object_id(&federation_id)?;
