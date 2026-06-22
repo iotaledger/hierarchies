@@ -9,7 +9,7 @@ use hierarchies::core::types::property_name::PropertyName;
 use hierarchies::core::types::property_value::PropertyValue;
 use hierarchies::core::types::timespan::Timespan;
 use hierarchies_examples::get_funded_client;
-use iota_sdk::types::base_types::ObjectID;
+use iota_sdk_types::ObjectId;
 
 /// Demonstrates how to use the offchain API to validate properties.
 /// In this example we connect to a locally running private network, but it can be adapted
@@ -43,7 +43,7 @@ async fn main() -> anyhow::Result<()> {
         .context("Failed to add Property")?;
 
     // Add new receiver
-    let receiver = ObjectID::random();
+    let receiver = ObjectId::random();
 
     // Properties
     let properties = FederationProperty {

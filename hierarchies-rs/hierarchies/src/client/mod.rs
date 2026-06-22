@@ -18,7 +18,7 @@ pub use error::ClientError;
 pub use full_client::*;
 use iota_interaction::IotaClientTrait;
 use iota_interaction::rpc_types::{IotaData, IotaObjectDataOptions};
-use iota_interaction::types::base_types::ObjectID;
+use iota_sdk_types::ObjectId;
 use product_common::core_client::CoreClientReadOnly;
 use product_common::network_name::NetworkName;
 pub use read_only::*;
@@ -42,7 +42,7 @@ async fn network_id(iota_client: &IotaClientAdapter) -> Result<NetworkName, Netw
 /// This function is used to retrieve an object from the IOTA network and deserialize it using BCS.
 pub async fn get_object_ref_by_id_with_bcs<T: DeserializeOwned>(
     client: &impl CoreClientReadOnly,
-    object_id: &ObjectID,
+    object_id: &ObjectId,
 ) -> Result<T, ObjectError> {
     let hierarchies_client = client
         .client_adapter()

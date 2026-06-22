@@ -19,11 +19,11 @@ use std::collections::HashMap;
 
 use async_trait::async_trait;
 use iota_interaction::rpc_types::IotaObjectDataOptions;
-use iota_interaction::types::base_types::{IotaAddress, ObjectID, ObjectRef, SequenceNumber};
-use iota_interaction::types::object::Owner;
+use iota_interaction::types::base_types::{IotaAddress, ObjectRef, SequenceNumber};
 use iota_interaction::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use iota_interaction::types::transaction::{CallArg, Command, ProgrammableTransaction, SharedObjectRef};
+use iota_interaction::types::transaction::{CallArg, ProgrammableTransaction, SharedObjectRef};
 use iota_interaction::{IotaClientTrait, MoveType, OptionalSync, ident_str};
+use iota_sdk_types::{Command, ObjectId, Owner};
 use product_common::core_client::CoreClientReadOnly;
 
 use crate::core::error::OperationError;
@@ -64,7 +64,7 @@ impl HierarchiesImpl {
     pub(crate) async fn get_root_authority_cap<C>(
         client: &C,
         owner: IotaAddress,
-        federation_id: ObjectID,
+        federation_id: ObjectId,
     ) -> Result<ObjectRef, CapabilityError>
     where
         C: CoreClientReadOnly + OptionalSync,
@@ -100,7 +100,7 @@ impl HierarchiesImpl {
     pub(crate) async fn get_accredit_cap<C>(
         client: &C,
         owner: IotaAddress,
-        federation_id: ObjectID,
+        federation_id: ObjectId,
     ) -> Result<ObjectRef, CapabilityError>
     where
         C: CoreClientReadOnly + OptionalSync,
@@ -133,7 +133,7 @@ impl HierarchiesImpl {
     /// # Errors
     ///
     /// Returns an error if the federation object is not found or not shared.
-    async fn get_fed_ref<C>(client: &C, federation_id: ObjectID) -> Result<CallArg, OperationError>
+    async fn get_fed_ref<C>(client: &C, federation_id: ObjectId) -> Result<CallArg, OperationError>
     where
         C: CoreClientReadOnly + OptionalSync,
     {
@@ -154,7 +154,7 @@ impl HierarchiesImpl {
     /// Returns an error if the object is not shared.
     pub(crate) async fn initial_shared_version<C>(
         client: &C,
-        object_id: &ObjectID,
+        object_id: &ObjectId,
     ) -> Result<SequenceNumber, ObjectError>
     where
         C: CoreClientReadOnly + OptionalSync,
@@ -209,7 +209,7 @@ pub(crate) trait HierarchiesOperations {
     /// [`ProgrammableTransaction`] A transaction that when executed creates a
     /// new federation and grants
     /// the sender all initial capabilities.
-    fn new_federation(package_id: ObjectID) -> Result<ProgrammableTransaction, OperationError> {
+    fn new_federation(package_id: ObjectId) -> Result<ProgrammableTransaction, OperationError> {
         let mut ptb = ProgrammableTransactionBuilder::new();
 
         ptb.move_call(
@@ -237,7 +237,7 @@ pub(crate) trait HierarchiesOperations {
     /// - The property name already exists in the federation
     /// - Network or transaction building fails
     async fn add_property<C>(
-        federation_id: ObjectID,
+        federation_id: ObjectId,
         property: FederationProperty,
         owner: IotaAddress,
         client: &C,
@@ -272,9 +272,9 @@ pub(crate) trait HierarchiesOperations {
     /// This function revokes specific attestation accreditations from a user.
     /// The revoker must possess sufficient accreditation to revoke the target accreditation.
     async fn revoke_accreditation_to_attest<C>(
-        federation_id: ObjectID,
-        user_id: ObjectID,
-        accreditation_id: ObjectID,
+        federation_id: ObjectId,
+        user_id: ObjectId,
+        accreditation_id: ObjectId,
         owner: IotaAddress,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>
@@ -317,8 +317,8 @@ pub(crate) trait HierarchiesOperations {
     ///
     /// Returns an error if the owner doesn't have `RootAuthorityCap`.
     async fn add_root_authority<C>(
-        federation_id: ObjectID,
-        account_id: ObjectID,
+        federation_id: ObjectId,
+        account_id: ObjectId,
         owner: IotaAddress,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>
@@ -358,8 +358,8 @@ pub(crate) trait HierarchiesOperations {
     ///
     /// Returns an error if the owner doesn't have `AccreditCap`.
     async fn create_accreditation_to_accredit<C>(
-        federation_id: ObjectID,
-        receiver: ObjectID,
+        federation_id: ObjectId,
+        receiver: ObjectId,
         want_properties: Vec<FederationProperty>,
         owner: IotaAddress,
         client: &C,
@@ -403,8 +403,8 @@ pub(crate) trait HierarchiesOperations {
     ///
     /// Returns an error if the owner doesn't have `AccreditCap`.
     async fn create_accreditation_to_attest<C>(
-        federation_id: ObjectID,
-        receiver: ObjectID,
+        federation_id: ObjectId,
+        receiver: ObjectId,
         want_properties: Vec<FederationProperty>,
         owner: IotaAddress,
         client: &C,
@@ -447,9 +447,9 @@ pub(crate) trait HierarchiesOperations {
     ///
     /// Returns an error if the owner doesn't have `AccreditCap`.
     async fn revoke_accreditation_to_accredit<C>(
-        federation_id: ObjectID,
-        user_id: ObjectID,
-        accreditation_id: ObjectID,
+        federation_id: ObjectId,
+        user_id: ObjectId,
+        accreditation_id: ObjectId,
         owner: IotaAddress,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>
@@ -490,7 +490,7 @@ pub(crate) trait HierarchiesOperations {
     /// # Errors
     ///
     /// Returns an error if the federation object is not found or not shared.
-    async fn get_properties<C>(federation_id: ObjectID, client: &C) -> Result<ProgrammableTransaction, OperationError>
+    async fn get_properties<C>(federation_id: ObjectId, client: &C) -> Result<ProgrammableTransaction, OperationError>
     where
         C: CoreClientReadOnly + OptionalSync,
     {
@@ -527,7 +527,7 @@ pub(crate) trait HierarchiesOperations {
     ///
     /// Returns an error if the federation object is not found or not shared.
     async fn is_property_in_federation<C>(
-        federation_id: ObjectID,
+        federation_id: ObjectId,
         property_name: PropertyName,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>
@@ -567,8 +567,8 @@ pub(crate) trait HierarchiesOperations {
     ///
     /// Returns an error if the federation object is not found or not shared.
     async fn get_accreditations_to_attest<C>(
-        federation_id: ObjectID,
-        user_id: ObjectID,
+        federation_id: ObjectId,
+        user_id: ObjectId,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>
     where
@@ -596,8 +596,8 @@ pub(crate) trait HierarchiesOperations {
     ///
     /// Returns true if the user has any attestation accreditations in the federation.
     async fn is_attester<C>(
-        federation_id: ObjectID,
-        user_id: ObjectID,
+        federation_id: ObjectId,
+        user_id: ObjectId,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>
     where
@@ -637,8 +637,8 @@ pub(crate) trait HierarchiesOperations {
     ///
     /// Returns an error if the federation object is not found or not shared.
     async fn get_accreditations_to_accredit<C>(
-        federation_id: ObjectID,
-        user_id: ObjectID,
+        federation_id: ObjectId,
+        user_id: ObjectId,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>
     where
@@ -666,8 +666,8 @@ pub(crate) trait HierarchiesOperations {
     ///
     /// Returns true if the user can grant accreditation rights to others.
     async fn is_accreditor<C>(
-        federation_id: ObjectID,
-        user_id: ObjectID,
+        federation_id: ObjectId,
+        user_id: ObjectId,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>
     where
@@ -706,7 +706,7 @@ pub(crate) trait HierarchiesOperations {
     /// Returns an error if the owner doesn't have `RootAuthorityCap` or the
     /// property doesn't exist in the federation.
     async fn revoke_property<C>(
-        federation_id: ObjectID,
+        federation_id: ObjectId,
         property_name: PropertyName,
         owner: IotaAddress,
         client: &C,
@@ -756,7 +756,7 @@ pub(crate) trait HierarchiesOperations {
     /// Returns an error if the owner doesn't have `RootAuthorityCap` or the
     /// property doesn't exist in the federation.
     async fn revoke_property_at<C>(
-        federation_id: ObjectID,
+        federation_id: ObjectId,
         property_name: PropertyName,
         valid_to_ms: u64,
         owner: IotaAddress,
@@ -808,8 +808,8 @@ pub(crate) trait HierarchiesOperations {
     ///
     /// Returns an error if the federation object is not found or not shared.
     async fn validate_property<C>(
-        federation_id: ObjectID,
-        attester_id: ObjectID,
+        federation_id: ObjectId,
+        attester_id: ObjectId,
         property_name: PropertyName,
         property_value: PropertyValue,
         client: &C,
@@ -859,8 +859,8 @@ pub(crate) trait HierarchiesOperations {
     ///
     /// Returns an error if the federation object is not found or not shared.
     async fn validate_properties<C>(
-        federation_id: ObjectID,
-        entity_id: ObjectID,
+        federation_id: ObjectId,
+        entity_id: ObjectId,
         properties: HashMap<PropertyName, PropertyValue>,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>
@@ -921,8 +921,8 @@ pub(crate) trait HierarchiesOperations {
 
     /// Check if root authority is in the federation.
     async fn is_root_authority<C>(
-        federation_id: ObjectID,
-        user_id: ObjectID,
+        federation_id: ObjectId,
+        user_id: ObjectId,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>
     where
@@ -959,8 +959,8 @@ pub(crate) trait HierarchiesOperations {
     /// - The account_id is not a root authority
     /// - Attempting to revoke the last root authority
     async fn revoke_root_authority<C>(
-        federation_id: ObjectID,
-        account_id: ObjectID,
+        federation_id: ObjectId,
+        account_id: ObjectId,
         owner: IotaAddress,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>
@@ -1005,8 +1005,8 @@ pub(crate) trait HierarchiesOperations {
     /// - The account is already an active root authority
     /// - Network communication fails
     async fn reinstate_root_authority<C>(
-        federation_id: ObjectID,
-        account_id: ObjectID,
+        federation_id: ObjectId,
+        account_id: ObjectId,
         owner: IotaAddress,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>

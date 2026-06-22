@@ -11,10 +11,11 @@ use std::ops::Deref;
 #[cfg(not(target_arch = "wasm32"))]
 use iota_interaction::IotaClient;
 use iota_interaction::IotaClientTrait;
-use iota_interaction::types::base_types::{IotaAddress, ObjectID};
+use iota_interaction::types::base_types::IotaAddress;
 use iota_interaction::types::transaction::{ProgrammableTransaction, TransactionKind};
 #[cfg(target_arch = "wasm32")]
 use iota_interaction_ts::bindings::WasmIotaClient;
+use iota_sdk_types::ObjectId;
 use product_common::core_client::CoreClientReadOnly;
 use product_common::network_name::NetworkName;
 use product_common::package_registry::Env;
@@ -39,9 +40,9 @@ use crate::package;
 pub struct HierarchiesClientReadOnly {
     /// The underlying IOTA client adapter used for communication.
     client: IotaClientAdapter,
-    /// The [`ObjectID`] of the deployed Hierarchies package (smart contract).
+    /// The [`ObjectId`] of the deployed Hierarchies package (smart contract).
     /// All interactions go through this package ID.
-    hierarchies_package_id: ObjectID,
+    hierarchies_package_id: ObjectId,
     /// The name of the network this client is connected to (e.g., "mainnet", "testnet").
     network_name: NetworkName,
     chain_id: String,
@@ -141,7 +142,7 @@ impl HierarchiesClientReadOnly {
     pub async fn new_with_pkg_id(
         #[cfg(target_arch = "wasm32")] iota_client: WasmIotaClient,
         #[cfg(not(target_arch = "wasm32"))] iota_client: IotaClient,
-        package_id: ObjectID,
+        package_id: ObjectId,
     ) -> Result<Self, ClientError> {
         let client = IotaClientAdapter::new(iota_client);
         let network = network_id(&client).await?;
@@ -156,21 +157,21 @@ impl HierarchiesClientReadOnly {
     }
 
     /// Retrieves a federation by its ID.
-    pub async fn get_federation_by_id(&self, federation_id: ObjectID) -> Result<Federation, ClientError> {
+    pub async fn get_federation_by_id(&self, federation_id: ObjectId) -> Result<Federation, ClientError> {
         let fed = get_object_ref_by_id_with_bcs(self, &federation_id).await?;
 
         Ok(fed)
     }
 
     /// Check if root authority is in the federation.
-    pub async fn is_root_authority(&self, federation_id: ObjectID, user_id: ObjectID) -> Result<bool, ClientError> {
+    pub async fn is_root_authority(&self, federation_id: ObjectId, user_id: ObjectId) -> Result<bool, ClientError> {
         let tx = HierarchiesImpl::is_root_authority(federation_id, user_id, self).await?;
         let result = self.execute_read_only_transaction(tx).await?;
         Ok(result)
     }
 
     /// Retrieves all property names registered in the federation.
-    pub async fn get_properties(&self, federation_id: ObjectID) -> Result<Vec<PropertyName>, ClientError> {
+    pub async fn get_properties(&self, federation_id: ObjectId) -> Result<Vec<PropertyName>, ClientError> {
         let tx = HierarchiesImpl::get_properties(federation_id, self).await?;
         let result = self.execute_read_only_transaction(tx).await?;
         Ok(result)
@@ -179,7 +180,7 @@ impl HierarchiesClientReadOnly {
     /// Checks if a property is registered in the federation.
     pub async fn is_property_in_federation(
         &self,
-        federation_id: ObjectID,
+        federation_id: ObjectId,
         property_name: PropertyName,
     ) -> Result<bool, ClientError> {
         let tx = HierarchiesImpl::is_property_in_federation(federation_id, property_name, self).await?;
@@ -190,8 +191,8 @@ impl HierarchiesClientReadOnly {
     /// Retrieves attestation accreditations for a specific user.
     pub async fn get_accreditations_to_attest(
         &self,
-        federation_id: ObjectID,
-        user_id: ObjectID,
+        federation_id: ObjectId,
+        user_id: ObjectId,
     ) -> Result<Accreditations, ClientError> {
         let tx = HierarchiesImpl::get_accreditations_to_attest(federation_id, user_id, self).await?;
         let result = self.execute_read_only_transaction(tx).await?;
@@ -199,7 +200,7 @@ impl HierarchiesClientReadOnly {
     }
 
     /// Checks if a user has attestation permissions.
-    pub async fn is_attester(&self, federation_id: ObjectID, user_id: ObjectID) -> Result<bool, ClientError> {
+    pub async fn is_attester(&self, federation_id: ObjectId, user_id: ObjectId) -> Result<bool, ClientError> {
         let tx = HierarchiesImpl::is_attester(federation_id, user_id, self).await?;
         let result = self.execute_read_only_transaction(tx).await?;
         Ok(result)
@@ -208,8 +209,8 @@ impl HierarchiesClientReadOnly {
     /// Retrieves accreditations to accredit for a specific user.
     pub async fn get_accreditations_to_accredit(
         &self,
-        federation_id: ObjectID,
-        user_id: ObjectID,
+        federation_id: ObjectId,
+        user_id: ObjectId,
     ) -> Result<Accreditations, ClientError> {
         let tx = HierarchiesImpl::get_accreditations_to_accredit(federation_id, user_id, self).await?;
         let result = self.execute_read_only_transaction(tx).await?;
@@ -217,7 +218,7 @@ impl HierarchiesClientReadOnly {
     }
 
     /// Checks if a user has accreditations to accredit.
-    pub async fn is_accreditor(&self, federation_id: ObjectID, user_id: ObjectID) -> Result<bool, ClientError> {
+    pub async fn is_accreditor(&self, federation_id: ObjectId, user_id: ObjectId) -> Result<bool, ClientError> {
         let tx = HierarchiesImpl::is_accreditor(federation_id, user_id, self).await?;
         let result = self.execute_read_only_transaction(tx).await?;
         Ok(result)
@@ -226,8 +227,8 @@ impl HierarchiesClientReadOnly {
     /// Validates an attestation
     pub async fn validate_property(
         &self,
-        federation_id: ObjectID,
-        attester_id: ObjectID,
+        federation_id: ObjectId,
+        attester_id: ObjectId,
         property_name: PropertyName,
         property_value: PropertyValue,
     ) -> Result<bool, ClientError> {
@@ -241,8 +242,8 @@ impl HierarchiesClientReadOnly {
     /// Validates an attestations
     pub async fn validate_properties(
         &self,
-        federation_id: ObjectID,
-        entity_id: ObjectID,
+        federation_id: ObjectId,
+        entity_id: ObjectId,
         properties: impl IntoIterator<Item = (PropertyName, PropertyValue)>,
     ) -> Result<bool, ClientError> {
         let tx = HierarchiesImpl::validate_properties(federation_id, entity_id, properties.into_iter().collect(), self)
@@ -324,7 +325,7 @@ impl HierarchiesClientReadOnly {
 
 #[async_trait::async_trait]
 impl CoreClientReadOnly for HierarchiesClientReadOnly {
-    fn package_id(&self) -> ObjectID {
+    fn package_id(&self) -> ObjectId {
         self.hierarchies_package_id
     }
 

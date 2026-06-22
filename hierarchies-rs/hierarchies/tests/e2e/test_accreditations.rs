@@ -7,7 +7,7 @@ use hierarchies::core::types::Federation;
 use hierarchies::core::types::property::FederationProperty;
 use hierarchies::core::types::property_name::PropertyName;
 use hierarchies::core::types::property_value::PropertyValue;
-use iota_interaction::types::base_types::ObjectID;
+use iota_sdk_types::ObjectId;
 
 use crate::client::get_funded_test_client;
 
@@ -43,7 +43,7 @@ async fn test_create_accreditation_to_attest() -> anyhow::Result<()> {
     let property = FederationProperty::new(property_name).with_allowed_values(accreditation_values);
 
     // Create accreditation to attest for a test receiver
-    let receiver_id = ObjectID::random();
+    let receiver_id = ObjectId::random();
     let result = client
         .create_accreditation_to_attest(*federation_id.object_id(), receiver_id, vec![property])
         .build_and_execute(&client)
@@ -90,7 +90,7 @@ async fn test_create_accreditation_to_accredit() -> anyhow::Result<()> {
     let property = FederationProperty::new(property_name).with_allowed_values(allowed_values);
 
     // Create accreditation to accredit for a test receiver
-    let receiver_id = ObjectID::random();
+    let receiver_id = ObjectId::random();
     let result = client
         .create_accreditation_to_accredit(*federation_id.object_id(), receiver_id, vec![property])
         .build_and_execute(&client)
@@ -200,7 +200,7 @@ async fn test_revoke_accreditation_to_attest() -> anyhow::Result<()> {
         .await?;
 
     // Create accreditation to attest
-    let receiver_id = ObjectID::random();
+    let receiver_id = ObjectId::random();
     let property = FederationProperty::new(property_name).with_allowed_values(allowed_values);
 
     client
@@ -258,7 +258,7 @@ async fn test_revoke_accreditation_to_accredit() -> anyhow::Result<()> {
         .await?;
 
     // Create accreditation to accredit
-    let receiver_id = ObjectID::random();
+    let receiver_id = ObjectId::random();
     let property = FederationProperty::new(property_name).with_allowed_values(allowed_values);
 
     client
@@ -339,7 +339,7 @@ async fn test_complex_accreditation_workflow() -> anyhow::Result<()> {
     let age_property = FederationProperty::new(age_name).with_allowed_values(vec![PropertyValue::Number(21)]);
 
     // Create accreditation to attest with multiple properties
-    let attestor_id = ObjectID::random();
+    let attestor_id = ObjectId::random();
     client
         .create_accreditation_to_attest(
             *federation_id.object_id(),
@@ -350,7 +350,7 @@ async fn test_complex_accreditation_workflow() -> anyhow::Result<()> {
         .await?;
 
     // Create accreditation to accredit for a different user
-    let accreditor_id = ObjectID::random();
+    let accreditor_id = ObjectId::random();
     let accredit_property =
         FederationProperty::new(PropertyName::from("identity.verification")).with_allowed_values(verification_values);
 
@@ -412,7 +412,7 @@ async fn test_property_with_numeric_values() -> anyhow::Result<()> {
     // Create accreditation with specific numeric value
     let property = FederationProperty::new(score_name).with_allowed_values(vec![PropertyValue::Number(700)]);
 
-    let receiver_id = ObjectID::random();
+    let receiver_id = ObjectId::random();
     let result = client
         .create_accreditation_to_attest(*federation_id.object_id(), receiver_id, vec![property])
         .build_and_execute(&client)
@@ -455,7 +455,7 @@ async fn test_create_accreditation_to_accredit_fails_for_nonexistent_property() 
     let property = FederationProperty::new(nonexistent_property_name).with_allowed_values(allowed_values);
 
     // This should fail because the property name doesn't exist in the federation
-    let receiver_id = ObjectID::random();
+    let receiver_id = ObjectId::random();
     let result = client
         .create_accreditation_to_accredit(*federation_id.object_id(), receiver_id, vec![property])
         .build_and_execute(&client)
@@ -495,7 +495,7 @@ async fn test_create_accreditation_to_attest_fails_for_nonexistent_property() ->
     let property = FederationProperty::new(nonexistent_property_name).with_allowed_values(allowed_values);
 
     // This should fail because the property name doesn't exist in the federation
-    let receiver_id = ObjectID::random();
+    let receiver_id = ObjectId::random();
     let result = client
         .create_accreditation_to_attest(*federation_id.object_id(), receiver_id, vec![property])
         .build_and_execute(&client)
@@ -546,7 +546,7 @@ async fn test_create_accreditation_succeeds_after_adding_property() -> anyhow::R
         FederationProperty::new(property_name).with_allowed_values(vec![PropertyValue::Text("admin".to_string())]);
 
     // This should succeed because the property name exists in the federation
-    let receiver_id = ObjectID::random();
+    let receiver_id = ObjectId::random();
     let result = client
         .create_accreditation_to_accredit(*federation_id.object_id(), receiver_id, vec![property])
         .build_and_execute(&client)
@@ -604,7 +604,7 @@ async fn test_create_accreditation_with_multiple_properties_partial_exist() -> a
         .with_allowed_values(vec![PropertyValue::Text("verified".to_string())]);
 
     // This should fail because one of the properties doesn't exist in the federation
-    let receiver_id = ObjectID::random();
+    let receiver_id = ObjectId::random();
     let result = client
         .create_accreditation_to_attest(
             *federation_id.object_id(),

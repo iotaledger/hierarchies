@@ -13,8 +13,9 @@ pub mod types;
 // Re-export error types for convenience
 pub use error::{CapabilityError, OperationError};
 use iota_interaction::types::programmable_transaction_builder::ProgrammableTransactionBuilder as Ptb;
-use iota_interaction::types::transaction::{Argument, CallArg, SharedObjectRef};
+use iota_interaction::types::transaction::{CallArg, SharedObjectRef};
 use iota_interaction::types::{IOTA_CLOCK_OBJECT_ID, IOTA_CLOCK_OBJECT_SHARED_VERSION};
+use iota_sdk_types::Argument;
 
 /// Adds a reference to the on-chain clock to `ptb`'s arguments.
 pub(crate) fn get_clock_ref(ptb: &mut Ptb) -> Argument {

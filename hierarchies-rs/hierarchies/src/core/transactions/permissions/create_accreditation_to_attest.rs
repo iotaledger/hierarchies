@@ -13,8 +13,9 @@
 use async_trait::async_trait;
 use iota_interaction::OptionalSync;
 use iota_interaction::rpc_types::IotaTransactionBlockEffects;
-use iota_interaction::types::base_types::{IotaAddress, ObjectID};
+use iota_interaction::types::base_types::IotaAddress;
 use iota_interaction::types::transaction::ProgrammableTransaction;
+use iota_sdk_types::ObjectId;
 use product_common::core_client::CoreClientReadOnly;
 use product_common::transaction::transaction_builder::Transaction;
 use tokio::sync::OnceCell;
@@ -29,9 +30,9 @@ use crate::core::types::property::FederationProperty;
 /// the ability to create attestations for specific properties.
 pub struct CreateAccreditationToAttest {
     /// The ID of the federation where the accreditation will be granted
-    federation_id: ObjectID,
+    federation_id: ObjectId,
     /// The ID of the user who will receive the attestation
-    receiver: ObjectID,
+    receiver: ObjectId,
     /// The properties for which attestation is being granted
     want_properties: Vec<FederationProperty>,
     /// The address of the signer (used for capability verification)
@@ -43,8 +44,8 @@ pub struct CreateAccreditationToAttest {
 impl CreateAccreditationToAttest {
     /// Creates a new [`CreateAccreditationToAttest`] instance.
     pub fn new(
-        federation_id: ObjectID,
-        receiver: ObjectID,
+        federation_id: ObjectId,
+        receiver: ObjectId,
         want_properties: impl IntoIterator<Item = FederationProperty>,
         signer_address: IotaAddress,
     ) -> Self {

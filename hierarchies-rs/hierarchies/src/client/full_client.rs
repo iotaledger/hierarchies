@@ -17,9 +17,9 @@
 //! ```rust,ignore
 //! # use hierarchies::client::full_client::HierarchiesClient;
 //! # use hierarchies::core::types::State;
-//! # use iota_interaction::types::base_types::ObjectID;
+//! # use iota_sdk_types::ObjectId;
 //! # async fn example(client: &HierarchiesClient<impl secret_storage::Signer<iota_interaction::IotaKeySignature>>) -> Result<(), Box<dyn std::error::Error>> {
-//! # let object_id = ObjectID::ZERO;
+//! # let object_id = ObjectId::ZERO;
 //! // 1. Create the transaction
 //! let result = client
 //!     .update_state(State::from_string("New data".to_string(), None), object_id)
@@ -71,9 +71,10 @@
 
 use std::ops::Deref;
 
-use iota_interaction::types::base_types::{IotaAddress, ObjectID};
+use iota_interaction::types::base_types::IotaAddress;
 use iota_interaction::types::crypto::PublicKey;
 use iota_interaction::{IotaKeySignature, OptionalSync};
+use iota_sdk_types::ObjectId;
 use product_common::core_client::{CoreClient, CoreClientReadOnly};
 use product_common::network_name::NetworkName;
 use product_common::transaction::transaction_builder::TransactionBuilder;
@@ -154,8 +155,8 @@ where
     /// Creates a [`TransactionBuilder`] for adding a root authority to a federation.
     pub fn add_root_authority(
         &self,
-        federation_id: ObjectID,
-        account_id: ObjectID,
+        federation_id: ObjectId,
+        account_id: ObjectId,
     ) -> TransactionBuilder<AddRootAuthority> {
         TransactionBuilder::new(AddRootAuthority::new(federation_id, account_id, self.sender_address()))
     }
@@ -166,8 +167,8 @@ where
     /// Cannot revoke the last root authority to prevent lockout.
     pub fn revoke_root_authority(
         &self,
-        federation_id: ObjectID,
-        account_id: ObjectID,
+        federation_id: ObjectId,
+        account_id: ObjectId,
     ) -> TransactionBuilder<RevokeRootAuthority> {
         TransactionBuilder::new(RevokeRootAuthority::new(
             federation_id,
@@ -182,8 +183,8 @@ where
     /// The target account must be in the revoked list to be reinstated.
     pub fn reinstate_root_authority(
         &self,
-        federation_id: ObjectID,
-        account_id: ObjectID,
+        federation_id: ObjectId,
+        account_id: ObjectId,
     ) -> TransactionBuilder<ReinstateRootAuthority> {
         TransactionBuilder::new(ReinstateRootAuthority::new(
             federation_id,
@@ -195,7 +196,7 @@ where
     /// Creates a new [`AddProperty`] transaction builder.
     pub fn add_property(
         &self,
-        federation_id: ObjectID,
+        federation_id: ObjectId,
         property: FederationProperty,
     ) -> TransactionBuilder<AddProperty> {
         TransactionBuilder::new(AddProperty::new(federation_id, property, self.sender_address()))
@@ -204,7 +205,7 @@ where
     /// Creates a new [`RevokeProperty`] transaction builder.
     pub fn revoke_property(
         &self,
-        federation_id: ObjectID,
+        federation_id: ObjectId,
         property_name: PropertyName,
         valid_to_ms: Option<u64>,
     ) -> TransactionBuilder<RevokeProperty> {
@@ -219,8 +220,8 @@ where
     /// Creates a new [`CreateAccreditationToAttest`] transaction builder.
     pub fn create_accreditation_to_attest(
         &self,
-        federation_id: ObjectID,
-        receiver: ObjectID,
+        federation_id: ObjectId,
+        receiver: ObjectId,
         want_properties: impl IntoIterator<Item = FederationProperty>,
     ) -> TransactionBuilder<CreateAccreditationToAttest> {
         TransactionBuilder::new(CreateAccreditationToAttest::new(
@@ -234,9 +235,9 @@ where
     /// Creates a new [`RevokeAccreditationToAttest`] transaction builder.
     pub fn revoke_accreditation_to_attest(
         &self,
-        federation_id: ObjectID,
-        user_id: ObjectID,
-        permission_id: ObjectID,
+        federation_id: ObjectId,
+        user_id: ObjectId,
+        permission_id: ObjectId,
     ) -> TransactionBuilder<RevokeAccreditationToAttest> {
         TransactionBuilder::new(RevokeAccreditationToAttest::new(
             federation_id,
@@ -249,8 +250,8 @@ where
     /// Creates a new [`CreateAccreditation`] transaction builder.
     pub fn create_accreditation_to_accredit(
         &self,
-        federation_id: ObjectID,
-        receiver: ObjectID,
+        federation_id: ObjectId,
+        receiver: ObjectId,
         properties: impl IntoIterator<Item = FederationProperty>,
     ) -> TransactionBuilder<CreateAccreditation> {
         TransactionBuilder::new(CreateAccreditation::new(
@@ -264,9 +265,9 @@ where
     /// Creates a new [`RevokeAccreditationToAccredit`] transaction builder.
     pub fn revoke_accreditation_to_accredit(
         &self,
-        federation_id: ObjectID,
-        user_id: ObjectID,
-        permission_id: ObjectID,
+        federation_id: ObjectId,
+        user_id: ObjectId,
+        permission_id: ObjectId,
     ) -> TransactionBuilder<RevokeAccreditationToAccredit> {
         TransactionBuilder::new(RevokeAccreditationToAccredit::new(
             federation_id,
@@ -293,7 +294,7 @@ where
         &self.read_client
     }
 
-    fn package_id(&self) -> ObjectID {
+    fn package_id(&self) -> ObjectId {
         self.read_client.package_id()
     }
 
