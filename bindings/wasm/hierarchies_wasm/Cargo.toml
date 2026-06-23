@@ -20,8 +20,8 @@ anyhow = "1.0"
 console_error_panic_hook = "0.1"
 hyper = "1.8"
 iota-sdk-types = { git = "https://github.com/iotaledger/iota-rust-sdk.git", rev = "35a27488b887e28e844a1e46d7edb78605871155", default-features = false }
-iota_interaction = { package = "iota_interaction", git = "https://github.com/iotaledger/product-core.git", branch = "feat/iota-v1-25-rc-upstream-merge", default-features = false }
-iota_interaction_ts = { package = "iota_interaction_ts", git = "https://github.com/iotaledger/product-core.git", branch = "feat/iota-v1-25-rc-upstream-merge" }
+iota_interaction = { package = "iota_interaction", git = "https://github.com/iotaledger/product-core.git", tag = "v0.8.21", default-features = false }
+iota_interaction_ts = { package = "iota_interaction_ts", git = "https://github.com/iotaledger/product-core.git", tag = "v0.8.21" }
 js-sys = { version = "=0.3.85" }
 serde = { version = "1.0", features = ["derive"] }
 serde-wasm-bindgen = "0.6"
@@ -36,7 +36,7 @@ features = ["default-http-client", "gas-station"]
 [dependencies.product_common]
 package = "product_common"
 git = "https://github.com/iotaledger/product-core.git"
-branch = "feat/iota-v1-25-rc-upstream-merge"
+tag = "v0.8.21"
 features = [
   "default-http-client",
   "binding-utils",
