@@ -10,6 +10,7 @@ chrono.workspace = true
 hierarchies = { path = "../hierarchies" }
 hyper = { workspace = true }
 iota-sdk = { workspace = true }
+iota-sdk-types.workspace = true
 product_common = { workspace = true, features = ["test-utils"] }
 tokio.workspace = true
 

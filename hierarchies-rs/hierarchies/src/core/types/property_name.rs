@@ -7,10 +7,9 @@
 
 use std::str::FromStr;
 
-use iota_interaction::types::base_types::{ObjectID, TypeTag};
 use iota_interaction::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use iota_interaction::types::transaction::Argument;
 use iota_interaction::{MoveType, ident_str};
+use iota_sdk_types::{Argument, ObjectId, TypeTag};
 use serde::{Deserialize, Serialize};
 
 /// PropertyName represents the name of a Property
@@ -45,13 +44,13 @@ impl PropertyName {
         &self.names
     }
 
-    pub fn to_ptb(&self, ptb: &mut ProgrammableTransactionBuilder, package_id: ObjectID) -> anyhow::Result<Argument> {
+    pub fn to_ptb(&self, ptb: &mut ProgrammableTransactionBuilder, package_id: ObjectId) -> anyhow::Result<Argument> {
         new_property_name(self, ptb, package_id)
     }
 }
 
 impl MoveType for PropertyName {
-    fn move_type(package: ObjectID) -> TypeTag {
+    fn move_type(package: ObjectId) -> TypeTag {
         TypeTag::from_str(format!("{package}::property_name::PropertyName").as_str())
             .expect("Failed to create type tag")
     }
@@ -61,7 +60,7 @@ impl MoveType for PropertyName {
 pub(crate) fn new_property_name(
     name: &PropertyName,
     ptb: &mut ProgrammableTransactionBuilder,
-    package_id: ObjectID,
+    package_id: ObjectId,
 ) -> anyhow::Result<Argument> {
     let names = ptb.pure(name.names())?;
     let property_names: Argument = ptb.programmable_move_call(

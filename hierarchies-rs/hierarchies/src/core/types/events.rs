@@ -5,7 +5,7 @@
 //!
 //! This module provides event types for the Hierarchies (IOTA Trust Hierarchy) module.
 
-use iota_interaction::types::base_types::ObjectID;
+use iota_sdk_types::ObjectId;
 use serde::{Deserialize, Serialize};
 
 use crate::core::types::property_name::PropertyName;
@@ -13,13 +13,13 @@ use crate::core::types::property_name::PropertyName;
 /// Event emitted when a new federation is created
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct FederationCreatedEvent {
-    pub federation_address: ObjectID,
+    pub federation_address: ObjectId,
 }
 
 /// Event emitted when a property is added to the federation
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PropertyAddedEvent {
-    pub federation_address: ObjectID,
+    pub federation_address: ObjectId,
     pub property_name: PropertyName,
     pub allow_any: bool,
 }
@@ -27,7 +27,7 @@ pub struct PropertyAddedEvent {
 /// Event emitted when a property is revoked
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PropertyRevokedEvent {
-    pub federation_address: ObjectID,
+    pub federation_address: ObjectId,
     pub property_name: PropertyName,
     pub valid_to_ms: u64,
 }
@@ -35,55 +35,55 @@ pub struct PropertyRevokedEvent {
 /// Event emitted when a root authority is added
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RootAuthorityAddedEvent {
-    pub federation_address: ObjectID,
-    pub account_id: ObjectID,
+    pub federation_address: ObjectId,
+    pub account_id: ObjectId,
 }
 
 /// Event emitted when a root authority is revoked
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RootAuthorityRevokedEvent {
-    pub federation_address: ObjectID,
-    pub account_id: ObjectID,
+    pub federation_address: ObjectId,
+    pub account_id: ObjectId,
 }
 
 /// Event emitted when a root authority is reinstated
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RootAuthorityReinstatedEvent {
-    pub federation_address: ObjectID,
-    pub account_id: ObjectID,
-    pub reinstated_by: ObjectID,
+    pub federation_address: ObjectId,
+    pub account_id: ObjectId,
+    pub reinstated_by: ObjectId,
 }
 
 /// Event emitted when accreditation to accredit is created
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AccreditationToAccreditCreatedEvent {
-    pub federation_address: ObjectID,
-    pub receiver: ObjectID,
-    pub accreditor: ObjectID,
+    pub federation_address: ObjectId,
+    pub receiver: ObjectId,
+    pub accreditor: ObjectId,
 }
 
 /// Event emitted when accreditation to attest is created
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AccreditationToAttestCreatedEvent {
-    pub federation_address: ObjectID,
-    pub receiver: ObjectID,
-    pub accreditor: ObjectID,
+    pub federation_address: ObjectId,
+    pub receiver: ObjectId,
+    pub accreditor: ObjectId,
 }
 
 /// Event emitted when accreditation to attest is revoked
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AccreditationToAttestRevokedEvent {
-    pub federation_address: ObjectID,
-    pub entity_id: ObjectID,
-    pub permission_id: ObjectID,
-    pub revoker: ObjectID,
+    pub federation_address: ObjectId,
+    pub entity_id: ObjectId,
+    pub permission_id: ObjectId,
+    pub revoker: ObjectId,
 }
 
 /// Event emitted when accreditation to accredit is revoked
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AccreditationToAccreditRevokedEvent {
-    pub federation_address: ObjectID,
-    pub entity_id: ObjectID,
-    pub permission_id: ObjectID,
-    pub revoker: ObjectID,
+    pub federation_address: ObjectId,
+    pub entity_id: ObjectId,
+    pub permission_id: ObjectId,
+    pub revoker: ObjectId,
 }

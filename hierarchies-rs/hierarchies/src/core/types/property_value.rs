@@ -3,10 +3,9 @@
 
 use std::str::FromStr;
 
-use iota_interaction::types::base_types::{ObjectID, TypeTag};
 use iota_interaction::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use iota_interaction::types::transaction::Argument;
 use iota_interaction::{MoveType, ident_str};
+use iota_sdk_types::{Argument, ObjectId, TypeTag};
 use serde::{Deserialize, Serialize};
 
 /// PropertyValue represents the value of a Property
@@ -22,7 +21,7 @@ impl PropertyValue {
     pub(crate) fn to_ptb(
         &self,
         ptb: &mut ProgrammableTransactionBuilder,
-        package_id: ObjectID,
+        package_id: ObjectId,
     ) -> anyhow::Result<Argument> {
         match self.clone() {
             PropertyValue::Text(text) => new_property_value_string(text, ptb, package_id),
@@ -35,7 +34,7 @@ impl PropertyValue {
 pub(crate) fn new_property_value_string(
     value: String,
     ptb: &mut ProgrammableTransactionBuilder,
-    package_id: ObjectID,
+    package_id: ObjectId,
 ) -> anyhow::Result<Argument> {
     let v = ptb.pure(value)?;
     Ok(ptb.programmable_move_call(
@@ -51,7 +50,7 @@ pub(crate) fn new_property_value_string(
 pub(crate) fn new_property_value_number(
     value: u64,
     ptb: &mut ProgrammableTransactionBuilder,
-    package_id: ObjectID,
+    package_id: ObjectId,
 ) -> anyhow::Result<Argument> {
     let v = ptb.pure(value)?;
     Ok(ptb.programmable_move_call(
@@ -64,7 +63,7 @@ pub(crate) fn new_property_value_number(
 }
 
 impl MoveType for PropertyValue {
-    fn move_type(package: ObjectID) -> TypeTag {
+    fn move_type(package: ObjectId) -> TypeTag {
         TypeTag::from_str(format!("{package}::property_value::PropertyValue").as_str())
             .expect("Failed to create type tag")
     }

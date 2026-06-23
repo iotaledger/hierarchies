@@ -16,8 +16,8 @@ use std::collections::HashMap;
 
 pub use accreditation::*;
 pub use cap::*;
-use iota_interaction::types::base_types::ObjectID;
 use iota_interaction::types::id::UID;
+use iota_sdk_types::ObjectId;
 use serde::{Deserialize, Serialize};
 
 use crate::core::types::property::FederationProperties;
@@ -50,14 +50,14 @@ pub struct Federation {
     pub id: UID,
     pub governance: Governance,
     pub root_authorities: Vec<RootAuthority>,
-    pub revoked_root_authorities: Vec<ObjectID>,
+    pub revoked_root_authorities: Vec<ObjectId>,
 }
 
 /// Represents a root authority. A root authority is an entity that has the highest level of authority in a federation
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RootAuthority {
     pub id: UID,
-    pub account_id: ObjectID,
+    pub account_id: ObjectId,
 }
 
 /// Represents the governance of a federation
@@ -66,7 +66,7 @@ pub struct Governance {
     pub id: UID,
     pub properties: FederationProperties,
     #[serde(deserialize_with = "deserialize_vec_map")]
-    pub accreditations_to_accredit: HashMap<ObjectID, Accreditations>,
+    pub accreditations_to_accredit: HashMap<ObjectId, Accreditations>,
     #[serde(deserialize_with = "deserialize_vec_map")]
-    pub accreditations_to_attest: HashMap<ObjectID, Accreditations>,
+    pub accreditations_to_attest: HashMap<ObjectId, Accreditations>,
 }

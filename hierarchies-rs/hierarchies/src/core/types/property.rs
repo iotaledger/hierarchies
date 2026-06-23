@@ -4,10 +4,9 @@
 use std::collections::{HashMap, HashSet};
 use std::str::FromStr;
 
-use iota_interaction::types::base_types::{ObjectID, TypeTag};
 use iota_interaction::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use iota_interaction::types::transaction::{Argument, Command};
 use iota_interaction::{MoveType, ident_str};
+use iota_sdk_types::{Argument, Command, ObjectId, TypeTag};
 use serde::{Deserialize, Serialize};
 
 use crate::core::types::property_name::PropertyName;
@@ -71,7 +70,7 @@ impl FederationProperty {
 }
 
 impl MoveType for FederationProperty {
-    fn move_type(package: ObjectID) -> TypeTag {
+    fn move_type(package: ObjectId) -> TypeTag {
         TypeTag::from_str(format!("{package}::property::FederationProperty").as_str())
             .expect("Failed to create type tag")
     }
@@ -79,7 +78,7 @@ impl MoveType for FederationProperty {
 
 /// Creates a new move type for a Property
 pub(crate) fn new_property(
-    package_id: ObjectID,
+    package_id: ObjectId,
     ptb: &mut ProgrammableTransactionBuilder,
     property: FederationProperty,
 ) -> anyhow::Result<Argument> {
@@ -124,7 +123,7 @@ pub(crate) fn new_property(
 
 /// Creates a new move type for a list of Properties
 pub(crate) fn new_properties(
-    package_id: ObjectID,
+    package_id: ObjectId,
     ptb: &mut ProgrammableTransactionBuilder,
     properties: Vec<FederationProperty>,
 ) -> anyhow::Result<Argument> {

@@ -10,8 +10,9 @@
 use async_trait::async_trait;
 use iota_interaction::OptionalSync;
 use iota_interaction::rpc_types::IotaTransactionBlockEffects;
-use iota_interaction::types::base_types::{IotaAddress, ObjectID};
+use iota_interaction::types::base_types::IotaAddress;
 use iota_interaction::types::transaction::ProgrammableTransaction;
+use iota_sdk_types::ObjectId;
 use product_common::core_client::CoreClientReadOnly;
 use product_common::transaction::transaction_builder::Transaction;
 use tokio::sync::OnceCell;
@@ -37,7 +38,7 @@ pub mod add_property {
     /// - The property name must be unique within the federation
     #[derive(Debug, Clone)]
     pub struct AddProperty {
-        federation_id: ObjectID,
+        federation_id: ObjectId,
         property: FederationProperty,
         owner: IotaAddress,
         cached_ptb: OnceCell<ProgrammableTransaction>,
@@ -49,7 +50,7 @@ pub mod add_property {
         /// # Returns
         ///
         /// A new `AddProperty` transaction instance ready for execution.
-        pub fn new(federation_id: ObjectID, property: FederationProperty, owner: IotaAddress) -> Self {
+        pub fn new(federation_id: ObjectId, property: FederationProperty, owner: IotaAddress) -> Self {
             Self {
                 federation_id,
                 property,
@@ -121,7 +122,7 @@ pub mod revoke_property {
     /// - The property must exist in the federation
     #[derive(Debug, Clone)]
     pub struct RevokeProperty {
-        federation_id: ObjectID,
+        federation_id: ObjectId,
         property_name: PropertyName,
         valid_to_ms: Option<u64>,
         owner: IotaAddress,
@@ -135,7 +136,7 @@ pub mod revoke_property {
         ///
         /// A new `RevokeProperty` transaction instance ready for execution.
         pub fn new(
-            federation_id: ObjectID,
+            federation_id: ObjectId,
             property_name: PropertyName,
             valid_to_ms: Option<u64>,
             owner: IotaAddress,

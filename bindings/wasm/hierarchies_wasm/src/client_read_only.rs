@@ -8,9 +8,9 @@ use anyhow::anyhow;
 use hierarchies::client::HierarchiesClientReadOnly;
 use hierarchies::core::types::property_name::PropertyName;
 use hierarchies::core::types::property_value::PropertyValue;
-use iota_interaction::types::base_types::ObjectID;
 use iota_interaction_ts::bindings::WasmIotaClient;
 use iota_interaction_ts::wasm_error::{Result, WasmResult, wasm_error};
+use iota_sdk_types::ObjectId;
 use product_common::bindings::WasmObjectID;
 use product_common::bindings::utils::parse_wasm_object_id;
 use product_common::core_client::CoreClientReadOnly;
@@ -85,7 +85,7 @@ impl WasmHierarchiesClientReadOnly {
     ) -> Result<WasmHierarchiesClientReadOnly> {
         let inner_client = HierarchiesClientReadOnly::new_with_pkg_id(
             iota_client,
-            ObjectID::from_str(&iota_hierarchies_pkg_id)
+            ObjectId::from_str(&iota_hierarchies_pkg_id)
                 .map_err(|e| anyhow!("Could not parse iota_hierarchies_pkg_id: {}", e.to_string()))
                 .wasm_result()?,
         )
@@ -147,7 +147,7 @@ impl WasmHierarchiesClientReadOnly {
     ///
     /// # Arguments
     ///
-    /// * `federation_id`: The [`ObjectID`] of the federation.
+    /// * `federation_id`: The [`ObjectId`] of the federation.
     ///
     /// # Returns
     /// A `Result` containing the [`Federation`] object or an [`Error`].
@@ -175,8 +175,8 @@ impl WasmHierarchiesClientReadOnly {
     /// Check if root authority is in the federation.
     /// # Arguments
     ///
-    /// * `federation_id`: The [`ObjectID`] of the federation.
-    /// * `user_id`: The [`ObjectID`] of the user.
+    /// * `federation_id`: The [`ObjectId`] of the federation.
+    /// * `user_id`: The [`ObjectId`] of the user.
     ///
     /// # Returns
     /// A `Result` containing a boolean indicating if the user is a root authority or an [`Error`].
@@ -196,7 +196,7 @@ impl WasmHierarchiesClientReadOnly {
     ///
     /// # Arguments
     ///
-    /// * `federation_id`: The [`ObjectID`] of the federation.
+    /// * `federation_id`: The [`ObjectId`] of the federation.
     ///
     /// # Returns
     /// A `Result` containing the list of property names or an [`Error`].
@@ -225,7 +225,7 @@ impl WasmHierarchiesClientReadOnly {
     ///
     /// # Arguments
     ///
-    /// * `federation_id`: The [`ObjectID`] of the federation.
+    /// * `federation_id`: The [`ObjectId`] of the federation.
     /// * `property_name`: The name of the property to check.
     ///
     /// # Returns
@@ -262,8 +262,8 @@ impl WasmHierarchiesClientReadOnly {
     ///
     /// # Arguments
     ///
-    /// * `federation_id`: The [`ObjectID`] of the federation.
-    /// * `user_id`: The [`ObjectID`] of the user.
+    /// * `federation_id`: The [`ObjectId`] of the federation.
+    /// * `user_id`: The [`ObjectId`] of the user.
     ///
     /// # Returns
     /// A `Result` containing the attestation accreditations or an [`Error`].
@@ -301,8 +301,8 @@ impl WasmHierarchiesClientReadOnly {
     ///
     /// # Arguments
     ///
-    /// * `federation_id`: The [`ObjectID`] of the federation.
-    /// * `user_id`: The [`ObjectID`] of the user.
+    /// * `federation_id`: The [`ObjectId`] of the federation.
+    /// * `user_id`: The [`ObjectId`] of the user.
     ///
     /// # Returns
     /// A `Result` containing a boolean indicating if the user has attestation accreditation or an [`Error`].
@@ -332,8 +332,8 @@ impl WasmHierarchiesClientReadOnly {
     ///
     /// # Arguments
     ///
-    /// * `federation_id`: The [`ObjectID`] of the federation.
-    /// * `user_id`: The [`ObjectID`] of the user.
+    /// * `federation_id`: The [`ObjectId`] of the federation.
+    /// * `user_id`: The [`ObjectId`] of the user.
     ///
     /// # Returns
     /// A `Result` containing the accreditations to accredit for the user or an [`Error`].
@@ -371,8 +371,8 @@ impl WasmHierarchiesClientReadOnly {
     ///
     /// # Arguments
     ///
-    /// * `federation_id`: The [`ObjectID`] of the federation.
-    /// * `user_id`: The [`ObjectID`] of the user.
+    /// * `federation_id`: The [`ObjectId`] of the federation.
+    /// * `user_id`: The [`ObjectId`] of the user.
     ///
     /// # Returns
     /// A `Result` containing a boolean indicating if the user has accreditations to accredit or an [`Error`].
@@ -402,8 +402,8 @@ impl WasmHierarchiesClientReadOnly {
     ///
     /// # Arguments
     ///
-    /// * `federation_id`: The [`ObjectID`] of the federation.
-    /// * `user_id`: The [`ObjectID`] of the user.
+    /// * `federation_id`: The [`ObjectId`] of the federation.
+    /// * `user_id`: The [`ObjectId`] of the user.
     /// * `property_name`: The name of the property to validate.
     /// * `property_value`: The value of the property to validate.
     ///
@@ -447,8 +447,8 @@ impl WasmHierarchiesClientReadOnly {
     ///
     /// # Arguments
     ///
-    /// * `federation_id`: The [`ObjectID`] of the federation.
-    /// * `user_id`: The [`ObjectID`] of the user.
+    /// * `federation_id`: The [`ObjectId`] of the federation.
+    /// * `user_id`: The [`ObjectId`] of the user.
     /// * `properties`: The properties to validate.
     ///
     /// # Returns
@@ -498,7 +498,7 @@ impl WasmHierarchiesClientReadOnly {
     /// @returns Stringified object ID of the resolved `tf_components` package.
     #[wasm_bindgen(js_name = tfComponentsPackageId)]
     pub fn tf_components_package_id(&self) -> String {
-        self.0.tf_components_package_id().unwrap_or(ObjectID::ZERO).to_string()
+        self.0.tf_components_package_id().unwrap_or(ObjectId::ZERO).to_string()
     }
 }
 

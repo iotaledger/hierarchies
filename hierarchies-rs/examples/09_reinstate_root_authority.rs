@@ -4,7 +4,7 @@
 use anyhow::Context;
 use hierarchies::core::types::Federation;
 use hierarchies_examples::get_funded_client;
-use iota_sdk::types::base_types::ObjectID;
+use iota_sdk_types::ObjectId;
 use product_common::core_client::CoreClientReadOnly;
 
 /// Demonstrate how to reinstate a previously revoked root authority in a federation.
@@ -30,7 +30,7 @@ async fn main() -> anyhow::Result<()> {
     println!("Federation ID: {federation_id:#?}");
 
     // Add a second root authority first
-    let second_root_authority = ObjectID::random();
+    let second_root_authority = ObjectId::random();
     println!("Adding second root authority: {second_root_authority:#?}");
 
     hierarchies_client

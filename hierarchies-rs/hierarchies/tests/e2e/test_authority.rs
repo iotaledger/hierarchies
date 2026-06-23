@@ -1,7 +1,7 @@
 // Copyright 2020-2025 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_interaction::types::base_types::ObjectID;
+use iota_sdk_types::ObjectId;
 use product_common::core_client::CoreClient;
 
 use crate::client::get_funded_test_client;
@@ -19,7 +19,7 @@ async fn test_add_root_authority_success() -> anyhow::Result<()> {
         .output
         .id;
 
-    let bob_id = ObjectID::random();
+    let bob_id = ObjectId::random();
 
     // Add Bob as root authority
     client
@@ -46,8 +46,8 @@ async fn test_revoke_root_authority_success() -> anyhow::Result<()> {
         .output
         .id;
 
-    let bob_id = ObjectID::random();
-    let charlie_id = ObjectID::random();
+    let bob_id = ObjectId::random();
+    let charlie_id = ObjectId::random();
 
     // Add Bob as root authority
     client
@@ -62,7 +62,7 @@ async fn test_revoke_root_authority_success() -> anyhow::Result<()> {
         .await?;
 
     // Verify all three are root authorities
-    let alice_id = ObjectID::from_address(client.sender_address());
+    let alice_id = ObjectId::from_address(client.sender_address());
     assert!(client.is_root_authority(*federation.object_id(), alice_id).await?);
     assert!(client.is_root_authority(*federation.object_id(), bob_id).await?);
     assert!(client.is_root_authority(*federation.object_id(), charlie_id).await?);
@@ -94,7 +94,7 @@ async fn test_revoke_root_authority_not_found() -> anyhow::Result<()> {
         .output
         .id;
 
-    let non_existent_id = ObjectID::random();
+    let non_existent_id = ObjectId::random();
 
     // Try to revoke a non-existent root authority
     let result = client
@@ -123,7 +123,7 @@ async fn test_cannot_revoke_last_root_authority() -> anyhow::Result<()> {
         .output
         .id;
 
-    let alice_id = ObjectID::from_address(client.sender_address());
+    let alice_id = ObjectId::from_address(client.sender_address());
 
     // Try to revoke the only root authority (Alice)
     let result = client
@@ -152,9 +152,9 @@ async fn test_is_root_authority() -> anyhow::Result<()> {
         .output
         .id;
 
-    let alice_id = ObjectID::from_address(client.sender_address());
-    let bob_id = ObjectID::random();
-    let charlie_id = ObjectID::random();
+    let alice_id = ObjectId::from_address(client.sender_address());
+    let bob_id = ObjectId::random();
+    let charlie_id = ObjectId::random();
 
     // Initially only Alice is a root authority
     assert!(client.is_root_authority(*federation.object_id(), alice_id).await?);
@@ -188,7 +188,7 @@ async fn test_reinstate_root_authority_success() -> anyhow::Result<()> {
         .output
         .id;
 
-    let bob_id = ObjectID::random();
+    let bob_id = ObjectId::random();
 
     client
         .add_root_authority(*federation.object_id(), bob_id)
@@ -227,7 +227,7 @@ async fn test_reinstate_root_authority_not_revoked() -> anyhow::Result<()> {
         .output
         .id;
 
-    let bob_id = ObjectID::random();
+    let bob_id = ObjectId::random();
 
     let result = client
         .reinstate_root_authority(*federation.object_id(), bob_id)
@@ -254,7 +254,7 @@ async fn test_reinstate_root_authority_already_active() -> anyhow::Result<()> {
         .output
         .id;
 
-    let bob_id = ObjectID::random();
+    let bob_id = ObjectId::random();
 
     client
         .add_root_authority(*federation.object_id(), bob_id)
@@ -286,7 +286,7 @@ async fn test_reinstated_authority_can_perform_actions() -> anyhow::Result<()> {
         .output
         .id;
 
-    let bob_id = ObjectID::random();
+    let bob_id = ObjectId::random();
 
     client
         .add_root_authority(*federation.object_id(), bob_id)
@@ -304,7 +304,7 @@ async fn test_reinstated_authority_can_perform_actions() -> anyhow::Result<()> {
         .await?;
 
     // Verify Bob can perform root authority actions by adding another root authority
-    let charlie_id = ObjectID::random();
+    let charlie_id = ObjectId::random();
 
     client
         .add_root_authority(*federation.object_id(), charlie_id)

@@ -15,7 +15,7 @@
 
 use std::sync::LazyLock;
 
-use iota_interaction::types::base_types::ObjectID;
+use iota_sdk_types::ObjectId;
 use product_common::core_client::CoreClientReadOnly;
 use product_common::package_registry::PackageRegistry;
 use tokio::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard, TryLockError};
@@ -62,7 +62,7 @@ pub(crate) fn blocking_hierarchies_registry_mut() -> PackageRegistryLockMut {
 }
 
 /// Returns the package ID for the Hierarchies package.
-pub(crate) async fn hierarchies_package_id<C>(client: &C) -> Result<ObjectID, ConfigError>
+pub(crate) async fn hierarchies_package_id<C>(client: &C) -> Result<ObjectId, ConfigError>
 where
     C: CoreClientReadOnly,
 {

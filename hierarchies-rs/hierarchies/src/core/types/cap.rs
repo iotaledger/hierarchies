@@ -9,8 +9,8 @@
 use std::str::FromStr;
 
 use iota_interaction::MoveType;
-use iota_interaction::types::base_types::{ObjectID, TypeTag};
 use iota_interaction::types::id::UID;
+use iota_sdk_types::{ObjectId, TypeTag};
 use serde::{Deserialize, Serialize};
 
 use super::move_names;
@@ -25,12 +25,12 @@ pub(crate) const ACCREDIT_CAP_TYPE: &str = "AccreditCap";
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RootAuthorityCap {
     pub id: UID,
-    pub federation_id: ObjectID,
-    pub account_id: ObjectID,
+    pub federation_id: ObjectId,
+    pub account_id: ObjectId,
 }
 
 impl MoveType for RootAuthorityCap {
-    fn move_type(package: ObjectID) -> TypeTag {
+    fn move_type(package: ObjectId) -> TypeTag {
         TypeTag::from_str(format!("{package}::{}::{}", move_names::MODULE_MAIN, ROOT_AUTHORITY_CAP_TYPE).as_str())
             .expect("Failed to create type tag")
     }
@@ -43,11 +43,11 @@ impl MoveType for RootAuthorityCap {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AccreditCap {
     pub id: UID,
-    pub federation_id: ObjectID,
+    pub federation_id: ObjectId,
 }
 
 impl MoveType for AccreditCap {
-    fn move_type(package: ObjectID) -> TypeTag {
+    fn move_type(package: ObjectId) -> TypeTag {
         TypeTag::from_str(format!("{package}::{}::{}", move_names::MODULE_MAIN, ACCREDIT_CAP_TYPE).as_str())
             .expect("Failed to create type tag")
     }

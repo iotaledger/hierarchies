@@ -4,7 +4,7 @@
 use anyhow::Context;
 use hierarchies::core::types::Federation;
 use hierarchies_examples::get_funded_client;
-use iota_sdk::types::base_types::ObjectID;
+use iota_sdk_types::ObjectId;
 use product_common::core_client::CoreClientReadOnly;
 
 /// Demonstrate how to add a root authority to a federation.
@@ -27,7 +27,7 @@ async fn main() -> anyhow::Result<()> {
         .await?;
 
     // Create a new root authority object ID
-    let new_root_authority = ObjectID::random();
+    let new_root_authority = ObjectId::random();
     println!("New Root Authority: {new_root_authority:#?}");
 
     // Federation ID

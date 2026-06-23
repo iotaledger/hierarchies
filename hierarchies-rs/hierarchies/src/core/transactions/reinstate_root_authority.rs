@@ -16,8 +16,9 @@
 use async_trait::async_trait;
 use iota_interaction::OptionalSync;
 use iota_interaction::rpc_types::IotaTransactionBlockEffects;
-use iota_interaction::types::base_types::{IotaAddress, ObjectID};
+use iota_interaction::types::base_types::IotaAddress;
 use iota_interaction::types::transaction::ProgrammableTransaction;
+use iota_sdk_types::ObjectId;
 use product_common::core_client::CoreClientReadOnly;
 use product_common::transaction::transaction_builder::Transaction;
 use tokio::sync::OnceCell;
@@ -36,8 +37,8 @@ use crate::error::TransactionError;
 /// - The target account must be in the revoked root authorities list
 /// - The target account must not already be an active root authority
 pub struct ReinstateRootAuthority {
-    federation_id: ObjectID,
-    account_id: ObjectID,
+    federation_id: ObjectId,
+    account_id: ObjectId,
     signer_address: IotaAddress,
     cached_ptb: OnceCell<ProgrammableTransaction>,
 }
@@ -48,7 +49,7 @@ impl ReinstateRootAuthority {
     /// # Returns
     ///
     /// A new `ReinstateRootAuthority` transaction instance ready for execution.
-    pub fn new(federation_id: ObjectID, account_id: ObjectID, signer_address: IotaAddress) -> Self {
+    pub fn new(federation_id: ObjectId, account_id: ObjectId, signer_address: IotaAddress) -> Self {
         Self {
             federation_id,
             account_id,

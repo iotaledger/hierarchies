@@ -8,10 +8,9 @@
 use std::str::FromStr;
 use std::string::String;
 
-use iota_interaction::types::base_types::{ObjectID, TypeTag};
 use iota_interaction::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use iota_interaction::types::transaction::Argument;
 use iota_interaction::{MoveType, ident_str};
+use iota_sdk_types::{Argument, ObjectId, TypeTag};
 use serde::{Deserialize, Serialize};
 
 /// PropertyShape is a shape that can be applied to a PropertyValue.
@@ -25,7 +24,7 @@ pub enum PropertyShape {
 }
 
 impl PropertyShape {
-    pub fn into_ptb(self, ptb: &mut ProgrammableTransactionBuilder, package_id: ObjectID) -> anyhow::Result<Argument> {
+    pub fn into_ptb(self, ptb: &mut ProgrammableTransactionBuilder, package_id: ObjectId) -> anyhow::Result<Argument> {
         match self {
             PropertyShape::StartsWith(text) => new_property_shape_starts_with(text, ptb, package_id),
             PropertyShape::EndsWith(text) => new_property_shape_ends_with(text, ptb, package_id),
@@ -37,7 +36,7 @@ impl PropertyShape {
 }
 
 impl MoveType for PropertyShape {
-    fn move_type(package: ObjectID) -> TypeTag {
+    fn move_type(package: ObjectId) -> TypeTag {
         TypeTag::from_str(format!("{package}::property_shape::PropertyShape").as_str())
             .expect("Failed to create type tag")
     }
@@ -47,7 +46,7 @@ impl MoveType for PropertyShape {
 pub(crate) fn new_property_shape_starts_with(
     text: String,
     ptb: &mut ProgrammableTransactionBuilder,
-    package_id: ObjectID,
+    package_id: ObjectId,
 ) -> anyhow::Result<Argument> {
     let text = ptb.pure(text)?;
     let condition = ptb.programmable_move_call(
@@ -64,7 +63,7 @@ pub(crate) fn new_property_shape_starts_with(
 fn new_property_shape_ends_with(
     text: String,
     ptb: &mut ProgrammableTransactionBuilder,
-    package_id: ObjectID,
+    package_id: ObjectId,
 ) -> anyhow::Result<Argument> {
     let text = ptb.pure(text)?;
     let condition = ptb.programmable_move_call(
@@ -81,7 +80,7 @@ fn new_property_shape_ends_with(
 fn new_property_shape_contains(
     text: String,
     ptb: &mut ProgrammableTransactionBuilder,
-    package_id: ObjectID,
+    package_id: ObjectId,
 ) -> anyhow::Result<Argument> {
     let text = ptb.pure(text)?;
     let condition = ptb.programmable_move_call(
@@ -98,7 +97,7 @@ fn new_property_shape_contains(
 fn new_property_shape_greater_than(
     value: u64,
     ptb: &mut ProgrammableTransactionBuilder,
-    package_id: ObjectID,
+    package_id: ObjectId,
 ) -> anyhow::Result<Argument> {
     let value = ptb.pure(value)?;
     let condition = ptb.programmable_move_call(
@@ -114,7 +113,7 @@ fn new_property_shape_greater_than(
 fn new_property_shape_lower_than(
     value: u64,
     ptb: &mut ProgrammableTransactionBuilder,
-    package_id: ObjectID,
+    package_id: ObjectId,
 ) -> anyhow::Result<Argument> {
     let value = ptb.pure(value)?;
     let condition = ptb.programmable_move_call(

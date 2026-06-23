@@ -10,7 +10,7 @@ use hierarchies::core::types::property_name::PropertyName;
 use hierarchies::core::types::property_value::PropertyValue;
 use hierarchies::core::types::timespan::Timespan;
 use hierarchies_examples::get_funded_client;
-use iota_sdk::types::base_types::ObjectID;
+use iota_sdk_types::ObjectId;
 use product_common::core_client::CoreClient;
 
 /// Demonstrate how to issue an accreditation to accredit to a Property.
@@ -59,7 +59,7 @@ async fn main() -> anyhow::Result<()> {
     println!("Added Property");
 
     // A receiver is an account that will receive the accreditation
-    let receiver = ObjectID::random();
+    let receiver = ObjectId::random();
 
     // Properties
     let properties = FederationProperty {

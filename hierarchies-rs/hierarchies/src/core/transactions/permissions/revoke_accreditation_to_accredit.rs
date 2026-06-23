@@ -13,8 +13,9 @@
 use async_trait::async_trait;
 use iota_interaction::OptionalSync;
 use iota_interaction::rpc_types::IotaTransactionBlockEffects;
-use iota_interaction::types::base_types::{IotaAddress, ObjectID};
+use iota_interaction::types::base_types::IotaAddress;
 use iota_interaction::types::transaction::ProgrammableTransaction;
+use iota_sdk_types::ObjectId;
 use product_common::core_client::CoreClientReadOnly;
 use product_common::transaction::transaction_builder::Transaction;
 use tokio::sync::OnceCell;
@@ -28,11 +29,11 @@ use crate::core::operations::{HierarchiesImpl, HierarchiesOperations};
 /// ability to delegate accreditation rights for specific properties.
 pub struct RevokeAccreditationToAccredit {
     /// The ID of the federation where the accreditation will be revoked
-    federation_id: ObjectID,
+    federation_id: ObjectId,
     /// The ID of the user whose accreditation permissions will be revoked
-    user_id: ObjectID,
+    user_id: ObjectId,
     /// The ID of the specific accreditation to revoke
-    accreditation_id: ObjectID,
+    accreditation_id: ObjectId,
     /// The address of the signer (used for capability verification)
     signer_address: IotaAddress,
     /// Cached programmable transaction
@@ -42,9 +43,9 @@ pub struct RevokeAccreditationToAccredit {
 impl RevokeAccreditationToAccredit {
     /// Creates a new [`RevokeAccreditationToAccredit`] instance.
     pub fn new(
-        federation_id: ObjectID,
-        user_id: ObjectID,
-        accreditation_id: ObjectID,
+        federation_id: ObjectId,
+        user_id: ObjectId,
+        accreditation_id: ObjectId,
         signer_address: IotaAddress,
     ) -> Self {
         Self {

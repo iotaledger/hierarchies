@@ -3,7 +3,7 @@
 
 use hierarchies::core::types::Federation;
 use hierarchies::core::types::events::FederationCreatedEvent;
-use iota_interaction::types::base_types::ObjectID;
+use iota_sdk_types::ObjectId;
 use product_common::core_client::CoreClient;
 
 use crate::client::get_funded_test_client;
@@ -54,7 +54,7 @@ async fn test_creation_of_federation_with_root_authorities() -> anyhow::Result<(
         .output
         .id;
 
-    let root_authority_id = ObjectID::random();
+    let root_authority_id = ObjectId::random();
 
     client
         .add_root_authority(*federation.object_id(), root_authority_id)
