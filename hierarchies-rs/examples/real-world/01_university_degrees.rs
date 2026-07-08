@@ -52,7 +52,7 @@ use hierarchies::core::types::property_name::PropertyName;
 use hierarchies::core::types::property_shape::PropertyShape;
 use hierarchies::core::types::property_value::PropertyValue;
 use hierarchies_examples::get_funded_client;
-use iota_sdk::types::base_types::IotaAddress;
+use iota_sdk_types::Address;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -272,8 +272,8 @@ async fn main() -> anyhow::Result<()> {
     // =============================================================================
     println!("🏛️ Step 3: Adding universities to the consortium...");
 
-    let harvard_address = IotaAddress::random();
-    let mit_address = IotaAddress::random();
+    let harvard_address = Address::random();
+    let mit_address = Address::random();
 
     // Add Harvard as root authority
     hierarchies_client
@@ -297,7 +297,7 @@ async fn main() -> anyhow::Result<()> {
     println!("🏫 Step 4: Creating faculty-level accreditations...");
 
     // Simulate Harvard CS Faculty address
-    let harvard_cs_faculty = IotaAddress::random();
+    let harvard_cs_faculty = Address::random();
 
     // Harvard delegates accreditation rights to its CS Faculty
     // This allows the faculty to further delegate to registrars and professors
@@ -330,7 +330,7 @@ async fn main() -> anyhow::Result<()> {
     println!("👨‍💼 Step 5: Creating registrar attestation rights...");
 
     // Simulate Harvard CS Registrar address
-    let harvard_cs_registrar = IotaAddress::random();
+    let harvard_cs_registrar = Address::random();
 
     // CS Faculty delegates attestation rights to the CS Registrar
     // Registrar can now create attestations (issue degrees) but not delegate further
@@ -353,8 +353,8 @@ async fn main() -> anyhow::Result<()> {
     println!("🎓 Step 6: Issuing student degrees...");
 
     // Simulate student addresses
-    let alice_student = IotaAddress::random();
-    let bob_student = IotaAddress::random();
+    let alice_student = Address::random();
+    let bob_student = Address::random();
 
     println!("📜 Issuing Bachelor's degree in Computer Science to Alice...");
 
@@ -635,7 +635,7 @@ struct DegreePropertyNames<'a> {
 /// Helper function to format and display degree information from an accreditation response
 fn format_degree_info(
     student_name: &str,
-    student_address: &IotaAddress,
+    student_address: &Address,
     accreditation: &Accreditation,
     properties: &DegreePropertyNames,
 ) {

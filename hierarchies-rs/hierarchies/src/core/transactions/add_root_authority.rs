@@ -16,9 +16,7 @@
 use async_trait::async_trait;
 use iota_interaction::OptionalSync;
 use iota_interaction::rpc_types::IotaTransactionBlockEffects;
-use iota_interaction::types::base_types::IotaAddress;
-use iota_interaction::types::transaction::ProgrammableTransaction;
-use iota_sdk_types::ObjectId;
+use iota_sdk_types::{Address, ObjectId, ProgrammableTransaction};
 use product_common::core_client::CoreClientReadOnly;
 use product_common::transaction::transaction_builder::Transaction;
 use tokio::sync::OnceCell;
@@ -38,7 +36,7 @@ use crate::error::TransactionError;
 pub struct AddRootAuthority {
     federation_id: ObjectId,
     account_id: ObjectId,
-    signer_address: IotaAddress,
+    signer_address: Address,
     cached_ptb: OnceCell<ProgrammableTransaction>,
 }
 
@@ -48,7 +46,7 @@ impl AddRootAuthority {
     /// # Returns
     ///
     /// A new `AddRootAuthority` transaction instance ready for execution.
-    pub fn new(federation_id: ObjectId, account_id: ObjectId, signer_address: IotaAddress) -> Self {
+    pub fn new(federation_id: ObjectId, account_id: ObjectId, signer_address: Address) -> Self {
         Self {
             federation_id,
             account_id,

@@ -13,9 +13,7 @@
 use async_trait::async_trait;
 use iota_interaction::OptionalSync;
 use iota_interaction::rpc_types::IotaTransactionBlockEffects;
-use iota_interaction::types::base_types::IotaAddress;
-use iota_interaction::types::transaction::ProgrammableTransaction;
-use iota_sdk_types::ObjectId;
+use iota_sdk_types::{Address, ObjectId, ProgrammableTransaction};
 use product_common::core_client::CoreClientReadOnly;
 use product_common::transaction::transaction_builder::Transaction;
 use tokio::sync::OnceCell;
@@ -36,7 +34,7 @@ pub struct CreateAccreditationToAttest {
     /// The properties for which attestation is being granted
     want_properties: Vec<FederationProperty>,
     /// The address of the signer (used for capability verification)
-    signer_address: IotaAddress,
+    signer_address: Address,
     /// Cached programmable transaction
     cached_ptb: OnceCell<ProgrammableTransaction>,
 }
@@ -47,7 +45,7 @@ impl CreateAccreditationToAttest {
         federation_id: ObjectId,
         receiver: ObjectId,
         want_properties: impl IntoIterator<Item = FederationProperty>,
-        signer_address: IotaAddress,
+        signer_address: Address,
     ) -> Self {
         Self {
             federation_id,

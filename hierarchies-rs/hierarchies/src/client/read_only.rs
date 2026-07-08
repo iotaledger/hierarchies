@@ -11,11 +11,9 @@ use std::ops::Deref;
 #[cfg(not(target_arch = "wasm32"))]
 use iota_interaction::IotaClient;
 use iota_interaction::IotaClientTrait;
-use iota_interaction::types::base_types::IotaAddress;
-use iota_interaction::types::transaction::{ProgrammableTransaction, TransactionKind};
 #[cfg(target_arch = "wasm32")]
 use iota_interaction_ts::bindings::WasmIotaClient;
-use iota_sdk_types::ObjectId;
+use iota_sdk_types::{Address, ObjectId, ProgrammableTransaction, TransactionKind};
 use product_common::core_client::CoreClientReadOnly;
 use product_common::network_name::NetworkName;
 use product_common::package_registry::Env;
@@ -280,7 +278,7 @@ impl HierarchiesClientReadOnly {
         let inspection_result = self
             .client
             .read_api()
-            .dev_inspect_transaction_block(IotaAddress::ZERO, TransactionKind::Programmable(tx), None, None, None)
+            .dev_inspect_transaction_block(Address::ZERO, TransactionKind::Programmable(tx), None, None, None)
             .await
             .map_err(|err| ClientError::ExecutionFailed {
                 reason: format!("Failed to inspect transaction block: {err}"),

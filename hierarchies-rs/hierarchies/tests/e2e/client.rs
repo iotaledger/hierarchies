@@ -5,11 +5,10 @@ use std::ops::Deref;
 use std::sync::Arc;
 
 use hierarchies::client::{HierarchiesClient, HierarchiesClientReadOnly};
-use iota_interaction::types::base_types::IotaAddress;
 use iota_interaction::types::crypto::PublicKey;
 use iota_interaction::{IOTA_LOCAL_NETWORK_URL, IotaClientBuilder};
 use iota_interaction_rust::IotaClientAdapter;
-use iota_sdk_types::ObjectId;
+use iota_sdk_types::{Address, ObjectId};
 use product_common::core_client::{CoreClient, CoreClientReadOnly};
 use product_common::network_name::NetworkName;
 use product_common::test_utils::{InMemSigner, init_product_package, request_funds};
@@ -79,7 +78,7 @@ impl CoreClient<InMemSigner> for TestClient {
         self.client.signer()
     }
 
-    fn sender_address(&self) -> IotaAddress {
+    fn sender_address(&self) -> Address {
         self.client.sender_address()
     }
 
