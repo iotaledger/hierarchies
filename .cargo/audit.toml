@@ -2,4 +2,6 @@
 ignore = [
   "RUSTSEC-2023-0071", # temporary ignore until fix is provided
   "RUSTSEC-2024-0437", # protobuf uncontrolled recursion https://github.com/iotaledger/iota/issues/5861
+  "RUSTSEC-2026-0194", # should be fixed by next IOTA version
+  "RUSTSEC-2026-0195", # should be fixed by next IOTA version
 ]
