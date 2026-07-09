@@ -8,7 +8,7 @@ use iota_interaction_ts::wasm_error::{Result, WasmResult};
 use iota_sdk_types::ObjectId;
 use product_common::bindings::transaction::WasmTransactionBuilder;
 use product_common::bindings::utils::{into_transaction_builder, parse_wasm_object_id};
-use product_common::bindings::{WasmIotaAddress, WasmObjectID};
+use product_common::bindings::{WasmAddress, WasmObjectID};
 use product_common::core_client::{CoreClient, CoreClientReadOnly};
 use wasm_bindgen::prelude::*;
 
@@ -276,7 +276,7 @@ impl WasmHierarchiesClient {
 
     /// Retrieves the sender's address.
     #[wasm_bindgen(js_name = senderAddress)]
-    pub fn sender_address(&self) -> WasmIotaAddress {
+    pub fn sender_address(&self) -> WasmAddress {
         self.0.sender_address().to_string()
     }
 

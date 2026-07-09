@@ -13,9 +13,7 @@
 use async_trait::async_trait;
 use iota_interaction::OptionalSync;
 use iota_interaction::rpc_types::IotaTransactionBlockEffects;
-use iota_interaction::types::base_types::IotaAddress;
-use iota_interaction::types::transaction::ProgrammableTransaction;
-use iota_sdk_types::ObjectId;
+use iota_sdk_types::{Address, ObjectId, ProgrammableTransaction};
 use product_common::core_client::CoreClientReadOnly;
 use product_common::transaction::transaction_builder::Transaction;
 use tokio::sync::OnceCell;
@@ -35,7 +33,7 @@ pub struct RevokeAccreditationToAccredit {
     /// The ID of the specific accreditation to revoke
     accreditation_id: ObjectId,
     /// The address of the signer (used for capability verification)
-    signer_address: IotaAddress,
+    signer_address: Address,
     /// Cached programmable transaction
     cached_ptb: OnceCell<ProgrammableTransaction>,
 }
@@ -46,7 +44,7 @@ impl RevokeAccreditationToAccredit {
         federation_id: ObjectId,
         user_id: ObjectId,
         accreditation_id: ObjectId,
-        signer_address: IotaAddress,
+        signer_address: Address,
     ) -> Self {
         Self {
             federation_id,

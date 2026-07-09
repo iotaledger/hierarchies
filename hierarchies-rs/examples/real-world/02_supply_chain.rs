@@ -57,7 +57,7 @@ use hierarchies::core::types::property::FederationProperty;
 use hierarchies::core::types::property_name::PropertyName;
 use hierarchies::core::types::property_value::PropertyValue;
 use hierarchies_examples::get_funded_client;
-use iota_sdk::types::base_types::IotaAddress;
+use iota_sdk_types::Address;
 
 /// Property names for the supply chain certification system
 #[allow(dead_code)]
@@ -363,9 +363,9 @@ async fn main() -> anyhow::Result<()> {
     println!("🌐 Step 3: Adding regional standards organizations...");
 
     // Simulate regional standards organization addresses
-    let iso_europe = IotaAddress::random();
-    let iso_americas = IotaAddress::random();
-    let iso_asia_pacific = IotaAddress::random();
+    let iso_europe = Address::random();
+    let iso_americas = Address::random();
+    let iso_asia_pacific = Address::random();
 
     // Add regional organizations as root authorities
     hierarchies_client
@@ -394,7 +394,7 @@ async fn main() -> anyhow::Result<()> {
     println!("🏢 Step 4: Creating national testing institute accreditations...");
 
     // German Testing Institute under ISO Europe
-    let german_testing_institute = IotaAddress::random();
+    let german_testing_institute = Address::random();
 
     // Create comprehensive accreditation package for German institute
     let european_cert_properties = vec![
@@ -419,7 +419,7 @@ async fn main() -> anyhow::Result<()> {
         .await?;
 
     // US FDA Regional Office under ISO Americas
-    let us_fda_regional = IotaAddress::random();
+    let us_fda_regional = Address::random();
 
     let americas_cert_properties = vec![
         FederationProperty::new(iso_9001.clone()).with_allow_any(true),
@@ -452,7 +452,7 @@ async fn main() -> anyhow::Result<()> {
     println!("🧪 Step 5: Creating local testing laboratory rights...");
 
     // Berlin Food Safety Lab under German Testing Institute
-    let berlin_food_lab = IotaAddress::random();
+    let berlin_food_lab = Address::random();
 
     // Focus on food safety and organic certifications
     let food_safety_properties = vec![
@@ -475,7 +475,7 @@ async fn main() -> anyhow::Result<()> {
         .await?;
 
     // California Agricultural Lab under US FDA
-    let california_ag_lab = IotaAddress::random();
+    let california_ag_lab = Address::random();
 
     hierarchies_client
         .create_accreditation_to_attest(
@@ -498,8 +498,8 @@ async fn main() -> anyhow::Result<()> {
     println!("🥕 Step 6: Issuing product certifications...");
 
     // Simulate product batch addresses/IDs
-    let organic_apples_batch = IotaAddress::random();
-    let processed_food_batch = IotaAddress::random();
+    let organic_apples_batch = Address::random();
+    let processed_food_batch = Address::random();
 
     // Current time for certification
     let now = Utc::now();

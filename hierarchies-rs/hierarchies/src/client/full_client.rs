@@ -71,10 +71,9 @@
 
 use std::ops::Deref;
 
-use iota_interaction::types::base_types::IotaAddress;
 use iota_interaction::types::crypto::PublicKey;
 use iota_interaction::{IotaKeySignature, OptionalSync};
-use iota_sdk_types::ObjectId;
+use iota_sdk_types::{Address, ObjectId};
 use product_common::core_client::{CoreClient, CoreClientReadOnly};
 use product_common::network_name::NetworkName;
 use product_common::transaction::transaction_builder::TransactionBuilder;
@@ -307,8 +306,8 @@ impl<S> CoreClient<S> for HierarchiesClient<S>
 where
     S: Signer<IotaKeySignature> + OptionalSync,
 {
-    fn sender_address(&self) -> IotaAddress {
-        IotaAddress::from(&self.public_key)
+    fn sender_address(&self) -> Address {
+        Address::from(&self.public_key)
     }
 
     fn signer(&self) -> &S {

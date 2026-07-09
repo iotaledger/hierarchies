@@ -10,9 +10,7 @@
 use async_trait::async_trait;
 use iota_interaction::OptionalSync;
 use iota_interaction::rpc_types::IotaTransactionBlockEffects;
-use iota_interaction::types::base_types::IotaAddress;
-use iota_interaction::types::transaction::ProgrammableTransaction;
-use iota_sdk_types::ObjectId;
+use iota_sdk_types::{Address, ObjectId, ProgrammableTransaction};
 use product_common::core_client::CoreClientReadOnly;
 use product_common::transaction::transaction_builder::Transaction;
 use tokio::sync::OnceCell;
@@ -40,7 +38,7 @@ pub mod add_property {
     pub struct AddProperty {
         federation_id: ObjectId,
         property: FederationProperty,
-        owner: IotaAddress,
+        owner: Address,
         cached_ptb: OnceCell<ProgrammableTransaction>,
     }
 
@@ -50,7 +48,7 @@ pub mod add_property {
         /// # Returns
         ///
         /// A new `AddProperty` transaction instance ready for execution.
-        pub fn new(federation_id: ObjectId, property: FederationProperty, owner: IotaAddress) -> Self {
+        pub fn new(federation_id: ObjectId, property: FederationProperty, owner: Address) -> Self {
             Self {
                 federation_id,
                 property,
@@ -125,7 +123,7 @@ pub mod revoke_property {
         federation_id: ObjectId,
         property_name: PropertyName,
         valid_to_ms: Option<u64>,
-        owner: IotaAddress,
+        owner: Address,
         cached_ptb: OnceCell<ProgrammableTransaction>,
     }
 
@@ -139,7 +137,7 @@ pub mod revoke_property {
             federation_id: ObjectId,
             property_name: PropertyName,
             valid_to_ms: Option<u64>,
-            owner: IotaAddress,
+            owner: Address,
         ) -> Self {
             Self {
                 federation_id,

@@ -19,11 +19,11 @@ use std::collections::HashMap;
 
 use async_trait::async_trait;
 use iota_interaction::rpc_types::IotaObjectDataOptions;
-use iota_interaction::types::base_types::{IotaAddress, ObjectRef, SequenceNumber};
+use iota_interaction::types::base_types::{ObjectRef, SequenceNumber};
 use iota_interaction::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use iota_interaction::types::transaction::{CallArg, ProgrammableTransaction, SharedObjectRef};
+use iota_interaction::types::transaction::{CallArg, SharedObjectRef};
 use iota_interaction::{IotaClientTrait, MoveType, OptionalSync, ident_str};
-use iota_sdk_types::{Command, ObjectId, Owner};
+use iota_sdk_types::{Address, Command, ObjectId, Owner, ProgrammableTransaction};
 use product_common::core_client::CoreClientReadOnly;
 
 use crate::core::error::OperationError;
@@ -63,7 +63,7 @@ impl HierarchiesImpl {
     /// Returns an error if the owner doesn't have a RootAuthorityCap.
     pub(crate) async fn get_root_authority_cap<C>(
         client: &C,
-        owner: IotaAddress,
+        owner: Address,
         federation_id: ObjectId,
     ) -> Result<ObjectRef, CapabilityError>
     where
@@ -99,7 +99,7 @@ impl HierarchiesImpl {
     /// Returns an error if the owner doesn't have an AccreditCap.
     pub(crate) async fn get_accredit_cap<C>(
         client: &C,
-        owner: IotaAddress,
+        owner: Address,
         federation_id: ObjectId,
     ) -> Result<ObjectRef, CapabilityError>
     where
@@ -239,7 +239,7 @@ pub(crate) trait HierarchiesOperations {
     async fn add_property<C>(
         federation_id: ObjectId,
         property: FederationProperty,
-        owner: IotaAddress,
+        owner: Address,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>
     where
@@ -275,7 +275,7 @@ pub(crate) trait HierarchiesOperations {
         federation_id: ObjectId,
         user_id: ObjectId,
         accreditation_id: ObjectId,
-        owner: IotaAddress,
+        owner: Address,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>
     where
@@ -319,7 +319,7 @@ pub(crate) trait HierarchiesOperations {
     async fn add_root_authority<C>(
         federation_id: ObjectId,
         account_id: ObjectId,
-        owner: IotaAddress,
+        owner: Address,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>
     where
@@ -361,7 +361,7 @@ pub(crate) trait HierarchiesOperations {
         federation_id: ObjectId,
         receiver: ObjectId,
         want_properties: Vec<FederationProperty>,
-        owner: IotaAddress,
+        owner: Address,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>
     where
@@ -406,7 +406,7 @@ pub(crate) trait HierarchiesOperations {
         federation_id: ObjectId,
         receiver: ObjectId,
         want_properties: Vec<FederationProperty>,
-        owner: IotaAddress,
+        owner: Address,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>
     where
@@ -450,7 +450,7 @@ pub(crate) trait HierarchiesOperations {
         federation_id: ObjectId,
         user_id: ObjectId,
         accreditation_id: ObjectId,
-        owner: IotaAddress,
+        owner: Address,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>
     where
@@ -708,7 +708,7 @@ pub(crate) trait HierarchiesOperations {
     async fn revoke_property<C>(
         federation_id: ObjectId,
         property_name: PropertyName,
-        owner: IotaAddress,
+        owner: Address,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>
     where
@@ -759,7 +759,7 @@ pub(crate) trait HierarchiesOperations {
         federation_id: ObjectId,
         property_name: PropertyName,
         valid_to_ms: u64,
-        owner: IotaAddress,
+        owner: Address,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>
     where
@@ -961,7 +961,7 @@ pub(crate) trait HierarchiesOperations {
     async fn revoke_root_authority<C>(
         federation_id: ObjectId,
         account_id: ObjectId,
-        owner: IotaAddress,
+        owner: Address,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>
     where
@@ -1007,7 +1007,7 @@ pub(crate) trait HierarchiesOperations {
     async fn reinstate_root_authority<C>(
         federation_id: ObjectId,
         account_id: ObjectId,
-        owner: IotaAddress,
+        owner: Address,
         client: &C,
     ) -> Result<ProgrammableTransaction, OperationError>
     where
