@@ -15,7 +15,7 @@ use hierarchies::{
         add_root_authority,
         revoke_root_authority,
         is_root_authority,
-        revoke_property
+        revoke_property,
     },
     property,
     property_name::new_property_name,
