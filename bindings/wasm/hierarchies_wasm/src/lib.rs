@@ -27,6 +27,7 @@ extern "C" {
 /// Initializes the console error panic hook for better error messages
 #[wasm_bindgen(start)]
 pub fn start() -> Result<(), JsValue> {
+    #[cfg(debug_assertions)]
     console_error_panic_hook::set_once();
     Ok(())
 }
