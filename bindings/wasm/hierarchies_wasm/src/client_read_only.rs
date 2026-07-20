@@ -86,7 +86,7 @@ impl WasmHierarchiesClientReadOnly {
         let inner_client = HierarchiesClientReadOnly::new_with_pkg_id(
             iota_client,
             ObjectId::from_str(&iota_hierarchies_pkg_id)
-                .map_err(|e| anyhow!("Could not parse iota_hierarchies_pkg_id: {}", e.to_string()))
+                .map_err(|e| anyhow!("Could not parse iota_hierarchies_pkg_id: {}", e))
                 .wasm_result()?,
         )
         .await
