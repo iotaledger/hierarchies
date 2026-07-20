@@ -13,6 +13,7 @@ import { createAccreditationToAccredit } from "./06_create_accreditation_to_accr
 import { revokeAccreditationToAccredit } from "./07_revoke_accreditation_to_accredit";
 import { revokeRootAuthority } from "./08_revoke_root_authority";
 import { reinstateRootAuthority } from "./09_reinstate_root_authority";
+import { createAccreditationOutOfScopeFails } from "./out_of_scope";
 import { universityDegrees } from "./real-world/01_university_degrees";
 import { supplyChain } from "./real-world/02_supply_chain";
 import { getAccreditations } from "./validation/01_get_accreditations";
@@ -39,6 +40,9 @@ describe("Test node examples", function() {
     });
     it("Should create Accreditation to Attest", async () => {
         await createAccreditationToAttest();
+    });
+    it("Should reject out-of-scope Accreditation", async () => {
+        await createAccreditationOutOfScopeFails();
     });
     it("Should revoke Accreditation to Attest", async () => {
         await revokeAccreditationToAttest();

@@ -172,20 +172,21 @@ async fn main() -> anyhow::Result<()> {
 
     println!("✅ Field Mathematics property added!");
     // Add GPA property with advanced numeric validation (must be between 2.0-4.0)
+    let gpa_values = HashSet::from([
+        PropertyValue::Number(200),
+        PropertyValue::Number(250),
+        PropertyValue::Number(300),
+        PropertyValue::Number(320),
+        PropertyValue::Number(350),
+        PropertyValue::Number(380),
+        PropertyValue::Number(400), // Common GPA ranges: 2.0, 2.5, 3.0, 3.2, 3.5, 3.8, 4.0
+    ]);
     hierarchies_client
         .add_property(
             *university_consortium.id.object_id(),
             FederationProperty::new(grade_gpa.clone())
                 .with_expression(PropertyShape::GreaterThan(200)) // GPA > 2.0 (stored as 200 for precision)
-                .with_allowed_values(HashSet::from([
-                    PropertyValue::Number(200),
-                    PropertyValue::Number(250),
-                    PropertyValue::Number(300),
-                    PropertyValue::Number(320),
-                    PropertyValue::Number(350),
-                    PropertyValue::Number(380),
-                    PropertyValue::Number(400), // Common GPA ranges: 2.0, 2.5, 3.0, 3.2, 3.5, 3.8, 4.0
-                ])),
+                .with_allowed_values(gpa_values.clone()),
         )
         .build_and_execute(&hierarchies_client)
         .await?;
@@ -193,25 +194,26 @@ async fn main() -> anyhow::Result<()> {
     println!("✅ GPA property added!");
 
     // Add graduation year with range validation (must be recent - from 1950 onwards)
+    let graduation_year_values = HashSet::from([
+        PropertyValue::Number(1950),
+        PropertyValue::Number(1960),
+        PropertyValue::Number(1970),
+        PropertyValue::Number(1980),
+        PropertyValue::Number(1990),
+        PropertyValue::Number(2000),
+        PropertyValue::Number(2010),
+        PropertyValue::Number(2020),
+        PropertyValue::Number(2021),
+        PropertyValue::Number(2022),
+        PropertyValue::Number(2023),
+        PropertyValue::Number(2024),
+    ]);
     hierarchies_client
         .add_property(
             *university_consortium.id.object_id(),
             FederationProperty::new(graduation_year.clone())
                 .with_expression(PropertyShape::GreaterThan(1950))
-                .with_allowed_values(HashSet::from([
-                    PropertyValue::Number(1950),
-                    PropertyValue::Number(1960),
-                    PropertyValue::Number(1970),
-                    PropertyValue::Number(1980),
-                    PropertyValue::Number(1990),
-                    PropertyValue::Number(2000),
-                    PropertyValue::Number(2010),
-                    PropertyValue::Number(2020),
-                    PropertyValue::Number(2021),
-                    PropertyValue::Number(2022),
-                    PropertyValue::Number(2023),
-                    PropertyValue::Number(2024),
-                ])),
+                .with_allowed_values(graduation_year_values.clone()),
         )
         .build_and_execute(&hierarchies_client)
         .await?;
@@ -299,16 +301,19 @@ async fn main() -> anyhow::Result<()> {
     // Simulate Harvard CS Faculty address
     let harvard_cs_faculty = IotaAddress::random();
 
-    // Harvard delegates accreditation rights to its CS Faculty
-    // This allows the faculty to further delegate to registrars and professors
+    // Harvard delegates accreditation rights to its CS Faculty.
+    // This allows the faculty to further delegate to registrars and professors.
+    // The delegated value space must stay within the federation's declared
+    // bounds for each property, so we delegate the federation's full set of
+    // allowed values rather than `allow_any`.
     let cs_faculty_properties = vec![
-        FederationProperty::new(degree_bachelor.clone()).with_allow_any(true),
-        FederationProperty::new(degree_master.clone()).with_allow_any(true),
-        FederationProperty::new(degree_phd.clone()).with_allow_any(true),
-        FederationProperty::new(field_cs.clone()).with_allow_any(true),
-        FederationProperty::new(grade_gpa.clone()).with_allow_any(true),
-        FederationProperty::new(graduation_year.clone()).with_allow_any(true),
-        FederationProperty::new(student_verified.clone()).with_allow_any(true),
+        FederationProperty::new(degree_bachelor.clone()).with_allowed_values(degree_values.clone()),
+        FederationProperty::new(degree_master.clone()).with_allowed_values(degree_values.clone()),
+        FederationProperty::new(degree_phd.clone()).with_allowed_values(degree_values.clone()),
+        FederationProperty::new(field_cs.clone()).with_allowed_values(boolean_values.clone()),
+        FederationProperty::new(grade_gpa.clone()).with_allowed_values(gpa_values.clone()),
+        FederationProperty::new(graduation_year.clone()).with_allowed_values(graduation_year_values.clone()),
+        FederationProperty::new(student_verified.clone()).with_allowed_values(boolean_values.clone()),
     ];
 
     hierarchies_client

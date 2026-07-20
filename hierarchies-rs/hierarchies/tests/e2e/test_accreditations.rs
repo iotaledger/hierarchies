@@ -63,6 +63,64 @@ async fn test_create_accreditation_to_attest() -> anyhow::Result<()> {
 }
 
 #[tokio::test]
+async fn test_create_accreditation_out_of_federation_scope_fails() -> anyhow::Result<()> {
+    let client = get_funded_test_client().await?;
+
+    // Create a new federation.
+    let federation_id = client
+        .create_new_federation()
+        .build_and_execute(&client)
+        .await?
+        .output
+        .id;
+
+    // Federation declares test-property with allowed_values = {"a"}.
+    let property_name = PropertyName::from("test-property");
+    let mut allowed_values = HashSet::new();
+    allowed_values.insert(PropertyValue::Text("a".to_string()));
+
+    client
+        .add_property(
+            *federation_id.object_id(),
+            FederationProperty::new(property_name.clone()).with_allowed_values(allowed_values),
+        )
+        .build_and_execute(&client)
+        .await?;
+
+    // Attempt to issue an accreditation for "b", which is outside the
+    // federation's declared value space. This must be rejected on-chain
+    // (EPropertyValuesOutOfFederationScope), even though the caller is a root
+    // authority.
+    let mut out_of_scope = HashSet::new();
+    out_of_scope.insert(PropertyValue::Text("b".to_string()));
+    let property = FederationProperty::new(property_name).with_allowed_values(out_of_scope);
+
+    let receiver_id = ObjectID::random();
+    let result = client
+        .create_accreditation_to_accredit(*federation_id.object_id(), receiver_id, vec![property])
+        .build_and_execute(&client)
+        .await;
+
+    assert!(
+        result.is_err(),
+        "expected out-of-scope accreditation to be rejected, but it succeeded"
+    );
+
+    // The receiver must not have gained an accredit accreditation. (The map is
+    // never empty — the federation creator always holds an entry — so check the
+    // receiver specifically.)
+    let federation: Federation = client.get_federation_by_id(*federation_id.object_id()).await?;
+    assert!(
+        !federation
+            .governance
+            .accreditations_to_accredit
+            .contains_key(&receiver_id)
+    );
+
+    Ok(())
+}
+
+#[tokio::test]
 async fn test_create_accreditation_to_accredit() -> anyhow::Result<()> {
     let client = get_funded_test_client().await?;
 

@@ -396,15 +396,19 @@ async fn main() -> anyhow::Result<()> {
     // German Testing Institute under ISO Europe
     let german_testing_institute = IotaAddress::random();
 
-    // Create comprehensive accreditation package for German institute
+    // Create comprehensive accreditation package for German institute.
+    // The delegated value space must stay within the federation's declared
+    // bounds, so we delegate each property's declared allowed values. Only
+    // `origin_verified` and `expiry_date` are declared `allow_any` by the
+    // federation, so they may be delegated as `allow_any`.
     let european_cert_properties = vec![
-        FederationProperty::new(iso_9001.clone()).with_allow_any(true),
-        FederationProperty::new(iso_14001.clone()).with_allow_any(true),
-        FederationProperty::new(iso_22000.clone()).with_allow_any(true),
-        FederationProperty::new(product_organic.clone()).with_allow_any(true),
+        FederationProperty::new(iso_9001.clone()).with_allowed_values(cert_status_values.clone()),
+        FederationProperty::new(iso_14001.clone()).with_allowed_values(cert_status_values.clone()),
+        FederationProperty::new(iso_22000.clone()).with_allowed_values(cert_status_values.clone()),
+        FederationProperty::new(product_organic.clone()).with_allowed_values(boolean_values.clone()),
         FederationProperty::new(origin_verified.clone()).with_allow_any(true),
-        FederationProperty::new(batch_tested.clone()).with_allow_any(true),
-        FederationProperty::new(compliance_eu.clone()).with_allow_any(true),
+        FederationProperty::new(batch_tested.clone()).with_allowed_values(test_results.clone()),
+        FederationProperty::new(compliance_eu.clone()).with_allowed_values(boolean_values.clone()),
         FederationProperty::new(expiry_date.clone()).with_allow_any(true),
     ];
 
@@ -422,12 +426,12 @@ async fn main() -> anyhow::Result<()> {
     let us_fda_regional = IotaAddress::random();
 
     let americas_cert_properties = vec![
-        FederationProperty::new(iso_9001.clone()).with_allow_any(true),
-        FederationProperty::new(iso_22000.clone()).with_allow_any(true),
-        FederationProperty::new(product_organic.clone()).with_allow_any(true),
+        FederationProperty::new(iso_9001.clone()).with_allowed_values(cert_status_values.clone()),
+        FederationProperty::new(iso_22000.clone()).with_allowed_values(cert_status_values.clone()),
+        FederationProperty::new(product_organic.clone()).with_allowed_values(boolean_values.clone()),
         FederationProperty::new(origin_verified.clone()).with_allow_any(true),
-        FederationProperty::new(batch_tested.clone()).with_allow_any(true),
-        FederationProperty::new(compliance_fda.clone()).with_allow_any(true),
+        FederationProperty::new(batch_tested.clone()).with_allowed_values(test_results.clone()),
+        FederationProperty::new(compliance_fda.clone()).with_allowed_values(boolean_values.clone()),
         FederationProperty::new(expiry_date.clone()).with_allow_any(true),
     ];
 
@@ -456,11 +460,11 @@ async fn main() -> anyhow::Result<()> {
 
     // Focus on food safety and organic certifications
     let food_safety_properties = vec![
-        FederationProperty::new(iso_22000.clone()).with_allow_any(true),
-        FederationProperty::new(product_organic.clone()).with_allow_any(true),
+        FederationProperty::new(iso_22000.clone()).with_allowed_values(cert_status_values.clone()),
+        FederationProperty::new(product_organic.clone()).with_allowed_values(boolean_values.clone()),
         FederationProperty::new(origin_verified.clone()).with_allow_any(true),
-        FederationProperty::new(batch_tested.clone()).with_allow_any(true),
-        FederationProperty::new(compliance_eu.clone()).with_allow_any(true),
+        FederationProperty::new(batch_tested.clone()).with_allowed_values(test_results.clone()),
+        FederationProperty::new(compliance_eu.clone()).with_allowed_values(boolean_values.clone()),
         FederationProperty::new(expiry_date.clone()).with_allow_any(true),
     ];
 

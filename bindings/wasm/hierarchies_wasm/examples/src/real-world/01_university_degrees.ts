@@ -46,7 +46,14 @@
  * - Alumni verification for networking platforms
  */
 
-import { Accreditation, Federation, FederationProperty, PropertyName, PropertyValue } from "@iota/hierarchies/node";
+import {
+    Accreditation,
+    Federation,
+    FederationProperty,
+    PropertyName,
+    PropertyShape,
+    PropertyValue,
+} from "@iota/hierarchies/node";
 import { getFundedClient } from "../util";
 
 /**
@@ -345,15 +352,17 @@ export async function universityDegreesExample(): Promise<void> {
     await hierarchies
         .addProperty(
             universityConsortium.id,
-            new FederationProperty(gradeGpa).withAllowedValues([
-                PropertyValue.newNumber(200n),
-                PropertyValue.newNumber(250n),
-                PropertyValue.newNumber(300n),
-                PropertyValue.newNumber(320n),
-                PropertyValue.newNumber(350n),
-                PropertyValue.newNumber(380n),
-                PropertyValue.newNumber(400n),
-            ]),
+            new FederationProperty(gradeGpa)
+                .withCondition(PropertyShape.newGreaterThan(200n)) // GPA > 2.0 (stored as 200 for precision)
+                .withAllowedValues([
+                    PropertyValue.newNumber(200n),
+                    PropertyValue.newNumber(250n),
+                    PropertyValue.newNumber(300n),
+                    PropertyValue.newNumber(320n),
+                    PropertyValue.newNumber(350n),
+                    PropertyValue.newNumber(380n),
+                    PropertyValue.newNumber(400n),
+                ]),
         )
         .buildAndExecute(hierarchies);
 
@@ -361,20 +370,22 @@ export async function universityDegreesExample(): Promise<void> {
     await hierarchies
         .addProperty(
             universityConsortium.id,
-            new FederationProperty(graduationYear).withAllowedValues([
-                PropertyValue.newNumber(1950n),
-                PropertyValue.newNumber(1960n),
-                PropertyValue.newNumber(1970n),
-                PropertyValue.newNumber(1980n),
-                PropertyValue.newNumber(1990n),
-                PropertyValue.newNumber(2000n),
-                PropertyValue.newNumber(2010n),
-                PropertyValue.newNumber(2020n),
-                PropertyValue.newNumber(2021n),
-                PropertyValue.newNumber(2022n),
-                PropertyValue.newNumber(2023n),
-                PropertyValue.newNumber(2024n),
-            ]),
+            new FederationProperty(graduationYear)
+                .withCondition(PropertyShape.newGreaterThan(1950n))
+                .withAllowedValues([
+                    PropertyValue.newNumber(1950n),
+                    PropertyValue.newNumber(1960n),
+                    PropertyValue.newNumber(1970n),
+                    PropertyValue.newNumber(1980n),
+                    PropertyValue.newNumber(1990n),
+                    PropertyValue.newNumber(2000n),
+                    PropertyValue.newNumber(2010n),
+                    PropertyValue.newNumber(2020n),
+                    PropertyValue.newNumber(2021n),
+                    PropertyValue.newNumber(2022n),
+                    PropertyValue.newNumber(2023n),
+                    PropertyValue.newNumber(2024n),
+                ]),
         )
         .buildAndExecute(hierarchies);
 
@@ -448,19 +459,38 @@ export async function universityDegreesExample(): Promise<void> {
     // Simulate Harvard CS Faculty address
     const harvardCsFaculty = "0x" + Math.random().toString(16).substring(2, 42).padStart(40, "0");
 
-    // Harvard delegates accreditation rights to its CS Faculty
-    // This allows the faculty to further delegate to registrars and professors
+    // Harvard delegates accreditation rights to its CS Faculty.
+    // This allows the faculty to further delegate to registrars and professors.
+    // The delegated value space must stay within the federation's declared
+    // bounds for each property, so we delegate the federation's full set of
+    // allowed values rather than `allowAny`.
+    //
+    // Note: `PropertyValue`/`FederationProperty` instances are consumed when
+    // passed across the wasm boundary, so these are factory functions that
+    // produce fresh instances for each transaction.
+    const degreeValues = () => [
+        PropertyValue.newText("completed"),
+        PropertyValue.newText("in_progress"),
+        PropertyValue.newText("withdrawn"),
+    ];
+    const booleanValues = () => [PropertyValue.newText("true"), PropertyValue.newText("false")];
+    const gpaValues = () => [200n, 250n, 300n, 320n, 350n, 380n, 400n].map(n => PropertyValue.newNumber(n));
+    const graduationYearValues = () =>
+        [1950n, 1960n, 1970n, 1980n, 1990n, 2000n, 2010n, 2020n, 2021n, 2022n, 2023n, 2024n]
+            .map(n => PropertyValue.newNumber(n));
+
+    const csFacultyProperties = () => [
+        new FederationProperty(degreeBachelor).withAllowedValues(degreeValues()),
+        new FederationProperty(degreeMaster).withAllowedValues(degreeValues()),
+        new FederationProperty(degreePhd).withAllowedValues(degreeValues()),
+        new FederationProperty(fieldCs).withAllowedValues(booleanValues()),
+        new FederationProperty(gradeGpa).withAllowedValues(gpaValues()),
+        new FederationProperty(graduationYear).withAllowedValues(graduationYearValues()),
+        new FederationProperty(studentVerified).withAllowedValues(booleanValues()),
+    ];
 
     await hierarchies
-        .createAccreditationToAccredit(universityConsortium.id, harvardCsFaculty, [
-            new FederationProperty(degreeBachelor).withAllowAny(true),
-            new FederationProperty(degreeMaster).withAllowAny(true),
-            new FederationProperty(degreePhd).withAllowAny(true),
-            new FederationProperty(fieldCs).withAllowAny(true),
-            new FederationProperty(gradeGpa).withAllowAny(true),
-            new FederationProperty(graduationYear).withAllowAny(true),
-            new FederationProperty(studentVerified).withAllowAny(true),
-        ])
+        .createAccreditationToAccredit(universityConsortium.id, harvardCsFaculty, csFacultyProperties())
         .buildAndExecute(hierarchies);
 
     console.log("✅ Harvard CS Faculty granted accreditation rights:");
@@ -478,15 +508,7 @@ export async function universityDegreesExample(): Promise<void> {
     // CS Faculty delegates attestation rights to the CS Registrar
     // Registrar can now create attestations (issue degrees) but not delegate further
     await hierarchies
-        .createAccreditationToAttest(universityConsortium.id, harvardCsRegistrar, [
-            new FederationProperty(degreeBachelor).withAllowAny(true),
-            new FederationProperty(degreeMaster).withAllowAny(true),
-            new FederationProperty(degreePhd).withAllowAny(true),
-            new FederationProperty(fieldCs).withAllowAny(true),
-            new FederationProperty(gradeGpa).withAllowAny(true),
-            new FederationProperty(graduationYear).withAllowAny(true),
-            new FederationProperty(studentVerified).withAllowAny(true),
-        ])
+        .createAccreditationToAttest(universityConsortium.id, harvardCsRegistrar, csFacultyProperties())
         .buildAndExecute(hierarchies);
 
     console.log("✅ Harvard CS Registrar granted attestation rights:");

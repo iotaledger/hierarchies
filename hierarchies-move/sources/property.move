@@ -136,6 +136,61 @@ public(package) fun matches_value(
     self.allowed_values.contains(value)
 }
 
+/// Checks whether `requested`'s value space is a subset of `self`'s value space,
+/// i.e. whether `self` (the federation's declared property) covers every value
+/// that an accreditation carrying `requested` could ever match.
+///
+/// `self` is the federation's `FederationProperty` (the hard upper bound);
+/// `requested` is the condition a new accreditation would carry. Used to
+/// reject accreditations whose value space is broader than the federation's
+/// declaration, regardless of who the caller is.
+///
+/// Rules (conservative — only provably in-bounds requests are accepted):
+/// - If the federation allows any value, every request is trivially covered.
+/// - A bounded federation can never be widened back to `allow_any`.
+/// - A requested `shape` is only accepted when it is exactly equal to the
+///   federation's `shape`; arbitrary shape-subset reasoning is not attempted.
+/// - Every concrete value in `requested.allowed_values` must lie in the
+///   federation's value space (matching its `shape` or its `allowed_values`).
+public(package) fun covers(
+    self: &FederationProperty,
+    requested: &FederationProperty,
+    current_time_ms: u64,
+): bool {
+    // The federation admits everything, so any requested condition is in-bounds.
+    if (self.allow_any) {
+        return true
+    };
+
+    // A bounded federation cannot be widened back to "any value".
+    if (requested.allow_any) {
+        return false
+    };
+
+    // A requested shape is only in-bounds if it is identical to the
+    // federation's shape. We do not attempt to prove shape-subset relations.
+    if (requested.shape.is_some()) {
+        if (self.shape.is_none()) {
+            return false
+        };
+        if (!self.shape.borrow().equals(requested.shape.borrow())) {
+            return false
+        };
+    };
+
+    // Every concrete requested value must be inside the federation's value space.
+    let requested_values = requested.allowed_values.keys();
+    let mut idx = 0;
+    while (idx < requested_values.length()) {
+        if (!self.matches_value(&requested_values[idx], current_time_ms)) {
+            return false
+        };
+        idx = idx + 1;
+    };
+
+    true
+}
+
 public(package) fun revoke(self: &mut FederationProperty, valid_to_ms: u64) {
     self.timespan.valid_until_ms = option::some(valid_to_ms)
 }

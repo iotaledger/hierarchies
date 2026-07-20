@@ -37,6 +37,9 @@ const EAlreadyRootAuthority: u64 = 11;
 const ENotRevokedRootAuthority: u64 = 12;
 /// Error when trying to create accreditation for a revoked property
 const EPropertyRevoked: u64 = 13;
+/// Error when a requested accreditation's value space is not a subset of the
+/// federation's declared value space for that property
+const EPropertyValuesOutOfFederationScope: u64 = 14;
 
 // ===== Constants =====
 const TIME_BUFFER_MS: u64 = 5000;
@@ -476,6 +479,14 @@ public fun create_accreditation_to_accredit(
         let federation_property = self.governance.properties.data().get(property.property_name());
         assert!(federation_property.is_valid_at_time(current_time_ms), EPropertyRevoked);
 
+        // The federation's declared property is a hard upper bound on the value
+        // space of any accreditation issued for it. This gate applies to every
+        // caller, including root authorities.
+        assert!(
+            federation_property.covers(property, current_time_ms),
+            EPropertyValuesOutOfFederationScope,
+        );
+
         idx = idx + 1;
     };
 
@@ -544,6 +555,14 @@ public fun create_accreditation_to_attest(
         // Check if property is revoked
         let federation_property = self.governance.properties.data().get(property.property_name());
         assert!(federation_property.is_valid_at_time(current_time_ms), EPropertyRevoked);
+
+        // The federation's declared property is a hard upper bound on the value
+        // space of any accreditation issued for it. This gate applies to every
+        // caller, including root authorities.
+        assert!(
+            federation_property.covers(property, current_time_ms),
+            EPropertyValuesOutOfFederationScope,
+        );
 
         idx = idx + 1;
     };
@@ -722,6 +741,12 @@ public fun validate_property(
         return false
     };
 
+    // Defense in depth: the value must lie inside the federation's declared
+    // value space, even if a (possibly buggy) accreditation carries it.
+    if (!federation_property.matches_value(&property_value, current_time_ms)) {
+        return false
+    };
+
     // Check if attester has accreditation permissions
     if (!self.is_attester(attester_id)) {
         return false
@@ -758,6 +783,13 @@ public fun validate_properties(
         // Check if the federation's property is still valid (not revoked)
         let federation_property = self.governance.properties.data().get(&property_name);
         if (!federation_property.is_valid_at_time(current_time_ms)) {
+            return false
+        };
+
+        // Defense in depth: the value must lie inside the federation's declared
+        // value space, even if a (possibly buggy) accreditation carries it.
+        let property_value = properties.get(&property_name);
+        if (!federation_property.matches_value(property_value, current_time_ms)) {
             return false
         };
 
@@ -800,6 +832,31 @@ fun is_revoked_root_authority(self: &Federation, id: &ID): bool {
 }
 
 // ===== Test Functions =====
+
+/// Injects an attest accreditation directly into governance, bypassing the
+/// `create_accreditation_to_attest` value-scope gate. Used only to construct
+/// out-of-scope accreditations for defense-in-depth validation tests.
+#[test_only]
+public(package) fun test_only_insert_attest_accreditation(
+    self: &mut Federation,
+    receiver: ID,
+    properties: vector<FederationProperty>,
+    ctx: &mut TxContext,
+) {
+    let accreditation = accreditation::new_accreditation(properties, ctx);
+    if (self.governance.accreditations_to_attest.contains(&receiver)) {
+        self
+            .governance
+            .accreditations_to_attest
+            .get_mut(&receiver)
+            .add_accreditation(accreditation);
+    } else {
+        let mut accreditations = accreditation::new_empty_accreditations();
+        accreditations.add_accreditation(accreditation);
+        self.governance.accreditations_to_attest.insert(receiver, accreditations);
+    };
+}
+
 #[test_only]
 public(package) fun transfer_root_authority_cap(
     self: &Federation,
