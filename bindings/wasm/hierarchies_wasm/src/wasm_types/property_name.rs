@@ -22,6 +22,12 @@ impl WasmPropertyName {
         Self(PropertyName::new(names))
     }
 
+    /// Returns the property names as an enumerable `names` property.
+    #[wasm_bindgen(getter, js_name = names, unchecked_return_type = "Array<String>")]
+    pub fn names(&self) -> js_sys::Array {
+        self.0.names().iter().map(JsValue::from).collect()
+    }
+
     /// Returns the property names as
     #[wasm_bindgen(js_name = getNames, unchecked_return_type = "Array<String>")]
     pub fn get_names(&self) -> js_sys::Array {
