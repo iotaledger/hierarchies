@@ -17,12 +17,12 @@ async-trait = "0.1"
 bcs = "0.1"
 chrono = { version = "0.4", features = ["serde"] }
 hyper = "1.8"
-iota-sdk = { package = "iota-sdk", git = "https://github.com/iotaledger/iota.git", tag = "v1.27.0" }
-iota-sdk-types = { git = "https://github.com/iotaledger/iota-rust-sdk.git", rev = "ce81341ac3fdb7204df112182c68319f26d5896b", default-features = false }
-iota_interaction = { package = "iota_interaction", git = "https://github.com/iotaledger/product-core.git", tag = "v0.8.23", default-features = false }
-iota_interaction_rust = { package = "iota_interaction_rust", git = "https://github.com/iotaledger/product-core.git", tag = "v0.8.23", default-features = false }
-iota_interaction_ts = { package = "iota_interaction_ts", git = "https://github.com/iotaledger/product-core.git", tag = "v0.8.23", default-features = false }
-product_common = { package = "product_common", git = "https://github.com/iotaledger/product-core.git", tag = "v0.8.23", default-features = false }
+iota-sdk = { package = "iota-sdk", git = "https://github.com/iotaledger/iota.git", tag = "v1.29.0" }
+iota-sdk-types = { git = "https://github.com/iotaledger/iota-rust-sdk.git", rev = "2f021d0556e47564e9b04bcd0b3e8347c41a0a26", default-features = false }
+iota_interaction = { package = "iota_interaction", git = "https://github.com/iotaledger/product-core.git", branch = "feat/iota-v1.29.0-upstream-merge", default-features = false }
+iota_interaction_rust = { package = "iota_interaction_rust", git = "https://github.com/iotaledger/product-core.git", branch = "feat/iota-v1.29.0-upstream-merge", default-features = false }
+iota_interaction_ts = { package = "iota_interaction_ts", git = "https://github.com/iotaledger/product-core.git", branch = "feat/iota-v1.29.0-upstream-merge", default-features = false }
+product_common = { package = "product_common", git = "https://github.com/iotaledger/product-core.git", branch = "feat/iota-v1.29.0-upstream-merge", default-features = false }
 secret-storage = { git = "https://github.com/iotaledger/secret-storage", tag = "v0.3.0", default-features = false }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1.0.149"
@@ -32,3 +32,6 @@ tokio = { version = "1.52.2", default-features = false, features = ["sync"] }
 
 [profile.release.package.iota_interaction_ts]
 opt-level = "s"
+
+[patch."https://github.com/MystenLabs/fastcrypto"]
+fastcrypto = "=0.1.11"

@@ -19,11 +19,12 @@ use std::collections::HashMap;
 
 use async_trait::async_trait;
 use iota_interaction::rpc_types::IotaObjectDataOptions;
-use iota_interaction::types::base_types::{ObjectRef, SequenceNumber};
 use iota_interaction::types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use iota_interaction::types::transaction::{CallArg, SharedObjectRef};
+use iota_interaction::types::transaction::CallArg;
 use iota_interaction::{IotaClientTrait, MoveType, OptionalSync, ident_str};
-use iota_sdk_types::{Address, Command, ObjectId, Owner, ProgrammableTransaction};
+use iota_sdk_types::{
+    Address, Command, ObjectId, ObjectReference, Owner, ProgrammableTransaction, SharedObjectReference, Version,
+};
 use product_common::core_client::CoreClientReadOnly;
 
 use crate::core::error::OperationError;
@@ -65,7 +66,7 @@ impl HierarchiesImpl {
         client: &C,
         owner: Address,
         federation_id: ObjectId,
-    ) -> Result<ObjectRef, CapabilityError>
+    ) -> Result<ObjectReference, CapabilityError>
     where
         C: CoreClientReadOnly + OptionalSync,
     {
@@ -101,7 +102,7 @@ impl HierarchiesImpl {
         client: &C,
         owner: Address,
         federation_id: ObjectId,
-    ) -> Result<ObjectRef, CapabilityError>
+    ) -> Result<ObjectReference, CapabilityError>
     where
         C: CoreClientReadOnly + OptionalSync,
     {
@@ -137,7 +138,7 @@ impl HierarchiesImpl {
     where
         C: CoreClientReadOnly + OptionalSync,
     {
-        let fed_ref = CallArg::Shared(SharedObjectRef {
+        let fed_ref = CallArg::Shared(SharedObjectReference {
             object_id: federation_id,
             initial_shared_version: HierarchiesImpl::initial_shared_version(client, &federation_id)
                 .await
@@ -152,10 +153,7 @@ impl HierarchiesImpl {
     ///
     /// Required for properly referencing shared objects in IOTA transactions.
     /// Returns an error if the object is not shared.
-    pub(crate) async fn initial_shared_version<C>(
-        client: &C,
-        object_id: &ObjectId,
-    ) -> Result<SequenceNumber, ObjectError>
+    pub(crate) async fn initial_shared_version<C>(client: &C, object_id: &ObjectId) -> Result<Version, ObjectError>
     where
         C: CoreClientReadOnly + OptionalSync,
     {
